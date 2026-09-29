@@ -13,7 +13,7 @@ public static class LoggingBootstrapper
         return new LoggerConfiguration()
             .MinimumLevel.Information()
             .Enrich.FromLogContext()
-            .Enrich.WithProperty("Application", "BusinessOS Pharmacy Desktop")
+            .Enrich.WithProperty("Application", "Darmaltoon")
             .WriteTo.File(
                 Path.Combine(paths.LogsDirectory, "application-.log"),
                 rollingInterval: RollingInterval.Day,

@@ -29,7 +29,7 @@ public sealed partial class DashboardViewModel : ObservableObject
     private bool isLoading;
 
     [ObservableProperty]
-    private string pharmacyName = "BusinessOS Pharmacy";
+    private string pharmacyName = "Darmaltoon";
 
     [ObservableProperty]
     private string pharmacyCode = "—";
@@ -69,9 +69,19 @@ public sealed partial class DashboardViewModel : ObservableObject
         _clock = clock;
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsLoading);
+        NavigateCommand = new RelayCommand<string>(key =>
+        {
+            if (!string.IsNullOrWhiteSpace(key))
+            {
+                NavigationRequested?.Invoke(key);
+            }
+        });
     }
 
     public IAsyncRelayCommand RefreshCommand { get; }
+    public IRelayCommand<string> NavigateCommand { get; }
+
+    public event Action<string>? NavigationRequested;
 
     public ObservableCollection<DashboardStatViewModel> Stats { get; } = new();
     public ObservableCollection<DashboardQuickActionViewModel> QuickActions { get; } = new();
@@ -123,7 +133,7 @@ public sealed partial class DashboardViewModel : ObservableObject
             var tenant = activation?.Tenant;
 
             PharmacyName = string.IsNullOrWhiteSpace(tenant?.Name)
-                ? "BusinessOS Pharmacy"
+                ? "Darmaltoon"
                 : tenant.Name;
             PharmacyCode = !string.IsNullOrWhiteSpace(tenant?.Slug)
                 ? tenant.Slug
@@ -244,7 +254,7 @@ public sealed partial class DashboardViewModel : ObservableObject
         QuickActions.Clear();
 
         AddAction("pos", Translate("Open POS", "باز کردن فروش", "خرڅلاو پرانیزئ"), "▣", "pos.sell", false);
-        AddAction("medicines", Translate("Add medicine", "افزودن دوا", "درمل زیات کړئ"), "✚", "medicines.manage", false);
+        AddAction("medicines", Translate("Add medicine", "افزودن دوا", "درمل زیات کړئ"), "✚", "medicines.manage", true);
         AddAction("customers", Translate("Customers", "مشتریان", "پېرودونکي"), "♙", "customers.manage", false);
         AddAction("purchases", Translate("New purchase", "خرید جدید", "نوی پېرود"), "↓", "purchases.manage", false);
         AddAction("inventory", Translate("Inventory", "موجودی", "زېرمه"), "▤", "inventory.manage", false);

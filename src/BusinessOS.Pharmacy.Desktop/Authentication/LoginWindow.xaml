@@ -1,7 +1,7 @@
 <Window x:Class="BusinessOS.Pharmacy.Desktop.Authentication.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Sign in — BusinessOS Pharmacy"
+        Title="Sign in — Darmaltoon"
         Width="560" Height="570"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
@@ -9,8 +9,8 @@
     <Grid Margin="40">
         <Border Style="{StaticResource SurfaceCard}" Padding="30">
             <StackPanel>
-                <TextBlock Text="BusinessOS Pharmacy" FontSize="26" FontWeight="SemiBold" />
-                <TextBlock Text="BusinessOS.af" Style="{StaticResource MutedText}" Margin="0,4,0,26" />
+                <TextBlock Text="Darmaltoon" FontSize="26" FontWeight="SemiBold" />
+                <TextBlock Text="darmaltoon.com · BusinessOS.af" Style="{StaticResource MutedText}" Margin="0,4,0,26" />
 
                 <TextBlock Text="Pharmacy Staff Sign In" FontSize="20" FontWeight="SemiBold" />
                 <TextBlock Text="Your license identifies the pharmacy. Sign in with your tenant-level employee account."

@@ -132,6 +132,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Button IsEnabled="{Binding IsAvailable}"
+                                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding Key}"
                                         MinWidth="145"
                                         Padding="14,10"
                                         Margin="0,0,10,10"
