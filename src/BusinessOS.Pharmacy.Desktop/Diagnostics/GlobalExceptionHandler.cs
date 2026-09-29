@@ -26,8 +26,8 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         logger.LogError(e.Exception, "Unhandled UI exception.");
 
         MessageBox.Show(
-            "BusinessOS Pharmacy encountered an unexpected error. Your data has not been intentionally removed. Please retry the action; technical details were written to the application log.",
-            "BusinessOS Pharmacy",
+            "Darmaltoon encountered an unexpected error. Your data has not been intentionally removed. Please retry the action; technical details were written to the application log.",
+            "Darmaltoon",
             MessageBoxButton.OK,
             MessageBoxImage.Error);
 
