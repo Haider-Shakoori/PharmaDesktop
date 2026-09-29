@@ -6,6 +6,7 @@ using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.Desktop.Medicines;
 using BusinessOS.Pharmacy.Desktop.Navigation;
+using BusinessOS.Pharmacy.Desktop.Networking;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -34,17 +35,20 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IUserSessionService sessions,
         IPermissionAuthorizer permissions,
         DashboardViewModel dashboard,
-        MedicinesViewModel medicines)
+        MedicinesViewModel medicines,
+        NetworkSettingsViewModel networkSettings)
     {
         _clock = clock;
         _sessions = sessions;
         _permissions = permissions;
         Dashboard = dashboard;
         Medicines = medicines;
+        NetworkSettings = networkSettings;
         currentPage = Dashboard;
 
         Dashboard.SetLanguage(SelectedLanguage);
         Medicines.SetLanguage(SelectedLanguage);
+        NetworkSettings.SetLanguage(SelectedLanguage);
         Dashboard.NavigationRequested += OnDashboardNavigationRequested;
 
         LogoutCommand = new AsyncRelayCommand(LogoutAsync);
@@ -58,21 +62,33 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public IAsyncRelayCommand<string> NavigateCommand { get; }
     public DashboardViewModel Dashboard { get; }
     public MedicinesViewModel Medicines { get; }
+    public NetworkSettingsViewModel NetworkSettings { get; }
 
     public string ApplicationName => "Darmaltoon";
     public string ParentBrand => "BusinessOS.af";
-    public string PageTitle => CurrentSectionKey == "medicines"
-        ? Translate("Medicines", "ادویه", "درمل")
-        : Translate("Dashboard", "داشبورد", "ډشبورډ");
-    public string PageSubtitle => CurrentSectionKey == "medicines"
-        ? Translate(
+    public string PageTitle => CurrentSectionKey switch
+    {
+        "medicines" => Translate("Medicines", "ادویه", "درمل"),
+        "network" => Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
+        _ => Translate("Dashboard", "داشبورد", "ډشبورډ")
+    };
+
+    public string PageSubtitle => CurrentSectionKey switch
+    {
+        "medicines" => Translate(
             "Medicine master data, categories and CSV registration",
             "اطلاعات اصلی ادویه، دسته‌بندی و ثبت CSV",
-            "د درملو اصلي معلومات، کټګورۍ او CSV ثبت")
-        : Translate(
+            "د درملو اصلي معلومات، کټګورۍ او CSV ثبت"),
+        "network" => Translate(
+            "Local server, paired terminals and network diagnostics",
+            "سرور محلی، ترمینال‌های جفت‌شده و عیب‌یابی شبکه",
+            "محلي سرور، نښلول شوي ترمینلونه او د شبکې تشخیص"),
+        _ => Translate(
             "Local-first pharmacy operations",
             "عملیات محلی دواخانه",
-            "د درملتون محلي عملیات");
+            "د درملتون محلي عملیات")
+    };
+
     public string OnlineText => Translate("Licensed", "فعال", "فعال");
     public string LastVerifiedText => $"{Translate("Ready", "آماده", "چمتو")} • {_clock.UtcNow:yyyy-MM-dd HH:mm} UTC";
     public string UserDisplayName => _sessions.Current?.Name ?? Translate("No user", "بدون کاربر", "کارن نشته");
@@ -91,6 +107,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         Dashboard.SetLanguage(SelectedLanguage);
         Medicines.SetLanguage(SelectedLanguage);
+        NetworkSettings.SetLanguage(SelectedLanguage);
         CurrentSectionKey = "dashboard";
         CurrentPage = Dashboard;
         RefreshNavigation();
@@ -101,6 +118,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         LayoutDirection = value.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
         Dashboard.SetLanguage(value);
         Medicines.SetLanguage(value);
+        NetworkSettings.SetLanguage(value);
         RefreshNavigation();
         RaisePageText();
         OnPropertyChanged(nameof(OnlineText));
@@ -123,6 +141,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AddIfAllowed("daily_closing.perform", "closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "✓");
         AddIfAllowed("users.manage", "users", Translate("Users", "کاربران", "کارنان"), "♟");
         AddIfAllowed("roles.manage", "roles", Translate("Roles", "نقش‌ها", "رولونه"), "⚿");
+
+        if (_permissions.HasPermission("users.manage") ||
+            _permissions.HasPermission("roles.manage"))
+        {
+            NavigationItems.Add(new(
+                "network",
+                Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
+                "⌁"));
+        }
     }
 
     private void AddIfAllowed(string permission, string key, string label, string glyph)
@@ -147,6 +174,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentSectionKey = "medicines";
                 CurrentPage = Medicines;
                 await Medicines.LoadAsync();
+                break;
+
+            case "network" when
+                _permissions.HasPermission("users.manage") ||
+                _permissions.HasPermission("roles.manage"):
+                CurrentSectionKey = "network";
+                CurrentPage = NetworkSettings;
+                await NetworkSettings.LoadAsync();
                 break;
         }
     }
