@@ -105,7 +105,10 @@ public sealed class LicenseService : ILicenseService
             deviceId,
             envelope.ServerTime,
             now,
-            entitlement);
+            entitlement,
+            envelope.Data.Tenant,
+            envelope.Data.Plan,
+            envelope.Data.SubscriptionHealth);
 
         await _store.SaveAsync(state, cancellationToken);
         return entitlement;
