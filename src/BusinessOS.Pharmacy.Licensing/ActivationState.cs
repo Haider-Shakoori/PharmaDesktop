@@ -7,7 +7,10 @@ public sealed record ActivationState(
     string DeviceId,
     DateTimeOffset LastServerTime,
     DateTimeOffset LastTrustedLocalTime,
-    EntitlementSnapshot Entitlement);
+    EntitlementSnapshot Entitlement,
+    TenantSummary? Tenant = null,
+    PlanSummary? Plan = null,
+    string? SubscriptionHealth = null);
 
 public interface IActivationStore
 {
