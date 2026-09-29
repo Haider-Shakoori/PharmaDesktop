@@ -1,3 +1,4 @@
+using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Desktop.Activation;
 using BusinessOS.Pharmacy.Desktop.Authentication;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
@@ -6,6 +7,7 @@ using BusinessOS.Pharmacy.Desktop.Medicines;
 using BusinessOS.Pharmacy.Infrastructure;
 using BusinessOS.Pharmacy.Infrastructure.Storage;
 using BusinessOS.Pharmacy.Licensing;
+using BusinessOS.Pharmacy.LocalClient;
 using BusinessOS.Pharmacy.Persistence;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,9 +18,18 @@ namespace BusinessOS.Pharmacy.Desktop.Hosting;
 
 public static class DesktopHost
 {
-    public static IHost Build()
+    public static IHost Build(
+        ApplicationPaths? paths = null,
+        NetworkConfiguration? networkConfiguration = null)
     {
-        var paths = new ApplicationPaths();
+        paths ??= new ApplicationPaths();
+        paths.EnsureCreated();
+
+        networkConfiguration ??= new NetworkConfigurationStore(paths)
+            .LoadAsync()
+            .GetAwaiter()
+            .GetResult();
+
         Log.Logger = LoggingBootstrapper.CreateLogger(paths);
 
         return Host.CreateDefaultBuilder()
@@ -31,9 +42,19 @@ public static class DesktopHost
             .ConfigureServices((context, services) =>
             {
                 services.AddBusinessOSInfrastructure(paths);
-                services.AddBusinessOSPersistence();
-                services.AddBusinessOSLicensing(context.Configuration);
 
+                if (networkConfiguration.Mode == DeploymentMode.Client &&
+                    networkConfiguration.IsConfigured)
+                {
+                    services.AddBusinessOSLocalClient();
+                }
+                else
+                {
+                    services.AddBusinessOSPersistence();
+                    services.AddBusinessOSLicensing(context.Configuration);
+                }
+
+                services.AddSingleton(networkConfiguration);
                 services.AddSingleton<GlobalExceptionHandler>();
                 services.AddSingleton<ActivationViewModel>();
                 services.AddSingleton<ActivationWindow>();
