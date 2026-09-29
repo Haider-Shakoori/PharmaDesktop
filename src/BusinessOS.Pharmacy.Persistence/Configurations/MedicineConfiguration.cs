@@ -14,10 +14,10 @@ internal sealed class MedicineConfiguration : IEntityTypeConfiguration<MedicineE
         builder.Property(x => x.Id).HasMaxLength(36).ValueGeneratedNever();
         builder.Property(x => x.MedicineCategoryId).HasMaxLength(36);
         builder.Property(x => x.ManufacturerId).HasMaxLength(36);
-        builder.Property(x => x.MedicineCode).HasMaxLength(80).IsRequired();
-        builder.Property(x => x.Barcode).HasMaxLength(120);
-        builder.Property(x => x.BrandName).HasMaxLength(180).IsRequired();
-        builder.Property(x => x.GenericName).HasMaxLength(180);
+        builder.Property(x => x.MedicineCode).HasMaxLength(80).UseCollation("NOCASE").IsRequired();
+        builder.Property(x => x.Barcode).HasMaxLength(120).UseCollation("NOCASE");
+        builder.Property(x => x.BrandName).HasMaxLength(180).UseCollation("NOCASE").IsRequired();
+        builder.Property(x => x.GenericName).HasMaxLength(180).UseCollation("NOCASE");
         builder.Property(x => x.Strength).HasMaxLength(100);
         builder.Property(x => x.DosageForm).HasMaxLength(80);
         builder.Property(x => x.PurchaseUnit).HasMaxLength(50).IsRequired();
