@@ -83,26 +83,32 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
 
                     b.Property<string>("Country")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("country");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(160)
                         .HasColumnType("TEXT")
+                        .HasColumnName("name")
                         .UseCollation("NOCASE");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -118,22 +124,27 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("TEXT")
+                        .HasColumnName("name")
                         .UseCollation("NOCASE");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -149,85 +160,105 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(36)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
 
                     b.Property<string>("Barcode")
                         .HasMaxLength(120)
                         .HasColumnType("TEXT")
+                        .HasColumnName("barcode")
                         .UseCollation("NOCASE");
 
                     b.Property<bool>("BatchTrackingRequired")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("batch_tracking_required");
 
                     b.Property<string>("BrandName")
                         .IsRequired()
                         .HasMaxLength(180)
                         .HasColumnType("TEXT")
+                        .HasColumnName("brand_name")
                         .UseCollation("NOCASE");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("DosageForm")
                         .HasMaxLength(80)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("dosage_form");
 
                     b.Property<bool>("ExpiryTrackingRequired")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("expiry_tracking_required");
 
                     b.Property<string>("GenericName")
                         .HasMaxLength(180)
                         .HasColumnType("TEXT")
+                        .HasColumnName("generic_name")
                         .UseCollation("NOCASE");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("ManufacturerId")
                         .HasMaxLength(36)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("manufacturer_id");
 
                     b.Property<string>("MedicineCategoryId")
                         .HasMaxLength(36)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("medicine_category_id");
 
                     b.Property<string>("MedicineCode")
                         .IsRequired()
                         .HasMaxLength(80)
                         .HasColumnType("TEXT")
+                        .HasColumnName("medicine_code")
                         .UseCollation("NOCASE");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
 
                     b.Property<bool>("PrescriptionRequired")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("prescription_required");
 
                     b.Property<string>("PurchaseUnit")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("purchase_unit");
 
                     b.Property<decimal>("ReorderLevel")
                         .HasPrecision(14, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reorder_level");
 
                     b.Property<string>("SaleUnit")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_unit");
 
                     b.Property<string>("Strength")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("strength");
 
                     b.Property<decimal>("UnitsPerPurchaseUnit")
                         .HasPrecision(12, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("units_per_purchase_unit");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
