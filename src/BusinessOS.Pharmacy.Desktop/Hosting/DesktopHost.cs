@@ -1,5 +1,6 @@
 using BusinessOS.Pharmacy.Desktop.Activation;
 using BusinessOS.Pharmacy.Desktop.Authentication;
+using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Diagnostics;
 using BusinessOS.Pharmacy.Infrastructure;
 using BusinessOS.Pharmacy.Infrastructure.Storage;
@@ -37,6 +38,7 @@ public static class DesktopHost
                 services.AddSingleton<ActivationWindow>();
                 services.AddTransient<LoginViewModel>();
                 services.AddTransient<LoginWindow>();
+                services.AddSingleton<DashboardViewModel>();
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<StartupCoordinator>();
