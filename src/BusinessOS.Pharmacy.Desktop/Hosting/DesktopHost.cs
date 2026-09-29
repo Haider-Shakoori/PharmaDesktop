@@ -5,6 +5,7 @@ using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Diagnostics;
 using BusinessOS.Pharmacy.Desktop.Medicines;
 using BusinessOS.Pharmacy.Infrastructure;
+using BusinessOS.Pharmacy.Infrastructure.Networking;
 using BusinessOS.Pharmacy.Infrastructure.Storage;
 using BusinessOS.Pharmacy.Licensing;
 using BusinessOS.Pharmacy.LocalClient;
