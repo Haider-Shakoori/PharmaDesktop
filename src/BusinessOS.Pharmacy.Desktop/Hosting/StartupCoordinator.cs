@@ -85,8 +85,8 @@ public sealed class StartupCoordinator
         catch (LocalDatabaseTenantMismatchException)
         {
             MessageBox.Show(
-                "This PC already contains local data for another pharmacy. BusinessOS Pharmacy will not overwrite or mix tenant data. Use the correct pharmacy activation or restore/reset the local database through the supported maintenance workflow.",
-                "BusinessOS Pharmacy — Local Database Protection",
+                "This PC already contains local data for another pharmacy. Darmaltoon will not overwrite or mix tenant data. Use the correct pharmacy activation or restore/reset the local database through the supported maintenance workflow.",
+                "Darmaltoon — Local Database Protection",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
 
