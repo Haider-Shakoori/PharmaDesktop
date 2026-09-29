@@ -1,3 +1,4 @@
+using BusinessOS.Pharmacy.Desktop.Activation;
 using BusinessOS.Pharmacy.Desktop.Diagnostics;
 using BusinessOS.Pharmacy.Infrastructure;
 using BusinessOS.Pharmacy.Infrastructure.Storage;
@@ -31,8 +32,11 @@ public static class DesktopHost
                 services.AddBusinessOSLicensing(context.Configuration);
 
                 services.AddSingleton<GlobalExceptionHandler>();
+                services.AddSingleton<ActivationViewModel>();
+                services.AddSingleton<ActivationWindow>();
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();
+                services.AddSingleton<StartupCoordinator>();
             })
             .Build();
     }

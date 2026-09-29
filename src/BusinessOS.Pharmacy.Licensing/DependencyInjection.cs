@@ -1,3 +1,4 @@
+using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -19,6 +20,10 @@ public static class DependencyInjection
             .ValidateOnStart();
 
         services.AddTransient<ILicenseActivationClient, LicenseActivationClient>();
+        services.AddSingleton<ISignedLeaseVerifier, SignedLeaseVerifier>();
+        services.AddSingleton<IInstallationIdentityProvider, InstallationIdentityProvider>();
+        services.AddSingleton<IActivationStore, WindowsActivationStore>();
+        services.AddSingleton<ILicenseService, LicenseService>();
 
         services.AddHttpClient(HttpClientName, (serviceProvider, client) =>
         {
