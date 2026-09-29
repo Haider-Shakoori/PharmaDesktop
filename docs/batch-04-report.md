@@ -2,7 +2,7 @@
 
 Batch: 4 — Licensing backend integration
 
-Status: desktop transport verified; Laravel licensing companion PR must be green before merge.
+Status: completed and verified.
 
 Created:
 - ILicenseActivationClient transport abstraction
@@ -25,7 +25,7 @@ Laravel companion work:
 - adds POST /api/v1/desktop/license/refresh
 - refresh revalidates device, activation, tenant, license/version and subscription state
 - plaintext license key is only needed for initial activation
-- companion PR: Haider-Shakoori/Pharmacy#50
+- companion PR Haider-Shakoori/Pharmacy#50 merged as 146b6290dc628ce4dfef76d82096a738efe20688
 
 Database changes:
 - none
@@ -42,6 +42,16 @@ Desktop verification:
 - integration tests: 2 passed, 0 failed
 - vulnerable package audit: no vulnerable packages reported
 - verification environment: Ubuntu 24.04, .NET SDK 10.0.401, net10.0-windows cross-build
+
+Laravel verification:
+- push CI: passed
+- pull-request CI: passed
+- Laravel regression: 106 tests / 570 assertions passed
+- Pint: 326 files passed
+- Composer security audit: passed
+- production frontend build: passed
+- Release Candidate web UAT: passed
+- Android Drift generation, formatting, static analysis and complete Flutter regression suite: passed
 
 Known follow-ups:
 - Batch 5 will verify Ed25519 signatures in C#, convert signed claims into EntitlementSnapshot, persist activation material with Windows protection, create persistent installation identity, enforce clock rollback protection, and implement the activation UI
