@@ -1,8 +1,8 @@
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using BusinessOS.Pharmacy.Domain.Licensing;
 using Microsoft.Extensions.Options;
+using NSec.Cryptography;
 
 namespace BusinessOS.Pharmacy.Licensing;
 
@@ -19,6 +19,11 @@ public sealed class SignedLeaseVerifier : ISignedLeaseVerifier
 
     public EntitlementSnapshot Verify(string token)
     {
+        if (string.IsNullOrWhiteSpace(_options.SigningPublicKey))
+        {
+            throw new CryptographicException("The desktop release is missing the BusinessOS license signing public key.");
+        }
+
         var parts = token.Split('.');
         if (parts.Length != 3 || parts[0] != "v1")
         {
@@ -27,10 +32,17 @@ public sealed class SignedLeaseVerifier : ISignedLeaseVerifier
 
         var payloadBytes = DecodeBase64Url(parts[1]);
         var signature = DecodeBase64Url(parts[2]);
-        var publicKey = Convert.FromBase64String(_options.SigningPublicKey);
+        var publicKeyBytes = Convert.FromBase64String(_options.SigningPublicKey);
+        var algorithm = SignatureAlgorithm.Ed25519;
 
-        if (publicKey.Length != 32 || signature.Length != 64 ||
-            !Ed25519.Verify(signature, payloadBytes, publicKey))
+        if (publicKeyBytes.Length != algorithm.PublicKeySize ||
+            signature.Length != algorithm.SignatureSize)
+        {
+            throw new CryptographicException("The license entitlement signature is invalid.");
+        }
+
+        var publicKey = PublicKey.Import(algorithm, publicKeyBytes, KeyBlobFormat.RawPublicKey);
+        if (!algorithm.Verify(publicKey, payloadBytes, signature))
         {
             throw new CryptographicException("The license entitlement signature is invalid.");
         }
@@ -78,7 +90,7 @@ public sealed class SignedLeaseVerifier : ISignedLeaseVerifier
     private static byte[] DecodeBase64Url(string value)
     {
         value = value.Replace('-', '+').Replace('_', '/');
-        value += value.Length % 4 switch { 2 => "==", 3 => "=", _ => string.Empty };
+        value += (value.Length % 4) switch { 2 => "==", 3 => "=", _ => string.Empty };
         return Convert.FromBase64String(value);
     }
 
@@ -92,9 +104,7 @@ public sealed class SignedLeaseVerifier : ISignedLeaseVerifier
             ? result
             : throw new CryptographicException($"Signed entitlement claim '{name}' is invalid.");
 
-    private static int ReadInt(JsonElement root, string name) =>
-        checked((int)ReadLong(root, name));
-
+    private static int ReadInt(JsonElement root, string name) => checked((int)ReadLong(root, name));
     private static DateTimeOffset FromUnix(long value) => DateTimeOffset.FromUnixTimeSeconds(value);
 
     private static SubscriptionState ParseSubscriptionState(string value) =>
