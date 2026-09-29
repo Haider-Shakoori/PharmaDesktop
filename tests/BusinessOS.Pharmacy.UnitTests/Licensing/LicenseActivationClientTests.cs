@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using BusinessOS.Pharmacy.Licensing;
 using Microsoft.Extensions.Options;
 using Xunit;
 
