@@ -38,8 +38,8 @@ public static class DependencyInjection
         services.AddSingleton<ILocalSettingsStore, LocalSettingsStore>();
         services.AddSingleton<ILocalSequenceService, LocalSequenceService>();
         services.AddSingleton<ILocalDashboardQueryService, LocalDashboardQueryService>();
-        services.AddSingleton<IMedicineCatalogService, MedicineCatalogService>();
-        services.AddSingleton<IMedicineCsvService, MedicineCsvService>();
+        services.AddTransient<IMedicineCatalogService, MedicineCatalogService>();
+        services.AddTransient<IMedicineCsvService, MedicineCsvService>();
         services.AddSingleton<IMedicineSeedService, MedicineSeedService>();
         services.AddSingleton<ILocalTerminalService, LocalTerminalService>();
         services.AddSingleton<ILocalLanCredentialStore, LocalLanCredentialStore>();
