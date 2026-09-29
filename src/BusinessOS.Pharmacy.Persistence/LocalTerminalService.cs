@@ -167,13 +167,14 @@ public sealed class LocalTerminalService : ILocalTerminalService
 
         var now = _clock.UtcNow;
         var candidates = (await context.Set<TerminalPairingCodeEntity>()
-                .Where(x =>
-                    x.UsedAt == null &&
-                    x.ExpiresAt >= now)
-                .OrderByDescending(x => x.CreatedAt)
-                .Take(25)
+                .Where(x => x.UsedAt == null)
+                .Take(100)
                 .ToListAsync(cancellationToken))
-            .Where(x => x.FailedAttempts < x.MaxAttempts)
+            .Where(x =>
+                x.ExpiresAt >= now &&
+                x.FailedAttempts < x.MaxAttempts)
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(25)
             .ToList();
 
         TerminalPairingCodeEntity? matched = null;
@@ -229,7 +230,6 @@ public sealed class LocalTerminalService : ILocalTerminalService
             SET used_at = {now}
             WHERE id = {matched.Id}
               AND used_at IS NULL
-              AND expires_at >= {now}
               AND failed_attempts < max_attempts;
             """,
             cancellationToken);
