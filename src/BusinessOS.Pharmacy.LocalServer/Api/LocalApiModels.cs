@@ -29,6 +29,7 @@ public sealed record PairTerminalApiResponse(
     string TerminalId,
     string TerminalSecret,
     string ServerId,
+    string TenantId,
     DateTimeOffset RegisteredAt);
 
 public sealed record LocalServerInfoResponse(
@@ -46,6 +47,12 @@ public sealed record TerminalHeartbeatResponse(
     DateTimeOffset ServerTime);
 
 public sealed record MedicineCreateResponse(string Id);
+
+public sealed record CreateCategoryRequest(string Name);
+
+public sealed record CreateManufacturerRequest(
+    string Name,
+    string? Country);
 
 public static class LocalApiModelExtensions
 {
