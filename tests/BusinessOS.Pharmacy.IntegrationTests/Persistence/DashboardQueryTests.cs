@@ -107,14 +107,6 @@ public sealed class DashboardQueryTests
 
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            CREATE TABLE medicines (
-                id TEXT PRIMARY KEY,
-                medicine_code TEXT NOT NULL,
-                brand_name TEXT NOT NULL,
-                reorder_level NUMERIC NOT NULL DEFAULT 0,
-                is_active INTEGER NOT NULL DEFAULT 1
-            );
-
             CREATE TABLE stock_locations (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL
@@ -148,11 +140,16 @@ public sealed class DashboardQueryTests
             INSERT INTO stock_locations (id, name)
             VALUES ('loc-1', 'Main Store');
 
-            INSERT INTO medicines (id, medicine_code, brand_name, reorder_level, is_active)
+            INSERT INTO medicines (
+                id, medicine_code, brand_name, purchase_unit, sale_unit,
+                units_per_purchase_unit, reorder_level, prescription_required,
+                batch_tracking_required, expiry_tracking_required, is_active,
+                created_at, updated_at
+            )
             VALUES
-                ('med-1', 'MED-001', 'Alpha', 10, 1),
-                ('med-2', 'MED-002', 'Beta', 0, 1),
-                ('med-3', 'MED-003', 'Gamma', 0, 1);
+                ('med-1', 'MED-001', 'Alpha', 'pack', 'unit', 1, 10, 0, 1, 1, 1, '2026-09-30T00:00:00+00:00', '2026-09-30T00:00:00+00:00'),
+                ('med-2', 'MED-002', 'Beta', 'pack', 'unit', 1, 0, 0, 1, 1, 1, '2026-09-30T00:00:00+00:00', '2026-09-30T00:00:00+00:00'),
+                ('med-3', 'MED-003', 'Gamma', 'pack', 'unit', 1, 0, 0, 1, 1, 1, '2026-09-30T00:00:00+00:00', '2026-09-30T00:00:00+00:00');
 
             INSERT INTO product_batches (
                 id, medicine_id, stock_location_id, batch_number, status,
