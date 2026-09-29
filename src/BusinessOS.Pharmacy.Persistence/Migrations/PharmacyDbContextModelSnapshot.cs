@@ -44,6 +44,165 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
                     b.ToTable("local_database_identity", (string)null);
                 });
 
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.LocalLanSessionEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("email");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("expires_at");
+
+                    b.Property<DateTimeOffset>("IssuedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("issued_at");
+
+                    b.Property<DateTimeOffset?>("LastSeenAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("last_seen_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("PermissionsJson")
+                        .IsRequired()
+                        .HasMaxLength(16000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("permissions_json");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("RolesJson")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("roles_json");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("TerminalId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("terminal_id");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("token_hash");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("TerminalId", "ExpiresAt");
+
+                    b.HasIndex("UserId", "ExpiresAt");
+
+                    b.ToTable("local_lan_sessions", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.LocalLanUserCredentialEntity", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("email")
+                        .UseCollation("NOCASE");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTimeOffset>("LastOnlineVerifiedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("last_online_verified_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("PasswordHashBase64")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("password_hash_base64");
+
+                    b.Property<int>("PasswordIterations")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("password_iterations");
+
+                    b.Property<string>("PasswordSaltBase64")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("password_salt_base64");
+
+                    b.Property<string>("PermissionsJson")
+                        .IsRequired()
+                        .HasMaxLength(16000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("permissions_json");
+
+                    b.Property<string>("RolesJson")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("roles_json");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "IsActive");
+
+                    b.ToTable("local_lan_user_credentials", (string)null);
+                });
+
             modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.LocalSequenceEntity", b =>
                 {
                     b.Property<string>("Key")
