@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:dashboard="clr-namespace:BusinessOS.Pharmacy.Desktop.Dashboard"
         xmlns:medicines="clr-namespace:BusinessOS.Pharmacy.Desktop.Medicines"
+        xmlns:networking="clr-namespace:BusinessOS.Pharmacy.Desktop.Networking"
         Title="Darmaltoon"
         Width="1360" Height="820"
         MinWidth="1080" MinHeight="680"
@@ -14,6 +15,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type medicines:MedicinesViewModel}">
             <medicines:MedicinesView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type networking:NetworkSettingsViewModel}">
+            <networking:NetworkSettingsView/>
         </DataTemplate>
     </Window.Resources>
 
