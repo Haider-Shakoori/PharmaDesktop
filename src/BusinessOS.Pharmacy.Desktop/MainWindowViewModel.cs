@@ -4,6 +4,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Localization;
+using BusinessOS.Pharmacy.Desktop.Medicines;
 using BusinessOS.Pharmacy.Desktop.Navigation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -22,33 +23,56 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private FlowDirection layoutDirection = FlowDirection.LeftToRight;
 
+    [ObservableProperty]
+    private object currentPage;
+
+    [ObservableProperty]
+    private string currentSectionKey = "dashboard";
+
     public MainWindowViewModel(
         IClock clock,
         IUserSessionService sessions,
         IPermissionAuthorizer permissions,
-        DashboardViewModel dashboard)
+        DashboardViewModel dashboard,
+        MedicinesViewModel medicines)
     {
         _clock = clock;
         _sessions = sessions;
         _permissions = permissions;
         Dashboard = dashboard;
+        Medicines = medicines;
+        currentPage = Dashboard;
+
         Dashboard.SetLanguage(SelectedLanguage);
+        Medicines.SetLanguage(SelectedLanguage);
+        Dashboard.NavigationRequested += OnDashboardNavigationRequested;
+
         LogoutCommand = new AsyncRelayCommand(LogoutAsync);
+        NavigateCommand = new AsyncRelayCommand<string>(NavigateAsync);
         RefreshNavigation();
     }
 
     public event EventHandler? LogoutRequested;
 
     public IAsyncRelayCommand LogoutCommand { get; }
+    public IAsyncRelayCommand<string> NavigateCommand { get; }
     public DashboardViewModel Dashboard { get; }
+    public MedicinesViewModel Medicines { get; }
 
     public string ApplicationName => "Darmaltoon";
     public string ParentBrand => "BusinessOS.af";
-    public string PageTitle => Translate("Dashboard", "داشبورد", "ډشبورډ");
-    public string PageSubtitle => Translate(
-        "Local-first pharmacy operations",
-        "عملیات محلی دواخانه",
-        "د درملتون محلي عملیات");
+    public string PageTitle => CurrentSectionKey == "medicines"
+        ? Translate("Medicines", "ادویه", "درمل")
+        : Translate("Dashboard", "داشبورد", "ډشبورډ");
+    public string PageSubtitle => CurrentSectionKey == "medicines"
+        ? Translate(
+            "Medicine master data, categories and CSV registration",
+            "اطلاعات اصلی ادویه، دسته‌بندی و ثبت CSV",
+            "د درملو اصلي معلومات، کټګورۍ او CSV ثبت")
+        : Translate(
+            "Local-first pharmacy operations",
+            "عملیات محلی دواخانه",
+            "د درملتون محلي عملیات");
     public string OnlineText => Translate("Licensed", "فعال", "فعال");
     public string LastVerifiedText => $"{Translate("Ready", "آماده", "چمتو")} • {_clock.UtcNow:yyyy-MM-dd HH:mm} UTC";
     public string UserDisplayName => _sessions.Current?.Name ?? Translate("No user", "بدون کاربر", "کارن نشته");
@@ -64,7 +88,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(UserDisplayName));
         OnPropertyChanged(nameof(UserRoleText));
         OnPropertyChanged(nameof(PermissionCount));
+
         Dashboard.SetLanguage(SelectedLanguage);
+        Medicines.SetLanguage(SelectedLanguage);
+        CurrentSectionKey = "dashboard";
+        CurrentPage = Dashboard;
         RefreshNavigation();
     }
 
@@ -72,13 +100,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         LayoutDirection = value.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
         Dashboard.SetLanguage(value);
+        Medicines.SetLanguage(value);
         RefreshNavigation();
-        OnPropertyChanged(nameof(PageTitle));
-        OnPropertyChanged(nameof(PageSubtitle));
+        RaisePageText();
         OnPropertyChanged(nameof(OnlineText));
         OnPropertyChanged(nameof(LastVerifiedText));
         OnPropertyChanged(nameof(UserDisplayName));
     }
+
+    partial void OnCurrentSectionKeyChanged(string value) => RaisePageText();
 
     private void RefreshNavigation()
     {
@@ -103,11 +133,40 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
     }
 
+    private async Task NavigateAsync(string? key)
+    {
+        switch (key)
+        {
+            case "dashboard" when _permissions.HasPermission("dashboard.view"):
+                CurrentSectionKey = "dashboard";
+                CurrentPage = Dashboard;
+                await Dashboard.LoadAsync();
+                break;
+
+            case "medicines" when _permissions.HasPermission("medicines.manage"):
+                CurrentSectionKey = "medicines";
+                CurrentPage = Medicines;
+                await Medicines.LoadAsync();
+                break;
+        }
+    }
+
+    private async void OnDashboardNavigationRequested(string key)
+    {
+        await NavigateAsync(key);
+    }
+
     private async Task LogoutAsync()
     {
         await _sessions.LogoutAsync();
         ApplyCurrentUser();
         LogoutRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void RaisePageText()
+    {
+        OnPropertyChanged(nameof(PageTitle));
+        OnPropertyChanged(nameof(PageSubtitle));
     }
 
     private string Translate(string english, string dari, string pashto) =>
