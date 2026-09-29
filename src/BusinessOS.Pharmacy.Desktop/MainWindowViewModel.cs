@@ -1,15 +1,19 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.Desktop.Navigation;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace BusinessOS.Pharmacy.Desktop;
 
 public sealed partial class MainWindowViewModel : ObservableObject
 {
     private readonly IClock _clock;
+    private readonly IUserSessionService _sessions;
+    private readonly IPermissionAuthorizer _permissions;
 
     [ObservableProperty]
     private UiLanguage selectedLanguage = UiLanguageCatalog.All[0];
@@ -17,20 +21,43 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private FlowDirection layoutDirection = FlowDirection.LeftToRight;
 
-    public MainWindowViewModel(IClock clock)
+    public MainWindowViewModel(
+        IClock clock,
+        IUserSessionService sessions,
+        IPermissionAuthorizer permissions)
     {
         _clock = clock;
+        _sessions = sessions;
+        _permissions = permissions;
+        LogoutCommand = new AsyncRelayCommand(LogoutAsync);
         RefreshNavigation();
     }
+
+    public event EventHandler? LogoutRequested;
+
+    public IAsyncRelayCommand LogoutCommand { get; }
 
     public string ApplicationName => "BusinessOS Pharmacy";
     public string ParentBrand => "BusinessOS.af";
     public string PageTitle => Translate("Dashboard", "داشبورد", "ډشبورډ");
     public string PageSubtitle => Translate("Native Windows pharmacy workspace", "محیط کاری ویندوز برای دواخانه", "د وینډوز درملتون کاري چاپېریال");
-    public string OnlineText => Translate("Online", "آنلاین", "آنلاین");
+    public string OnlineText => Translate("Licensed", "فعال", "فعال");
     public string LastVerifiedText => $"{Translate("Ready", "آماده", "چمتو")} • {_clock.UtcNow:yyyy-MM-dd HH:mm} UTC";
+    public string UserDisplayName => _sessions.Current?.Name ?? Translate("No user", "بدون کاربر", "کارن نشته");
+    public string UserRoleText => _sessions.Current is null
+        ? string.Empty
+        : string.Join(", ", _sessions.Current.Roles);
+    public int PermissionCount => _sessions.Current?.Permissions.Count ?? 0;
     public ReadOnlyCollection<UiLanguage> Languages => UiLanguageCatalog.All;
     public ObservableCollection<NavigationItemViewModel> NavigationItems { get; } = new();
+
+    public void ApplyCurrentUser()
+    {
+        OnPropertyChanged(nameof(UserDisplayName));
+        OnPropertyChanged(nameof(UserRoleText));
+        OnPropertyChanged(nameof(PermissionCount));
+        RefreshNavigation();
+    }
 
     partial void OnSelectedLanguageChanged(UiLanguage value)
     {
@@ -40,19 +67,37 @@ public sealed partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(PageSubtitle));
         OnPropertyChanged(nameof(OnlineText));
         OnPropertyChanged(nameof(LastVerifiedText));
+        OnPropertyChanged(nameof(UserDisplayName));
     }
 
     private void RefreshNavigation()
     {
         NavigationItems.Clear();
-        NavigationItems.Add(new("dashboard", Translate("Dashboard", "داشبورد", "ډشبورډ"), "⌂"));
-        NavigationItems.Add(new("pos", Translate("POS", "فروش", "خرڅلاو"), "▣"));
-        NavigationItems.Add(new("medicines", Translate("Medicines", "ادویه", "درمل"), "✚"));
-        NavigationItems.Add(new("inventory", Translate("Inventory", "موجودی", "زېرمه"), "▤"));
-        NavigationItems.Add(new("purchases", Translate("Purchases", "خریداری", "پېرود"), "↓"));
-        NavigationItems.Add(new("customers", Translate("Customers", "مشتریان", "پېرودونکي"), "♙"));
-        NavigationItems.Add(new("reports", Translate("Reports", "گزارش‌ها", "راپورونه"), "▥"));
-        NavigationItems.Add(new("closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "✓"));
+        AddIfAllowed("dashboard.view", "dashboard", Translate("Dashboard", "داشبورد", "ډشبورډ"), "⌂");
+        AddIfAllowed("pos.sell", "pos", Translate("POS", "فروش", "خرڅلاو"), "▣");
+        AddIfAllowed("medicines.manage", "medicines", Translate("Medicines", "ادویه", "درمل"), "✚");
+        AddIfAllowed("inventory.manage", "inventory", Translate("Inventory", "موجودی", "زېرمه"), "▤");
+        AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), "↓");
+        AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), "♙");
+        AddIfAllowed("reports.view", "reports", Translate("Reports", "گزارش‌ها", "راپورونه"), "▥");
+        AddIfAllowed("daily_closing.perform", "closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "✓");
+        AddIfAllowed("users.manage", "users", Translate("Users", "کاربران", "کارنان"), "♟");
+        AddIfAllowed("roles.manage", "roles", Translate("Roles", "نقش‌ها", "رولونه"), "⚿");
+    }
+
+    private void AddIfAllowed(string permission, string key, string label, string glyph)
+    {
+        if (_permissions.HasPermission(permission))
+        {
+            NavigationItems.Add(new(key, label, glyph));
+        }
+    }
+
+    private async Task LogoutAsync()
+    {
+        await _sessions.LogoutAsync();
+        ApplyCurrentUser();
+        LogoutRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private string Translate(string english, string dari, string pashto) =>
