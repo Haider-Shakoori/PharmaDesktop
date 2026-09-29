@@ -166,14 +166,15 @@ public sealed class LocalTerminalService : ILocalTerminalService
         await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
 
         var now = _clock.UtcNow;
-        var candidates = await context.Set<TerminalPairingCodeEntity>()
-            .Where(x =>
-                x.UsedAt == null &&
-                x.ExpiresAt >= now &&
-                x.FailedAttempts < x.MaxAttempts)
-            .OrderByDescending(x => x.CreatedAt)
-            .Take(25)
-            .ToListAsync(cancellationToken);
+        var candidates = (await context.Set<TerminalPairingCodeEntity>()
+                .Where(x =>
+                    x.UsedAt == null &&
+                    x.ExpiresAt >= now)
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(25)
+                .ToListAsync(cancellationToken))
+            .Where(x => x.FailedAttempts < x.MaxAttempts)
+            .ToList();
 
         TerminalPairingCodeEntity? matched = null;
 
@@ -222,6 +223,25 @@ public sealed class LocalTerminalService : ILocalTerminalService
                 "The pairing code is invalid, expired, already used or locked.");
         }
 
+        var claimed = await context.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+            UPDATE terminal_pairing_codes
+            SET used_at = {now}
+            WHERE id = {matched.Id}
+              AND used_at IS NULL
+              AND expires_at >= {now}
+              AND failed_attempts < max_attempts;
+            """,
+            cancellationToken);
+
+        if (claimed != 1)
+        {
+            throw new InvalidOperationException(
+                "The pairing code has already been used, expired or locked.");
+        }
+
+        context.Entry(matched).State = EntityState.Detached;
+
         if (await context.Set<RegisteredTerminalEntity>()
             .AnyAsync(x => x.Id == terminalId && x.IsActive, cancellationToken))
         {
@@ -258,8 +278,6 @@ public sealed class LocalTerminalService : ILocalTerminalService
         existing.IsActive = true;
         existing.RevokedAt = null;
         existing.LastSeenAt = now;
-
-        matched.UsedAt = now;
 
         await AddAuditAsync(
             context,
