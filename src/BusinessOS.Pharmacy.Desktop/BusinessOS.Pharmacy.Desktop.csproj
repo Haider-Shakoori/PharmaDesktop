@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AssemblyName>BusinessOS.Pharmacy.Desktop</AssemblyName>
+    <RootNamespace>BusinessOS.Pharmacy.Desktop</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BusinessOS.Pharmacy.Application\BusinessOS.Pharmacy.Application.csproj" />
+    <ProjectReference Include="..\BusinessOS.Pharmacy.Infrastructure\BusinessOS.Pharmacy.Infrastructure.csproj" />
+    <ProjectReference Include="..\BusinessOS.Pharmacy.Persistence\BusinessOS.Pharmacy.Persistence.csproj" />
+    <ProjectReference Include="..\BusinessOS.Pharmacy.Licensing\BusinessOS.Pharmacy.Licensing.csproj" />
+    <ProjectReference Include="..\BusinessOS.Pharmacy.Sync\BusinessOS.Pharmacy.Sync.csproj" />
+    <ProjectReference Include="..\BusinessOS.Pharmacy.Printing\BusinessOS.Pharmacy.Printing.csproj" />
+    <ProjectReference Include="..\BusinessOS.Pharmacy.Updater\BusinessOS.Pharmacy.Updater.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>
