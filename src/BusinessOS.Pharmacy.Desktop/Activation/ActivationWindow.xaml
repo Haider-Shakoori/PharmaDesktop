@@ -1,7 +1,7 @@
 <Window x:Class="BusinessOS.Pharmacy.Desktop.Activation.ActivationWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Activate BusinessOS Pharmacy"
+        Title="Activate Darmaltoon"
         Width="560" Height="520"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
@@ -9,11 +9,11 @@
     <Grid Margin="40">
         <Border Style="{StaticResource SurfaceCard}" Padding="30">
             <StackPanel>
-                <TextBlock Text="BusinessOS Pharmacy" FontSize="26" FontWeight="SemiBold" />
-                <TextBlock Text="BusinessOS.af" Style="{StaticResource MutedText}" Margin="0,4,0,26" />
+                <TextBlock Text="Darmaltoon" FontSize="26" FontWeight="SemiBold" />
+                <TextBlock Text="darmaltoon.com · BusinessOS.af" Style="{StaticResource MutedText}" Margin="0,4,0,26" />
 
                 <TextBlock Text="Activate Your Pharmacy" FontSize="20" FontWeight="SemiBold" />
-                <TextBlock Text="Use the license key issued by the BusinessOS Pharmacy website."
+                <TextBlock Text="Use the license key issued for your Darmaltoon subscription."
                            Style="{StaticResource MutedText}" Margin="0,6,0,20" TextWrapping="Wrap" />
 
                 <TextBlock Text="License Key" FontWeight="SemiBold" Margin="0,0,0,6" />
@@ -39,7 +39,7 @@
                 <TextBlock Margin="0,18,0,0"
                            Style="{StaticResource MutedText}"
                            TextWrapping="Wrap"
-                           Text="Initial activation requires internet. After activation, BusinessOS Pharmacy can continue operating offline while the signed entitlement remains valid." />
+                           Text="Initial activation requires internet. After activation, Darmaltoon can continue operating offline while the signed entitlement remains valid." />
             </StackPanel>
         </Border>
     </Grid>
