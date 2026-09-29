@@ -36,7 +36,7 @@ public sealed class LocalDatabaseInitializer : ILocalDatabaseInitializer
             await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
             await context.Database.MigrateAsync(cancellationToken);
-            await ConfigureSqliteAsync(context, cancellationToken);
+            await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL;", cancellationToken);
 
             var identity = await context.Set<LocalDatabaseIdentityEntity>()
                 .SingleOrDefaultAsync(cancellationToken);
@@ -78,15 +78,5 @@ public sealed class LocalDatabaseInitializer : ILocalDatabaseInitializer
         {
             _gate.Release();
         }
-    }
-
-    private static async Task ConfigureSqliteAsync(
-        PharmacyDbContext context,
-        CancellationToken cancellationToken)
-    {
-        await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL;", cancellationToken);
-        await context.Database.ExecuteSqlRawAsync("PRAGMA synchronous=NORMAL;", cancellationToken);
-        await context.Database.ExecuteSqlRawAsync("PRAGMA busy_timeout=5000;", cancellationToken);
-        await context.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys=ON;", cancellationToken);
     }
 }
