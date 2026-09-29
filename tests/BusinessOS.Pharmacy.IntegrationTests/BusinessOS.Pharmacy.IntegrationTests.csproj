@@ -5,6 +5,7 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\BusinessOS.Pharmacy.Infrastructure\BusinessOS.Pharmacy.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\BusinessOS.Pharmacy.Persistence\BusinessOS.Pharmacy.Persistence.csproj" />
   </ItemGroup>
   <ItemGroup>
