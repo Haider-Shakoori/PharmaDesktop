@@ -240,6 +240,7 @@ local.MapPost(
                 paired.TerminalId,
                 paired.TerminalSecret,
                 paired.ServerId,
+                paired.TenantId,
                 paired.RegisteredAt));
         })
     .RequireRateLimiting("pairing");
@@ -339,6 +340,53 @@ authorized.MapPost(
     {
         var id = await medicines.CreateAsync(request, cancellationToken);
         return Results.Ok(new MedicineCreateResponse(id));
+    });
+
+authorized.MapPost(
+    "/medicine-categories",
+    async (
+        CreateCategoryRequest request,
+        IMedicineCatalogService medicines,
+        CancellationToken cancellationToken) =>
+    {
+        var id = await medicines.CreateCategoryAsync(request.Name, cancellationToken);
+        return Results.Ok(new MedicineCreateResponse(id));
+    });
+
+authorized.MapPost(
+    "/manufacturers",
+    async (
+        CreateManufacturerRequest request,
+        IMedicineCatalogService medicines,
+        CancellationToken cancellationToken) =>
+    {
+        var id = await medicines.CreateManufacturerAsync(
+            request.Name,
+            request.Country,
+            cancellationToken);
+        return Results.Ok(new MedicineCreateResponse(id));
+    });
+
+authorized.MapGet(
+    "/dashboard",
+    async (
+        DateOnly businessDate,
+        int? lowStockThreshold,
+        int? nearExpiryDays,
+        IPermissionAuthorizer permissions,
+        ILocalDashboardQueryService dashboard,
+        CancellationToken cancellationToken) =>
+    {
+        permissions.Demand("dashboard.view");
+
+        var snapshot = await dashboard.GetSnapshotAsync(
+            new DashboardQueryOptions(
+                businessDate,
+                lowStockThreshold ?? 10,
+                nearExpiryDays ?? 90),
+            cancellationToken);
+
+        return Results.Ok(snapshot);
     });
 
 authorized.MapPut(
