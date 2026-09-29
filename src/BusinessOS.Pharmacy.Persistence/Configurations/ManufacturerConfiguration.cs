@@ -11,7 +11,7 @@ internal sealed class ManufacturerConfiguration : IEntityTypeConfiguration<Manuf
         builder.ToTable("manufacturers");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasMaxLength(36).ValueGeneratedNever();
-        builder.Property(x => x.Name).HasMaxLength(160).IsRequired();
+        builder.Property(x => x.Name).HasMaxLength(160).UseCollation("NOCASE").IsRequired();
         builder.Property(x => x.Country).HasMaxLength(100);
         builder.Property(x => x.IsActive).IsRequired();
         builder.Property(x => x.CreatedAt).IsRequired();
