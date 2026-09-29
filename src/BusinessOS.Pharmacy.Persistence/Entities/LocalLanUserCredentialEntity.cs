@@ -12,6 +12,7 @@ internal sealed class LocalLanUserCredentialEntity
     public string PasswordHashBase64 { get; set; } = string.Empty;
     public int PasswordIterations { get; set; }
     public DateTimeOffset LastOnlineVerifiedAt { get; set; }
+    public DateTimeOffset IdentityValidUntil { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public bool IsActive { get; set; } = true;
 }
