@@ -109,6 +109,12 @@ public sealed partial class MedicinesViewModel : ObservableObject
         {
             await LoadReferencesAsync();
             await SearchCoreAsync();
+
+            if (EditingId is null && string.IsNullOrWhiteSpace(BrandName))
+            {
+                MedicineCode = NextMedicineCode();
+            }
+
             StatusMessage = Translate(
                 $"{Medicines.Count} medicines loaded from the local database.",
                 $"{Medicines.Count} دوا از پایگاه‌داده محلی بارگذاری شد.",
@@ -267,19 +273,22 @@ public sealed partial class MedicinesViewModel : ObservableObject
                 IsActive,
                 Notes);
 
+            var savedMessage = EditingId is null
+                ? Translate("Medicine created.", "دوا ایجاد شد.", "درمل جوړ شو.")
+                : Translate("Medicine updated.", "دوا به‌روزرسانی شد.", "درمل تازه شو.");
+
             if (EditingId is null)
             {
                 await _catalog.CreateAsync(request);
-                StatusMessage = Translate("Medicine created.", "دوا ایجاد شد.", "درمل جوړ شو.");
             }
             else
             {
                 await _catalog.UpdateAsync(EditingId, request);
-                StatusMessage = Translate("Medicine updated.", "دوا به‌روزرسانی شد.", "درمل تازه شو.");
             }
 
             await SearchCoreAsync();
             NewMedicine();
+            StatusMessage = savedMessage;
         });
     }
 
