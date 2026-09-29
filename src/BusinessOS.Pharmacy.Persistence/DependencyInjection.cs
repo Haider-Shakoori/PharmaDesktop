@@ -10,6 +10,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddBusinessOSPersistence(this IServiceCollection services)
     {
+        services.AddSingleton<SqlitePragmaInterceptor>();
+
         services.AddDbContextFactory<PharmacyDbContext>((serviceProvider, options) =>
         {
             var paths = serviceProvider.GetRequiredService<IApplicationPaths>();
@@ -26,6 +28,7 @@ public static class DependencyInjection
             }.ToString();
 
             options.UseSqlite(connectionString);
+            options.AddInterceptors(serviceProvider.GetRequiredService<SqlitePragmaInterceptor>());
         });
 
         services.AddSingleton<ILocalDatabaseInitializer, LocalDatabaseInitializer>();
