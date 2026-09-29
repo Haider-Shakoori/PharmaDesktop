@@ -3,6 +3,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
 using BusinessOS.Pharmacy.Desktop.Activation;
 using BusinessOS.Pharmacy.Desktop.Authentication;
+using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Domain.Licensing;
 using BusinessOS.Pharmacy.Licensing;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,7 @@ public sealed class StartupCoordinator
     private readonly IServiceProvider _services;
     private readonly MainWindow _mainWindow;
     private readonly MainWindowViewModel _mainViewModel;
+    private readonly DashboardViewModel _dashboard;
     private bool _handlingLogout;
 
     public StartupCoordinator(
@@ -27,7 +29,8 @@ public sealed class StartupCoordinator
         ActivationViewModel activationViewModel,
         IServiceProvider services,
         MainWindow mainWindow,
-        MainWindowViewModel mainViewModel)
+        MainWindowViewModel mainViewModel,
+        DashboardViewModel dashboard)
     {
         _licenseService = licenseService;
         _localDatabase = localDatabase;
@@ -36,6 +39,7 @@ public sealed class StartupCoordinator
         _services = services;
         _mainWindow = mainWindow;
         _mainViewModel = mainViewModel;
+        _dashboard = dashboard;
         _mainViewModel.LogoutRequested += OnLogoutRequested;
     }
 
@@ -97,6 +101,7 @@ public sealed class StartupCoordinator
         }
 
         _mainViewModel.ApplyCurrentUser();
+        await _dashboard.LoadAsync();
         _mainWindow.Show();
     }
 
@@ -106,7 +111,7 @@ public sealed class StartupCoordinator
         return loginWindow.ShowDialog() == true;
     }
 
-    private void OnLogoutRequested(object? sender, EventArgs e)
+    private async void OnLogoutRequested(object? sender, EventArgs e)
     {
         if (_handlingLogout)
         {
@@ -125,6 +130,7 @@ public sealed class StartupCoordinator
             }
 
             _mainViewModel.ApplyCurrentUser();
+            await _dashboard.LoadAsync();
             _mainWindow.Show();
         }
         finally
