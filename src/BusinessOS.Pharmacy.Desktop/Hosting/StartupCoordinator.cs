@@ -1,5 +1,6 @@
 using System.Windows;
 using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
+using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
 using BusinessOS.Pharmacy.Desktop.Activation;
 using BusinessOS.Pharmacy.Desktop.Authentication;
@@ -14,6 +15,7 @@ public sealed class StartupCoordinator
 {
     private readonly ILicenseService _licenseService;
     private readonly ILocalDatabaseInitializer _localDatabase;
+    private readonly IMedicineSeedService _medicineSeeds;
     private readonly ActivationWindow _activationWindow;
     private readonly ActivationViewModel _activationViewModel;
     private readonly IServiceProvider _services;
@@ -25,6 +27,7 @@ public sealed class StartupCoordinator
     public StartupCoordinator(
         ILicenseService licenseService,
         ILocalDatabaseInitializer localDatabase,
+        IMedicineSeedService medicineSeeds,
         ActivationWindow activationWindow,
         ActivationViewModel activationViewModel,
         IServiceProvider services,
@@ -34,6 +37,7 @@ public sealed class StartupCoordinator
     {
         _licenseService = licenseService;
         _localDatabase = localDatabase;
+        _medicineSeeds = medicineSeeds;
         _activationWindow = activationWindow;
         _activationViewModel = activationViewModel;
         _services = services;
@@ -81,6 +85,19 @@ public sealed class StartupCoordinator
         try
         {
             await _localDatabase.InitializeAsync(entitlement.TenantId, cancellationToken);
+
+            try
+            {
+                await _medicineSeeds.SeedDefaultsOnceAsync(cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(
+                    $"Darmaltoon could not load the optional starter medicine data. You can still add medicines manually or import CSV.\n\n{exception.Message}",
+                    "Darmaltoon — Starter Data",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
         }
         catch (LocalDatabaseTenantMismatchException)
         {
