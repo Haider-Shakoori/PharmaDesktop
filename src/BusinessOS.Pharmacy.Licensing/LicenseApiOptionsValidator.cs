@@ -17,10 +17,14 @@ public sealed class LicenseApiOptionsValidator : IValidateOptions<LicenseApiOpti
             return ValidateOptionsResult.Fail("The licensing service must use HTTPS except for loopback development endpoints.");
         }
 
-        if (string.IsNullOrWhiteSpace(options.ActivationPath) ||
-            !options.ActivationPath.StartsWith("/api/", StringComparison.Ordinal))
+        if (!IsApiPath(options.ActivationPath))
         {
             return ValidateOptionsResult.Fail("BusinessOS:Licensing:ActivationPath must start with /api/.");
+        }
+
+        if (!IsApiPath(options.RefreshPath))
+        {
+            return ValidateOptionsResult.Fail("BusinessOS:Licensing:RefreshPath must start with /api/.");
         }
 
         if (options.TimeoutSeconds is < 3 or > 120)
@@ -30,4 +34,8 @@ public sealed class LicenseApiOptionsValidator : IValidateOptions<LicenseApiOpti
 
         return ValidateOptionsResult.Success;
     }
+
+    private static bool IsApiPath(string? value) =>
+        !string.IsNullOrWhiteSpace(value) &&
+        value.StartsWith("/api/", StringComparison.Ordinal);
 }
