@@ -36,6 +36,7 @@ public sealed record CachedLanUser(
     string PasswordHashBase64,
     int PasswordIterations,
     DateTimeOffset LastOnlineVerifiedAt,
+    DateTimeOffset IdentityValidUntil,
     bool IsActive);
 
 public sealed record LocalLanSessionPrincipal(
