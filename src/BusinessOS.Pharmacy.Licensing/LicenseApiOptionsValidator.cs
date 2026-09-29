@@ -17,19 +17,36 @@ public sealed class LicenseApiOptionsValidator : IValidateOptions<LicenseApiOpti
             return ValidateOptionsResult.Fail("The licensing service must use HTTPS except for loopback development endpoints.");
         }
 
-        if (!IsApiPath(options.ActivationPath))
+        if (!IsApiPath(options.ActivationPath) || !IsApiPath(options.RefreshPath))
         {
-            return ValidateOptionsResult.Fail("BusinessOS:Licensing:ActivationPath must start with /api/.");
-        }
-
-        if (!IsApiPath(options.RefreshPath))
-        {
-            return ValidateOptionsResult.Fail("BusinessOS:Licensing:RefreshPath must start with /api/.");
+            return ValidateOptionsResult.Fail("Licensing API paths must start with /api/.");
         }
 
         if (options.TimeoutSeconds is < 3 or > 120)
         {
             return ValidateOptionsResult.Fail("BusinessOS:Licensing:TimeoutSeconds must be between 3 and 120.");
+        }
+
+        if (options.ClockRollbackToleranceMinutes is < 1 or > 120)
+        {
+            return ValidateOptionsResult.Fail("BusinessOS:Licensing:ClockRollbackToleranceMinutes must be between 1 and 120.");
+        }
+
+        if (string.IsNullOrWhiteSpace(options.SigningPublicKey))
+        {
+            return ValidateOptionsResult.Fail("BusinessOS:Licensing:SigningPublicKey must be configured for signed entitlement verification.");
+        }
+
+        try
+        {
+            if (Convert.FromBase64String(options.SigningPublicKey).Length != 32)
+            {
+                return ValidateOptionsResult.Fail("BusinessOS:Licensing:SigningPublicKey must be a 32-byte Ed25519 public key.");
+            }
+        }
+        catch (FormatException)
+        {
+            return ValidateOptionsResult.Fail("BusinessOS:Licensing:SigningPublicKey must be valid Base64.");
         }
 
         return ValidateOptionsResult.Success;
