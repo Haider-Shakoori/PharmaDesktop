@@ -32,21 +32,19 @@ public sealed class LicenseApiOptionsValidator : IValidateOptions<LicenseApiOpti
             return ValidateOptionsResult.Fail("BusinessOS:Licensing:ClockRollbackToleranceMinutes must be between 1 and 120.");
         }
 
-        if (string.IsNullOrWhiteSpace(options.SigningPublicKey))
+        if (!string.IsNullOrWhiteSpace(options.SigningPublicKey))
         {
-            return ValidateOptionsResult.Fail("BusinessOS:Licensing:SigningPublicKey must be configured for signed entitlement verification.");
-        }
-
-        try
-        {
-            if (Convert.FromBase64String(options.SigningPublicKey).Length != 32)
+            try
             {
-                return ValidateOptionsResult.Fail("BusinessOS:Licensing:SigningPublicKey must be a 32-byte Ed25519 public key.");
+                if (Convert.FromBase64String(options.SigningPublicKey).Length != 32)
+                {
+                    return ValidateOptionsResult.Fail("BusinessOS:Licensing:SigningPublicKey must be a 32-byte Ed25519 public key.");
+                }
             }
-        }
-        catch (FormatException)
-        {
-            return ValidateOptionsResult.Fail("BusinessOS:Licensing:SigningPublicKey must be valid Base64.");
+            catch (FormatException)
+            {
+                return ValidateOptionsResult.Fail("BusinessOS:Licensing:SigningPublicKey must be valid Base64.");
+            }
         }
 
         return ValidateOptionsResult.Success;
