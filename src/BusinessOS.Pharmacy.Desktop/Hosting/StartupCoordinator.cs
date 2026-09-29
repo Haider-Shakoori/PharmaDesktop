@@ -1,6 +1,9 @@
+using System.Windows;
 using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
+using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
 using BusinessOS.Pharmacy.Desktop.Activation;
 using BusinessOS.Pharmacy.Desktop.Authentication;
+using BusinessOS.Pharmacy.Domain.Licensing;
 using BusinessOS.Pharmacy.Licensing;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,6 +12,7 @@ namespace BusinessOS.Pharmacy.Desktop.Hosting;
 public sealed class StartupCoordinator
 {
     private readonly ILicenseService _licenseService;
+    private readonly ILocalDatabaseInitializer _localDatabase;
     private readonly ActivationWindow _activationWindow;
     private readonly ActivationViewModel _activationViewModel;
     private readonly IServiceProvider _services;
@@ -18,6 +22,7 @@ public sealed class StartupCoordinator
 
     public StartupCoordinator(
         ILicenseService licenseService,
+        ILocalDatabaseInitializer localDatabase,
         ActivationWindow activationWindow,
         ActivationViewModel activationViewModel,
         IServiceProvider services,
@@ -25,6 +30,7 @@ public sealed class StartupCoordinator
         MainWindowViewModel mainViewModel)
     {
         _licenseService = licenseService;
+        _localDatabase = localDatabase;
         _activationWindow = activationWindow;
         _activationViewModel = activationViewModel;
         _services = services;
@@ -35,27 +41,51 @@ public sealed class StartupCoordinator
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        var showActivation = false;
+        EntitlementSnapshot? entitlement = null;
 
         try
         {
-            showActivation = await _licenseService.GetCachedEntitlementAsync(cancellationToken) is null;
+            entitlement = await _licenseService.GetCachedEntitlementAsync(cancellationToken);
         }
         catch (ClockRollbackDetectedException)
         {
             _activationViewModel.StatusMessage =
                 "Windows clock rollback was detected. Connect to the internet and verify the subscription.";
-            showActivation = true;
         }
         catch
         {
             _activationViewModel.StatusMessage =
                 "The saved activation could not be verified. Please activate or verify the subscription online.";
-            showActivation = true;
         }
 
-        if (showActivation && _activationWindow.ShowDialog() != true)
+        if (entitlement is null)
         {
+            if (_activationWindow.ShowDialog() != true)
+            {
+                System.Windows.Application.Current.Shutdown();
+                return;
+            }
+
+            entitlement = await _licenseService.GetCachedEntitlementAsync(cancellationToken);
+            if (entitlement is null)
+            {
+                System.Windows.Application.Current.Shutdown();
+                return;
+            }
+        }
+
+        try
+        {
+            await _localDatabase.InitializeAsync(entitlement.TenantId, cancellationToken);
+        }
+        catch (LocalDatabaseTenantMismatchException)
+        {
+            MessageBox.Show(
+                "This PC already contains local data for another pharmacy. BusinessOS Pharmacy will not overwrite or mix tenant data. Use the correct pharmacy activation or restore/reset the local database through the supported maintenance workflow.",
+                "BusinessOS Pharmacy — Local Database Protection",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+
             System.Windows.Application.Current.Shutdown();
             return;
         }

@@ -1,4 +1,6 @@
+using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
 using BusinessOS.Pharmacy.Application.Abstractions.Storage;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,11 +10,30 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddBusinessOSPersistence(this IServiceCollection services)
     {
+        services.AddSingleton<SqlitePragmaInterceptor>();
+
         services.AddDbContextFactory<PharmacyDbContext>((serviceProvider, options) =>
         {
             var paths = serviceProvider.GetRequiredService<IApplicationPaths>();
-            options.UseSqlite($"Data Source={paths.DatabasePath};Cache=Shared");
+            paths.EnsureCreated();
+
+            var connectionString = new SqliteConnectionStringBuilder
+            {
+                DataSource = paths.DatabasePath,
+                Mode = SqliteOpenMode.ReadWriteCreate,
+                Cache = SqliteCacheMode.Shared,
+                Pooling = true,
+                ForeignKeys = true,
+                DefaultTimeout = 5,
+            }.ToString();
+
+            options.UseSqlite(connectionString);
+            options.AddInterceptors(serviceProvider.GetRequiredService<SqlitePragmaInterceptor>());
         });
+
+        services.AddSingleton<ILocalDatabaseInitializer, LocalDatabaseInitializer>();
+        services.AddSingleton<ILocalSettingsStore, LocalSettingsStore>();
+        services.AddSingleton<ILocalSequenceService, LocalSequenceService>();
 
         return services;
     }
