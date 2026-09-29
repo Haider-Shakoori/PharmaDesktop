@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddSingleton<INetworkConfigurationStore, NetworkConfigurationStore>();
         services.AddSingleton<INetworkSecretStore, WindowsNetworkSecretStore>();
         services.AddSingleton<ILocalServerDiscovery, UdpLocalServerDiscovery>();
+        services.AddSingleton<ILocalServerServiceController, WindowsLocalServerServiceController>();
 
         return services;
     }
