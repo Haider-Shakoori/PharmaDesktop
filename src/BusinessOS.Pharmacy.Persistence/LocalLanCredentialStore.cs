@@ -70,6 +70,7 @@ public sealed class LocalLanCredentialStore : ILocalLanCredentialStore
         entity.PasswordHashBase64 = user.PasswordHashBase64;
         entity.PasswordIterations = user.PasswordIterations;
         entity.LastOnlineVerifiedAt = user.LastOnlineVerifiedAt;
+        entity.IdentityValidUntil = user.IdentityValidUntil;
         entity.UpdatedAt = _clock.UtcNow;
         entity.IsActive = user.IsActive;
 
@@ -209,6 +210,7 @@ public sealed class LocalLanCredentialStore : ILocalLanCredentialStore
             entity.PasswordHashBase64,
             entity.PasswordIterations,
             entity.LastOnlineVerifiedAt,
+            entity.IdentityValidUntil,
             entity.IsActive);
 
     private static LocalLanSessionPrincipal ToPrincipal(LocalLanSessionEntity entity) =>
