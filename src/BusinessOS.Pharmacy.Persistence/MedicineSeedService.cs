@@ -49,12 +49,12 @@ public sealed class MedicineSeedService : IMedicineSeedService
                 continue;
             }
 
-            context.Add(seed with
+            context.Add((seed with
             {
                 Id = Guid.CreateVersion7().ToString(),
                 CreatedAt = now,
                 UpdatedAt = now,
-            }.ToEntity());
+            }).ToEntity());
 
             added++;
         }
