@@ -29,7 +29,7 @@ public sealed partial class DashboardViewModel : ObservableObject
     private bool isLoading;
 
     [ObservableProperty]
-    private string pharmacyName = "BusinessOS Pharmacy";
+    private string pharmacyName = "Darmaltoon";
 
     [ObservableProperty]
     private string pharmacyCode = "—";
@@ -123,7 +123,7 @@ public sealed partial class DashboardViewModel : ObservableObject
             var tenant = activation?.Tenant;
 
             PharmacyName = string.IsNullOrWhiteSpace(tenant?.Name)
-                ? "BusinessOS Pharmacy"
+                ? "Darmaltoon"
                 : tenant.Name;
             PharmacyCode = !string.IsNullOrWhiteSpace(tenant?.Slug)
                 ? tenant.Slug
