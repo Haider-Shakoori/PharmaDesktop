@@ -17,9 +17,12 @@ public sealed class LicenseApiOptionsValidator : IValidateOptions<LicenseApiOpti
             return ValidateOptionsResult.Fail("The licensing service must use HTTPS except for loopback development endpoints.");
         }
 
-        if (!IsApiPath(options.ActivationPath) || !IsApiPath(options.RefreshPath))
+        if (!IsApiPath(options.ActivationPath) ||
+            !IsApiPath(options.RefreshPath) ||
+            !IsApiPath(options.SessionLoginPath) ||
+            !IsApiPath(options.SessionRefreshPath))
         {
-            return ValidateOptionsResult.Fail("Licensing API paths must start with /api/.");
+            return ValidateOptionsResult.Fail("Licensing and desktop session API paths must start with /api/.");
         }
 
         if (options.TimeoutSeconds is < 3 or > 120)
