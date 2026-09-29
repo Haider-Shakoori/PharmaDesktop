@@ -1,5 +1,7 @@
+using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Storage;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
+using BusinessOS.Pharmacy.Infrastructure.Networking;
 using BusinessOS.Pharmacy.Infrastructure.Storage;
 using BusinessOS.Pharmacy.Infrastructure.Time;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +20,9 @@ public static class DependencyInjection
         services.AddSingleton(applicationPaths);
         services.AddSingleton<IApplicationPaths>(applicationPaths);
         services.AddSingleton<IClock, SystemClock>();
+        services.AddSingleton<INetworkConfigurationStore, NetworkConfigurationStore>();
+        services.AddSingleton<INetworkSecretStore, WindowsNetworkSecretStore>();
+        services.AddSingleton<ILocalServerDiscovery, UdpLocalServerDiscovery>();
 
         return services;
     }
