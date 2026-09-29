@@ -16,7 +16,7 @@ public sealed partial class ActivationViewModel : ObservableObject
     private string licenseKey = string.Empty;
 
     [ObservableProperty]
-    private string statusMessage = "Enter the license key created by the BusinessOS Pharmacy website.";
+    private string statusMessage = "Enter the license key created by the Darmaltoon website.";
 
     [ObservableProperty]
     private bool isBusy;
