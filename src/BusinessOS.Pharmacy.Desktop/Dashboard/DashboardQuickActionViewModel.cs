@@ -4,4 +4,5 @@ public sealed record DashboardQuickActionViewModel(
     string Key,
     string Label,
     string Glyph,
-    string Permission);
+    string Permission,
+    bool IsAvailable);
