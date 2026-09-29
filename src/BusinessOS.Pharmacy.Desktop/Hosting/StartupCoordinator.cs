@@ -1,6 +1,7 @@
 using System.Windows;
 using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
 using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
+using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
 using BusinessOS.Pharmacy.Desktop.Activation;
 using BusinessOS.Pharmacy.Desktop.Authentication;
@@ -13,34 +14,22 @@ namespace BusinessOS.Pharmacy.Desktop.Hosting;
 
 public sealed class StartupCoordinator
 {
-    private readonly ILicenseService _licenseService;
-    private readonly ILocalDatabaseInitializer _localDatabase;
-    private readonly IMedicineSeedService _medicineSeeds;
-    private readonly ActivationWindow _activationWindow;
-    private readonly ActivationViewModel _activationViewModel;
     private readonly IServiceProvider _services;
+    private readonly NetworkConfiguration _networkConfiguration;
     private readonly MainWindow _mainWindow;
     private readonly MainWindowViewModel _mainViewModel;
     private readonly DashboardViewModel _dashboard;
     private bool _handlingLogout;
 
     public StartupCoordinator(
-        ILicenseService licenseService,
-        ILocalDatabaseInitializer localDatabase,
-        IMedicineSeedService medicineSeeds,
-        ActivationWindow activationWindow,
-        ActivationViewModel activationViewModel,
         IServiceProvider services,
+        NetworkConfiguration networkConfiguration,
         MainWindow mainWindow,
         MainWindowViewModel mainViewModel,
         DashboardViewModel dashboard)
     {
-        _licenseService = licenseService;
-        _localDatabase = localDatabase;
-        _medicineSeeds = medicineSeeds;
-        _activationWindow = activationWindow;
-        _activationViewModel = activationViewModel;
         _services = services;
+        _networkConfiguration = networkConfiguration;
         _mainWindow = mainWindow;
         _mainViewModel = mainViewModel;
         _dashboard = dashboard;
@@ -49,32 +38,77 @@ public sealed class StartupCoordinator
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
+        if (_networkConfiguration.Mode == DeploymentMode.Client)
+        {
+            await StartClientAsync(cancellationToken);
+            return;
+        }
+
+        await StartDatabaseOwnerAsync(cancellationToken);
+    }
+
+    private async Task StartClientAsync(CancellationToken cancellationToken)
+    {
+        if (!_networkConfiguration.IsConfigured ||
+            string.IsNullOrWhiteSpace(_networkConfiguration.ServerHost) ||
+            string.IsNullOrWhiteSpace(_networkConfiguration.ServerId) ||
+            string.IsNullOrWhiteSpace(_networkConfiguration.TerminalId))
+        {
+            MessageBox.Show(
+                "This Client Terminal has not been paired with a Main Pharmacy Server. Open the deployment setup and pair this computer first.",
+                "Darmaltoon — Client Terminal Setup",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+
+            System.Windows.Application.Current.Shutdown();
+            return;
+        }
+
+        if (!ShowLogin())
+        {
+            System.Windows.Application.Current.Shutdown();
+            return;
+        }
+
+        _mainViewModel.ApplyCurrentUser();
+        await _dashboard.LoadAsync();
+        _mainWindow.Show();
+    }
+
+    private async Task StartDatabaseOwnerAsync(CancellationToken cancellationToken)
+    {
+        var licenseService = _services.GetRequiredService<ILicenseService>();
+        var localDatabase = _services.GetRequiredService<ILocalDatabaseInitializer>();
+        var medicineSeeds = _services.GetRequiredService<IMedicineSeedService>();
+        var activationWindow = _services.GetRequiredService<ActivationWindow>();
+        var activationViewModel = _services.GetRequiredService<ActivationViewModel>();
+
         EntitlementSnapshot? entitlement = null;
 
         try
         {
-            entitlement = await _licenseService.GetCachedEntitlementAsync(cancellationToken);
+            entitlement = await licenseService.GetCachedEntitlementAsync(cancellationToken);
         }
         catch (ClockRollbackDetectedException)
         {
-            _activationViewModel.StatusMessage =
+            activationViewModel.StatusMessage =
                 "Windows clock rollback was detected. Connect to the internet and verify the subscription.";
         }
         catch
         {
-            _activationViewModel.StatusMessage =
+            activationViewModel.StatusMessage =
                 "The saved activation could not be verified. Please activate or verify the subscription online.";
         }
 
         if (entitlement is null)
         {
-            if (_activationWindow.ShowDialog() != true)
+            if (activationWindow.ShowDialog() != true)
             {
                 System.Windows.Application.Current.Shutdown();
                 return;
             }
 
-            entitlement = await _licenseService.GetCachedEntitlementAsync(cancellationToken);
+            entitlement = await licenseService.GetCachedEntitlementAsync(cancellationToken);
             if (entitlement is null)
             {
                 System.Windows.Application.Current.Shutdown();
@@ -84,11 +118,11 @@ public sealed class StartupCoordinator
 
         try
         {
-            await _localDatabase.InitializeAsync(entitlement.TenantId, cancellationToken);
+            await localDatabase.InitializeAsync(entitlement.TenantId, cancellationToken);
 
             try
             {
-                await _medicineSeeds.SeedDefaultsOnceAsync(cancellationToken);
+                await medicineSeeds.SeedDefaultsOnceAsync(cancellationToken);
             }
             catch (Exception exception)
             {
@@ -109,6 +143,15 @@ public sealed class StartupCoordinator
 
             System.Windows.Application.Current.Shutdown();
             return;
+        }
+
+        if (_networkConfiguration.Mode == DeploymentMode.Server)
+        {
+            var terminals = _services.GetRequiredService<ILocalTerminalService>();
+            await terminals.GetOrCreateServerIdentityAsync(
+                entitlement.TenantId,
+                _networkConfiguration.ServerName,
+                cancellationToken);
         }
 
         if (!ShowLogin())
