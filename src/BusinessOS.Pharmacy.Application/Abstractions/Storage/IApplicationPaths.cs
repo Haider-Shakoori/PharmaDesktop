@@ -6,6 +6,9 @@ public interface IApplicationPaths
     string DatabasePath { get; }
     string BackupsDirectory { get; }
     string LogsDirectory { get; }
+    string LicensingDirectory { get; }
+    string InstallationIdPath { get; }
+    string ActivationStatePath { get; }
 
     void EnsureCreated();
 }
