@@ -21,6 +21,7 @@ public sealed class ApplicationPaths : IApplicationPaths
         LicensingDirectory = Path.Combine(RootDirectory, "licensing");
         InstallationIdPath = Path.Combine(LicensingDirectory, "installation.id");
         ActivationStatePath = Path.Combine(LicensingDirectory, "activation.bin");
+        UserSessionStatePath = Path.Combine(LicensingDirectory, "user-session.bin");
     }
 
     public string RootDirectory { get; }
@@ -30,6 +31,7 @@ public sealed class ApplicationPaths : IApplicationPaths
     public string LicensingDirectory { get; }
     public string InstallationIdPath { get; }
     public string ActivationStatePath { get; }
+    public string UserSessionStatePath { get; }
 
     public void EnsureCreated()
     {
