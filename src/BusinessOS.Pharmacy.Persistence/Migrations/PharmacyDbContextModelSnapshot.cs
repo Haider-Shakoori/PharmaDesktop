@@ -141,6 +141,10 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
                         .HasColumnName("email")
                         .UseCollation("NOCASE");
 
+                    b.Property<DateTimeOffset>("IdentityValidUntil")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("identity_valid_until");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER")
                         .HasColumnName("is_active");
