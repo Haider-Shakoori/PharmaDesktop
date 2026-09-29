@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
+using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.Desktop.Navigation;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -24,11 +25,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(
         IClock clock,
         IUserSessionService sessions,
-        IPermissionAuthorizer permissions)
+        IPermissionAuthorizer permissions,
+        DashboardViewModel dashboard)
     {
         _clock = clock;
         _sessions = sessions;
         _permissions = permissions;
+        Dashboard = dashboard;
+        Dashboard.SetLanguage(SelectedLanguage);
         LogoutCommand = new AsyncRelayCommand(LogoutAsync);
         RefreshNavigation();
     }
@@ -36,11 +40,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public event EventHandler? LogoutRequested;
 
     public IAsyncRelayCommand LogoutCommand { get; }
+    public DashboardViewModel Dashboard { get; }
 
     public string ApplicationName => "BusinessOS Pharmacy";
     public string ParentBrand => "BusinessOS.af";
     public string PageTitle => Translate("Dashboard", "داشبورد", "ډشبورډ");
-    public string PageSubtitle => Translate("Native Windows pharmacy workspace", "محیط کاری ویندوز برای دواخانه", "د وینډوز درملتون کاري چاپېریال");
+    public string PageSubtitle => Translate(
+        "Local-first pharmacy operations",
+        "عملیات محلی دواخانه",
+        "د درملتون محلي عملیات");
     public string OnlineText => Translate("Licensed", "فعال", "فعال");
     public string LastVerifiedText => $"{Translate("Ready", "آماده", "چمتو")} • {_clock.UtcNow:yyyy-MM-dd HH:mm} UTC";
     public string UserDisplayName => _sessions.Current?.Name ?? Translate("No user", "بدون کاربر", "کارن نشته");
@@ -56,12 +64,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(UserDisplayName));
         OnPropertyChanged(nameof(UserRoleText));
         OnPropertyChanged(nameof(PermissionCount));
+        Dashboard.SetLanguage(SelectedLanguage);
         RefreshNavigation();
     }
 
     partial void OnSelectedLanguageChanged(UiLanguage value)
     {
         LayoutDirection = value.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+        Dashboard.SetLanguage(value);
         RefreshNavigation();
         OnPropertyChanged(nameof(PageTitle));
         OnPropertyChanged(nameof(PageSubtitle));
