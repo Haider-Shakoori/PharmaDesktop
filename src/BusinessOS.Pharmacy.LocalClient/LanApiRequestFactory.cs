@@ -2,7 +2,7 @@ using System.Net.Http.Headers;
 
 namespace BusinessOS.Pharmacy.LocalClient;
 
-internal sealed class LanApiRequestFactory(
+public sealed class LanApiRequestFactory(
     PinnedLocalServerTransport transport,
     LanClientSessionState sessionState)
 {
