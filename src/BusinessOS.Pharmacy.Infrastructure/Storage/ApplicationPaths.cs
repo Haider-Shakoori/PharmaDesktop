@@ -18,20 +18,24 @@ public sealed class ApplicationPaths : IApplicationPaths
         DatabasePath = Path.Combine(RootDirectory, "pharmacy.db");
         BackupsDirectory = Path.Combine(RootDirectory, "backups");
         LogsDirectory = Path.Combine(RootDirectory, "logs");
+        LicensingDirectory = Path.Combine(RootDirectory, "licensing");
+        InstallationIdPath = Path.Combine(LicensingDirectory, "installation.id");
+        ActivationStatePath = Path.Combine(LicensingDirectory, "activation.bin");
     }
 
     public string RootDirectory { get; }
-
     public string DatabasePath { get; }
-
     public string BackupsDirectory { get; }
-
     public string LogsDirectory { get; }
+    public string LicensingDirectory { get; }
+    public string InstallationIdPath { get; }
+    public string ActivationStatePath { get; }
 
     public void EnsureCreated()
     {
         Directory.CreateDirectory(RootDirectory);
         Directory.CreateDirectory(BackupsDirectory);
         Directory.CreateDirectory(LogsDirectory);
+        Directory.CreateDirectory(LicensingDirectory);
     }
 }
