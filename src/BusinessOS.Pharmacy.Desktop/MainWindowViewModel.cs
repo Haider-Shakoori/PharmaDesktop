@@ -42,7 +42,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public IAsyncRelayCommand LogoutCommand { get; }
     public DashboardViewModel Dashboard { get; }
 
-    public string ApplicationName => "BusinessOS Pharmacy";
+    public string ApplicationName => "Darmaltoon";
     public string ParentBrand => "BusinessOS.af";
     public string PageTitle => Translate("Dashboard", "داشبورد", "ډشبورډ");
     public string PageSubtitle => Translate(
