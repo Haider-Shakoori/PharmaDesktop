@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddSingleton<IMedicineCsvService, MedicineCsvService>();
         services.AddSingleton<IMedicineSeedService, MedicineSeedService>();
         services.AddSingleton<ILocalTerminalService, LocalTerminalService>();
+        services.AddSingleton<ILocalLanCredentialStore, LocalLanCredentialStore>();
 
         return services;
     }
