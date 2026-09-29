@@ -45,4 +45,19 @@ public sealed class LicenseApiOptionsValidatorTests
 
         Assert.True(result.Failed);
     }
+
+    [Fact]
+    public void InvalidRefreshPath_Fails()
+    {
+        var result = _validator.Validate(null, new LicenseApiOptions
+        {
+            BaseUrl = "https://pharmacy.businessos.af",
+            ActivationPath = "/api/v1/license/activate",
+            RefreshPath = "/desktop/license/refresh",
+            TimeoutSeconds = 15,
+        });
+
+        Assert.True(result.Failed);
+    }
+
 }
