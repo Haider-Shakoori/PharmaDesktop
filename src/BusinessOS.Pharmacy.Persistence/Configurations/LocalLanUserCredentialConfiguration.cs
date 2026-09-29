@@ -20,6 +20,7 @@ internal sealed class LocalLanUserCredentialConfiguration : IEntityTypeConfigura
         builder.Property(x => x.PasswordHashBase64).HasColumnName("password_hash_base64").HasMaxLength(256).IsRequired();
         builder.Property(x => x.PasswordIterations).HasColumnName("password_iterations").IsRequired();
         builder.Property(x => x.LastOnlineVerifiedAt).HasColumnName("last_online_verified_at").IsRequired();
+        builder.Property(x => x.IdentityValidUntil).HasColumnName("identity_valid_until").IsRequired();
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at").IsRequired();
         builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
         builder.HasIndex(x => x.Email).IsUnique();
