@@ -8,5 +8,7 @@ public sealed class LicenseApiOptions
 
     public string ActivationPath { get; init; } = "/api/v1/license/activate";
 
+    public string RefreshPath { get; init; } = "/api/v1/desktop/license/refresh";
+
     public int TimeoutSeconds { get; init; } = 15;
 }

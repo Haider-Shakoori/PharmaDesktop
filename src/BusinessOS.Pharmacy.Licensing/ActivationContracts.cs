@@ -8,7 +8,18 @@ public sealed record LicenseActivationRequest(
     [property: JsonPropertyName("device_id")] string DeviceId,
     [property: JsonPropertyName("device_name")] string? DeviceName,
     [property: JsonPropertyName("app_version")] string? AppVersion,
+    [property: JsonPropertyName("device_model")] string? DeviceModel = null,
+    [property: JsonPropertyName("os_version")] string? OsVersion = null,
+    [property: JsonPropertyName("build_number")] string? BuildNumber = null,
     [property: JsonPropertyName("platform")] string Platform = "windows");
+
+public sealed record LicenseRefreshRequest(
+    [property: JsonPropertyName("device_id")] string DeviceId,
+    [property: JsonPropertyName("device_name")] string? DeviceName,
+    [property: JsonPropertyName("app_version")] string? AppVersion,
+    [property: JsonPropertyName("device_model")] string? DeviceModel = null,
+    [property: JsonPropertyName("os_version")] string? OsVersion = null,
+    [property: JsonPropertyName("build_number")] string? BuildNumber = null);
 
 public sealed record LicenseActivationEnvelope(
     [property: JsonPropertyName("data")] LicenseActivationData Data,

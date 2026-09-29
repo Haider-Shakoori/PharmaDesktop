@@ -18,6 +18,8 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(LicenseApiOptions.SectionName))
             .ValidateOnStart();
 
+        services.AddTransient<ILicenseActivationClient, LicenseActivationClient>();
+
         services.AddHttpClient(HttpClientName, (serviceProvider, client) =>
         {
             var options = serviceProvider.GetRequiredService<IOptions<LicenseApiOptions>>().Value;
