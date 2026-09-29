@@ -14,6 +14,10 @@ public sealed record NetworkConfiguration
     public string? ServerHost { get; init; }
     public string? ServerId { get; init; }
     public string? ServerCertificateSha256 { get; init; }
+    public string? TenantId { get; init; }
+    public string? TerminalId { get; init; }
+    public string? TerminalName { get; init; }
+    public string? TerminalRole { get; init; }
 
     public bool IsConfigured { get; init; }
 
@@ -44,6 +48,12 @@ public sealed record NetworkConfiguration
             if (string.IsNullOrWhiteSpace(ServerCertificateSha256))
             {
                 throw new InvalidOperationException("A Client Terminal must remember the paired server certificate.");
+            }
+
+            if (string.IsNullOrWhiteSpace(TenantId) ||
+                string.IsNullOrWhiteSpace(TerminalId))
+            {
+                throw new InvalidOperationException("A configured Client Terminal must remember its pharmacy tenant and terminal identity.");
             }
         }
     }
