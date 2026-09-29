@@ -2,11 +2,21 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:dashboard="clr-namespace:BusinessOS.Pharmacy.Desktop.Dashboard"
+        xmlns:medicines="clr-namespace:BusinessOS.Pharmacy.Desktop.Medicines"
         Title="Darmaltoon"
-        Width="1280" Height="760"
-        MinWidth="980" MinHeight="620"
+        Width="1360" Height="820"
+        MinWidth="1080" MinHeight="680"
         Background="{DynamicResource AppBackgroundBrush}"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type dashboard:DashboardViewModel}">
+            <dashboard:DashboardView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type medicines:MedicinesViewModel}">
+            <medicines:MedicinesView/>
+        </DataTemplate>
+    </Window.Resources>
+
     <Grid FlowDirection="{Binding LayoutDirection}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="230" />
@@ -16,13 +26,16 @@
         <Border Grid.Column="0" Background="{DynamicResource SidebarBrush}">
             <DockPanel Margin="18,20">
                 <StackPanel DockPanel.Dock="Top" Margin="4,0,4,22">
-                    <TextBlock Text="{Binding ApplicationName}" Foreground="White" FontSize="20" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding ParentBrand}" Foreground="#94A3B8" FontSize="11" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding ApplicationName}" Foreground="White" FontSize="22" FontWeight="SemiBold" />
+                    <TextBlock Text="darmaltoon.com" Foreground="#93C5FD" FontSize="11" Margin="0,3,0,0" />
+                    <TextBlock Text="{Binding ParentBrand}" Foreground="#94A3B8" FontSize="10" Margin="0,2,0,0" />
                 </StackPanel>
                 <ItemsControl ItemsSource="{Binding NavigationItems}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button Style="{StaticResource SidebarNavigationButton}">
+                            <Button Style="{StaticResource SidebarNavigationButton}"
+                                    Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding Key}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="28" />
@@ -71,8 +84,7 @@
                 </Grid>
             </Border>
 
-            <dashboard:DashboardView Grid.Row="1"
-                                     DataContext="{Binding Dashboard}" />
+            <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" />
         </Grid>
     </Grid>
 </Window>
