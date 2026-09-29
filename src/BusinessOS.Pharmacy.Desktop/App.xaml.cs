@@ -24,9 +24,9 @@ public partial class App : System.Windows.Application
             .GetRequiredService<GlobalExceptionHandler>()
             .Attach(this);
 
-        _host.Services
-            .GetRequiredService<MainWindow>()
-            .Show();
+        await _host.Services
+            .GetRequiredService<StartupCoordinator>()
+            .StartAsync();
 
         base.OnStartup(e);
     }
