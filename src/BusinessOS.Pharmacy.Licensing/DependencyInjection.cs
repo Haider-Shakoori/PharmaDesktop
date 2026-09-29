@@ -1,3 +1,4 @@
+using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,10 +21,18 @@ public static class DependencyInjection
             .ValidateOnStart();
 
         services.AddTransient<ILicenseActivationClient, LicenseActivationClient>();
+        services.AddTransient<IDesktopSessionClient, DesktopSessionClient>();
+
         services.AddSingleton<ISignedLeaseVerifier, SignedLeaseVerifier>();
+        services.AddSingleton<ISignedDesktopSessionVerifier, SignedDesktopSessionVerifier>();
         services.AddSingleton<IInstallationIdentityProvider, InstallationIdentityProvider>();
         services.AddSingleton<IActivationStore, WindowsActivationStore>();
+        services.AddSingleton<IUserSessionStore, WindowsUserSessionStore>();
+        services.AddSingleton<IOfflinePasswordVerifier, OfflinePasswordVerifier>();
+
         services.AddSingleton<ILicenseService, LicenseService>();
+        services.AddSingleton<IUserSessionService, PharmacyUserSessionService>();
+        services.AddSingleton<IPermissionAuthorizer, PermissionAuthorizer>();
 
         services.AddHttpClient(HttpClientName, (serviceProvider, client) =>
         {

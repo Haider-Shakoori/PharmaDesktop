@@ -9,6 +9,7 @@ public interface IApplicationPaths
     string LicensingDirectory { get; }
     string InstallationIdPath { get; }
     string ActivationStatePath { get; }
+    string UserSessionStatePath { get; }
 
     void EnsureCreated();
 }
