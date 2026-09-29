@@ -3,6 +3,7 @@ using System.Text.Json;
 using BusinessOS.Pharmacy.Licensing;
 using Microsoft.Extensions.Options;
 using NSec.Cryptography;
+using Xunit;
 
 namespace BusinessOS.Pharmacy.UnitTests.Licensing;
 
