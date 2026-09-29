@@ -18,7 +18,7 @@ public sealed class NetworkFileLogger
 
         var safeEvent = Sanitize(eventName, 120);
         var safeMessage = Sanitize(message, 800);
-        var line = $"{DateTimeOffset.UtcNow:O}	{safeEvent}	{safeMessage}{Environment.NewLine}";
+        var line = $"{DateTimeOffset.UtcNow:O}\t{safeEvent}\t{safeMessage}{Environment.NewLine}";
 
         await _gate.WaitAsync(cancellationToken);
         try
@@ -37,10 +37,9 @@ public sealed class NetworkFileLogger
     private static string Sanitize(string value, int maxLength)
     {
         value = value
-            .Replace('', ' ')
-            .Replace('
-', ' ')
-            .Replace('	', ' ');
+            .Replace("\r", " ")
+            .Replace("\n", " ")
+            .Replace("\t", " ");
 
         return value.Length <= maxLength
             ? value
