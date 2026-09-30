@@ -257,7 +257,7 @@ public sealed partial class DashboardViewModel : ObservableObject
         AddAction("medicines", Translate("Add medicine", "افزودن دوا", "درمل زیات کړئ"), "✚", "medicines.manage", true);
         AddAction("customers", Translate("Customers", "مشتریان", "پېرودونکي"), "♙", "customers.manage", false);
         AddAction("purchases", Translate("New purchase", "خرید جدید", "نوی پېرود"), "↓", "purchases.manage", false);
-        AddAction("inventory", Translate("Inventory", "موجودی", "زېرمه"), "▤", "inventory.manage", false);
+        AddAction("inventory", Translate("Inventory", "موجودی", "زېرمه"), "▤", "inventory.manage", true);
         AddAction("reports", Translate("Reports", "گزارش‌ها", "راپورونه"), "▥", "reports.view", false);
     }
 
