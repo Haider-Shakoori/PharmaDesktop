@@ -3,6 +3,7 @@ using System.Globalization;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Dashboard;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
+using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.Licensing;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -16,7 +17,8 @@ public sealed partial class DashboardViewModel : ObservableObject
     private const int DefaultNearExpiryDays = 90;
 
     private readonly ILocalDashboardQueryService _dashboardQueries;
-    private readonly IActivationStore _activationStore;
+    private readonly IActivationStore? _activationStore;
+    private readonly INetworkConfigurationStore _networkConfiguration;
     private readonly IUserSessionService _sessions;
     private readonly IPermissionAuthorizer _permissions;
     private readonly IClock _clock;
@@ -57,12 +59,14 @@ public sealed partial class DashboardViewModel : ObservableObject
 
     public DashboardViewModel(
         ILocalDashboardQueryService dashboardQueries,
-        IActivationStore activationStore,
+        INetworkConfigurationStore networkConfiguration,
         IUserSessionService sessions,
         IPermissionAuthorizer permissions,
-        IClock clock)
+        IClock clock,
+        IActivationStore? activationStore = null)
     {
         _dashboardQueries = dashboardQueries;
+        _networkConfiguration = networkConfiguration;
         _activationStore = activationStore;
         _sessions = sessions;
         _permissions = permissions;
@@ -129,16 +133,23 @@ public sealed partial class DashboardViewModel : ObservableObject
                 return;
             }
 
-            var activation = await _activationStore.LoadAsync();
+            var activation = _activationStore is null
+                ? null
+                : await _activationStore.LoadAsync();
             var tenant = activation?.Tenant;
+            var network = await _networkConfiguration.LoadAsync();
 
             PharmacyName = string.IsNullOrWhiteSpace(tenant?.Name)
-                ? "Darmaltoon"
+                ? (network.Mode == DeploymentMode.Client ? "Darmaltoon" : "Darmaltoon")
                 : tenant.Name;
             PharmacyCode = !string.IsNullOrWhiteSpace(tenant?.Slug)
                 ? tenant.Slug
-                : activation?.Entitlement.TenantId ?? "—";
-            SubscriptionLabel = HumanizeHealth(activation?.SubscriptionHealth);
+                : activation?.Entitlement.TenantId
+                  ?? network.TenantId
+                  ?? "—";
+            SubscriptionLabel = network.Mode == DeploymentMode.Client
+                ? Translate("Main Server", "سرور اصلی", "اصلي سرور")
+                : HumanizeHealth(activation?.SubscriptionHealth);
             SignedInUser = _sessions.Current?.Name ?? "—";
             _currency = string.IsNullOrWhiteSpace(tenant?.Currency) ? "AFN" : tenant.Currency;
 

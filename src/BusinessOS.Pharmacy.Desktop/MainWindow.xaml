@@ -11,6 +11,7 @@
         xmlns:pos="clr-namespace:BusinessOS.Pharmacy.Desktop.Pos"
         xmlns:returns="clr-namespace:BusinessOS.Pharmacy.Desktop.Returns"
         xmlns:reports="clr-namespace:BusinessOS.Pharmacy.Desktop.Reports"
+        xmlns:networking="clr-namespace:BusinessOS.Pharmacy.Desktop.Networking"
         Title="Darmaltoon"
         Width="1360" Height="820"
         MinWidth="1080" MinHeight="680"
@@ -34,6 +35,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type reports:ReportsViewModel}">
             <reports:ReportsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type networking:NetworkSettingsViewModel}">
+            <networking:NetworkSettingsView/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type customers:CustomersViewModel}">
             <customers:CustomersView/>
@@ -105,8 +109,19 @@
                             <TextBlock Text="{Binding UserDisplayName}" FontWeight="SemiBold" HorizontalAlignment="Right" />
                             <TextBlock Text="{Binding UserRoleText}" Style="{StaticResource MutedText}" HorizontalAlignment="Right" />
                         </StackPanel>
-                        <Border Background="#ECFDF5" CornerRadius="16" Padding="10,5" Margin="0,0,12,0">
+                        <Border Background="#ECFDF5" CornerRadius="16" Padding="10,5" Margin="0,0,8,0">
                             <TextBlock Text="{Binding OnlineText}" Foreground="#047857" FontSize="11" FontWeight="SemiBold" />
+                        </Border>
+                        <Border Background="{DynamicResource AppBackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="16"
+                                Padding="10,5"
+                                Margin="0,0,12,0">
+                            <TextBlock Text="{Binding LanStatusText}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       FontSize="11"
+                                       FontWeight="SemiBold" />
                         </Border>
                         <ComboBox Width="120" ItemsSource="{Binding Languages}"
                                   SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
