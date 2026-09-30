@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BusinessOS.Pharmacy.Persistence;
 
-public sealed class DailyClosingService:IDailyClosingService
+internal sealed class DailyClosingService:IDailyClosingService
 {
  private readonly IDbContextFactory<PharmacyDbContext> _factory;private readonly IPermissionAuthorizer _permissions;private readonly IUserSessionService _sessions;private readonly IClock _clock;private readonly AccountingProvisioner _accounts;private readonly LedgerPostingService _ledger;
  public DailyClosingService(IDbContextFactory<PharmacyDbContext> factory,IPermissionAuthorizer permissions,IUserSessionService sessions,IClock clock,AccountingProvisioner accounts,LedgerPostingService ledger){_factory=factory;_permissions=permissions;_sessions=sessions;_clock=clock;_accounts=accounts;_ledger=ledger;}
@@ -24,7 +24,7 @@ public sealed class DailyClosingService:IDailyClosingService
   _permissions.Demand("daily_closing.perform");var d=date??BusinessDate();await using var c=await _factory.CreateDbContextAsync(ct);
   await RequireLocation(c,locationId,ct);var snapshot=await Snapshot(c,locationId,d,ct);
   var closing=await ClosingQuery(c).AsNoTracking().SingleOrDefaultAsync(x=>x.StockLocationId==locationId&&x.BusinessDate==d,ct);
-  var user=_sessions.Current?.UserId;var shifts=await c.Set<CashierShiftEntity>().AsNoTracking().Where(x=>x.StockLocationId==locationId&&x.BusinessDate==d).OrderByDescending(x=>x.OpenedAt).ToListAsync(ct);
+  var user=_sessions.Current?.UserId;var shifts=await c.Set<CashierShiftEntity>().AsNoTracking().Where(x=>x.StockLocationId==locationId&&x.BusinessDate==d).OrderByDescending(x=>x.Id).ToListAsync(ct);
   return new(snapshot,closing is null?null:Map(closing),shifts.FirstOrDefault(x=>x.UserId==user&&x.Status=="open") is { } mine?Map(mine):null,shifts.Select(Map).ToList());
  }
 
@@ -42,9 +42,10 @@ public sealed class DailyClosingService:IDailyClosingService
   _permissions.Demand("daily_closing.perform");if(countedCash<0)throw new ArgumentOutOfRangeException(nameof(countedCash));notes=N(notes,1000);var user=_sessions.Current?.UserId??throw new InvalidOperationException("A pharmacy user must be signed in.");
   await using var c=await _factory.CreateDbContextAsync(ct);await using var tx=await InventoryWriteTransaction.BeginAsync(c,ct);var row=await c.Set<CashierShiftEntity>().SingleOrDefaultAsync(x=>x.Id==shiftId,ct)??throw new InvalidOperationException("Shift was not found.");
   if(row.Status!="open")throw new InvalidOperationException("This shift is already closed.");if(row.UserId!=user&&!_permissions.HasPermission("daily_closing.approve"))throw new UnauthorizedAccessException();
-  var cashRows=await c.Set<SalePaymentEntity>().Where(p=>p.Method=="cash"&&p.PaidAt>=row.OpenedAt&&p.Sale.StockLocationId==row.StockLocationId&&p.Sale.CreatedBy==row.UserId&&p.Sale.BusinessDate==row.BusinessDate&&p.Sale.Status=="completed").Select(p=>p.Amount).ToListAsync(ct);
-  var changeRows=await c.Set<SaleEntity>().Where(s=>s.StockLocationId==row.StockLocationId&&s.CreatedBy==row.UserId&&s.BusinessDate==row.BusinessDate&&s.Status=="completed"&&s.CompletedAt>=row.OpenedAt).Select(s=>s.ChangeTotal).ToListAsync(ct);
-  var expected=S(row.OpeningCash+cashRows.Sum()-changeRows.Sum());var counted=S(countedCash);row.Status="closed";row.ExpectedCash=expected;row.CountedCash=counted;row.Variance=S(counted-expected);row.ClosedAt=_clock.UtcNow;row.ClosingNotes=notes;row.UpdatedAt=_clock.UtcNow;await c.SaveChangesAsync(ct);await tx.CommitAsync(ct);return Map(row);
+  var cashRows=await c.Set<SalePaymentEntity>().AsNoTracking().Where(p=>p.Method=="cash"&&p.Sale.StockLocationId==row.StockLocationId&&p.Sale.CreatedBy==row.UserId&&p.Sale.BusinessDate==row.BusinessDate&&p.Sale.Status=="completed").Select(p=>new{p.Amount,p.PaidAt}).ToListAsync(ct);
+  var changeRows=await c.Set<SaleEntity>().AsNoTracking().Where(s=>s.StockLocationId==row.StockLocationId&&s.CreatedBy==row.UserId&&s.BusinessDate==row.BusinessDate&&s.Status=="completed").Select(s=>new{s.ChangeTotal,s.CompletedAt}).ToListAsync(ct);
+  var cashTotal=cashRows.Where(x=>x.PaidAt>=row.OpenedAt).Sum(x=>x.Amount);var changeTotal=changeRows.Where(x=>x.CompletedAt is not null&&x.CompletedAt.Value>=row.OpenedAt).Sum(x=>x.ChangeTotal);
+  var expected=S(row.OpeningCash+cashTotal-changeTotal);var counted=S(countedCash);row.Status="closed";row.ExpectedCash=expected;row.CountedCash=counted;row.Variance=S(counted-expected);row.ClosedAt=_clock.UtcNow;row.ClosingNotes=notes;row.UpdatedAt=_clock.UtcNow;await c.SaveChangesAsync(ct);await tx.CommitAsync(ct);return Map(row);
  }
 
  public async Task<DailyClosingItem> FinalizeAsync(string locationId,decimal? countedCash,string? notes,CancellationToken ct=default)
