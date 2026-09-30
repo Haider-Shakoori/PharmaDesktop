@@ -51,8 +51,7 @@ public sealed class StockAllocationService : IStockAllocationService
             .Where(x =>
                 x.MovementType == "sale" &&
                 x.IdempotencyKey.StartsWith(prefix + ":"))
-            .OrderBy(x => x.OccurredAt)
-            .ThenBy(x => x.Id)
+            .OrderBy(x => x.Id)
             .ToListAsync(cancellationToken);
 
         if (existing.Count > 0)
@@ -98,7 +97,7 @@ public sealed class StockAllocationService : IStockAllocationService
         var candidates = await query
             .OrderBy(x => x.ExpiresAt == null)
             .ThenBy(x => x.ExpiresAt)
-            .ThenBy(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .ToListAsync(cancellationToken);
 
         var remaining = requestedQuantity;

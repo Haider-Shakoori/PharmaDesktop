@@ -1,6 +1,7 @@
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Sales;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
+using BusinessOS.Pharmacy.Domain.Authentication;
 using BusinessOS.Pharmacy.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -128,7 +129,7 @@ public sealed class PosService : IPosService
             .OrderBy(x => x.Medicine.BrandName)
             .ThenBy(x => x.ExpiresAt == null)
             .ThenBy(x => x.ExpiresAt)
-            .ThenBy(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .ToListAsync(cancellationToken);
 
         return batches
@@ -320,7 +321,7 @@ public sealed class PosService : IPosService
                     (x.ExpiresAt == null || x.ExpiresAt >= businessDate))
                 .OrderBy(x => x.ExpiresAt == null)
                 .ThenBy(x => x.ExpiresAt)
-                .ThenBy(x => x.CreatedAt)
+                .ThenBy(x => x.Id)
                 .ToListAsync(cancellationToken);
 
             var remaining = quantity;
@@ -570,8 +571,8 @@ public sealed class PosService : IPosService
         }
 
         return await query
-            .OrderByDescending(x => x.CompletedAt)
-            .ThenByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.BusinessDate)
+            .ThenByDescending(x => x.Id)
             .Take(take)
             .Select(x => new SaleListItem(
                 x.Id,

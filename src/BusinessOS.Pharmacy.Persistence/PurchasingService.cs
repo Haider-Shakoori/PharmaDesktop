@@ -119,7 +119,7 @@ public sealed class PurchasingService : IPurchasingService
 
         return await query
             .OrderByDescending(x => x.OrderDate)
-            .ThenByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id)
             .Take(take)
             .Select(x => new PurchaseOrderListItem(
                 x.Id,
