@@ -283,7 +283,7 @@ public sealed class InventoryService : IInventoryService
         var batchNumber = Optional(request.BatchNumber, 120, nameof(request.BatchNumber));
         var quantity = StockLedger.Scale4(request.Quantity);
         var purchaseCost = StockLedger.Scale4(request.PurchaseCost);
-        var salePrice = request.SalePrice is null
+        decimal? salePrice = request.SalePrice is null
             ? null
             : StockLedger.Scale4(request.SalePrice.Value);
 
