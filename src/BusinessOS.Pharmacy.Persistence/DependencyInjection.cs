@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddSingleton<ILocalSettingsStore, LocalSettingsStore>();
         services.AddSingleton<ILocalSequenceService, LocalSequenceService>();
         services.AddSingleton<ISyncQueueStore, SqliteSyncQueueStore>();
+        services.AddSingleton<ISyncEntityMapStore, SqliteSyncEntityMapStore>();
         services.AddSingleton<ILocalDashboardQueryService, LocalDashboardQueryService>();
         services.AddTransient<IMedicineCatalogService, MedicineCatalogService>();
         services.AddTransient<IMedicineCsvService, MedicineCsvService>();
