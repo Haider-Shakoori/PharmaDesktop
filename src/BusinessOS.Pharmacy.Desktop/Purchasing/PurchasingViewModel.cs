@@ -92,7 +92,8 @@ public sealed partial class PurchasingViewModel : ObservableObject
         _permissions = permissions;
         _clock = clock;
 
-        var today = DateOnly.FromDateTime(_clock.UtcNow.LocalDateTime);
+        var today = DateOnly.FromDateTime(
+            _clock.UtcNow.ToOffset(TimeSpan.FromMinutes(270)).DateTime);
         orderDateText = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         invoiceDateText = orderDateText;
 
@@ -104,7 +105,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
         SearchOrdersCommand = new AsyncRelayCommand(SearchOrdersAsync, () => !IsBusy);
         AddDraftLineCommand = new RelayCommand(AddDraftLine, () => !IsBusy && SelectedDraftMedicine is not null);
         RemoveDraftLineCommand = new RelayCommand<PurchaseOrderDraftLineViewModel>(RemoveDraftLine, _ => !IsBusy);
-        ClearDraftLinesCommand = new RelayCommand(() => DraftLines.Clear(), () => !IsBusy);
+        ClearDraftLinesCommand = new RelayCommand(ClearDraftLines, () => !IsBusy);
         CreateOrderCommand = new AsyncRelayCommand(CreateOrderAsync, () => !IsBusy && CanManagePurchases && DraftLines.Count > 0);
         SubmitOrderCommand = new AsyncRelayCommand(SubmitOrderAsync, CanSubmitOrder);
         ApproveOrderCommand = new AsyncRelayCommand(ApproveOrderAsync, CanApproveOrder);
@@ -417,6 +418,12 @@ public sealed partial class PurchasingViewModel : ObservableObject
         }
     }
 
+    private void ClearDraftLines()
+    {
+        DraftLines.Clear();
+        CreateOrderCommand.NotifyCanExecuteChanged();
+    }
+
     private async Task CreateOrderAsync()
     {
         await ExecuteBusyAsync(async () =>
@@ -660,7 +667,8 @@ public sealed partial class PurchasingViewModel : ObservableObject
         !IsBusy &&
         CanManagePurchases &&
         SelectedOrderLine is not null &&
-        SelectedOrder?.Status is "approved" or "partially_received";
+        SelectedOrder is not null &&
+        (SelectedOrder.Status is "approved" or "partially_received");
 
     private bool CanPostReceipt() =>
         !IsBusy &&
@@ -672,8 +680,10 @@ public sealed partial class PurchasingViewModel : ObservableObject
     private bool CanCreateInvoice() =>
         !IsBusy &&
         CanManagePurchases &&
-        SelectedOrder?.Status is "approved" or "partially_received" or "received" &&
-        SelectedOrderDetail?.Invoices.All(x => x.Status == "cancelled") != false;
+        SelectedOrder is not null &&
+        (SelectedOrder.Status is "approved" or "partially_received" or "received") &&
+        SelectedOrderDetail is not null &&
+        SelectedOrderDetail.Invoices.All(x => x.Status == "cancelled");
 
     private bool CanRecordPayment() =>
         !IsBusy &&
