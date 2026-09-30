@@ -1,0 +1,250 @@
+<UserControl x:Class="BusinessOS.Pharmacy.Desktop.Inventory.InventoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitleText}"/>
+                <TextBlock Text="{Binding Subtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
+            </StackPanel>
+            <Button Grid.Column="1" Content="Refresh" Command="{Binding RefreshCommand}"
+                    Style="{StaticResource PrimaryButton}" Padding="14,8"/>
+        </Grid>
+
+        <Border Grid.Row="1" Style="{StaticResource SurfaceCard}" Margin="0,0,0,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0,0,10,0" Padding="9,7"
+                         ToolTip="Medicine, code or batch number"/>
+
+                <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding FilterStatuses}"
+                          SelectedItem="{Binding SelectedFilterStatus}"
+                          Margin="0,0,10,0"/>
+
+                <ComboBox Grid.Column="2"
+                          ItemsSource="{Binding ExpiryFilters}"
+                          SelectedItem="{Binding SelectedExpiryFilter}"
+                          Margin="0,0,10,0"/>
+
+                <ComboBox Grid.Column="3"
+                          ItemsSource="{Binding Locations}"
+                          SelectedItem="{Binding SelectedFilterLocation}"
+                          DisplayMemberPath="Name"
+                          Margin="0,0,10,0"/>
+
+                <Button Grid.Column="4" Content="Search"
+                        Command="{Binding SearchCommand}" Padding="14,8"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="14"/>
+                <ColumnDefinition Width="0.8*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource SurfaceCard}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <DataGrid ItemsSource="{Binding Batches}"
+                              SelectedItem="{Binding SelectedBatch}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              SelectionMode="Single"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Medicine" Binding="{Binding BrandName}" Width="1.35*"/>
+                            <DataGridTextColumn Header="Code" Binding="{Binding MedicineCode}" Width="90"/>
+                            <DataGridTextColumn Header="Batch" Binding="{Binding BatchNumber}" Width="100"/>
+                            <DataGridTextColumn Header="Location" Binding="{Binding StockLocationName}" Width="100"/>
+                            <DataGridTextColumn Header="Available" Binding="{Binding AvailableQuantity, StringFormat=0.####}" Width="85"/>
+                            <DataGridTextColumn Header="Expiry" Binding="{Binding ExpiresAt, StringFormat=yyyy-MM-dd}" Width="100"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
+                            <DataGridTextColumn Header="Cost" Binding="{Binding PurchaseCost, StringFormat=N4}" Width="85"/>
+                            <DataGridTextColumn Header="Price" Binding="{Binding SalePrice, StringFormat=N4}" Width="85"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="1" Text="{Binding StatusMessage}"
+                               Style="{StaticResource MutedText}"
+                               Margin="0,10,0,0" TextWrapping="Wrap"/>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Expander Header="{Binding OpeningStockTitle}"
+                              IsExpanded="True"
+                              IsEnabled="{Binding CanManageInventory}"
+                              Margin="0,0,0,12">
+                        <Border Style="{StaticResource SurfaceCard}" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Medicine" FontWeight="SemiBold"/>
+                                <ComboBox ItemsSource="{Binding Medicines}"
+                                          SelectedItem="{Binding SelectedOpeningMedicine}"
+                                          DisplayMemberPath="BrandName"
+                                          Margin="0,5,0,10"/>
+
+                                <TextBlock Text="Stock location" FontWeight="SemiBold"/>
+                                <ComboBox ItemsSource="{Binding Locations}"
+                                          SelectedItem="{Binding SelectedOpeningLocation}"
+                                          DisplayMemberPath="Name"
+                                          Margin="0,5,0,10"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Batch / lot number" FontWeight="SemiBold"/>
+                                        <TextBox Text="{Binding OpeningBatchNumber}" Margin="0,5,0,10" Padding="8,6"/>
+
+                                        <TextBlock Text="Manufactured (yyyy-MM-dd)" FontWeight="SemiBold"/>
+                                        <TextBox Text="{Binding ManufacturedAtText}" Margin="0,5,0,10" Padding="8,6"/>
+
+                                        <TextBlock Text="Quantity" FontWeight="SemiBold"/>
+                                        <TextBox Text="{Binding OpeningQuantity, ValidatesOnExceptions=True}"
+                                                 Margin="0,5,0,10" Padding="8,6"/>
+
+                                        <TextBlock Text="Purchase cost" FontWeight="SemiBold"/>
+                                        <TextBox Text="{Binding PurchaseCost, ValidatesOnExceptions=True}"
+                                                 Margin="0,5,0,10" Padding="8,6"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Expiry (yyyy-MM-dd)" FontWeight="SemiBold"/>
+                                        <TextBox Text="{Binding ExpiresAtText}" Margin="0,5,0,10" Padding="8,6"/>
+
+                                        <TextBlock Text="Sale price (optional)" FontWeight="SemiBold"/>
+                                        <TextBox Text="{Binding SalePrice}" Margin="0,5,0,10" Padding="8,6"/>
+
+                                        <TextBlock Text="Notes" FontWeight="SemiBold"/>
+                                        <TextBox Text="{Binding OpeningNotes}" AcceptsReturn="True"
+                                                 TextWrapping="Wrap" MinHeight="74"
+                                                 Margin="0,5,0,10" Padding="8,6"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Button Content="Post opening stock"
+                                        Command="{Binding CreateOpeningStockCommand}"
+                                        Style="{StaticResource PrimaryButton}"
+                                        MinHeight="40"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <Expander Header="{Binding AdjustmentTitle}"
+                              IsEnabled="{Binding CanAdjustInventory}"
+                              Margin="0,0,0,12">
+                        <Border Style="{StaticResource SurfaceCard}" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Selected batch" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding SelectedBatch.BrandName, TargetNullValue=Select a batch}"
+                                           Margin="0,4,0,10" Style="{StaticResource MutedText}"/>
+
+                                <TextBlock Text="Quantity change (+/-)" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding AdjustmentQuantity, ValidatesOnExceptions=True}"
+                                         Margin="0,5,0,10" Padding="8,6"/>
+
+                                <TextBlock Text="Reason code" FontWeight="SemiBold"/>
+                                <ComboBox ItemsSource="{Binding AdjustmentReasons}"
+                                          SelectedItem="{Binding SelectedAdjustmentReason}"
+                                          Margin="0,5,0,10"/>
+
+                                <TextBlock Text="Reason" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding AdjustmentReason}" AcceptsReturn="True"
+                                         MinHeight="62" TextWrapping="Wrap"
+                                         Margin="0,5,0,10" Padding="8,6"/>
+
+                                <Button Content="Post adjustment"
+                                        Command="{Binding AdjustCommand}"
+                                        Padding="12,8"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <Expander Header="{Binding StatusTitle}"
+                              IsEnabled="{Binding CanChangeBatchStatus}"
+                              Margin="0,0,0,12">
+                        <Border Style="{StaticResource SurfaceCard}" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock Text="New status" FontWeight="SemiBold"/>
+                                <ComboBox ItemsSource="{Binding BatchStatuses}"
+                                          SelectedItem="{Binding SelectedBatchStatus}"
+                                          Margin="0,5,0,10"/>
+
+                                <TextBlock Text="Reason" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding BatchStatusReason}" AcceptsReturn="True"
+                                         MinHeight="62" TextWrapping="Wrap"
+                                         Margin="0,5,0,10" Padding="8,6"/>
+
+                                <Button Content="Change batch status"
+                                        Command="{Binding ChangeStatusCommand}"
+                                        Padding="12,8"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <Expander Header="{Binding HistoryTitle}" IsExpanded="True">
+                        <Border Style="{StaticResource SurfaceCard}" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock Text="{Binding DetailTitle}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                                <TextBlock Text="Recent stock movements" FontWeight="SemiBold" Margin="0,4,0,6"/>
+                                <DataGrid ItemsSource="{Binding Movements}" AutoGenerateColumns="False"
+                                          IsReadOnly="True" CanUserAddRows="False" MaxHeight="190">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Type" Binding="{Binding MovementType}" Width="95"/>
+                                        <DataGridTextColumn Header="Δ Qty" Binding="{Binding QuantityDelta, StringFormat=0.####}" Width="70"/>
+                                        <DataGridTextColumn Header="Balance" Binding="{Binding BalanceAfter, StringFormat=0.####}" Width="75"/>
+                                        <DataGridTextColumn Header="When" Binding="{Binding OccurredAt, StringFormat=yyyy-MM-dd HH:mm}" Width="130"/>
+                                        <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <TextBlock Text="Batch status history" FontWeight="SemiBold" Margin="0,12,0,6"/>
+                                <DataGrid ItemsSource="{Binding StatusEvents}" AutoGenerateColumns="False"
+                                          IsReadOnly="True" CanUserAddRows="False" MaxHeight="160">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="From" Binding="{Binding FromStatus}" Width="80"/>
+                                        <DataGridTextColumn Header="To" Binding="{Binding ToStatus}" Width="80"/>
+                                        <DataGridTextColumn Header="When" Binding="{Binding ChangedAt, StringFormat=yyyy-MM-dd HH:mm}" Width="130"/>
+                                        <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>
