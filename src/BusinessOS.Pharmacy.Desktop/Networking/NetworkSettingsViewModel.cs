@@ -231,8 +231,12 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
             return;
         }
 
-        var pairing = _services.GetRequiredService<LanTerminalPairingClient>();
-        var status = await pairing.TestConnectionAsync();
+        var monitor = _services.GetService<ILocalServerConnectionMonitor>();
+        var status = monitor is not null
+            ? await monitor.CheckNowAsync()
+            : await _services
+                .GetRequiredService<LanTerminalPairingClient>()
+                .TestConnectionAsync();
 
         ConnectionStatus = status.IsConnected
             ? T(
