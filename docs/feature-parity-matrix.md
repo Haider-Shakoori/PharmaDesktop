@@ -29,7 +29,7 @@ This matrix is based on the current Laravel routes, tenant migrations, controlle
 | Reports | derived | reconcile inventory/accounting/closing | Reports/export/print | Local | No/derived | reports.view | Audited |
 | Pharmacy settings | pharmacy_settings | locale/timezone/business-day/inventory policies | Settings | Hybrid | Yes | settings.manage | Audited |
 | Localization | settings + lang resources | English/Dari/Pashto, RTL | Whole UI | Local config | Optional | none | Audited |
-| Backup/restore | existing Laravel backup services/commands | safe backup/verify/restore | Native local backup | Local | Optional cloud later | owner/admin policy | Planned |
+| Backup/restore | existing Laravel backup services/commands | safe backup/verify/restore | Native local backup | Local | Optional cloud later | owner/admin policy | Implemented (Batch 19) |
 | Offline sync | current mobile sync APIs/services | idempotent; retry-safe; tenant-safe; late-close conflicts explicit | Sync status/queue | Hybrid | Required | active lease | Audited |
 | Printing | web receipts/reports | preserve tenant/financial data | 58/80mm + A4 native printing | Local | No | module permission | Planned |
 | Updater | platform responsibility | signed/checksummed release metadata required | Updater | Cloud | Check | min version | Planned |

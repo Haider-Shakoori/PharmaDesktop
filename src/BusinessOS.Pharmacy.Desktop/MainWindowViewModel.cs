@@ -4,6 +4,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Desktop.Customers;
+using BusinessOS.Pharmacy.Desktop.Backup;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.DailyClosing;
 using BusinessOS.Pharmacy.Desktop.Localization;
@@ -59,6 +60,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ExpensesViewModel expenses,
         DailyClosingViewModel dailyClosing,
         ReportsViewModel reports,
+        BackupRestoreViewModel backupRestore,
         NetworkSettingsViewModel networkSettings,
         NetworkConfiguration networkConfiguration,
         IServiceProvider services)
@@ -78,6 +80,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Expenses = expenses;
         DailyClosing = dailyClosing;
         Reports = reports;
+        BackupRestore = backupRestore;
         NetworkSettings = networkSettings;
         currentPage = Dashboard;
 
@@ -120,6 +123,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ExpensesViewModel Expenses { get; }
     public DailyClosingViewModel DailyClosing { get; }
     public ReportsViewModel Reports { get; }
+    public BackupRestoreViewModel BackupRestore { get; }
     public NetworkSettingsViewModel NetworkSettings { get; }
 
     public string ApplicationName => "Darmaltoon";
@@ -131,6 +135,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         "expenses" => Translate("Expenses & Accounting", "مصارف و حسابداری", "لګښتونه او حسابداري"),
         "closing" => Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"),
         "reports" => Translate("Reports", "گزارش‌ها", "راپورونه"),
+        "backup" => Translate("Backup & Restore", "پشتیبان‌گیری و بازیابی", "بیک اپ او بېرته راګرځول"),
         "network" => Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
@@ -144,6 +149,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "Sales, profit, purchasing, stock and movement reporting",
             "گزارش فروش، سود، خرید، موجودی و گردش کالا",
             "د خرڅلاو، ګټې، پېرود، زېرمه او حرکتونو راپورونه"),
+        "backup" => Translate(
+            "Verified backup and safe restore of the authoritative pharmacy database",
+            "پشتیبان‌گیری تأییدشده و بازیابی امن پایگاه داده اصلی دواخانه",
+            "د اصلي درملتون ډیټابیس تایید شوی بیک اپ او خوندي بېرته راګرځول"),
         "network" => Translate(
             "LAN server, client terminals and connection diagnostics",
             "سرور شبکه، ترمینال‌های مشتری و عیب‌یابی اتصال",
@@ -230,6 +239,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Expenses.SetLanguage(value);
         DailyClosing.SetLanguage(value);
         Reports.SetLanguage(value);
+        BackupRestore.SetLanguage(value);
         NetworkSettings.SetLanguage(value);
         RefreshLanStatusText();
         RefreshNavigation();
@@ -260,6 +270,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), "↓");
         AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), "♙");
         AddIfAllowed("reports.view", "reports", Translate("Reports", "گزارش‌ها", "راپورونه"), "▥");
+
+        if (_networkConfiguration.Mode != DeploymentMode.Client && _permissions.HasPermission("settings.manage"))
+        {
+            NavigationItems.Add(new NavigationItemViewModel(
+                "backup",
+                Translate("Backup & Restore", "پشتیبان‌گیری و بازیابی", "بیک اپ او بېرته راګرځول"),
+                "◫"));
+        }
 
         if (_networkConfiguration.Mode == DeploymentMode.Server &&
             (_permissions.HasPermission("users.manage") ||
@@ -315,6 +333,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentSectionKey = "reports";
                 CurrentPage = Reports;
                 await Reports.LoadAsync();
+                break;
+
+            case "backup" when _networkConfiguration.Mode != DeploymentMode.Client && _permissions.HasPermission("settings.manage"):
+                CurrentSectionKey = "backup";
+                CurrentPage = BackupRestore;
+                await BackupRestore.LoadAsync();
                 break;
 
             case "network" when

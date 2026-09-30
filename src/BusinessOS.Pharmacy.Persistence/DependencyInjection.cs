@@ -1,3 +1,4 @@
+using BusinessOS.Pharmacy.Application.Abstractions.Backup;
 using BusinessOS.Pharmacy.Application.Abstractions.Accounting;
 using BusinessOS.Pharmacy.Application.Abstractions.Customers;
 using BusinessOS.Pharmacy.Application.Abstractions.Dashboard;
@@ -42,6 +43,7 @@ public static class DependencyInjection
         });
 
         services.AddSingleton<ILocalDatabaseInitializer, LocalDatabaseInitializer>();
+        services.AddSingleton<ILocalBackupService, LocalBackupService>();
         services.AddSingleton<ILocalSettingsStore, LocalSettingsStore>();
         services.AddSingleton<ILocalSequenceService, LocalSequenceService>();
         services.AddSingleton<ILocalDashboardQueryService, LocalDashboardQueryService>();

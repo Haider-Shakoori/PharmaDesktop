@@ -76,6 +76,45 @@ public sealed class WindowsLocalServerServiceController : ILocalServerServiceCon
         return await GetStatusAsync(cancellationToken);
     }
 
+    public async Task<LocalServerServiceStatus> StopAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var current = await GetStatusAsync(cancellationToken);
+
+        if (!current.IsWindows || !current.IsInstalled || !current.IsRunning)
+        {
+            return current;
+        }
+
+        var result = await RunAsync(
+            "sc.exe",
+            $"stop \"{ServiceName}\"",
+            cancellationToken);
+
+        if (result.ExitCode != 0)
+        {
+            return current with
+            {
+                Message = "Windows could not stop the Darmaltoon Local Server. Restore was not started."
+            };
+        }
+
+        for (var attempt = 0; attempt < 20; attempt++)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
+            var status = await GetStatusAsync(cancellationToken);
+            if (!status.IsRunning)
+            {
+                return status;
+            }
+        }
+
+        return current with
+        {
+            Message = "The Darmaltoon Local Server did not stop in time. Restore was not started."
+        };
+    }
+
     public async Task<NetworkProfileStatus> GetNetworkProfileStatusAsync(
         CancellationToken cancellationToken = default)
     {

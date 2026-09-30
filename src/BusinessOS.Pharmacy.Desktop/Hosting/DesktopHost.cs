@@ -1,6 +1,7 @@
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Desktop.Activation;
 using BusinessOS.Pharmacy.Desktop.Authentication;
+using BusinessOS.Pharmacy.Desktop.Backup;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Diagnostics;
 using BusinessOS.Pharmacy.Desktop.Inventory;
@@ -80,6 +81,7 @@ public static class DesktopHost
                 services.AddSingleton<ExpensesViewModel>();
                 services.AddSingleton<DailyClosingViewModel>();
                 services.AddSingleton<ReportsViewModel>();
+                services.AddSingleton<BackupRestoreViewModel>();
                 services.AddSingleton<NetworkSettingsViewModel>();
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();

@@ -8,6 +8,9 @@ public interface ILocalServerServiceController
     Task<LocalServerServiceStatus> StartAsync(
         CancellationToken cancellationToken = default);
 
+    Task<LocalServerServiceStatus> StopAsync(
+        CancellationToken cancellationToken = default);
+
     Task<NetworkProfileStatus> GetNetworkProfileStatusAsync(
         CancellationToken cancellationToken = default);
 
