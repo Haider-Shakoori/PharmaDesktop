@@ -61,11 +61,7 @@ public sealed class MedicineMasterTests
             await connection.OpenAsync();
 
             await using var tableCheck = connection.CreateCommand();
-            tableCheck.CommandText = """
-                SELECT COUNT(*)
-                FROM sqlite_master
-                WHERE type = 'table' AND name = 'product_batches';
-                """;
+            tableCheck.CommandText = "SELECT COUNT(*) FROM product_batches;";
 
             Assert.Equal(0L, Convert.ToInt64(await tableCheck.ExecuteScalarAsync()));
         }
