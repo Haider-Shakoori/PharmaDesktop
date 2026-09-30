@@ -4,6 +4,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Localization;
+using BusinessOS.Pharmacy.Desktop.Inventory;
 using BusinessOS.Pharmacy.Desktop.Medicines;
 using BusinessOS.Pharmacy.Desktop.Navigation;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -34,17 +35,20 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IUserSessionService sessions,
         IPermissionAuthorizer permissions,
         DashboardViewModel dashboard,
-        MedicinesViewModel medicines)
+        MedicinesViewModel medicines,
+        InventoryViewModel inventory)
     {
         _clock = clock;
         _sessions = sessions;
         _permissions = permissions;
         Dashboard = dashboard;
         Medicines = medicines;
+        Inventory = inventory;
         currentPage = Dashboard;
 
         Dashboard.SetLanguage(SelectedLanguage);
         Medicines.SetLanguage(SelectedLanguage);
+        Inventory.SetLanguage(SelectedLanguage);
         Dashboard.NavigationRequested += OnDashboardNavigationRequested;
 
         LogoutCommand = new AsyncRelayCommand(LogoutAsync);
@@ -58,21 +62,31 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public IAsyncRelayCommand<string> NavigateCommand { get; }
     public DashboardViewModel Dashboard { get; }
     public MedicinesViewModel Medicines { get; }
+    public InventoryViewModel Inventory { get; }
 
     public string ApplicationName => "Darmaltoon";
     public string ParentBrand => "BusinessOS.af";
-    public string PageTitle => CurrentSectionKey == "medicines"
-        ? Translate("Medicines", "ادویه", "درمل")
-        : Translate("Dashboard", "داشبورد", "ډشبورډ");
-    public string PageSubtitle => CurrentSectionKey == "medicines"
-        ? Translate(
+    public string PageTitle => CurrentSectionKey switch
+    {
+        "medicines" => Translate("Medicines", "ادویه", "درمل"),
+        "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
+        _ => Translate("Dashboard", "داشبورد", "ډشبورډ"),
+    };
+    public string PageSubtitle => CurrentSectionKey switch
+    {
+        "medicines" => Translate(
             "Medicine master data, categories and CSV registration",
             "اطلاعات اصلی ادویه، دسته‌بندی و ثبت CSV",
-            "د درملو اصلي معلومات، کټګورۍ او CSV ثبت")
-        : Translate(
+            "د درملو اصلي معلومات، کټګورۍ او CSV ثبت"),
+        "inventory" => Translate(
+            "Batch-aware stock, expiry and movement control",
+            "کنترل موجودی، بچ، انقضا و گردش کالا",
+            "د بېچ، ختمېدو او زېرمتون حرکتونو کنټرول"),
+        _ => Translate(
             "Local-first pharmacy operations",
             "عملیات محلی دواخانه",
-            "د درملتون محلي عملیات");
+            "د درملتون محلي عملیات"),
+    };
     public string OnlineText => Translate("Licensed", "فعال", "فعال");
     public string LastVerifiedText => $"{Translate("Ready", "آماده", "چمتو")} • {_clock.UtcNow:yyyy-MM-dd HH:mm} UTC";
     public string UserDisplayName => _sessions.Current?.Name ?? Translate("No user", "بدون کاربر", "کارن نشته");
@@ -91,6 +105,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         Dashboard.SetLanguage(SelectedLanguage);
         Medicines.SetLanguage(SelectedLanguage);
+        Inventory.SetLanguage(SelectedLanguage);
         CurrentSectionKey = "dashboard";
         CurrentPage = Dashboard;
         RefreshNavigation();
@@ -101,6 +116,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         LayoutDirection = value.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
         Dashboard.SetLanguage(value);
         Medicines.SetLanguage(value);
+        Inventory.SetLanguage(value);
         RefreshNavigation();
         RaisePageText();
         OnPropertyChanged(nameof(OnlineText));
@@ -147,6 +163,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentSectionKey = "medicines";
                 CurrentPage = Medicines;
                 await Medicines.LoadAsync();
+                break;
+
+            case "inventory" when
+                _permissions.HasPermission("inventory.manage") ||
+                _permissions.HasPermission("inventory.status"):
+                CurrentSectionKey = "inventory";
+                CurrentPage = Inventory;
+                await Inventory.LoadAsync();
                 break;
         }
     }
