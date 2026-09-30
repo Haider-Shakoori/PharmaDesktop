@@ -245,6 +245,8 @@ public sealed class SaleReturnService : ISaleReturnService
         if (request.Reason.Trim().Length > 1000) throw new ArgumentOutOfRangeException(nameof(request.Reason));
         if (request.Lines.Count == 0) throw new ArgumentOutOfRangeException(nameof(request.Lines));
         if (request.Refunds.Count == 0) throw new ArgumentOutOfRangeException(nameof(request.Refunds));
+        if (request.Lines.Select(x => x.SaleLineId).Distinct(StringComparer.Ordinal).Count() != request.Lines.Count)
+            throw new ArgumentException("A sale line can appear only once in a return request.", nameof(request.Lines));
         foreach (var line in request.Lines)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(line.SaleLineId);
