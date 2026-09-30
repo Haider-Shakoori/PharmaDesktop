@@ -484,6 +484,217 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
                     b.ToTable("medicines", (string)null);
                 });
 
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SyncCheckpointEntity", b =>
+                {
+                    b.Property<string>("Stream")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stream");
+
+                    b.Property<string>("Checkpoint")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("checkpoint");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Stream");
+
+                    b.ToTable("sync_checkpoints", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SyncConflictEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<int>("ConsistencyClass")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("consistency_class");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("DetectedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("detected_at");
+
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("direction");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("LocalPayloadJson")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("local_payload_json");
+
+                    b.Property<string>("QueueItemId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("queue_item_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("RemotePayloadJson")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("remote_payload_json");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("resolved_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Stream")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stream");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey");
+
+                    b.HasIndex("Status", "DetectedAt");
+
+                    b.HasIndex("Stream", "EntityId");
+
+                    b.ToTable("sync_conflicts", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SyncQueueEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<DateTimeOffset?>("ClaimedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("claimed_at");
+
+                    b.Property<string>("CloudEntityId")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cloud_entity_id");
+
+                    b.Property<string>("CloudVersion")
+                        .HasMaxLength(191)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cloud_version");
+
+                    b.Property<int>("ConsistencyClass")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("consistency_class");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("last_error");
+
+                    b.Property<long>("LocalVersion")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("local_version");
+
+                    b.Property<DateTimeOffset?>("NextAttemptAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("next_attempt_at");
+
+                    b.Property<int>("Operation")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("operation");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payload_json");
+
+                    b.Property<int>("State")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("state");
+
+                    b.Property<string>("Stream")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stream");
+
+                    b.Property<DateTimeOffset?>("SyncedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("synced_at");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("State", "NextAttemptAt");
+
+                    b.HasIndex("Stream", "EntityId");
+
+                    b.ToTable("sync_queue", (string)null);
+                });
+
             modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.NetworkAuditEntity", b =>
                 {
                     b.Property<long>("Id")
