@@ -1,6 +1,5 @@
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Sales;
-using BusinessOS.Pharmacy.Application.Abstractions.DailyClosing;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +14,6 @@ public sealed class SaleReturnService : ISaleReturnService
     private readonly IUserSessionService _sessions;
     private readonly IClock _clock;
     private readonly StockLedger _ledger;
-    private readonly IDailyClosingService _dailyClosing;
 
     public SaleReturnService(IDbContextFactory<PharmacyDbContext> contextFactory, IPermissionAuthorizer permissions, IUserSessionService sessions, IClock clock, StockLedger ledger)
     {
@@ -24,7 +22,6 @@ public sealed class SaleReturnService : ISaleReturnService
         _sessions = sessions;
         _clock = clock;
         _ledger = ledger;
-        _dailyClosing = dailyClosing;
     }
 
     public async Task<IReadOnlyList<SaleListItem>> SearchReturnableSalesAsync(SaleSearchFilter filter, CancellationToken cancellationToken = default)
@@ -96,7 +93,7 @@ public sealed class SaleReturnService : ISaleReturnService
         var sale = await context.Set<SaleEntity>().Include(x => x.StockLocation).SingleOrDefaultAsync(x => x.Id == request.SaleId, cancellationToken)
             ?? throw new InvalidOperationException("Sale was not found.");
         if (sale.Status != "completed") throw new InvalidOperationException("Only completed sales can be returned.");
-        if (await _dailyClosing.SalesBlockedAsync(sale.StockLocationId, businessDate, cancellationToken))
+        if (await DailyClosingService.SalesBlockedAsync(context, sale.StockLocationId, businessDate, cancellationToken))
             throw new InvalidOperationException("This business day is finalized. Reopen Daily Closing before posting a return.");
 
         var saleReturn = new SaleReturnEntity

@@ -33,7 +33,7 @@ public sealed class DailyClosingService:IDailyClosingService
   _permissions.Demand("daily_closing.perform");if(openingCash<0)throw new ArgumentOutOfRangeException(nameof(openingCash));var user=_sessions.Current?.UserId??throw new InvalidOperationException("A pharmacy user must be signed in.");var date=BusinessDate();
   await using var c=await _factory.CreateDbContextAsync(ct);await using var tx=await InventoryWriteTransaction.BeginAsync(c,ct);await RequireLocation(c,locationId,ct);
   if(await c.Set<CashierShiftEntity>().AnyAsync(x=>x.UserId==user&&x.Status=="open",ct))throw new InvalidOperationException("You already have an open cashier shift.");
-  if(await Blocked(c,locationId,date,ct))throw new InvalidOperationException("This business day is already finalized.");
+  if(await SalesBlockedAsync(c,locationId,date,ct))throw new InvalidOperationException("This business day is already finalized.");
   var now=_clock.UtcNow;var row=new CashierShiftEntity{Id=Guid.CreateVersion7().ToString(),StockLocationId=locationId,UserId=user,BusinessDate=date,Status="open",OpeningCash=S(openingCash),OpenedAt=now,CreatedAt=now,UpdatedAt=now};c.Add(row);await c.SaveChangesAsync(ct);await tx.CommitAsync(ct);return Map(row);
  }
 
@@ -72,7 +72,7 @@ public sealed class DailyClosingService:IDailyClosingService
  }
 
  public async Task<bool> SalesBlockedAsync(string locationId,DateOnly? date=null,CancellationToken ct=default)
- {await using var c=await _factory.CreateDbContextAsync(ct);return await Blocked(c,locationId,date??BusinessDate(),ct);}
+ {await using var c=await _factory.CreateDbContextAsync(ct);return await SalesBlockedAsync(c,locationId,date??BusinessDate(),ct);}
 
  private async Task<DailyClosingSnapshot> Snapshot(PharmacyDbContext c,string loc,DateOnly date,CancellationToken ct)
  {
@@ -87,11 +87,11 @@ public sealed class DailyClosingService:IDailyClosingService
  private async Task PostVariance(PharmacyDbContext c,DailyClosingEntity closing,DailyClosingEventEntity ev,decimal variance,string user,CancellationToken ct)
  {
   var cash=await c.Set<LedgerAccountEntity>().SingleAsync(x=>x.SystemKey=="cash_on_hand"&&x.IsActive,ct);var over=await c.Set<LedgerAccountEntity>().SingleAsync(x=>x.SystemKey=="cash_over_short"&&x.IsActive,ct);var amount=Math.Abs(variance);
-  var lines=variance>0?[new JournalLineDraft(cash,closing.StockLocationId,amount,0m,Memo:"Cash over at Daily Closing"),new JournalLineDraft(over,closing.StockLocationId,0m,amount,Memo:"Cash over at Daily Closing")]:[new JournalLineDraft(over,closing.StockLocationId,amount,0m,Memo:"Cash shortage at Daily Closing"),new JournalLineDraft(cash,closing.StockLocationId,0m,amount,Memo:"Cash shortage at Daily Closing")];
+  IReadOnlyList<JournalLineDraft> lines=variance>0?[new JournalLineDraft(cash,closing.StockLocationId,amount,0m,Memo:"Cash over at Daily Closing"),new JournalLineDraft(over,closing.StockLocationId,0m,amount,Memo:"Cash over at Daily Closing")]:[new JournalLineDraft(over,closing.StockLocationId,amount,0m,Memo:"Cash shortage at Daily Closing"),new JournalLineDraft(cash,closing.StockLocationId,0m,amount,Memo:"Cash shortage at Daily Closing")];
   await _ledger.PostAsync(c,new JournalPostDraft(closing.BusinessDate,ev.OccurredAt,"AFN","daily_closing",closing.Id,$"variance:{ev.Id}",closing.BusinessDate.ToString(),$"accounting:daily-closing-variance:{ev.Id}",null,$"Daily Closing cash variance {closing.BusinessDate}",user),lines,ct);
  }
  private static async Task RequireLocation(PharmacyDbContext c,string id,CancellationToken ct){if(!await c.Set<StockLocationEntity>().AnyAsync(x=>x.Id==id&&x.IsActive,ct))throw new InvalidOperationException("Stock location was not found or is inactive.");}
- private static Task<bool> Blocked(PharmacyDbContext c,string loc,DateOnly d,CancellationToken ct)=>c.Set<DailyClosingEntity>().AnyAsync(x=>x.StockLocationId==loc&&x.BusinessDate==d&&(x.Status=="finalized"||x.Status=="approved"),ct);
+ internal static Task<bool> SalesBlockedAsync(PharmacyDbContext c,string loc,DateOnly d,CancellationToken ct)=>c.Set<DailyClosingEntity>().AnyAsync(x=>x.StockLocationId==loc&&x.BusinessDate==d&&(x.Status=="finalized"||x.Status=="approved"),ct);
  private static IQueryable<DailyClosingEntity> ClosingQuery(PharmacyDbContext c)=>c.Set<DailyClosingEntity>().Include(x=>x.Events);
  private static DailyClosingEventEntity Event(DailyClosingEntity row,string type,string? actor,string? reason,string? snap,DateTimeOffset now)=>new(){Id=Guid.CreateVersion7().ToString(),DailyClosingId=row.Id,EventType=type,ActorId=actor,Reason=reason,SnapshotJson=snap,OccurredAt=now,CreatedAt=now,UpdatedAt=now};
  private static void Apply(DailyClosingEntity r,DailyClosingSnapshot s){r.GrossSales=s.GrossSales;r.DiscountTotal=s.DiscountTotal;r.ReturnsTotal=s.ReturnsTotal;r.CashCollected=s.CashCollected;r.BankCollected=s.BankCollected;r.MobileCollected=s.MobileCollected;r.CreditSales=s.CreditSales;r.OpeningCash=s.OpeningCash;r.ExpectedCash=s.ExpectedCash;}

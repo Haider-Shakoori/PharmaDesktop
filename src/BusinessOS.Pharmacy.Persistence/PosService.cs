@@ -1,6 +1,5 @@
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Sales;
-using BusinessOS.Pharmacy.Application.Abstractions.DailyClosing;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Domain.Authentication;
 using BusinessOS.Pharmacy.Persistence.Entities;
@@ -18,22 +17,20 @@ public sealed class PosService : IPosService
     private readonly IUserSessionService _sessions;
     private readonly IClock _clock;
     private readonly StockLedger _ledger;
-    private readonly IDailyClosingService _dailyClosing;
 
     public PosService(
         IDbContextFactory<PharmacyDbContext> contextFactory,
         IPermissionAuthorizer permissions,
         IUserSessionService sessions,
         IClock clock,
-        StockLedger ledger,
-        IDailyClosingService dailyClosing)
+        StockLedger ledger
+        )
     {
         _contextFactory = contextFactory;
         _permissions = permissions;
         _sessions = sessions;
         _clock = clock;
         _ledger = ledger;
-        _dailyClosing = dailyClosing;
     }
 
     public async Task<PosReferenceData> GetReferenceDataAsync(
@@ -210,7 +207,7 @@ public sealed class PosService : IPosService
                 cancellationToken)
             ?? throw new InvalidOperationException("Stock location was not found or is inactive.");
 
-        if (await _dailyClosing.SalesBlockedAsync(location.Id, businessDate, cancellationToken))
+        if (await DailyClosingService.SalesBlockedAsync(context, location.Id, businessDate, cancellationToken))
         {
             throw new InvalidOperationException("This business day is finalized. Reopen Daily Closing before posting a sale.");
         }
