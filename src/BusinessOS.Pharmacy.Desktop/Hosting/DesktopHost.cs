@@ -10,6 +10,7 @@ using BusinessOS.Pharmacy.Desktop.Medicines;
 using BusinessOS.Pharmacy.Desktop.Purchasing;
 using BusinessOS.Pharmacy.Desktop.Pos;
 using BusinessOS.Pharmacy.Desktop.Returns;
+using BusinessOS.Pharmacy.Desktop.Reports;
 using BusinessOS.Pharmacy.Infrastructure;
 using BusinessOS.Pharmacy.Infrastructure.Storage;
 using BusinessOS.Pharmacy.Licensing;
@@ -55,6 +56,7 @@ public static class DesktopHost
                 services.AddSingleton<ReturnsViewModel>();
                 services.AddSingleton<ExpensesViewModel>();
                 services.AddSingleton<DailyClosingViewModel>();
+                services.AddSingleton<ReportsViewModel>();
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<StartupCoordinator>();

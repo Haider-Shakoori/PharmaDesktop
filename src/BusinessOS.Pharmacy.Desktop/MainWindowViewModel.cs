@@ -13,6 +13,7 @@ using BusinessOS.Pharmacy.Desktop.Navigation;
 using BusinessOS.Pharmacy.Desktop.Purchasing;
 using BusinessOS.Pharmacy.Desktop.Pos;
 using BusinessOS.Pharmacy.Desktop.Returns;
+using BusinessOS.Pharmacy.Desktop.Reports;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -48,7 +49,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         PosViewModel pos,
         ReturnsViewModel returns,
         ExpensesViewModel expenses,
-        DailyClosingViewModel dailyClosing)
+        DailyClosingViewModel dailyClosing,
+        ReportsViewModel reports)
     {
         _clock = clock;
         _sessions = sessions;
@@ -62,6 +64,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Returns = returns;
         Expenses = expenses;
         DailyClosing = dailyClosing;
+        Reports = reports;
         currentPage = Dashboard;
 
         Dashboard.SetLanguage(SelectedLanguage);
@@ -73,6 +76,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Returns.SetLanguage(SelectedLanguage);
         Expenses.SetLanguage(SelectedLanguage);
         DailyClosing.SetLanguage(SelectedLanguage);
+        Reports.SetLanguage(SelectedLanguage);
         Dashboard.NavigationRequested += OnDashboardNavigationRequested;
 
         LogoutCommand = new AsyncRelayCommand(LogoutAsync);
@@ -93,6 +97,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ReturnsViewModel Returns { get; }
     public ExpensesViewModel Expenses { get; }
     public DailyClosingViewModel DailyClosing { get; }
+    public ReportsViewModel Reports { get; }
 
     public string ApplicationName => "Darmaltoon";
     public string ParentBrand => "BusinessOS.af";
@@ -102,6 +107,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         "returns" => Translate("Sale Returns", "برگشت فروش", "د خرڅلاو بېرته ستنول"),
         "expenses" => Translate("Expenses & Accounting", "مصارف و حسابداری", "لګښتونه او حسابداري"),
         "closing" => Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"),
+        "reports" => Translate("Reports", "گزارش‌ها", "راپورونه"),
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
         "purchases" => Translate("Purchases", "خریداری", "پېرود"),
@@ -110,6 +116,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
     };
     public string PageSubtitle => CurrentSectionKey switch
     {
+        "reports" => Translate(
+            "Sales, profit, purchasing, stock and movement reporting",
+            "گزارش فروش، سود، خرید، موجودی و گردش کالا",
+            "د خرڅلاو، ګټې، پېرود، زېرمه او حرکتونو راپورونه"),
         "closing" => Translate(
             "Cashier shifts, cash reconciliation and auditable day finalization",
             "شیفت صندوق، تطبیق نقد و نهایی‌سازی قابل حسابرسی",
@@ -172,6 +182,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Returns.SetLanguage(SelectedLanguage);
         Expenses.SetLanguage(SelectedLanguage);
         DailyClosing.SetLanguage(SelectedLanguage);
+        Reports.SetLanguage(SelectedLanguage);
         CurrentSectionKey = "dashboard";
         CurrentPage = Dashboard;
         RefreshNavigation();
@@ -189,6 +200,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Returns.SetLanguage(value);
         Expenses.SetLanguage(value);
         DailyClosing.SetLanguage(value);
+        Reports.SetLanguage(value);
         RefreshNavigation();
         RaisePageText();
         OnPropertyChanged(nameof(OnlineText));
@@ -256,6 +268,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentSectionKey = "expenses";
                 CurrentPage = Expenses;
                 await Expenses.LoadAsync();
+                break;
+
+            case "reports" when _permissions.HasPermission("reports.view"):
+                CurrentSectionKey = "reports";
+                CurrentPage = Reports;
+                await Reports.LoadAsync();
                 break;
 
             case "closing" when _permissions.HasPermission("daily_closing.perform"):
