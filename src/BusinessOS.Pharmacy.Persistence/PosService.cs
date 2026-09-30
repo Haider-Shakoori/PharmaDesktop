@@ -23,7 +23,8 @@ public sealed class PosService : IPosService
         IPermissionAuthorizer permissions,
         IUserSessionService sessions,
         IClock clock,
-        StockLedger ledger)
+        StockLedger ledger
+        )
     {
         _contextFactory = contextFactory;
         _permissions = permissions;
@@ -205,6 +206,11 @@ public sealed class PosService : IPosService
                 x => x.Id == request.StockLocationId && x.IsActive && x.Branch.IsActive,
                 cancellationToken)
             ?? throw new InvalidOperationException("Stock location was not found or is inactive.");
+
+        if (await DailyClosingService.SalesBlockedAsync(context, location.Id, businessDate, cancellationToken))
+        {
+            throw new InvalidOperationException("This business day is finalized. Reopen Daily Closing before posting a sale.");
+        }
 
         CustomerEntity? customer = null;
         if (!string.IsNullOrWhiteSpace(request.CustomerId))

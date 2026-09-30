@@ -93,6 +93,8 @@ public sealed class SaleReturnService : ISaleReturnService
         var sale = await context.Set<SaleEntity>().Include(x => x.StockLocation).SingleOrDefaultAsync(x => x.Id == request.SaleId, cancellationToken)
             ?? throw new InvalidOperationException("Sale was not found.");
         if (sale.Status != "completed") throw new InvalidOperationException("Only completed sales can be returned.");
+        if (await DailyClosingService.SalesBlockedAsync(context, sale.StockLocationId, businessDate, cancellationToken))
+            throw new InvalidOperationException("This business day is finalized. Reopen Daily Closing before posting a return.");
 
         var saleReturn = new SaleReturnEntity
         {

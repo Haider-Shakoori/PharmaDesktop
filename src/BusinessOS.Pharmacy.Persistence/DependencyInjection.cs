@@ -1,6 +1,7 @@
 using BusinessOS.Pharmacy.Application.Abstractions.Accounting;
 using BusinessOS.Pharmacy.Application.Abstractions.Customers;
 using BusinessOS.Pharmacy.Application.Abstractions.Dashboard;
+using BusinessOS.Pharmacy.Application.Abstractions.DailyClosing;
 using BusinessOS.Pharmacy.Application.Abstractions.Inventory;
 using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
@@ -58,6 +59,7 @@ public static class DependencyInjection
         services.AddSingleton<AccountingProvisioner>();
         services.AddSingleton<LedgerPostingService>();
         services.AddSingleton<IExpenseService, ExpenseService>();
+        services.AddSingleton<IDailyClosingService, DailyClosingService>();
 
         return services;
     }
