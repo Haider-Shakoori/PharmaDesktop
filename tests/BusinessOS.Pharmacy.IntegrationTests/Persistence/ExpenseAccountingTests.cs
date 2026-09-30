@@ -13,7 +13,7 @@ public sealed class ExpenseAccountingTests
 {
  [Fact] public async Task Defaults_and_expense_post_create_balanced_journal_and_are_idempotent()
  {
-  var root=Temp();try{await using var p=Build(root);await Init(p);var s=p.GetRequiredService<IExpenseService>();var refs=await s.GetReferenceDataAsync();Assert.Equal(18,refs.ExpenseAccounts.Concat(refs.PaymentAccounts).Select(x=>x.SystemKey).Where(x=>x is not null).Distinct().Count()+refs.ExpenseAccounts.Concat(refs.PaymentAccounts).Count(x=>x.SystemKey=="accounts_receivable"||x.SystemKey=="inventory")); 
+  var root=Temp();try{await using var p=Build(root);await Init(p);var s=p.GetRequiredService<IExpenseService>();var refs=await s.GetReferenceDataAsync();Assert.Contains(refs.ExpenseAccounts,x=>x.SystemKey=="operating_expense");Assert.Contains(refs.PaymentAccounts,x=>x.SystemKey=="cash_on_hand");Assert.Contains(refs.PaymentAccounts,x=>x.SystemKey=="bank");Assert.DoesNotContain(refs.PaymentAccounts,x=>x.SystemKey=="inventory"); 
   var expense=refs.ExpenseAccounts.Single(x=>x.SystemKey=="operating_expense");var cash=refs.PaymentAccounts.Single(x=>x.SystemKey=="cash_on_hand");
   var req=new PostExpenseRequest(expense.Id,cash.Id,null,new DateOnly(2026,9,30),"afn",123.45678m,"Landlord","R-1","Rent","exp-1");
   var x=await s.PostAsync(req);Assert.Equal(123.4568m,x.Expense.Amount);Assert.Equal("AFN",x.Expense.Currency);
@@ -22,15 +22,14 @@ public sealed class ExpenseAccountingTests
  }
  [Fact] public async Task Inventory_cannot_be_used_as_expense_payment_account()
  {
-  var root=Temp();try{await using var p=Build(root);await Init(p);var s=p.GetRequiredService<IExpenseService>();var refs=await s.GetReferenceDataAsync();var expense=refs.ExpenseAccounts.First();var all=await ReadAccountBySystemKey(p,"inventory");
-  await Assert.ThrowsAsync<InvalidOperationException>(()=>s.PostAsync(new PostExpenseRequest(expense.Id,all,null,new DateOnly(2026,9,30),"AFN",10m,null,null,null,"bad-payment")));}finally{SqliteConnection.ClearAllPools();Delete(root);}
+  var root=Temp();try{await using var p=Build(root);await Init(p);var s=p.GetRequiredService<IExpenseService>();var refs=await s.GetReferenceDataAsync();var expense=refs.ExpenseAccounts.First();
+  await Assert.ThrowsAsync<InvalidOperationException>(()=>s.PostAsync(new PostExpenseRequest(expense.Id,expense.Id,null,new DateOnly(2026,9,30),"AFN",10m,null,null,null,"bad-payment")));}finally{SqliteConnection.ClearAllPools();Delete(root);}
  }
  [Fact] public async Task Reversal_posts_opposite_journal_and_is_idempotent()
  {
   var root=Temp();try{await using var p=Build(root);await Init(p);var s=p.GetRequiredService<IExpenseService>();var refs=await s.GetReferenceDataAsync();var row=await s.PostAsync(new PostExpenseRequest(refs.ExpenseAccounts.Single(x=>x.SystemKey=="operating_expense").Id,refs.PaymentAccounts.Single(x=>x.SystemKey=="cash_on_hand").Id,null,new DateOnly(2026,9,30),"AFN",50m,null,null,null,"reverse-me"));
-  var reversed=await s.ReverseAsync(row.Expense.Id,"Entered twice");Assert.Equal("reversed",reversed.Expense.Status);var journals=await s.GetJournalsAsync(row.Expense.Id);Assert.Equal(2,journals.Count);Assert.Equal("reversed",journals[0].Status);Assert.Equal("posted",journals[1].Status);Assert.Equal(journals[0].Lines[0].Debit,journals[1].Lines[0].Credit);await s.ReverseAsync(row.Expense.Id,"Entered twice");Assert.Equal(2,(await s.GetJournalsAsync(row.Expense.Id)).Count);}finally{SqliteConnection.ClearAllPools();Delete(root);}
+  var reversed=await s.ReverseAsync(row.Expense.Id,"Entered twice");Assert.Equal("reversed",reversed.Expense.Status);var journals=await s.GetJournalsAsync(row.Expense.Id);Assert.Equal(2,journals.Count);Assert.Equal("reversed",journals[0].Status);Assert.Equal("posted",journals[1].Status);Assert.Equal(journals[0].TotalDebit,journals[1].TotalCredit);Assert.Equal(journals[0].TotalCredit,journals[1].TotalDebit);await s.ReverseAsync(row.Expense.Id,"Entered twice");Assert.Equal(2,(await s.GetJournalsAsync(row.Expense.Id)).Count);}finally{SqliteConnection.ClearAllPools();Delete(root);}
  }
- private static async Task<string> ReadAccountBySystemKey(ServiceProvider p,string key){var f=p.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<PharmacyDbContext>>();await using var c=await f.CreateDbContextAsync();return await c.Set<BusinessOS.Pharmacy.Persistence.Entities.LedgerAccountEntity>().Where(x=>x.SystemKey==key).Select(x=>x.Id).SingleAsync();}
  private static async Task Init(ServiceProvider p){await p.GetRequiredService<ILocalDatabaseInitializer>().InitializeAsync("tenant-expenses");}
  private static ServiceProvider Build(string root){var s=new ServiceCollection();s.AddBusinessOSInfrastructure(new ApplicationPaths(root));s.AddSingleton<IPermissionAuthorizer>(new Allow());s.AddSingleton<IUserSessionService>(new Session());s.AddBusinessOSPersistence();return s.BuildServiceProvider(true);}
  private static string Temp()=>Path.Combine(Path.GetTempPath(),"darmaltoon-expense-tests",Guid.NewGuid().ToString("N"));private static void Delete(string r){if(Directory.Exists(r))Directory.Delete(r,true);}

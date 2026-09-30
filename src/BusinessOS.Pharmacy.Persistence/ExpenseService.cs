@@ -73,7 +73,8 @@ public sealed class ExpenseService : IExpenseService
         await using var c=await _factory.CreateDbContextAsync(ct); var q=ExpenseQuery(c).AsNoTracking();
         if(f.From is not null) q=q.Where(x=>x.BusinessDate>=f.From); if(f.To is not null) q=q.Where(x=>x.BusinessDate<=f.To); if(status is not null) q=q.Where(x=>x.Status==status);
         if(search is not null){var p=$"%{search}%";q=q.Where(x=>EF.Functions.Like(x.ExpenseNumber,p)||(x.Payee!=null&&EF.Functions.Like(x.Payee,p))||(x.Reference!=null&&EF.Functions.Like(x.Reference,p)));}
-        return await q.OrderByDescending(x=>x.BusinessDate).ThenByDescending(x=>x.PostedAt).Take(take).Select(x=>ToListProjection(x)).ToListAsync(ct);
+        var rows = await q.OrderByDescending(x=>x.BusinessDate).ThenByDescending(x=>x.PostedAt).Take(take).ToListAsync(ct);
+        return rows.Select(ToListProjection).ToList();
     }
     public async Task<ExpenseDetail?> GetAsync(string id,CancellationToken ct=default){_permissions.Demand("accounting.manage");await using var c=await _factory.CreateDbContextAsync(ct);var x=await ExpenseQuery(c).AsNoTracking().SingleOrDefaultAsync(x=>x.Id==id,ct);return x is null?null:ToDetail(x);}
     public async Task<IReadOnlyList<JournalEntryDetail>> GetJournalsAsync(string expenseId,CancellationToken ct=default)
