@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
+using BusinessOS.Pharmacy.Desktop.Customers;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.Desktop.Inventory;
@@ -36,6 +37,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IUserSessionService sessions,
         IPermissionAuthorizer permissions,
         DashboardViewModel dashboard,
+        CustomersViewModel customers,
         MedicinesViewModel medicines,
         InventoryViewModel inventory,
         PurchasingViewModel purchasing)
@@ -44,12 +46,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _sessions = sessions;
         _permissions = permissions;
         Dashboard = dashboard;
+        Customers = customers;
         Medicines = medicines;
         Inventory = inventory;
         Purchasing = purchasing;
         currentPage = Dashboard;
 
         Dashboard.SetLanguage(SelectedLanguage);
+        Customers.SetLanguage(SelectedLanguage);
         Medicines.SetLanguage(SelectedLanguage);
         Inventory.SetLanguage(SelectedLanguage);
         Purchasing.SetLanguage(SelectedLanguage);
@@ -65,6 +69,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public IAsyncRelayCommand LogoutCommand { get; }
     public IAsyncRelayCommand<string> NavigateCommand { get; }
     public DashboardViewModel Dashboard { get; }
+    public CustomersViewModel Customers { get; }
     public MedicinesViewModel Medicines { get; }
     public InventoryViewModel Inventory { get; }
     public PurchasingViewModel Purchasing { get; }
@@ -76,6 +81,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
         "purchases" => Translate("Purchases", "خریداری", "پېرود"),
+        "customers" => Translate("Customers", "مشتریان", "پېرودونکي"),
         _ => Translate("Dashboard", "داشبورد", "ډشبورډ"),
     };
     public string PageSubtitle => CurrentSectionKey switch
@@ -92,6 +98,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "Suppliers, purchase orders, receiving, invoices and supplier payments",
             "تأمین‌کنندگان، سفارش خرید، دریافت، فاکتور و پرداخت",
             "عرضه کوونکي، پېرود امرونه، ترلاسه کول، بلونه او تادیات"),
+        "customers" => Translate(
+            "Customer records and per-sale credit limits",
+            "اطلاعات مشتری و سقف اعتبار هر فروش",
+            "د پېرودونکو معلومات او د هر خرڅلاو د پور حد"),
         _ => Translate(
             "Local-first pharmacy operations",
             "عملیات محلی دواخانه",
@@ -114,6 +124,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(PermissionCount));
 
         Dashboard.SetLanguage(SelectedLanguage);
+        Customers.SetLanguage(SelectedLanguage);
         Medicines.SetLanguage(SelectedLanguage);
         Inventory.SetLanguage(SelectedLanguage);
         Purchasing.SetLanguage(SelectedLanguage);
@@ -126,6 +137,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         LayoutDirection = value.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
         Dashboard.SetLanguage(value);
+        Customers.SetLanguage(value);
         Medicines.SetLanguage(value);
         Inventory.SetLanguage(value);
         Purchasing.SetLanguage(value);
@@ -196,6 +208,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentSectionKey = "purchases";
                 CurrentPage = Purchasing;
                 await Purchasing.LoadAsync();
+                break;
+
+            case "customers" when _permissions.HasPermission("customers.manage"):
+                CurrentSectionKey = "customers";
+                CurrentPage = Customers;
+                await Customers.LoadAsync();
                 break;
         }
     }
