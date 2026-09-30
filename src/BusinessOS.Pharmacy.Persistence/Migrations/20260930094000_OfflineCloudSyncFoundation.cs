@@ -51,6 +51,29 @@ public sealed class OfflineCloudSyncFoundation : Migration
             });
 
         migrationBuilder.CreateTable(
+            name: "sync_entity_maps",
+            columns: table => new
+            {
+                stream = table.Column<string>(type: "TEXT", maxLength: 80, nullable: false),
+                local_entity_id = table.Column<string>(type: "TEXT", maxLength: 80, nullable: false),
+                cloud_entity_id = table.Column<string>(type: "TEXT", maxLength: 80, nullable: false),
+                cloud_version = table.Column<string>(type: "TEXT", maxLength: 191, nullable: true),
+                updated_at = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey(
+                    "PK_sync_entity_maps",
+                    x => new { x.stream, x.local_entity_id });
+            });
+
+        migrationBuilder.CreateIndex(
+            name: "IX_sync_entity_maps_stream_cloud_entity_id",
+            table: "sync_entity_maps",
+            columns: new[] { "stream", "cloud_entity_id" },
+            unique: true);
+
+        migrationBuilder.CreateTable(
             name: "sync_queue",
             columns: table => new
             {
@@ -120,6 +143,7 @@ public sealed class OfflineCloudSyncFoundation : Migration
     {
         migrationBuilder.DropTable(name: "sync_checkpoints");
         migrationBuilder.DropTable(name: "sync_conflicts");
+        migrationBuilder.DropTable(name: "sync_entity_maps");
         migrationBuilder.DropTable(name: "sync_queue");
     }
 }
