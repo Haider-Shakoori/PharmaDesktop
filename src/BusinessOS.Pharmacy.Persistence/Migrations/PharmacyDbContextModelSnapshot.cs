@@ -592,6 +592,41 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
                     b.ToTable("sync_conflicts", (string)null);
                 });
 
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SyncEntityMapEntity", b =>
+                {
+                    b.Property<string>("Stream")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stream");
+
+                    b.Property<string>("LocalEntityId")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("local_entity_id");
+
+                    b.Property<string>("CloudEntityId")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cloud_entity_id");
+
+                    b.Property<string>("CloudVersion")
+                        .HasMaxLength(191)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cloud_version");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Stream", "LocalEntityId");
+
+                    b.HasIndex("Stream", "CloudEntityId")
+                        .IsUnique();
+
+                    b.ToTable("sync_entity_maps", (string)null);
+                });
+
             modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SyncQueueEntity", b =>
                 {
                     b.Property<string>("Id")
