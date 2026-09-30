@@ -1,4 +1,5 @@
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Desktop.Activation;
 using BusinessOS.Pharmacy.Desktop.Authentication;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
@@ -11,6 +12,7 @@ using BusinessOS.Pharmacy.Infrastructure.Storage;
 using BusinessOS.Pharmacy.Licensing;
 using BusinessOS.Pharmacy.LocalClient;
 using BusinessOS.Pharmacy.Persistence;
+using BusinessOS.Pharmacy.Sync;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -54,6 +56,15 @@ public static class DesktopHost
                 {
                     services.AddBusinessOSPersistence();
                     services.AddBusinessOSLicensing(context.Configuration);
+
+                    services.AddSingleton(new HttpClient
+                    {
+                        Timeout = TimeSpan.FromSeconds(20),
+                    });
+                    services.AddSingleton<SyncRetryPolicy>();
+                    services.AddSingleton<ICloudSyncTransport, DesktopCloudSyncTransport>();
+                    services.AddSingleton<ISyncEngine, CloudSyncEngine>();
+                    services.AddHostedService<CloudSyncBackgroundService>();
                 }
 
                 services.AddSingleton(networkConfiguration);
