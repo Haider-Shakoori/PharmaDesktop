@@ -10,6 +10,7 @@ using BusinessOS.Pharmacy.Desktop.Medicines;
 using BusinessOS.Pharmacy.Desktop.Navigation;
 using BusinessOS.Pharmacy.Desktop.Purchasing;
 using BusinessOS.Pharmacy.Desktop.Pos;
+using BusinessOS.Pharmacy.Desktop.Returns;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -42,7 +43,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         MedicinesViewModel medicines,
         InventoryViewModel inventory,
         PurchasingViewModel purchasing,
-        PosViewModel pos)
+        PosViewModel pos,
+        ReturnsViewModel returns)
     {
         _clock = clock;
         _sessions = sessions;
@@ -53,6 +55,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Inventory = inventory;
         Purchasing = purchasing;
         Pos = pos;
+        Returns = returns;
         currentPage = Dashboard;
 
         Dashboard.SetLanguage(SelectedLanguage);
@@ -61,6 +64,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Inventory.SetLanguage(SelectedLanguage);
         Purchasing.SetLanguage(SelectedLanguage);
         Pos.SetLanguage(SelectedLanguage);
+        Returns.SetLanguage(SelectedLanguage);
         Dashboard.NavigationRequested += OnDashboardNavigationRequested;
 
         LogoutCommand = new AsyncRelayCommand(LogoutAsync);
@@ -78,12 +82,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public InventoryViewModel Inventory { get; }
     public PurchasingViewModel Purchasing { get; }
     public PosViewModel Pos { get; }
+    public ReturnsViewModel Returns { get; }
 
     public string ApplicationName => "Darmaltoon";
     public string ParentBrand => "BusinessOS.af";
     public string PageTitle => CurrentSectionKey switch
     {
         "pos" => Translate("Point of Sale", "فروش", "خرڅلاو"),
+        "returns" => Translate("Sale Returns", "برگشت فروش", "د خرڅلاو بېرته ستنول"),
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
         "purchases" => Translate("Purchases", "خریداری", "پېرود"),
@@ -92,6 +98,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
     };
     public string PageSubtitle => CurrentSectionKey switch
     {
+        "returns" => Translate(
+            "Allocation-aware returns, refunds and safe stock restocking",
+            "برگشت مبتنی بر تخصیص، بازپرداخت و بازگردانی امن موجودی",
+            "د تخصیص پر بنسټ ستنېدل، بېرته تادیه او خوندي زېرمه"),
         "pos" => Translate(
             "Fast local sales with FEFO stock allocation and mixed payments",
             "فروش سریع محلی با تخصیص FEFO و پرداخت ترکیبی",
@@ -139,6 +149,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Inventory.SetLanguage(SelectedLanguage);
         Purchasing.SetLanguage(SelectedLanguage);
         Pos.SetLanguage(SelectedLanguage);
+        Returns.SetLanguage(SelectedLanguage);
         CurrentSectionKey = "dashboard";
         CurrentPage = Dashboard;
         RefreshNavigation();
@@ -153,6 +164,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Inventory.SetLanguage(value);
         Purchasing.SetLanguage(value);
         Pos.SetLanguage(value);
+        Returns.SetLanguage(value);
         RefreshNavigation();
         RaisePageText();
         OnPropertyChanged(nameof(OnlineText));
@@ -167,6 +179,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         NavigationItems.Clear();
         AddIfAllowed("dashboard.view", "dashboard", Translate("Dashboard", "داشبورد", "ډشبورډ"), "⌂");
         AddIfAllowed("pos.sell", "pos", Translate("POS", "فروش", "خرڅلاو"), "▣");
+        AddIfAllowed("returns.manage", "returns", Translate("Returns", "برگشت", "ستنېدل"), "↶");
         AddIfAllowed("medicines.manage", "medicines", Translate("Medicines", "ادویه", "درمل"), "✚");
         if (_permissions.HasPermission("inventory.manage") ||
             _permissions.HasPermission("inventory.status"))
@@ -206,6 +219,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentSectionKey = "pos";
                 CurrentPage = Pos;
                 await Pos.LoadAsync();
+                break;
+
+            case "returns" when _permissions.HasPermission("returns.manage"):
+                CurrentSectionKey = "returns";
+                CurrentPage = Returns;
+                await Returns.LoadAsync();
                 break;
 
             case "medicines" when _permissions.HasPermission("medicines.manage"):
