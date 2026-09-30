@@ -2,6 +2,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Dashboard;
 using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Application.Abstractions.Storage;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,7 @@ public static class DependencyInjection
         services.AddSingleton<ILocalDatabaseInitializer, LocalDatabaseInitializer>();
         services.AddSingleton<ILocalSettingsStore, LocalSettingsStore>();
         services.AddSingleton<ILocalSequenceService, LocalSequenceService>();
+        services.AddSingleton<ISyncQueueStore, SqliteSyncQueueStore>();
         services.AddSingleton<ILocalDashboardQueryService, LocalDashboardQueryService>();
         services.AddTransient<IMedicineCatalogService, MedicineCatalogService>();
         services.AddTransient<IMedicineCsvService, MedicineCsvService>();
