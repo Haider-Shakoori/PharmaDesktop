@@ -12,7 +12,7 @@ namespace BusinessOS.Pharmacy.IntegrationTests.Persistence;
 public sealed class DashboardQueryTests
 {
     [Fact]
-    public async Task Dashboard_returns_clean_zero_state_before_operational_module_tables_exist()
+    public async Task Dashboard_returns_zero_metrics_when_inventory_is_initialized_but_empty()
     {
         var root = CreateTemporaryRoot();
 
