@@ -77,7 +77,8 @@ public sealed class PharmacyReportTests
             Assert.Single(report.Sales);
             Assert.Single(report.Returns);
             Assert.Contains(report.LowStock, x => x.MedicineId == medicineId && x.AvailableStock == 4.2m);
-            var nearExpiry = Assert.Single(report.NearExpiry);\n            Assert.Equal("REPORT-B", nearExpiry.BatchNumber);
+            var nearExpiry = Assert.Single(report.NearExpiry);
+            Assert.Equal("REPORT-B", nearExpiry.BatchNumber);
         }
         finally
         {

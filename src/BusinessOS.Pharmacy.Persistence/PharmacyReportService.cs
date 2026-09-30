@@ -54,7 +54,8 @@ public sealed class PharmacyReportService : IPharmacyReportService
                 x.Status == "completed" &&
                 x.BusinessDate >= range.From &&
                 x.BusinessDate <= range.To)
-            .OrderByDescending(x => x.CompletedAt)
+            .OrderByDescending(x => x.BusinessDate)
+            .ThenByDescending(x => x.Id)
             .ToListAsync(cancellationToken);
 
         var saleIds = sales.Select(x => x.Id).ToList();
@@ -71,7 +72,8 @@ public sealed class PharmacyReportService : IPharmacyReportService
                 x.Status == "completed" &&
                 x.BusinessDate >= range.From &&
                 x.BusinessDate <= range.To)
-            .OrderByDescending(x => x.CompletedAt)
+            .OrderByDescending(x => x.BusinessDate)
+            .ThenByDescending(x => x.Id)
             .ToListAsync(cancellationToken);
 
         var returnIds = returns.Select(x => x.Id).ToList();
@@ -97,7 +99,7 @@ public sealed class PharmacyReportService : IPharmacyReportService
             .Include(x => x.Supplier)
             .Where(x => x.InvoiceDate >= range.From && x.InvoiceDate <= range.To)
             .OrderByDescending(x => x.InvoiceDate)
-            .ThenByDescending(x => x.CreatedAt)
+            .ThenByDescending(x => x.Id)
             .ToListAsync(cancellationToken);
 
         var allReceivables = await context.Set<SaleEntity>()
@@ -132,16 +134,19 @@ public sealed class PharmacyReportService : IPharmacyReportService
             range.To.AddDays(1).ToDateTime(TimeOnly.MinValue),
             KabulOffset).ToUniversalTime();
 
-        var movements = await context.Set<StockMovementEntity>()
+        var movementRows = await context.Set<StockMovementEntity>()
             .AsNoTracking()
             .Include(x => x.ProductBatch)
                 .ThenInclude(x => x.Medicine)
             .Include(x => x.ProductBatch)
                 .ThenInclude(x => x.StockLocation)
+            .ToListAsync(cancellationToken);
+
+        var movements = movementRows
             .Where(x => x.OccurredAt >= fromInstant && x.OccurredAt < toExclusive)
             .OrderByDescending(x => x.OccurredAt)
             .Take(1000)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var salesTotal = Money(sales.Sum(x => x.GrandTotal));
         var returnsTotal = Money(returns.Sum(x => x.RefundTotal));
