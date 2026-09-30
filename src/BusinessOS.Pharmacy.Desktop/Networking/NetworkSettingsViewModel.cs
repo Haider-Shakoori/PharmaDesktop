@@ -127,9 +127,15 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
 
             if (configuration.Mode == DeploymentMode.Server)
             {
-                var firewall = await _serviceController
+                var apiFirewall = await _serviceController
                     .GetPrivateFirewallRuleStatusAsync(configuration.ServerPort);
-                FirewallStatus = firewall.Message;
+                var discoveryFirewall = await _serviceController
+                    .GetPrivateDiscoveryFirewallRuleStatusAsync(configuration.DiscoveryPort);
+
+                FirewallStatus = string.Join(
+                    Environment.NewLine,
+                    apiFirewall.Message,
+                    discoveryFirewall.Message);
             }
             else
             {
@@ -242,8 +248,24 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         await BusyAsync(async () =>
         {
             EnsureServerMode();
-            var result = await _serviceController.EnsurePrivateFirewallRuleAsync(ServerPort);
-            StatusMessage = result.Message;
+
+            var configuration = await _configurationStore.LoadAsync();
+            var apiResult = await _serviceController
+                .EnsurePrivateFirewallRuleAsync(ServerPort);
+            var discoveryResult = await _serviceController
+                .EnsurePrivateDiscoveryFirewallRuleAsync(configuration.DiscoveryPort);
+
+            FirewallStatus = string.Join(
+                Environment.NewLine,
+                apiResult.Message,
+                discoveryResult.Message);
+
+            StatusMessage = apiResult.Success && discoveryResult.Success
+                ? T(
+                    "Private LAN firewall rules are configured for the API and automatic discovery.",
+                    "قوانین فایروال شبکه خصوصی برای API و کشف خودکار تنظیم شد.",
+                    "د شخصي شبکې فایروال قواعد د API او اتومات موندنې لپاره تنظیم شول.")
+                : FirewallStatus;
         });
     }
 
@@ -446,11 +468,23 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
             var configuration = await _configurationStore.LoadAsync();
             var service = await _serviceController.GetStatusAsync();
             var profile = await _serviceController.GetNetworkProfileStatusAsync();
-            var firewall = configuration.Mode == DeploymentMode.Server
-                ? await _serviceController.GetPrivateFirewallRuleStatusAsync(configuration.ServerPort)
-                : new FirewallConfigurationResult(
+            FirewallConfigurationResult apiFirewall;
+            FirewallConfigurationResult discoveryFirewall;
+
+            if (configuration.Mode == DeploymentMode.Server)
+            {
+                apiFirewall = await _serviceController
+                    .GetPrivateFirewallRuleStatusAsync(configuration.ServerPort);
+                discoveryFirewall = await _serviceController
+                    .GetPrivateDiscoveryFirewallRuleStatusAsync(configuration.DiscoveryPort);
+            }
+            else
+            {
+                apiFirewall = new FirewallConfigurationResult(
                     true,
                     "Not applicable; this computer is not the Main Pharmacy Server.");
+                discoveryFirewall = apiFirewall;
+            }
 
             var paths = _services.GetRequiredService<IApplicationPaths>();
             paths.EnsureCreated();
@@ -513,7 +547,12 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
             }
 
             NetworkProfileStatus = profile.Message;
-            FirewallStatus = firewall.Message;
+            FirewallStatus = configuration.Mode == DeploymentMode.Server
+                ? string.Join(
+                    Environment.NewLine,
+                    apiFirewall.Message,
+                    discoveryFirewall.Message)
+                : apiFirewall.Message;
 
             DiagnosticsReport = string.Join(
                 Environment.NewLine,
@@ -521,7 +560,8 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
                 $"Server Service: {service.Message}",
                 $"LAN Connection: {ConnectionStatus}",
                 $"Network Profile: {profile.Message}",
-                $"Firewall: {firewall.Message}",
+                $"API Firewall: {apiFirewall.Message}",
+                $"Discovery Firewall: {discoveryFirewall.Message}",
                 $"Address/Port: {(configuration.ServerHost ?? Environment.MachineName)}:{configuration.ServerPort}",
                 databaseStatus,
                 diskStatus,
