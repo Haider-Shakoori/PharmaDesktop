@@ -1,3 +1,4 @@
+using System.IO;
 using System.Collections.ObjectModel;
 using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
