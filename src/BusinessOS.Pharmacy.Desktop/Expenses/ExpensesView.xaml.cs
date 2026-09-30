@@ -1,0 +1,1 @@
+using System.Windows.Controls; namespace BusinessOS.Pharmacy.Desktop.Expenses; public partial class ExpensesView:UserControl{public ExpensesView()=>InitializeComponent();}
