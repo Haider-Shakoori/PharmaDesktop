@@ -56,6 +56,32 @@ This prevents a first-run LAN wizard from disrupting an existing pharmacy.
 
 The existing database remains in place. Medicines and other authoritative data are not recreated.
 
+## Windows Service installation
+
+The Local Server project supports Windows Service hosting.
+
+For technician/manual installation before the final installer batch, use:
+
+`scripts/install-darmaltoon-local-server.ps1`
+
+Run it as Administrator and pass the published `BusinessOS.Pharmacy.LocalServer.exe` path.
+
+The script:
+
+- refuses a Public-only Windows network
+- configures automatic service startup
+- configures service restart recovery
+- opens the HTTPS API TCP port on the Private profile only
+- opens the UDP discovery port on the Private profile only
+- starts the service
+- does not delete or reset pharmacy data
+
+To remove only the service/firewall rules while keeping pharmacy data/configuration:
+
+`scripts/uninstall-darmaltoon-local-server.ps1`
+
+The production installer should invoke equivalent logic automatically so pharmacy staff do not need developer commands.
+
 ## Main Server network requirements
 
 Recommended:
