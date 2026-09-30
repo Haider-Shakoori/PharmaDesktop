@@ -6,7 +6,8 @@ namespace BusinessOS.Pharmacy.Infrastructure.Networking;
 public sealed class WindowsLocalServerServiceController : ILocalServerServiceController
 {
     public const string ServiceName = "BusinessOS Pharmacy Local Server";
-    public const string FirewallRuleName = "Darmaltoon Local Server (Private LAN)";
+    public const string FirewallRuleName = "Darmaltoon Local Server API (Private LAN)";
+    public const string DiscoveryFirewallRuleName = "Darmaltoon Local Server Discovery (Private LAN)";
 
     public async Task<LocalServerServiceStatus> GetStatusAsync(
         CancellationToken cancellationToken = default)
@@ -228,6 +229,95 @@ public sealed class WindowsLocalServerServiceController : ILocalServerServiceCon
             : new FirewallConfigurationResult(
                 false,
                 "Windows could not configure the private-network firewall rule. Administrator rights may be required.");
+    }
+
+
+    public async Task<FirewallConfigurationResult> GetPrivateDiscoveryFirewallRuleStatusAsync(
+        int discoveryPort,
+        CancellationToken cancellationToken = default)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return new FirewallConfigurationResult(
+                false,
+                "Windows Firewall status is available only on Windows.");
+        }
+
+        ValidatePort(discoveryPort);
+
+        var result = await RunAsync(
+            "netsh.exe",
+            $"advfirewall firewall show rule name=\"{DiscoveryFirewallRuleName}\" verbose",
+            cancellationToken);
+
+        if (result.ExitCode != 0)
+        {
+            return new FirewallConfigurationResult(
+                false,
+                "The Darmaltoon private-LAN discovery firewall rule is not installed.");
+        }
+
+        var mentionsPort = result.Output.Contains(
+            discoveryPort.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            StringComparison.OrdinalIgnoreCase);
+        var mentionsPrivate = result.Output.Contains(
+            "Private",
+            StringComparison.OrdinalIgnoreCase);
+
+        return mentionsPort && mentionsPrivate
+            ? new FirewallConfigurationResult(
+                true,
+                $"Private-network discovery firewall rule is present for UDP {discoveryPort}.")
+            : new FirewallConfigurationResult(
+                false,
+                "A Darmaltoon discovery firewall rule exists, but its port/profile does not match the current Server configuration.");
+    }
+
+    public async Task<FirewallConfigurationResult> EnsurePrivateDiscoveryFirewallRuleAsync(
+        int discoveryPort,
+        CancellationToken cancellationToken = default)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return new FirewallConfigurationResult(
+                false,
+                "Windows Firewall configuration is available only on Windows.");
+        }
+
+        ValidatePort(discoveryPort);
+
+        var profile = await GetNetworkProfileStatusAsync(cancellationToken);
+        if (profile.HasPublicNetwork && !profile.HasPrivateOrDomainNetwork)
+        {
+            return new FirewallConfigurationResult(
+                false,
+                "Discovery firewall rule was not opened because Windows identifies the connected network as Public.");
+        }
+
+        if (!profile.HasPrivateOrDomainNetwork)
+        {
+            return new FirewallConfigurationResult(
+                false,
+                "Discovery firewall rule was not opened because no trusted Private/Domain network is currently available.");
+        }
+
+        _ = await RunAsync(
+            "netsh.exe",
+            $"advfirewall firewall delete rule name=\"{DiscoveryFirewallRuleName}\"",
+            cancellationToken);
+
+        var add = await RunAsync(
+            "netsh.exe",
+            $"advfirewall firewall add rule name=\"{DiscoveryFirewallRuleName}\" dir=in action=allow protocol=UDP localport={discoveryPort} profile=private",
+            cancellationToken);
+
+        return add.ExitCode == 0
+            ? new FirewallConfigurationResult(
+                true,
+                $"Private-network discovery firewall rule is configured for UDP {discoveryPort}.")
+            : new FirewallConfigurationResult(
+                false,
+                "Windows could not configure the private-network discovery firewall rule. Administrator rights may be required.");
     }
 
     private static void ValidatePort(int port)
