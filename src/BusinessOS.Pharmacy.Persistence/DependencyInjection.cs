@@ -53,6 +53,7 @@ public static class DependencyInjection
         services.AddSingleton<ICustomerCreditPolicy>(sp => sp.GetRequiredService<CustomerService>());
         services.AddSingleton<IPurchasingService, PurchasingService>();
         services.AddSingleton<IPosService, PosService>();
+        services.AddSingleton<ISaleReturnService, SaleReturnService>();
 
         return services;
     }
