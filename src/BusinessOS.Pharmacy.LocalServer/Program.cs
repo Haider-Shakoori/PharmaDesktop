@@ -30,6 +30,19 @@ if (networkConfiguration.Mode != DeploymentMode.Server)
         "BusinessOS Pharmacy Local Server can run only when this computer is configured as Main Pharmacy Server.");
 }
 
+if (OperatingSystem.IsWindows())
+{
+    var networkProfile = await new WindowsLocalServerServiceController()
+        .GetNetworkProfileStatusAsync();
+
+    if (networkProfile.HasPublicNetwork &&
+        !networkProfile.HasPrivateOrDomainNetwork)
+    {
+        throw new InvalidOperationException(
+            "Darmaltoon Local Server will not listen on a Public-only Windows network. Mark the trusted pharmacy LAN as Private, then start the service again.");
+    }
+}
+
 var bootstrapSecrets = new WindowsNetworkSecretStore(paths);
 var certificateProvider = new LocalServerCertificateProvider(paths, bootstrapSecrets);
 using var certificate = await certificateProvider.GetOrCreateAsync();
