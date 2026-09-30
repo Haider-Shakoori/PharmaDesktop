@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BusinessOS.Pharmacy.Persistence;
 
-internal sealed class StockLedger
+public sealed class StockLedger
 {
     private readonly IClock _clock;
 
