@@ -132,7 +132,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AddIfAllowed("dashboard.view", "dashboard", Translate("Dashboard", "داشبورد", "ډشبورډ"), "⌂");
         AddIfAllowed("pos.sell", "pos", Translate("POS", "فروش", "خرڅلاو"), "▣");
         AddIfAllowed("medicines.manage", "medicines", Translate("Medicines", "ادویه", "درمل"), "✚");
-        AddIfAllowed("inventory.manage", "inventory", Translate("Inventory", "موجودی", "زېرمه"), "▤");
+        if (_permissions.HasPermission("inventory.manage") ||
+            _permissions.HasPermission("inventory.status"))
+        {
+            NavigationItems.Add(new(
+                "inventory",
+                Translate("Inventory", "موجودی", "زېرمه"),
+                "▤"));
+        }
         AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), "↓");
         AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), "♙");
         AddIfAllowed("reports.view", "reports", Translate("Reports", "گزارش‌ها", "راپورونه"), "▥");
