@@ -16,7 +16,7 @@ internal static class InventoryWriteTransaction
             await connection.OpenAsync(cancellationToken);
         }
 
-        var transaction = connection.BeginTransaction(SqliteTransactionMode.Immediate);
+        var transaction = connection.BeginTransaction(deferred: false);
         await context.Database.UseTransactionAsync(transaction, cancellationToken);
         return transaction;
     }
