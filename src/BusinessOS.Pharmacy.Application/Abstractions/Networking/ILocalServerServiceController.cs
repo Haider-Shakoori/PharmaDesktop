@@ -18,6 +18,14 @@ public interface ILocalServerServiceController
     Task<FirewallConfigurationResult> EnsurePrivateFirewallRuleAsync(
         int port,
         CancellationToken cancellationToken = default);
+
+    Task<FirewallConfigurationResult> GetPrivateDiscoveryFirewallRuleStatusAsync(
+        int discoveryPort,
+        CancellationToken cancellationToken = default);
+
+    Task<FirewallConfigurationResult> EnsurePrivateDiscoveryFirewallRuleAsync(
+        int discoveryPort,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record LocalServerServiceStatus(
