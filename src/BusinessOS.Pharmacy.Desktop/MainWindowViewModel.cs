@@ -7,6 +7,7 @@ using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.Desktop.Inventory;
 using BusinessOS.Pharmacy.Desktop.Medicines;
 using BusinessOS.Pharmacy.Desktop.Navigation;
+using BusinessOS.Pharmacy.Desktop.Purchasing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -36,7 +37,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IPermissionAuthorizer permissions,
         DashboardViewModel dashboard,
         MedicinesViewModel medicines,
-        InventoryViewModel inventory)
+        InventoryViewModel inventory,
+        PurchasingViewModel purchasing)
     {
         _clock = clock;
         _sessions = sessions;
@@ -44,11 +46,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Dashboard = dashboard;
         Medicines = medicines;
         Inventory = inventory;
+        Purchasing = purchasing;
         currentPage = Dashboard;
 
         Dashboard.SetLanguage(SelectedLanguage);
         Medicines.SetLanguage(SelectedLanguage);
         Inventory.SetLanguage(SelectedLanguage);
+        Purchasing.SetLanguage(SelectedLanguage);
         Dashboard.NavigationRequested += OnDashboardNavigationRequested;
 
         LogoutCommand = new AsyncRelayCommand(LogoutAsync);
@@ -63,6 +67,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public DashboardViewModel Dashboard { get; }
     public MedicinesViewModel Medicines { get; }
     public InventoryViewModel Inventory { get; }
+    public PurchasingViewModel Purchasing { get; }
 
     public string ApplicationName => "Darmaltoon";
     public string ParentBrand => "BusinessOS.af";
@@ -70,6 +75,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
+        "purchases" => Translate("Purchases", "خریداری", "پېرود"),
         _ => Translate("Dashboard", "داشبورد", "ډشبورډ"),
     };
     public string PageSubtitle => CurrentSectionKey switch
@@ -82,6 +88,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "Batch-aware stock, expiry and movement control",
             "کنترل موجودی، بچ، انقضا و گردش کالا",
             "د بېچ، ختمېدو او زېرمتون حرکتونو کنټرول"),
+        "purchases" => Translate(
+            "Suppliers, purchase orders, receiving, invoices and supplier payments",
+            "تأمین‌کنندگان، سفارش خرید، دریافت، فاکتور و پرداخت",
+            "عرضه کوونکي، پېرود امرونه، ترلاسه کول، بلونه او تادیات"),
         _ => Translate(
             "Local-first pharmacy operations",
             "عملیات محلی دواخانه",
@@ -106,6 +116,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Dashboard.SetLanguage(SelectedLanguage);
         Medicines.SetLanguage(SelectedLanguage);
         Inventory.SetLanguage(SelectedLanguage);
+        Purchasing.SetLanguage(SelectedLanguage);
         CurrentSectionKey = "dashboard";
         CurrentPage = Dashboard;
         RefreshNavigation();
@@ -117,6 +128,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Dashboard.SetLanguage(value);
         Medicines.SetLanguage(value);
         Inventory.SetLanguage(value);
+        Purchasing.SetLanguage(value);
         RefreshNavigation();
         RaisePageText();
         OnPropertyChanged(nameof(OnlineText));
@@ -178,6 +190,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentSectionKey = "inventory";
                 CurrentPage = Inventory;
                 await Inventory.LoadAsync();
+                break;
+
+            case "purchases" when _permissions.HasPermission("purchases.manage"):
+                CurrentSectionKey = "purchases";
+                CurrentPage = Purchasing;
+                await Purchasing.LoadAsync();
                 break;
         }
     }

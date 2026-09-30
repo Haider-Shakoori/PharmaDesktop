@@ -4,6 +4,7 @@ using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Diagnostics;
 using BusinessOS.Pharmacy.Desktop.Inventory;
 using BusinessOS.Pharmacy.Desktop.Medicines;
+using BusinessOS.Pharmacy.Desktop.Purchasing;
 using BusinessOS.Pharmacy.Infrastructure;
 using BusinessOS.Pharmacy.Infrastructure.Storage;
 using BusinessOS.Pharmacy.Licensing;
@@ -43,6 +44,7 @@ public static class DesktopHost
                 services.AddSingleton<DashboardViewModel>();
                 services.AddSingleton<MedicinesViewModel>();
                 services.AddSingleton<InventoryViewModel>();
+                services.AddSingleton<PurchasingViewModel>();
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<StartupCoordinator>();

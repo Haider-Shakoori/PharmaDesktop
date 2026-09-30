@@ -1,7 +1,8 @@
 using BusinessOS.Pharmacy.Application.Abstractions.Dashboard;
-using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
 using BusinessOS.Pharmacy.Application.Abstractions.Inventory;
+using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
+using BusinessOS.Pharmacy.Application.Abstractions.Purchasing;
 using BusinessOS.Pharmacy.Application.Abstractions.Storage;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -44,6 +45,8 @@ public static class DependencyInjection
         services.AddSingleton<StockLedger>();
         services.AddSingleton<IInventoryService, InventoryService>();
         services.AddSingleton<IStockAllocationService, StockAllocationService>();
+        services.AddSingleton<ISupplierService, SupplierService>();
+        services.AddSingleton<IPurchasingService, PurchasingService>();
 
         return services;
     }
