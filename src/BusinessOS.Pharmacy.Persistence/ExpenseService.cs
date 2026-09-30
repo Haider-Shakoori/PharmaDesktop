@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BusinessOS.Pharmacy.Persistence;
 
-public sealed class ExpenseService : IExpenseService
+internal sealed class ExpenseService : IExpenseService
 {
     private readonly IDbContextFactory<PharmacyDbContext> _factory; private readonly IPermissionAuthorizer _permissions;
     private readonly IUserSessionService _sessions; private readonly IClock _clock; private readonly AccountingProvisioner _provisioner; private readonly LedgerPostingService _ledger;
@@ -73,14 +73,14 @@ public sealed class ExpenseService : IExpenseService
         await using var c=await _factory.CreateDbContextAsync(ct); var q=ExpenseQuery(c).AsNoTracking();
         if(f.From is not null) q=q.Where(x=>x.BusinessDate>=f.From); if(f.To is not null) q=q.Where(x=>x.BusinessDate<=f.To); if(status is not null) q=q.Where(x=>x.Status==status);
         if(search is not null){var p=$"%{search}%";q=q.Where(x=>EF.Functions.Like(x.ExpenseNumber,p)||(x.Payee!=null&&EF.Functions.Like(x.Payee,p))||(x.Reference!=null&&EF.Functions.Like(x.Reference,p)));}
-        var rows = await q.OrderByDescending(x=>x.BusinessDate).ThenByDescending(x=>x.PostedAt).Take(take).ToListAsync(ct);
+        var rows = await q.OrderByDescending(x=>x.BusinessDate).ThenByDescending(x=>x.Id).Take(take).ToListAsync(ct);
         return rows.Select(ToListProjection).ToList();
     }
     public async Task<ExpenseDetail?> GetAsync(string id,CancellationToken ct=default){_permissions.Demand("accounting.manage");await using var c=await _factory.CreateDbContextAsync(ct);var x=await ExpenseQuery(c).AsNoTracking().SingleOrDefaultAsync(x=>x.Id==id,ct);return x is null?null:ToDetail(x);}
     public async Task<IReadOnlyList<JournalEntryDetail>> GetJournalsAsync(string expenseId,CancellationToken ct=default)
     {
         _permissions.Demand("accounting.manage"); await using var c=await _factory.CreateDbContextAsync(ct);
-        var rows=await c.Set<JournalEntryEntity>().AsNoTracking().Include(x=>x.Lines).ThenInclude(x=>x.LedgerAccount).Where(x=>x.SourceType=="expense"&&x.SourceId==expenseId).OrderBy(x=>x.PostedAt).ToListAsync(ct);
+        var rows=await c.Set<JournalEntryEntity>().AsNoTracking().Include(x=>x.Lines).ThenInclude(x=>x.LedgerAccount).Where(x=>x.SourceType=="expense"&&x.SourceId==expenseId).OrderBy(x=>x.Id).ToListAsync(ct);
         return rows.Select(ToJournal).ToList();
     }
 
