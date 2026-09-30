@@ -1,5 +1,6 @@
 using System.Windows;
 using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
+using BusinessOS.Pharmacy.Application.Abstractions.Inventory;
 using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
 using BusinessOS.Pharmacy.Desktop.Activation;
@@ -16,6 +17,7 @@ public sealed class StartupCoordinator
     private readonly ILicenseService _licenseService;
     private readonly ILocalDatabaseInitializer _localDatabase;
     private readonly IMedicineSeedService _medicineSeeds;
+    private readonly IInventoryProvisioner _inventoryProvisioner;
     private readonly ActivationWindow _activationWindow;
     private readonly ActivationViewModel _activationViewModel;
     private readonly IServiceProvider _services;
@@ -28,6 +30,7 @@ public sealed class StartupCoordinator
         ILicenseService licenseService,
         ILocalDatabaseInitializer localDatabase,
         IMedicineSeedService medicineSeeds,
+        IInventoryProvisioner inventoryProvisioner,
         ActivationWindow activationWindow,
         ActivationViewModel activationViewModel,
         IServiceProvider services,
@@ -38,6 +41,7 @@ public sealed class StartupCoordinator
         _licenseService = licenseService;
         _localDatabase = localDatabase;
         _medicineSeeds = medicineSeeds;
+        _inventoryProvisioner = inventoryProvisioner;
         _activationWindow = activationWindow;
         _activationViewModel = activationViewModel;
         _services = services;
@@ -85,6 +89,7 @@ public sealed class StartupCoordinator
         try
         {
             await _localDatabase.InitializeAsync(entitlement.TenantId, cancellationToken);
+            await _inventoryProvisioner.EnsureDefaultsAsync(cancellationToken);
 
             try
             {
