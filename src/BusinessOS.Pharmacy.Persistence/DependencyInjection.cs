@@ -6,6 +6,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Inventory;
 using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
 using BusinessOS.Pharmacy.Application.Abstractions.Purchasing;
+using BusinessOS.Pharmacy.Application.Abstractions.Reports;
 using BusinessOS.Pharmacy.Application.Abstractions.Sales;
 using BusinessOS.Pharmacy.Application.Abstractions.Storage;
 using Microsoft.Data.Sqlite;
@@ -60,6 +61,7 @@ public static class DependencyInjection
         services.AddSingleton<LedgerPostingService>();
         services.AddSingleton<IExpenseService, ExpenseService>();
         services.AddSingleton<IDailyClosingService, DailyClosingService>();
+        services.AddSingleton<IPharmacyReportService, PharmacyReportService>();
 
         return services;
     }
