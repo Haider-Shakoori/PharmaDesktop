@@ -10,7 +10,7 @@ public sealed class StockLedger
 
     public StockLedger(IClock clock) => _clock = clock;
 
-    public async Task<StockMovementEntity> RecordAsync(
+    internal async Task<StockMovementEntity> RecordAsync(
         PharmacyDbContext context,
         ProductBatchEntity batch,
         decimal quantityDelta,
@@ -114,15 +114,15 @@ public sealed class StockLedger
         return movement;
     }
 
-    public static decimal Scale(decimal value) =>
+    internal static decimal Scale(decimal value) =>
         decimal.Round(value, 4, MidpointRounding.AwayFromZero);
 
-    public static decimal ScaleMoney(decimal value) =>
+    internal static decimal ScaleMoney(decimal value) =>
         decimal.Round(value, 4, MidpointRounding.AwayFromZero);
 
-    public static bool IsExpired(ProductBatchEntity batch, DateOnly businessDate) =>
+    internal static bool IsExpired(ProductBatchEntity batch, DateOnly businessDate) =>
         batch.ExpiresAt is not null && batch.ExpiresAt.Value < businessDate;
 
-    public static DateOnly BusinessDate(DateTimeOffset now) =>
+    internal static DateOnly BusinessDate(DateTimeOffset now) =>
         DateOnly.FromDateTime(now.ToOffset(TimeSpan.FromMinutes(270)).DateTime);
 }
