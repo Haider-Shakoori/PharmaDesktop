@@ -1,5 +1,6 @@
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -31,6 +32,7 @@ public static class DependencyInjection
         services.AddSingleton<IOfflinePasswordVerifier, OfflinePasswordVerifier>();
 
         services.AddSingleton<ILicenseService, LicenseService>();
+        services.AddSingleton<ICloudSyncSessionProvider, DesktopCloudSyncSessionProvider>();
         services.AddSingleton<IUserSessionService, PharmacyUserSessionService>();
         services.AddSingleton<IPermissionAuthorizer, PermissionAuthorizer>();
 
