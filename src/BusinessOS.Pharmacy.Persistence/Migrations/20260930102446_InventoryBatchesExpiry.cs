@@ -1,3 +1,4 @@
+using BusinessOS.Pharmacy.Persistence;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
