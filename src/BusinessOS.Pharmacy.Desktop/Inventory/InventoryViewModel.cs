@@ -261,6 +261,8 @@ public sealed partial class InventoryViewModel : ObservableObject
             return;
         }
 
+        var batchId = SelectedBatch.Id;
+
         await ExecuteBusyAsync(async () =>
         {
             var result = await _inventory.AdjustAsync(
@@ -271,8 +273,7 @@ public sealed partial class InventoryViewModel : ObservableObject
                     AdjustmentReason));
 
             await SearchCoreAsync();
-            SelectedBatch = Batches.FirstOrDefault(x => x.Id == result.AdjustmentId) ??
-                            Batches.FirstOrDefault(x => x.Id == SelectedBatch?.Id);
+            SelectedBatch = Batches.FirstOrDefault(x => x.Id == batchId);
             AdjustmentQuantity = 0m;
             AdjustmentReason = string.Empty;
 
