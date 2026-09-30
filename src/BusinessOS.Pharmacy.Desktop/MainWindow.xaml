@@ -6,6 +6,7 @@
         xmlns:medicines="clr-namespace:BusinessOS.Pharmacy.Desktop.Medicines"
         xmlns:inventory="clr-namespace:BusinessOS.Pharmacy.Desktop.Inventory"
         xmlns:purchasing="clr-namespace:BusinessOS.Pharmacy.Desktop.Purchasing"
+        xmlns:pos="clr-namespace:BusinessOS.Pharmacy.Desktop.Pos"
         Title="Darmaltoon"
         Width="1360" Height="820"
         MinWidth="1080" MinHeight="680"
@@ -14,6 +15,9 @@
     <Window.Resources>
         <DataTemplate DataType="{x:Type dashboard:DashboardViewModel}">
             <dashboard:DashboardView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type pos:PosViewModel}">
+            <pos:PosView/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type customers:CustomersViewModel}">
             <customers:CustomersView/>
