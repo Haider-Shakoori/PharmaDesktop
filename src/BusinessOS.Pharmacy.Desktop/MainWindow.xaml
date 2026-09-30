@@ -5,6 +5,7 @@
         xmlns:dashboard="clr-namespace:BusinessOS.Pharmacy.Desktop.Dashboard"
         xmlns:medicines="clr-namespace:BusinessOS.Pharmacy.Desktop.Medicines"
         xmlns:inventory="clr-namespace:BusinessOS.Pharmacy.Desktop.Inventory"
+        xmlns:expenses="clr-namespace:BusinessOS.Pharmacy.Desktop.Expenses"
         xmlns:purchasing="clr-namespace:BusinessOS.Pharmacy.Desktop.Purchasing"
         xmlns:pos="clr-namespace:BusinessOS.Pharmacy.Desktop.Pos"
         xmlns:returns="clr-namespace:BusinessOS.Pharmacy.Desktop.Returns"
@@ -22,6 +23,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type returns:ReturnsViewModel}">
             <returns:ReturnsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type expenses:ExpensesViewModel}">
+            <expenses:ExpensesView/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type customers:CustomersViewModel}">
             <customers:CustomersView/>

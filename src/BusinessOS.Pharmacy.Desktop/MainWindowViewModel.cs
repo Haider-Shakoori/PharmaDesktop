@@ -6,6 +6,7 @@ using BusinessOS.Pharmacy.Desktop.Customers;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.Desktop.Inventory;
+using BusinessOS.Pharmacy.Desktop.Expenses;
 using BusinessOS.Pharmacy.Desktop.Medicines;
 using BusinessOS.Pharmacy.Desktop.Navigation;
 using BusinessOS.Pharmacy.Desktop.Purchasing;
@@ -44,7 +45,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         InventoryViewModel inventory,
         PurchasingViewModel purchasing,
         PosViewModel pos,
-        ReturnsViewModel returns)
+        ReturnsViewModel returns,
+        ExpensesViewModel expenses)
     {
         _clock = clock;
         _sessions = sessions;
@@ -56,6 +58,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Purchasing = purchasing;
         Pos = pos;
         Returns = returns;
+        Expenses = expenses;
         currentPage = Dashboard;
 
         Dashboard.SetLanguage(SelectedLanguage);
@@ -65,6 +68,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Purchasing.SetLanguage(SelectedLanguage);
         Pos.SetLanguage(SelectedLanguage);
         Returns.SetLanguage(SelectedLanguage);
+        Expenses.SetLanguage(SelectedLanguage);
         Dashboard.NavigationRequested += OnDashboardNavigationRequested;
 
         LogoutCommand = new AsyncRelayCommand(LogoutAsync);
@@ -83,6 +87,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public PurchasingViewModel Purchasing { get; }
     public PosViewModel Pos { get; }
     public ReturnsViewModel Returns { get; }
+    public ExpensesViewModel Expenses { get; }
 
     public string ApplicationName => "Darmaltoon";
     public string ParentBrand => "BusinessOS.af";
@@ -90,6 +95,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         "pos" => Translate("Point of Sale", "فروش", "خرڅلاو"),
         "returns" => Translate("Sale Returns", "برگشت فروش", "د خرڅلاو بېرته ستنول"),
+        "expenses" => Translate("Expenses & Accounting", "مصارف و حسابداری", "لګښتونه او حسابداري"),
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
         "purchases" => Translate("Purchases", "خریداری", "پېرود"),
@@ -98,6 +104,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
     };
     public string PageSubtitle => CurrentSectionKey switch
     {
+        "expenses" => Translate(
+            "Balanced expense journals with auditable reversals",
+            "ثبت متوازن مصارف با معکوس‌سازی قابل حسابرسی",
+            "متوازن لګښت ژورنالونه او د پلټنې وړ معکوسونه"),
         "returns" => Translate(
             "Allocation-aware returns, refunds and safe stock restocking",
             "برگشت مبتنی بر تخصیص، بازپرداخت و بازگردانی امن موجودی",
@@ -150,6 +160,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Purchasing.SetLanguage(SelectedLanguage);
         Pos.SetLanguage(SelectedLanguage);
         Returns.SetLanguage(SelectedLanguage);
+        Expenses.SetLanguage(SelectedLanguage);
         CurrentSectionKey = "dashboard";
         CurrentPage = Dashboard;
         RefreshNavigation();
@@ -165,6 +176,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Purchasing.SetLanguage(value);
         Pos.SetLanguage(value);
         Returns.SetLanguage(value);
+        Expenses.SetLanguage(value);
         RefreshNavigation();
         RaisePageText();
         OnPropertyChanged(nameof(OnlineText));
@@ -180,6 +192,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AddIfAllowed("dashboard.view", "dashboard", Translate("Dashboard", "داشبورد", "ډشبورډ"), "⌂");
         AddIfAllowed("pos.sell", "pos", Translate("POS", "فروش", "خرڅلاو"), "▣");
         AddIfAllowed("returns.manage", "returns", Translate("Returns", "برگشت", "ستنېدل"), "↶");
+        AddIfAllowed("accounting.manage", "expenses", Translate("Expenses", "مصارف", "لګښتونه"), "₳");
         AddIfAllowed("medicines.manage", "medicines", Translate("Medicines", "ادویه", "درمل"), "✚");
         if (_permissions.HasPermission("inventory.manage") ||
             _permissions.HasPermission("inventory.status"))
@@ -225,6 +238,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentSectionKey = "returns";
                 CurrentPage = Returns;
                 await Returns.LoadAsync();
+                break;
+
+            case "expenses" when _permissions.HasPermission("accounting.manage"):
+                CurrentSectionKey = "expenses";
+                CurrentPage = Expenses;
+                await Expenses.LoadAsync();
                 break;
 
             case "medicines" when _permissions.HasPermission("medicines.manage"):
