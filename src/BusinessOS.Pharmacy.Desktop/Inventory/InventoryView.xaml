@@ -167,7 +167,7 @@
                         <Border Style="{StaticResource SurfaceCard}" Margin="0,8,0,0">
                             <StackPanel>
                                 <TextBlock Text="Selected batch" FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding SelectedBatch.BrandName, TargetNullValue=Select a batch}"
+                                <TextBlock Text="{Binding SelectedBatch.BrandName, TargetNullValue='Select a batch'}"
                                            Margin="0,4,0,10" Style="{StaticResource MutedText}"/>
 
                                 <TextBlock Text="Quantity change (+/-)" FontWeight="SemiBold"/>
