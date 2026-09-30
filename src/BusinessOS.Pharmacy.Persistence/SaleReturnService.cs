@@ -203,7 +203,7 @@ public sealed class SaleReturnService : ISaleReturnService
             var pattern = $"%{search}%";
             query = query.Where(x => EF.Functions.Like(x.ReturnNumber, pattern) || EF.Functions.Like(x.Sale.SaleNumber, pattern));
         }
-        return await query.OrderByDescending(x => x.CompletedAt).ThenByDescending(x => x.CreatedAt).Take(take)
+        return await query.OrderByDescending(x => x.BusinessDate).ThenByDescending(x => x.Id).Take(take)
             .Select(x => new SaleReturnListItem(x.Id, x.ReturnNumber, x.SaleId, x.Sale.SaleNumber, x.BusinessDate, x.StockLocation.Name, x.Status, x.RefundTotal, x.Reason, x.CompletedAt))
             .ToListAsync(cancellationToken);
     }
