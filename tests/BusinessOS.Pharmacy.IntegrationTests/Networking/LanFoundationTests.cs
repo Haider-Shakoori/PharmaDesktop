@@ -256,6 +256,148 @@ public sealed class LanFoundationTests
         }
     }
 
+    [Fact]
+    public async Task Lan_user_session_is_bound_to_terminal_and_rejects_tampering()
+    {
+        var root = CreateTemporaryRoot();
+        var clock = new TestClock(
+            new DateTimeOffset(2026, 9, 30, 1, 0, 0, TimeSpan.Zero));
+
+        try
+        {
+            await using var provider = BuildServerProvider(root, clock);
+            await provider.GetRequiredService<ILocalDatabaseInitializer>()
+                .InitializeAsync("tenant-a");
+
+            var credentials = provider.GetRequiredService<ILocalLanCredentialStore>();
+            var terminalId = Guid.CreateVersion7().ToString();
+            var otherTerminalId = Guid.CreateVersion7().ToString();
+
+            var principal = new LocalLanSessionPrincipal(
+                string.Empty,
+                terminalId,
+                "user-1",
+                "tenant-a",
+                "Cashier A",
+                "cashier@example.test",
+                new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "cashier" },
+                new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pos.sell" },
+                clock.UtcNow,
+                clock.UtcNow.AddHours(1),
+                null);
+
+            var created = await credentials.CreateSessionAsync(
+                principal,
+                TimeSpan.FromHours(1));
+
+            var authenticated = await credentials.AuthenticateSessionAsync(
+                terminalId,
+                created.SessionToken);
+
+            Assert.NotNull(authenticated);
+            Assert.Equal("user-1", authenticated!.UserId);
+            Assert.True(authenticated.HasPermission("pos.sell"));
+
+            Assert.Null(await credentials.AuthenticateSessionAsync(
+                otherTerminalId,
+                created.SessionToken));
+
+            Assert.Null(await credentials.AuthenticateSessionAsync(
+                terminalId,
+                created.SessionToken + "tampered"));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
+    [Fact]
+    public async Task Lan_user_session_expires_and_terminal_session_revocation_is_effective()
+    {
+        var root = CreateTemporaryRoot();
+        var clock = new TestClock(
+            new DateTimeOffset(2026, 9, 30, 2, 0, 0, TimeSpan.Zero));
+
+        try
+        {
+            await using var provider = BuildServerProvider(root, clock);
+            await provider.GetRequiredService<ILocalDatabaseInitializer>()
+                .InitializeAsync("tenant-a");
+
+            var credentials = provider.GetRequiredService<ILocalLanCredentialStore>();
+            var terminalId = Guid.CreateVersion7().ToString();
+
+            LocalLanSessionPrincipal NewPrincipal() => new(
+                string.Empty,
+                terminalId,
+                "user-2",
+                "tenant-a",
+                "Cashier B",
+                "cashier-b@example.test",
+                new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "cashier" },
+                new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pos.sell" },
+                clock.UtcNow,
+                clock.UtcNow.AddMinutes(5),
+                null);
+
+            var first = await credentials.CreateSessionAsync(
+                NewPrincipal(),
+                TimeSpan.FromMinutes(5));
+
+            clock.UtcNow = clock.UtcNow.AddMinutes(6);
+
+            Assert.Null(await credentials.AuthenticateSessionAsync(
+                terminalId,
+                first.SessionToken));
+
+            var second = await credentials.CreateSessionAsync(
+                NewPrincipal(),
+                TimeSpan.FromMinutes(5));
+
+            Assert.NotNull(await credentials.AuthenticateSessionAsync(
+                terminalId,
+                second.SessionToken));
+
+            await credentials.RevokeSessionsForTerminalAsync(terminalId);
+
+            Assert.Null(await credentials.AuthenticateSessionAsync(
+                terminalId,
+                second.SessionToken));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
+    [Fact]
+    public void Client_configuration_rejects_missing_server_identity_or_certificate()
+    {
+        var missingIdentity = new NetworkConfiguration
+        {
+            Mode = DeploymentMode.Client,
+            ServerHost = "PHARMACY-SERVER",
+            ServerPort = 5280,
+            TenantId = "tenant-a",
+            TerminalId = Guid.CreateVersion7().ToString(),
+            IsConfigured = true,
+        };
+
+        Assert.Throws<InvalidOperationException>(missingIdentity.Validate);
+
+        var invalidPort = new NetworkConfiguration
+        {
+            Mode = DeploymentMode.Server,
+            ServerPort = 80,
+            IsConfigured = true,
+        };
+
+        Assert.Throws<InvalidOperationException>(invalidPort.Validate);
+    }
+
     private static ServiceProvider BuildServerProvider(
         string root,
         TestClock? clock = null)
