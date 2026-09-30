@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
+using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
+using BusinessOS.Pharmacy.Application.Abstractions.Storage;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.LocalClient;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -28,6 +30,9 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     [ObservableProperty] private string statusMessage = string.Empty;
     [ObservableProperty] private string serviceStatus = string.Empty;
     [ObservableProperty] private string connectionStatus = string.Empty;
+    [ObservableProperty] private string networkProfileStatus = string.Empty;
+    [ObservableProperty] private string firewallStatus = string.Empty;
+    [ObservableProperty] private string diagnosticsReport = string.Empty;
     [ObservableProperty] private string pairingCode = string.Empty;
     [ObservableProperty] private string pairingExpiry = string.Empty;
     [ObservableProperty] private RegisteredTerminal? selectedTerminal;
@@ -55,6 +60,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         RediscoverCommand = new AsyncRelayCommand(RediscoverAsync, () => !IsBusy && CurrentMode == DeploymentMode.Client);
         ApplyModeCommand = new AsyncRelayCommand(ApplyModeAsync, () => !IsBusy);
         SaveConnectionCommand = new AsyncRelayCommand(SaveConnectionAsync, () => !IsBusy);
+        RunDiagnosticsCommand = new AsyncRelayCommand(RunDiagnosticsAsync, () => !IsBusy);
     }
 
     public ObservableCollection<RegisteredTerminal> Terminals { get; } = new();
@@ -71,6 +77,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     public IAsyncRelayCommand RediscoverCommand { get; }
     public IAsyncRelayCommand ApplyModeCommand { get; }
     public IAsyncRelayCommand SaveConnectionCommand { get; }
+    public IAsyncRelayCommand RunDiagnosticsCommand { get; }
 
     public string Title => T("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه");
     public string Subtitle => T("Local pharmacy server, terminals and diagnostics", "سرور محلی دواخانه، ترمینال‌ها و عیب‌یابی", "د درملتون محلي سرور، ترمینلونه او تشخیص");
@@ -94,6 +101,9 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     public string RenameLabel => T("Rename", "تغییر نام", "نوم بدلول");
     public string RevokeLabel => T("Revoke Terminal", "لغو ترمینال", "ترمینل لغوه کړئ");
     public string RefreshLabel => T("Refresh", "تازه‌سازی", "تازه کول");
+    public string RunDiagnosticsLabel => T("Run Diagnostics", "اجرای عیب‌یابی", "تشخیص وچلوئ");
+    public string NetworkProfileLabel => T("Windows network profile", "پروفایل شبکه ویندوز", "د وینډوز شبکې پروفایل");
+    public string FirewallStatusLabel => T("Firewall status", "وضعیت فایروال", "د فایروال حالت");
 
     public void SetLanguage(UiLanguage language)
     {
@@ -110,6 +120,23 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
 
             var service = await _serviceController.GetStatusAsync();
             ServiceStatus = service.Message;
+
+            var profile = await _serviceController.GetNetworkProfileStatusAsync();
+            NetworkProfileStatus = profile.Message;
+
+            if (configuration.Mode == DeploymentMode.Server)
+            {
+                var firewall = await _serviceController
+                    .GetPrivateFirewallRuleStatusAsync(configuration.ServerPort);
+                FirewallStatus = firewall.Message;
+            }
+            else
+            {
+                FirewallStatus = T(
+                    "Not applicable in this deployment mode.",
+                    "در این حالت نصب قابل تطبیق نیست.",
+                    "په دې نصب حالت کې نه پلي کېږي.");
+            }
 
             Terminals.Clear();
 
@@ -410,6 +437,103 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         }
     }
 
+
+    private async Task RunDiagnosticsAsync()
+    {
+        await BusyAsync(async () =>
+        {
+            var configuration = await _configurationStore.LoadAsync();
+            var service = await _serviceController.GetStatusAsync();
+            var profile = await _serviceController.GetNetworkProfileStatusAsync();
+            var firewall = configuration.Mode == DeploymentMode.Server
+                ? await _serviceController.GetPrivateFirewallRuleStatusAsync(configuration.ServerPort)
+                : new FirewallConfigurationResult(
+                    true,
+                    "Not applicable; this computer is not the Main Pharmacy Server.");
+
+            var paths = _services.GetRequiredService<IApplicationPaths>();
+            paths.EnsureCreated();
+
+            var databaseStatus = configuration.Mode == DeploymentMode.Client
+                ? "Authoritative database: Main Pharmacy Server (no local authoritative client database)."
+                : File.Exists(paths.DatabasePath)
+                    ? $"Authoritative database: available locally ({new FileInfo(paths.DatabasePath).Length:N0} bytes)."
+                    : "Authoritative database: not created yet.";
+
+            string diskStatus;
+            try
+            {
+                var root = Path.GetPathRoot(paths.RootDirectory);
+                var drive = !string.IsNullOrWhiteSpace(root)
+                    ? new DriveInfo(root)
+                    : null;
+
+                diskStatus = drive is null || !drive.IsReady
+                    ? "Disk space: unavailable."
+                    : $"Disk free: {drive.AvailableFreeSpace / 1024d / 1024d / 1024d:N1} GB.";
+            }
+            catch
+            {
+                diskStatus = "Disk space: unavailable.";
+            }
+
+            string licenseStatus;
+            if (configuration.Mode == DeploymentMode.Client)
+            {
+                licenseStatus =
+                    "License: inherited from the paired Main Pharmacy Server; this client does not create a separate trial.";
+            }
+            else
+            {
+                var licensing = _services.GetService<ILicenseService>();
+                if (licensing is null)
+                {
+                    licenseStatus = "License: service unavailable.";
+                }
+                else
+                {
+                    try
+                    {
+                        var entitlement = await licensing.GetCachedEntitlementAsync();
+                        licenseStatus = entitlement is null
+                            ? "License: no valid cached server/standalone entitlement."
+                            : $"License: tenant {entitlement.TenantId}; offline lease expires {entitlement.ExpiresAt:yyyy-MM-dd HH:mm zzz}.";
+                    }
+                    catch (Exception exception)
+                    {
+                        licenseStatus = $"License: verification error — {exception.Message}";
+                    }
+                }
+            }
+
+            if (configuration.Mode == DeploymentMode.Client)
+            {
+                await TestConnectionCoreAsync();
+            }
+
+            NetworkProfileStatus = profile.Message;
+            FirewallStatus = firewall.Message;
+
+            DiagnosticsReport = string.Join(
+                Environment.NewLine,
+                $"Deployment Mode: {configuration.Mode}",
+                $"Server Service: {service.Message}",
+                $"LAN Connection: {ConnectionStatus}",
+                $"Network Profile: {profile.Message}",
+                $"Firewall: {firewall.Message}",
+                $"Address/Port: {(configuration.ServerHost ?? Environment.MachineName)}:{configuration.ServerPort}",
+                databaseStatus,
+                diskStatus,
+                licenseStatus,
+                "Cloud sync and LAN connectivity are independent. A cloud outage must not be treated as a LAN outage.");
+
+            StatusMessage = T(
+                "Diagnostics completed.",
+                "عیب‌یابی تکمیل شد.",
+                "تشخیص بشپړ شو.");
+        });
+    }
+
     private async Task BusyAsync(Func<Task> action)
     {
         if (IsBusy)
@@ -447,6 +571,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         RediscoverCommand.NotifyCanExecuteChanged();
         ApplyModeCommand.NotifyCanExecuteChanged();
         SaveConnectionCommand.NotifyCanExecuteChanged();
+        RunDiagnosticsCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnCurrentModeChanged(DeploymentMode value) => NotifyCommandStates();
@@ -494,5 +619,8 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(RenameLabel));
         OnPropertyChanged(nameof(RevokeLabel));
         OnPropertyChanged(nameof(RefreshLabel));
+        OnPropertyChanged(nameof(RunDiagnosticsLabel));
+        OnPropertyChanged(nameof(NetworkProfileLabel));
+        OnPropertyChanged(nameof(FirewallStatusLabel));
     }
 }
