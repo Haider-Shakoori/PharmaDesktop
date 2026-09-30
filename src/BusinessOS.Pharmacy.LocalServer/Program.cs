@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
+using BusinessOS.Pharmacy.Application.Abstractions.Dashboard;
 using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
 using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
