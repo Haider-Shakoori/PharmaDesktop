@@ -158,11 +158,10 @@ public sealed class LocalLanCredentialStore : ILocalLanCredentialStore
                     x =>
                         x.TokenHash == hash &&
                         x.TerminalId == terminalId &&
-                        x.RevokedAt == null &&
-                        x.ExpiresAt > now,
+                        x.RevokedAt == null,
                     cancellationToken);
 
-            if (entity is null)
+            if (entity is null || entity.ExpiresAt <= now)
             {
                 return null;
             }
