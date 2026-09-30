@@ -80,9 +80,9 @@ public sealed class StockLedger : IStockLedger
             {
                 var sameOperation =
                     existing.ProductBatchId == productBatchId &&
-                    existing.SourceType == sourceType &&
-                    existing.SourceId == sourceId &&
-                    Scale4(existing.QuantityDelta) == quantityDelta;
+                    existing.Movement.SourceType == sourceType &&
+                    existing.Movement.SourceId == sourceId &&
+                    Scale4(existing.Movement.QuantityDelta) == quantityDelta;
 
                 if (!sameOperation)
                 {
@@ -91,7 +91,7 @@ public sealed class StockLedger : IStockLedger
                 }
 
                 await CommitAsync(connection, cancellationToken);
-                return existing;
+                return existing.Movement;
             }
 
             var batch = await LoadBatchAsync(
@@ -381,7 +381,7 @@ public sealed class StockLedger : IStockLedger
         command.Parameters.Add(parameter);
     }
 
-    private async Task<StockMovementItem?> FindByIdempotencyAsync(
+    private async Task<ExistingMovement?> FindByIdempotencyAsync(
         DbConnection connection,
         string idempotencyKey,
         CancellationToken cancellationToken)
@@ -415,24 +415,24 @@ public sealed class StockLedger : IStockLedger
             return null;
         }
 
-        return new StockMovementItem(
-            reader.GetString(0),
-            reader.GetString(2),
-            ReadDecimal(reader, 3),
-            ReadDecimal(reader, 4),
-            reader.IsDBNull(5) ? null : ReadDecimal(reader, 5),
-            reader.GetString(6),
-            reader.GetString(7),
-            reader.IsDBNull(8) ? null : reader.GetString(8),
-            reader.IsDBNull(9) ? null : reader.GetString(9),
-            reader.GetString(10),
-            reader.IsDBNull(11) ? null : reader.GetString(11),
-            DateTimeOffset.Parse(
-                Convert.ToString(reader.GetValue(12), CultureInfo.InvariantCulture)!,
-                CultureInfo.InvariantCulture),
-            reader.IsDBNull(13) ? null : reader.GetString(13))
-        {
-        };
+        return new ExistingMovement(
+            reader.GetString(1),
+            new StockMovementItem(
+                reader.GetString(0),
+                reader.GetString(2),
+                ReadDecimal(reader, 3),
+                ReadDecimal(reader, 4),
+                reader.IsDBNull(5) ? null : ReadDecimal(reader, 5),
+                reader.GetString(6),
+                reader.GetString(7),
+                reader.IsDBNull(8) ? null : reader.GetString(8),
+                reader.IsDBNull(9) ? null : reader.GetString(9),
+                reader.GetString(10),
+                reader.IsDBNull(11) ? null : reader.GetString(11),
+                DateTimeOffset.Parse(
+                    Convert.ToString(reader.GetValue(12), CultureInfo.InvariantCulture)!,
+                    CultureInfo.InvariantCulture),
+                reader.IsDBNull(13) ? null : reader.GetString(13)));
     }
 
     private bool IsExpired(DateOnly? expiresAt)
@@ -476,6 +476,10 @@ public sealed class StockLedger : IStockLedger
 
         return value;
     }
+
+    private sealed record ExistingMovement(
+        string ProductBatchId,
+        StockMovementItem Movement);
 
     internal sealed record BatchRow(
         string Id,
