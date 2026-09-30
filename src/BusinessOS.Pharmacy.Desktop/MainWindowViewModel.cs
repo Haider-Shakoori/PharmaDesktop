@@ -142,8 +142,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AddIfAllowed("users.manage", "users", Translate("Users", "کاربران", "کارنان"), "♟");
         AddIfAllowed("roles.manage", "roles", Translate("Roles", "نقش‌ها", "رولونه"), "⚿");
 
-        if (_permissions.HasPermission("users.manage") ||
-            _permissions.HasPermission("roles.manage"))
+        if (_permissions.HasPermission("settings.manage"))
         {
             NavigationItems.Add(new(
                 "network",
@@ -176,9 +175,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 await Medicines.LoadAsync();
                 break;
 
-            case "network" when
-                _permissions.HasPermission("users.manage") ||
-                _permissions.HasPermission("roles.manage"):
+            case "network" when _permissions.HasPermission("settings.manage"):
                 CurrentSectionKey = "network";
                 CurrentPage = NetworkSettings;
                 await NetworkSettings.LoadAsync();
