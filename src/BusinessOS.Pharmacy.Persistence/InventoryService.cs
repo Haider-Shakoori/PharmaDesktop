@@ -284,7 +284,7 @@ public sealed class InventoryService : IInventoryService
         var actorId = CurrentUserId();
         var quantity = StockLedger.Scale(request.Quantity);
         var purchaseCost = StockLedger.ScaleMoney(request.PurchaseCost);
-        var salePrice = request.SalePrice is null
+        decimal? salePrice = request.SalePrice is null
             ? null
             : StockLedger.ScaleMoney(request.SalePrice.Value);
         var operationId = Guid.CreateVersion7().ToString();
