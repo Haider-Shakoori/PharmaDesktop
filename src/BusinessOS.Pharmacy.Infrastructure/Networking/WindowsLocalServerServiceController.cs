@@ -75,6 +75,114 @@ public sealed class WindowsLocalServerServiceController : ILocalServerServiceCon
         return await GetStatusAsync(cancellationToken);
     }
 
+    public async Task<NetworkProfileStatus> GetNetworkProfileStatusAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return new NetworkProfileStatus(
+                false,
+                false,
+                false,
+                false,
+                "Windows network-profile detection is available only on Windows.");
+        }
+
+        var command =
+            "Get-NetConnectionProfile | " +
+            "Where-Object { $_.IPv4Connectivity -ne 'Disconnected' -or $_.IPv6Connectivity -ne 'Disconnected' } | " +
+            "Select-Object -ExpandProperty NetworkCategory";
+
+        var result = await RunAsync(
+            "powershell.exe",
+            $"-NoProfile -NonInteractive -Command \"{command}\"",
+            cancellationToken);
+
+        if (result.ExitCode != 0)
+        {
+            return new NetworkProfileStatus(
+                true,
+                false,
+                false,
+                false,
+                "Windows network profile could not be determined.");
+        }
+
+        var categories = result.Output
+            .Split(
+                ['\r', '\n'],
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        var hasPrivateOrDomain = categories.Any(category =>
+            category.Equals("Private", StringComparison.OrdinalIgnoreCase) ||
+            category.Equals("DomainAuthenticated", StringComparison.OrdinalIgnoreCase));
+
+        var hasPublic = categories.Any(category =>
+            category.Equals("Public", StringComparison.OrdinalIgnoreCase));
+
+        if (categories.Length == 0)
+        {
+            return new NetworkProfileStatus(
+                true,
+                false,
+                false,
+                false,
+                "No connected Windows network profile was detected.");
+        }
+
+        return new NetworkProfileStatus(
+            true,
+            true,
+            hasPrivateOrDomain,
+            hasPublic,
+            hasPrivateOrDomain
+                ? "A Private/Domain Windows network is available for the pharmacy LAN."
+                : hasPublic
+                    ? "Windows currently identifies the connected network as Public. Do not expose the Darmaltoon Local Server until the pharmacy LAN is marked Private."
+                    : "The connected Windows network profile is not suitable for the pharmacy LAN.");
+    }
+
+    public async Task<FirewallConfigurationResult> GetPrivateFirewallRuleStatusAsync(
+        int port,
+        CancellationToken cancellationToken = default)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return new FirewallConfigurationResult(
+                false,
+                "Windows Firewall status is available only on Windows.");
+        }
+
+        ValidatePort(port);
+
+        var result = await RunAsync(
+            "netsh.exe",
+            $"advfirewall firewall show rule name=\"{FirewallRuleName}\" verbose",
+            cancellationToken);
+
+        if (result.ExitCode != 0)
+        {
+            return new FirewallConfigurationResult(
+                false,
+                "The Darmaltoon private-LAN firewall rule is not installed.");
+        }
+
+        var mentionsPort = result.Output.Contains(
+            port.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            StringComparison.OrdinalIgnoreCase);
+        var mentionsPrivate = result.Output.Contains(
+            "Private",
+            StringComparison.OrdinalIgnoreCase);
+
+        return mentionsPort && mentionsPrivate
+            ? new FirewallConfigurationResult(
+                true,
+                $"Private-network firewall rule is present for TCP {port}.")
+            : new FirewallConfigurationResult(
+                false,
+                "A Darmaltoon firewall rule exists, but its port/profile does not match the current Server configuration.");
+    }
+
     public async Task<FirewallConfigurationResult> EnsurePrivateFirewallRuleAsync(
         int port,
         CancellationToken cancellationToken = default)
@@ -86,17 +194,27 @@ public sealed class WindowsLocalServerServiceController : ILocalServerServiceCon
                 "Windows Firewall configuration is available only on Windows.");
         }
 
-        if (port is < 1024 or > 65535)
+        ValidatePort(port);
+
+        var profile = await GetNetworkProfileStatusAsync(cancellationToken);
+        if (profile.HasPublicNetwork && !profile.HasPrivateOrDomainNetwork)
         {
-            throw new ArgumentOutOfRangeException(nameof(port));
+            return new FirewallConfigurationResult(
+                false,
+                "Firewall rule was not opened because Windows identifies the connected network as Public. Change the trusted pharmacy LAN to Private, then try again.");
         }
 
-        var delete = await RunAsync(
+        if (!profile.HasPrivateOrDomainNetwork)
+        {
+            return new FirewallConfigurationResult(
+                false,
+                "Firewall rule was not opened because no trusted Private/Domain network is currently available.");
+        }
+
+        _ = await RunAsync(
             "netsh.exe",
             $"advfirewall firewall delete rule name=\"{FirewallRuleName}\"",
             cancellationToken);
-
-        _ = delete;
 
         var add = await RunAsync(
             "netsh.exe",
@@ -110,6 +228,14 @@ public sealed class WindowsLocalServerServiceController : ILocalServerServiceCon
             : new FirewallConfigurationResult(
                 false,
                 "Windows could not configure the private-network firewall rule. Administrator rights may be required.");
+    }
+
+    private static void ValidatePort(int port)
+    {
+        if (port is < 1024 or > 65535)
+        {
+            throw new ArgumentOutOfRangeException(nameof(port));
+        }
     }
 
     private static async Task<ProcessResult> RunAsync(
