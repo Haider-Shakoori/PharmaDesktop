@@ -35,6 +35,7 @@ public sealed record PairTerminalApiResponse(
 public sealed record LocalServerInfoResponse(
     string Service,
     string ApiVersion,
+    string ApplicationVersion,
     string MinimumClientVersion,
     string ServerId,
     string ServerName,

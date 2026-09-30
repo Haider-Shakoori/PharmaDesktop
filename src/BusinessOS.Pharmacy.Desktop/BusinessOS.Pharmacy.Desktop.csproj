@@ -30,4 +30,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <Target Name="CopyUpdateAgentRuntime" AfterTargets="Build">
+    <ItemGroup>
+      <UpdateAgentRuntime Include="$(MSBuildProjectDirectory)/../BusinessOS.Pharmacy.Updater/bin/$(Configuration)/net10.0/BusinessOS.Pharmacy.Updater*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(UpdateAgentRuntime)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

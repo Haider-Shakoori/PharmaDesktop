@@ -17,6 +17,7 @@ using BusinessOS.Pharmacy.Desktop.Pos;
 using BusinessOS.Pharmacy.Desktop.Returns;
 using BusinessOS.Pharmacy.Desktop.Reports;
 using BusinessOS.Pharmacy.Desktop.Networking;
+using BusinessOS.Pharmacy.Desktop.Updates;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,6 +62,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         DailyClosingViewModel dailyClosing,
         ReportsViewModel reports,
         BackupRestoreViewModel backupRestore,
+        UpdateViewModel updates,
         NetworkSettingsViewModel networkSettings,
         NetworkConfiguration networkConfiguration,
         IServiceProvider services)
@@ -81,6 +83,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         DailyClosing = dailyClosing;
         Reports = reports;
         BackupRestore = backupRestore;
+        Updates = updates;
         NetworkSettings = networkSettings;
         currentPage = Dashboard;
 
@@ -124,6 +127,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public DailyClosingViewModel DailyClosing { get; }
     public ReportsViewModel Reports { get; }
     public BackupRestoreViewModel BackupRestore { get; }
+    public UpdateViewModel Updates { get; }
     public NetworkSettingsViewModel NetworkSettings { get; }
 
     public string ApplicationName => "Darmaltoon";
@@ -136,6 +140,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         "closing" => Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"),
         "reports" => Translate("Reports", "گزارش‌ها", "راپورونه"),
         "backup" => Translate("Backup & Restore", "پشتیبان‌گیری و بازیابی", "بیک اپ او بېرته راګرځول"),
+        "updates" => Translate("Application Updates", "به‌روزرسانی برنامه", "د اپلېکېشن تازه کول"),
         "network" => Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
@@ -153,6 +158,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "Verified backup and safe restore of the authoritative pharmacy database",
             "پشتیبان‌گیری تأییدشده و بازیابی امن پایگاه داده اصلی دواخانه",
             "د اصلي درملتون ډیټابیس تایید شوی بیک اپ او خوندي بېرته راګرځول"),
+        "updates" => Translate(
+            "Signed releases with checksum verification and deployment-mode compatibility checks",
+            "نسخه‌های امضاشده با بررسی صحت و سازگاری حالت نصب",
+            "لاسلیک شوي نسخې د checksum او نصب حالت د سازګارۍ له تایید سره"),
         "network" => Translate(
             "LAN server, client terminals and connection diagnostics",
             "سرور شبکه، ترمینال‌های مشتری و عیب‌یابی اتصال",
@@ -220,6 +229,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Expenses.SetLanguage(SelectedLanguage);
         DailyClosing.SetLanguage(SelectedLanguage);
         Reports.SetLanguage(SelectedLanguage);
+        BackupRestore.SetLanguage(SelectedLanguage);
+        Updates.SetLanguage(SelectedLanguage);
         NetworkSettings.SetLanguage(SelectedLanguage);
         CurrentSectionKey = "dashboard";
         CurrentPage = Dashboard;
@@ -240,6 +251,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         DailyClosing.SetLanguage(value);
         Reports.SetLanguage(value);
         BackupRestore.SetLanguage(value);
+        Updates.SetLanguage(value);
         NetworkSettings.SetLanguage(value);
         RefreshLanStatusText();
         RefreshNavigation();
@@ -277,6 +289,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 "backup",
                 Translate("Backup & Restore", "پشتیبان‌گیری و بازیابی", "بیک اپ او بېرته راګرځول"),
                 "◫"));
+        }
+
+        if (_permissions.HasPermission("settings.manage"))
+        {
+            NavigationItems.Add(new NavigationItemViewModel(
+                "updates",
+                Translate("Updates", "به‌روزرسانی", "تازه کول"),
+                "⇧"));
         }
 
         if (_networkConfiguration.Mode == DeploymentMode.Server &&
@@ -339,6 +359,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentSectionKey = "backup";
                 CurrentPage = BackupRestore;
                 await BackupRestore.LoadAsync();
+                break;
+
+            case "updates" when _permissions.HasPermission("settings.manage"):
+                CurrentSectionKey = "updates";
+                CurrentPage = Updates;
+                await Updates.LoadAsync();
                 break;
 
             case "network" when

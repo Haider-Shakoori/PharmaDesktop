@@ -17,6 +17,7 @@ public sealed class ApplicationPathsTests
 
             Assert.True(Directory.Exists(paths.RootDirectory));
             Assert.True(Directory.Exists(paths.BackupsDirectory));
+            Assert.True(Directory.Exists(paths.UpdatesDirectory));
             Assert.True(Directory.Exists(paths.LogsDirectory));
             Assert.Equal(Path.Combine(paths.RootDirectory, "pharmacy.db"), paths.DatabasePath);
         }

@@ -8,6 +8,7 @@
     <ProjectReference Include="..\..\src\BusinessOS.Pharmacy.Domain\BusinessOS.Pharmacy.Domain.csproj" />
     <ProjectReference Include="..\..\src\BusinessOS.Pharmacy.Application\BusinessOS.Pharmacy.Application.csproj" />
     <ProjectReference Include="..\..\src\BusinessOS.Pharmacy.Licensing\BusinessOS.Pharmacy.Licensing.csproj" />
+    <ProjectReference Include="..\..\src\BusinessOS.Pharmacy.Updater\BusinessOS.Pharmacy.Updater.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />

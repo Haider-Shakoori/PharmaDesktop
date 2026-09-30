@@ -1,3 +1,4 @@
+using System.Net.Http;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Desktop.Activation;
 using BusinessOS.Pharmacy.Desktop.Authentication;
@@ -14,12 +15,14 @@ using BusinessOS.Pharmacy.Desktop.DailyClosing;
 using BusinessOS.Pharmacy.Desktop.Reports;
 using BusinessOS.Pharmacy.Desktop.Medicines;
 using BusinessOS.Pharmacy.Desktop.Networking;
+using BusinessOS.Pharmacy.Desktop.Updates;
 using BusinessOS.Pharmacy.Infrastructure;
 using BusinessOS.Pharmacy.Infrastructure.Networking;
 using BusinessOS.Pharmacy.Infrastructure.Storage;
 using BusinessOS.Pharmacy.Licensing;
 using BusinessOS.Pharmacy.LocalClient;
 using BusinessOS.Pharmacy.Persistence;
+using BusinessOS.Pharmacy.Updater;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -65,6 +68,22 @@ public static class DesktopHost
                     services.AddBusinessOSLicensing(context.Configuration);
                 }
 
+                var updaterSection = context.Configuration.GetSection("BusinessOS:Updater");
+                var updaterChannel = Enum.TryParse<UpdateChannel>(updaterSection["Channel"], true, out var parsedChannel)
+                    ? parsedChannel
+                    : UpdateChannel.Stable;
+                var updaterOptions = new UpdateOptions(
+                    updaterSection["ManifestUrl"] ?? string.Empty,
+                    updaterSection["SigningPublicKeyPem"] ?? string.Empty,
+                    int.TryParse(updaterSection["TimeoutSeconds"], out var updateTimeout) ? updateTimeout : 30,
+                    updaterChannel,
+                    long.TryParse(updaterSection["MaximumPackageBytes"], out var maxPackageBytes) ? maxPackageBytes : 536_870_912);
+
+                services.AddSingleton(updaterOptions);
+                services.AddSingleton(_ => new UpdateService(
+                    new HttpClient { Timeout = TimeSpan.FromSeconds(Math.Clamp(updaterOptions.TimeoutSeconds, 5, 300)) },
+                    updaterOptions,
+                    paths.UpdatesDirectory));
                 services.AddSingleton(networkConfiguration);
                 services.AddSingleton<GlobalExceptionHandler>();
                 services.AddSingleton<ActivationViewModel>();
@@ -82,6 +101,7 @@ public static class DesktopHost
                 services.AddSingleton<DailyClosingViewModel>();
                 services.AddSingleton<ReportsViewModel>();
                 services.AddSingleton<BackupRestoreViewModel>();
+                services.AddSingleton<UpdateViewModel>();
                 services.AddSingleton<NetworkSettingsViewModel>();
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();

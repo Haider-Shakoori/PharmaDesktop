@@ -225,6 +225,7 @@ local.MapGet("/server-info", (LocalServerRuntimeState runtime) =>
     return Results.Ok(new LocalServerInfoResponse(
         "BusinessOS.Pharmacy.LocalServer",
         "v1",
+        typeof(LocalServerInfoResponse).Assembly.GetName().Version?.ToString(3) ?? "1.0.0",
         "1.0.0",
         state.Identity.ServerId,
         state.Identity.ServerName,

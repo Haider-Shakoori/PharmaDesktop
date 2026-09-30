@@ -13,6 +13,7 @@
         xmlns:returns="clr-namespace:BusinessOS.Pharmacy.Desktop.Returns"
         xmlns:reports="clr-namespace:BusinessOS.Pharmacy.Desktop.Reports"
         xmlns:networking="clr-namespace:BusinessOS.Pharmacy.Desktop.Networking"
+        xmlns:updates="clr-namespace:BusinessOS.Pharmacy.Desktop.Updates"
         Title="Darmaltoon"
         Width="1360" Height="820"
         MinWidth="1080" MinHeight="680"
@@ -42,6 +43,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type networking:NetworkSettingsViewModel}">
             <networking:NetworkSettingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type updates:UpdateViewModel}">
+            <updates:UpdateView/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type customers:CustomersViewModel}">
             <customers:CustomersView/>

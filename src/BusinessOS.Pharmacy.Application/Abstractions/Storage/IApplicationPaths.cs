@@ -5,6 +5,7 @@ public interface IApplicationPaths
     string RootDirectory { get; }
     string DatabasePath { get; }
     string BackupsDirectory { get; }
+    string UpdatesDirectory { get; }
     string LogsDirectory { get; }
     string LicensingDirectory { get; }
     string ConfigDirectory { get; }

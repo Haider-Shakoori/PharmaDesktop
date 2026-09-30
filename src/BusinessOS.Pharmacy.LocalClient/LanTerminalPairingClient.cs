@@ -154,6 +154,39 @@ public sealed class LanTerminalPairingClient
         }
     }
 
+    public async Task<Version> GetServerApplicationVersionAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var configuration = await _configurationStore.LoadAsync(cancellationToken);
+        if (configuration.Mode != DeploymentMode.Client ||
+            string.IsNullOrWhiteSpace(configuration.ServerId) ||
+            string.IsNullOrWhiteSpace(configuration.ServerHost) ||
+            string.IsNullOrWhiteSpace(configuration.ServerCertificateSha256))
+        {
+            throw new InvalidOperationException("Client Terminal is not paired with a Main Pharmacy Server.");
+        }
+
+        using var client = PinnedLocalServerTransport.CreatePinnedClient(
+            configuration.ServerHost,
+            configuration.ServerPort,
+            configuration.ServerCertificateSha256);
+
+        using var response = await client.GetAsync("server-info", cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var info = await response.Content.ReadFromJsonAsync<ServerInfoResponse>(
+            cancellationToken: cancellationToken)
+            ?? throw new InvalidOperationException("The server returned an empty identity response.");
+
+        if (!string.Equals(info.ServerId, configuration.ServerId, StringComparison.Ordinal))
+            throw new InvalidOperationException("The configured host resolves to a different pharmacy server.");
+
+        if (!Version.TryParse(info.ApplicationVersion, out var version))
+            throw new InvalidOperationException("The Main Pharmacy Server did not report a valid application version.");
+
+        return version;
+    }
+
     private static string NormalizeFingerprint(string value) =>
         value.Replace(":", string.Empty)
             .Replace(" ", string.Empty)
@@ -178,6 +211,7 @@ public sealed class LanTerminalPairingClient
     private sealed record ServerInfoResponse(
         string Service,
         string ApiVersion,
+        string ApplicationVersion,
         string MinimumClientVersion,
         string ServerId,
         string ServerName,
