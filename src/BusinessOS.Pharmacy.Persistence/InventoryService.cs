@@ -454,7 +454,7 @@ public sealed class InventoryService : IInventoryService
             line.Id,
             request.Reason,
             batch.PurchaseCost,
-            $"{{"reason_code":"{request.ReasonCode}"}}",
+            $"{{\"reason_code\":\"{request.ReasonCode}\"}}",
             cancellationToken);
 
         adjustment.Status = "posted";
