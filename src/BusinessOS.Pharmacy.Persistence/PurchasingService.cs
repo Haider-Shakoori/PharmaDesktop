@@ -121,7 +121,19 @@ public sealed class PurchasingService : IPurchasingService
             .OrderByDescending(x => x.OrderDate)
             .ThenByDescending(x => x.CreatedAt)
             .Take(take)
-            .Select(x => ToListItem(x))
+            .Select(x => new PurchaseOrderListItem(
+                x.Id,
+                x.Number,
+                x.SupplierId,
+                x.Supplier.Name,
+                x.Status,
+                x.OrderDate,
+                x.ExpectedDate,
+                x.Currency,
+                x.Subtotal,
+                x.DiscountTotal,
+                x.LandedCostTotal,
+                x.GrandTotal))
             .ToListAsync(cancellationToken);
     }
 
