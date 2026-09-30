@@ -9,6 +9,7 @@ public static class SyncStreamCatalog
     public const string Suppliers = "suppliers";
     public const string PurchaseOrders = "purchase_orders";
     public const string GoodsReceipts = "goods_receipts";
+    public const string Inventory = "inventory";
     public const string InventoryMovements = "inventory_movements";
     public const string Sales = "sales";
     public const string SaleReturns = "sale_returns";
@@ -19,7 +20,7 @@ public static class SyncStreamCatalog
     public static SyncConsistencyClass GetConsistencyClass(string stream) =>
         stream switch
         {
-            Medicines or Customers or Suppliers or PharmacySettings =>
+            Medicines or Customers or Suppliers or Inventory or PharmacySettings =>
                 SyncConsistencyClass.VersionedMasterData,
 
             PurchaseOrders or GoodsReceipts or InventoryMovements or
