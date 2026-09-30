@@ -253,7 +253,7 @@ public sealed partial class DashboardViewModel : ObservableObject
     {
         QuickActions.Clear();
 
-        AddAction("pos", Translate("Open POS", "باز کردن فروش", "خرڅلاو پرانیزئ"), "▣", "pos.sell", false);
+        AddAction("pos", Translate("Open POS", "باز کردن فروش", "خرڅلاو پرانیزئ"), "▣", "pos.sell", true);
         AddAction("medicines", Translate("Add medicine", "افزودن دوا", "درمل زیات کړئ"), "✚", "medicines.manage", true);
         AddAction("customers", Translate("Customers", "مشتریان", "پېرودونکي"), "♙", "customers.manage", true);
         AddAction("purchases", Translate("New purchase", "خرید جدید", "نوی پېرود"), "↓", "purchases.manage", true);

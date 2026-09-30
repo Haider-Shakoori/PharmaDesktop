@@ -203,7 +203,7 @@ public sealed class InventoryService : IInventoryService
             .OrderBy(x => x.ExpiresAt == null)
             .ThenBy(x => x.ExpiresAt)
             .ThenBy(x => x.Medicine.BrandName)
-            .ThenBy(x => x.CreatedAt)
+            .ThenBy(x => x.Id)
             .Take(take)
             .ToListAsync(cancellationToken);
 
@@ -235,7 +235,7 @@ public sealed class InventoryService : IInventoryService
         var movements = await context.Set<StockMovementEntity>()
             .AsNoTracking()
             .Where(x => x.ProductBatchId == id)
-            .OrderByDescending(x => x.OccurredAt)
+            .OrderByDescending(x => x.Id)
             .Take(100)
             .Select(x => new StockMovementItem(
                 x.Id,
@@ -255,7 +255,7 @@ public sealed class InventoryService : IInventoryService
         var statusEvents = await context.Set<BatchStatusEventEntity>()
             .AsNoTracking()
             .Where(x => x.ProductBatchId == id)
-            .OrderByDescending(x => x.ChangedAt)
+            .OrderByDescending(x => x.Id)
             .Take(50)
             .Select(x => new BatchStatusEventItem(
                 x.Id,

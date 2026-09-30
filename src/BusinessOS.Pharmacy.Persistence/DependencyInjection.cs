@@ -4,6 +4,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Inventory;
 using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
 using BusinessOS.Pharmacy.Application.Abstractions.Purchasing;
+using BusinessOS.Pharmacy.Application.Abstractions.Sales;
 using BusinessOS.Pharmacy.Application.Abstractions.Storage;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -51,6 +52,7 @@ public static class DependencyInjection
         services.AddSingleton<ICustomerService>(sp => sp.GetRequiredService<CustomerService>());
         services.AddSingleton<ICustomerCreditPolicy>(sp => sp.GetRequiredService<CustomerService>());
         services.AddSingleton<IPurchasingService, PurchasingService>();
+        services.AddSingleton<IPosService, PosService>();
 
         return services;
     }
