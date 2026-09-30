@@ -133,25 +133,87 @@ public sealed class SqliteSyncQueueStore : ISyncQueueStore
         }
     }
 
-    public Task MarkSyncedAsync(
+    public async Task MarkSyncedAsync(
         string queueItemId,
         string? cloudEntityId,
         string? cloudVersion,
         DateTimeOffset syncedAt,
-        CancellationToken cancellationToken = default) =>
-        MutateAsync(
-            queueItemId,
-            item =>
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(queueItemId);
+
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+            await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+
+            var item = await RequiredQueueItemAsync(
+                context,
+                queueItemId,
+                cancellationToken);
+
+            var cloudId = TrimToNull(cloudEntityId);
+            var version = TrimToNull(cloudVersion);
+
+            item.State = (int)SyncQueueState.Synced;
+            item.CloudEntityId = cloudId;
+            item.CloudVersion = version;
+            item.SyncedAt = syncedAt;
+            item.NextAttemptAt = null;
+            item.ClaimedAt = null;
+            item.LastError = null;
+            item.UpdatedAt = syncedAt;
+
+            if (cloudId is not null)
             {
-                item.State = (int)SyncQueueState.Synced;
-                item.CloudEntityId = TrimToNull(cloudEntityId);
-                item.CloudVersion = TrimToNull(cloudVersion);
-                item.SyncedAt = syncedAt;
-                item.NextAttemptAt = null;
-                item.ClaimedAt = null;
-                item.LastError = null;
-            },
-            cancellationToken);
+                var conflicting = await context.Set<SyncEntityMapEntity>()
+                    .AsNoTracking()
+                    .AnyAsync(
+                        x => x.Stream == item.Stream &&
+                             x.CloudEntityId == cloudId &&
+                             x.LocalEntityId != item.EntityId,
+                        cancellationToken);
+
+                if (conflicting)
+                {
+                    throw new InvalidOperationException(
+                        "The acknowledged cloud record is already mapped to another local record.");
+                }
+
+                var mapping = await context.Set<SyncEntityMapEntity>()
+                    .SingleOrDefaultAsync(
+                        x => x.Stream == item.Stream &&
+                             x.LocalEntityId == item.EntityId,
+                        cancellationToken);
+
+                if (mapping is null)
+                {
+                    context.Add(new SyncEntityMapEntity
+                    {
+                        Stream = item.Stream,
+                        LocalEntityId = item.EntityId,
+                        CloudEntityId = cloudId,
+                        CloudVersion = version,
+                        UpdatedAt = syncedAt,
+                    });
+                }
+                else
+                {
+                    mapping.CloudEntityId = cloudId;
+                    mapping.CloudVersion = version;
+                    mapping.UpdatedAt = syncedAt;
+                }
+            }
+
+            await context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
 
     public Task MarkRetryAsync(
         string queueItemId,
