@@ -1,5 +1,6 @@
 using BusinessOS.Pharmacy.Application.Abstractions.Dashboard;
 using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
+using BusinessOS.Pharmacy.Application.Abstractions.Inventory;
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
 using BusinessOS.Pharmacy.Application.Abstractions.Storage;
 using Microsoft.Data.Sqlite;
@@ -40,6 +41,10 @@ public static class DependencyInjection
         services.AddSingleton<IMedicineCatalogService, MedicineCatalogService>();
         services.AddSingleton<IMedicineCsvService, MedicineCsvService>();
         services.AddSingleton<IMedicineSeedService, MedicineSeedService>();
+        services.AddSingleton<IInventoryProvisioner, InventoryProvisioner>();
+        services.AddSingleton<IStockLedger, StockLedger>();
+        services.AddSingleton<IStockAllocationService, StockAllocationService>();
+        services.AddTransient<IInventoryService, InventoryService>();
 
         return services;
     }
