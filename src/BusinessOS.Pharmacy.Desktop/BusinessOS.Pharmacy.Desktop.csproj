@@ -13,6 +13,7 @@
     <ProjectReference Include="..\BusinessOS.Pharmacy.Application\BusinessOS.Pharmacy.Application.csproj" />
     <ProjectReference Include="..\BusinessOS.Pharmacy.Infrastructure\BusinessOS.Pharmacy.Infrastructure.csproj" />
     <ProjectReference Include="..\BusinessOS.Pharmacy.Persistence\BusinessOS.Pharmacy.Persistence.csproj" />
+    <ProjectReference Include="..\BusinessOS.Pharmacy.LocalClient\BusinessOS.Pharmacy.LocalClient.csproj" />
     <ProjectReference Include="..\BusinessOS.Pharmacy.Licensing\BusinessOS.Pharmacy.Licensing.csproj" />
     <ProjectReference Include="..\BusinessOS.Pharmacy.Sync\BusinessOS.Pharmacy.Sync.csproj" />
     <ProjectReference Include="..\BusinessOS.Pharmacy.Printing\BusinessOS.Pharmacy.Printing.csproj" />

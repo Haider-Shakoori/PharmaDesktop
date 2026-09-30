@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
+using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Desktop.Customers;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
@@ -14,8 +15,10 @@ using BusinessOS.Pharmacy.Desktop.Purchasing;
 using BusinessOS.Pharmacy.Desktop.Pos;
 using BusinessOS.Pharmacy.Desktop.Returns;
 using BusinessOS.Pharmacy.Desktop.Reports;
+using BusinessOS.Pharmacy.Desktop.Networking;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BusinessOS.Pharmacy.Desktop;
 
@@ -23,7 +26,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
 {
     private readonly IClock _clock;
     private readonly IUserSessionService _sessions;
+    private readonly NetworkConfiguration _networkConfiguration;
     private readonly IPermissionAuthorizer _permissions;
+    private readonly ILocalServerConnectionMonitor? _connectionMonitor;
 
     [ObservableProperty]
     private UiLanguage selectedLanguage = UiLanguageCatalog.All[0];
@@ -36,6 +41,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private string currentSectionKey = "dashboard";
+
+    [ObservableProperty]
+    private string lanStatusText = string.Empty;
 
     public MainWindowViewModel(
         IClock clock,
@@ -50,11 +58,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ReturnsViewModel returns,
         ExpensesViewModel expenses,
         DailyClosingViewModel dailyClosing,
-        ReportsViewModel reports)
+        ReportsViewModel reports,
+        NetworkSettingsViewModel networkSettings,
+        NetworkConfiguration networkConfiguration,
+        IServiceProvider services)
     {
         _clock = clock;
         _sessions = sessions;
         _permissions = permissions;
+        _networkConfiguration = networkConfiguration;
+        _connectionMonitor = services.GetService<ILocalServerConnectionMonitor>();
         Dashboard = dashboard;
         Customers = customers;
         Medicines = medicines;
@@ -65,6 +78,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Expenses = expenses;
         DailyClosing = dailyClosing;
         Reports = reports;
+        NetworkSettings = networkSettings;
         currentPage = Dashboard;
 
         Dashboard.SetLanguage(SelectedLanguage);
@@ -77,7 +91,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Expenses.SetLanguage(SelectedLanguage);
         DailyClosing.SetLanguage(SelectedLanguage);
         Reports.SetLanguage(SelectedLanguage);
+        NetworkSettings.SetLanguage(SelectedLanguage);
         Dashboard.NavigationRequested += OnDashboardNavigationRequested;
+
+        if (_connectionMonitor is not null)
+        {
+            _connectionMonitor.StatusChanged += OnLanStatusChanged;
+        }
+
+        RefreshLanStatusText();
 
         LogoutCommand = new AsyncRelayCommand(LogoutAsync);
         NavigateCommand = new AsyncRelayCommand<string>(NavigateAsync);
@@ -98,6 +120,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ExpensesViewModel Expenses { get; }
     public DailyClosingViewModel DailyClosing { get; }
     public ReportsViewModel Reports { get; }
+    public NetworkSettingsViewModel NetworkSettings { get; }
 
     public string ApplicationName => "Darmaltoon";
     public string ParentBrand => "BusinessOS.af";
@@ -108,6 +131,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         "expenses" => Translate("Expenses & Accounting", "مصارف و حسابداری", "لګښتونه او حسابداري"),
         "closing" => Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"),
         "reports" => Translate("Reports", "گزارش‌ها", "راپورونه"),
+        "network" => Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
         "purchases" => Translate("Purchases", "خریداری", "پېرود"),
@@ -120,6 +144,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "Sales, profit, purchasing, stock and movement reporting",
             "گزارش فروش، سود، خرید، موجودی و گردش کالا",
             "د خرڅلاو، ګټې، پېرود، زېرمه او حرکتونو راپورونه"),
+        "network" => Translate(
+            "LAN server, client terminals and connection diagnostics",
+            "سرور شبکه، ترمینال‌های مشتری و عیب‌یابی اتصال",
+            "د LAN سرور، مراجع ترمینلونه او د نښلونې تشخیص"),
         "closing" => Translate(
             "Cashier shifts, cash reconciliation and auditable day finalization",
             "شیفت صندوق، تطبیق نقد و نهایی‌سازی قابل حسابرسی",
@@ -183,6 +211,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Expenses.SetLanguage(SelectedLanguage);
         DailyClosing.SetLanguage(SelectedLanguage);
         Reports.SetLanguage(SelectedLanguage);
+        NetworkSettings.SetLanguage(SelectedLanguage);
         CurrentSectionKey = "dashboard";
         CurrentPage = Dashboard;
         RefreshNavigation();
@@ -201,6 +230,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Expenses.SetLanguage(value);
         DailyClosing.SetLanguage(value);
         Reports.SetLanguage(value);
+        NetworkSettings.SetLanguage(value);
+        RefreshLanStatusText();
         RefreshNavigation();
         RaisePageText();
         OnPropertyChanged(nameof(OnlineText));
@@ -229,6 +260,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), "↓");
         AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), "♙");
         AddIfAllowed("reports.view", "reports", Translate("Reports", "گزارش‌ها", "راپورونه"), "▥");
+
+        if (_networkConfiguration.Mode == DeploymentMode.Server &&
+            (_permissions.HasPermission("users.manage") ||
+             _permissions.HasPermission("settings.manage")))
+        {
+            NavigationItems.Add(new NavigationItemViewModel(
+                "network",
+                Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
+                "⌁"));
+        }
         AddIfAllowed("daily_closing.perform", "closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "✓");
         AddIfAllowed("users.manage", "users", Translate("Users", "کاربران", "کارنان"), "♟");
         AddIfAllowed("roles.manage", "roles", Translate("Roles", "نقش‌ها", "رولونه"), "⚿");
@@ -276,6 +317,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 await Reports.LoadAsync();
                 break;
 
+            case "network" when
+                _networkConfiguration.Mode == DeploymentMode.Server &&
+                (_permissions.HasPermission("users.manage") ||
+                 _permissions.HasPermission("settings.manage")):
+                CurrentSectionKey = "network";
+                CurrentPage = NetworkSettings;
+                await NetworkSettings.LoadAsync();
+                RefreshLanStatusText();
+                break;
+
             case "closing" when _permissions.HasPermission("daily_closing.perform"):
                 CurrentSectionKey = "closing";
                 CurrentPage = DailyClosing;
@@ -320,6 +371,54 @@ public sealed partial class MainWindowViewModel : ObservableObject
         await _sessions.LogoutAsync();
         ApplyCurrentUser();
         LogoutRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnLanStatusChanged(
+        object? sender,
+        LocalServerConnectionStatus status)
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+
+        if (dispatcher is null || dispatcher.CheckAccess())
+        {
+            LanStatusText = FormatLanStatus(status);
+            return;
+        }
+
+        _ = dispatcher.InvokeAsync(() =>
+            LanStatusText = FormatLanStatus(status));
+    }
+
+    private void RefreshLanStatusText()
+    {
+        LanStatusText = _networkConfiguration.Mode switch
+        {
+            DeploymentMode.Client when _connectionMonitor is not null =>
+                FormatLanStatus(_connectionMonitor.Current),
+            DeploymentMode.Server =>
+                Translate("Main Server", "سرور اصلی", "اصلي سرور"),
+            _ =>
+                Translate("Standalone", "مستقل", "خپلواک"),
+        };
+    }
+
+    private string FormatLanStatus(LocalServerConnectionStatus status)
+    {
+        if (status.IsConnected)
+        {
+            var latency = status.Latency?.TotalMilliseconds;
+            return latency is null
+                ? Translate("Main Server connected", "سرور اصلی متصل", "اصلي سرور وصل")
+                : Translate(
+                    $"Main Server · {latency:0} ms",
+                    $"سرور اصلی · {latency:0} ms",
+                    $"اصلي سرور · {latency:0} ms");
+        }
+
+        return Translate(
+            "Server reconnecting…",
+            "اتصال مجدد به سرور…",
+            "سرور ته بیا نښلول…");
     }
 
     private void RaisePageText()
