@@ -242,6 +242,64 @@ public sealed class PosSalesTests
     }
 
     [Fact]
+    public async Task Subprecision_quantity_is_rejected_without_stock_mutation()
+    {
+        var root = CreateTemporaryRoot();
+
+        try
+        {
+            await using var provider = BuildProvider(root);
+            await InitializeAsync(provider);
+
+            var medicineId = await CreateMedicineAsync(
+                provider,
+                "POS-TINY-1",
+                "Tiny Quantity Medicine");
+
+            var inventory = provider.GetRequiredService<IInventoryService>();
+            await inventory.EnsureDefaultsAsync();
+            var location = (await inventory.GetReferenceDataAsync()).Locations.Single();
+
+            await inventory.CreateOpeningStockAsync(new CreateOpeningStockRequest(
+                medicineId,
+                location.Id,
+                "TINY-1",
+                null,
+                new DateOnly(2027, 9, 1),
+                1m,
+                10m,
+                20m,
+                null));
+
+            var pos = provider.GetRequiredService<IPosService>();
+
+            await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+                pos.CheckoutAsync(new PosCheckoutRequest(
+                    location.Id,
+                    null,
+                    "tiny-quantity",
+                    null,
+                    null,
+                    null,
+                    null,
+                    [new PosCheckoutLineRequest(medicineId, 0.00001m)],
+                    [new PosPaymentRequest("cash", 1m)])));
+
+            var batches = await inventory.SearchBatchesAsync(
+                new InventoryBatchFilter(StockLocationId: location.Id));
+
+            Assert.Equal(
+                1m,
+                batches.Single(x => x.BatchNumber == "TINY-1").AvailableQuantity);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
+    [Fact]
     public async Task Prescription_only_medicine_requires_reference()
     {
         var root = CreateTemporaryRoot();

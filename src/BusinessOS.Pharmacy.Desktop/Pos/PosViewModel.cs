@@ -196,12 +196,45 @@ public sealed partial class PosViewModel : ObservableObject
         });
     }
 
-    private bool CanAddToCart() =>
-        !IsBusy &&
-        SelectedProduct is not null &&
-        Quantity > 0m &&
-        (!OverridePrice || (CanOverridePrice && OverrideUnitPrice is >= 0m)) &&
-        (DiscountAmount == 0m || CanDiscount);
+    private bool CanAddToCart()
+    {
+        if (IsBusy || SelectedProduct is null)
+        {
+            return false;
+        }
+
+        var roundedQuantity = decimal.Round(
+            Quantity,
+            4,
+            MidpointRounding.AwayFromZero);
+
+        if (roundedQuantity <= 0m ||
+            roundedQuantity > SelectedProduct.AvailableQuantity ||
+            DiscountAmount < 0m)
+        {
+            return false;
+        }
+
+        if (OverridePrice &&
+            (!CanOverridePrice || OverrideUnitPrice is null or < 0m))
+        {
+            return false;
+        }
+
+        if (DiscountAmount > 0m && !CanDiscount)
+        {
+            return false;
+        }
+
+        var draft = new PosCartLineViewModel(
+            SelectedProduct,
+            roundedQuantity,
+            OverridePrice ? OverrideUnitPrice : null,
+            OverridePrice,
+            decimal.Round(DiscountAmount, 4, MidpointRounding.AwayFromZero));
+
+        return draft.DiscountAmount <= draft.EstimatedSubtotal;
+    }
 
     private void AddToCart()
     {
@@ -240,7 +273,7 @@ public sealed partial class PosViewModel : ObservableObject
 
     private bool CanAddPayment() =>
         !IsBusy &&
-        PaymentAmount > 0m &&
+        decimal.Round(PaymentAmount, 4, MidpointRounding.AwayFromZero) > 0m &&
         PaymentMethods.Contains(SelectedPaymentMethod);
 
     private void AddPayment()
@@ -423,10 +456,50 @@ public sealed record PosCartLineViewModel(
         new[] { Product.BrandName, Product.Strength }
             .Where(x => !string.IsNullOrWhiteSpace(x)));
 
-    public decimal DisplayUnitPrice => UnitPrice ?? Product.FefoPrice ?? 0m;
+    public decimal EstimatedSubtotal
+    {
+        get
+        {
+            if (OverridePrice)
+            {
+                return decimal.Round(
+                    Quantity * (UnitPrice ?? 0m),
+                    4,
+                    MidpointRounding.AwayFromZero);
+            }
+
+            var remaining = Quantity;
+            decimal subtotal = 0m;
+
+            foreach (var batch in Product.Batches)
+            {
+                if (remaining <= 0m)
+                {
+                    break;
+                }
+
+                var allocated = Math.Min(remaining, batch.AvailableQuantity);
+                subtotal += allocated * batch.SalePrice;
+                remaining -= allocated;
+            }
+
+            return decimal.Round(
+                subtotal,
+                4,
+                MidpointRounding.AwayFromZero);
+        }
+    }
+
+    public decimal DisplayUnitPrice =>
+        Quantity <= 0m
+            ? 0m
+            : decimal.Round(
+                EstimatedSubtotal / Quantity,
+                4,
+                MidpointRounding.AwayFromZero);
 
     public decimal EstimatedLineTotal => decimal.Round(
-        Math.Max(0m, (Quantity * DisplayUnitPrice) - DiscountAmount),
+        Math.Max(0m, EstimatedSubtotal - DiscountAmount),
         4,
         MidpointRounding.AwayFromZero);
 }

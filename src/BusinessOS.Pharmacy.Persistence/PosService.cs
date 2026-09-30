@@ -94,8 +94,11 @@ public sealed class PosService : IPosService
 
         var locationExists = await context.Set<StockLocationEntity>()
             .AsNoTracking()
+            .Include(x => x.Branch)
             .AnyAsync(
-                x => x.Id == filter.StockLocationId && x.IsActive,
+                x => x.Id == filter.StockLocationId &&
+                     x.IsActive &&
+                     x.Branch.IsActive,
                 cancellationToken);
 
         if (!locationExists)
@@ -260,6 +263,13 @@ public sealed class PosService : IPosService
             var quantity = ScaleQuantity(input.Quantity);
             var discount = ScaleMoney(input.DiscountAmount);
 
+            if (quantity <= 0m)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(input.Quantity),
+                    "Sale quantity must be at least 0.0001.");
+            }
+
             if (input.OverridePrice && !_permissions.HasPermission("pos.price_override"))
             {
                 throw new UnauthorizedAccessException(
@@ -406,6 +416,13 @@ public sealed class PosService : IPosService
         {
             var method = payment.Method.Trim().ToLowerInvariant();
             var amount = ScaleMoney(payment.Amount);
+
+            if (amount <= 0m)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(payment.Amount),
+                    "Payment amount must be at least 0.0001.");
+            }
 
             if (!PaymentMethods.Contains(method))
             {
