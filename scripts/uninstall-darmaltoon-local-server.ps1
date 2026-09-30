@@ -1,7 +1,8 @@
 $ErrorActionPreference = "Stop"
 
 $serviceName = "BusinessOS Pharmacy Local Server"
-$firewallRule = "Darmaltoon Local Server (Private LAN)"
+$firewallRule = "Darmaltoon Local Server API (Private LAN)"
+$discoveryFirewallRule = "Darmaltoon Local Server Discovery (Private LAN)"
 
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = New-Object Security.Principal.WindowsPrincipal($identity)
