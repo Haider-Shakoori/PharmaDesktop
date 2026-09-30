@@ -33,7 +33,7 @@ public sealed class DashboardQueryTests
             Assert.Equal(0m, snapshot.OutstandingCredit);
             Assert.Equal(0, snapshot.TotalAlerts);
             Assert.False(snapshot.Availability.Sales);
-            Assert.False(snapshot.Availability.Inventory);
+            Assert.True(snapshot.Availability.Inventory);
             Assert.False(snapshot.Availability.Customers);
         }
         finally
@@ -107,22 +107,6 @@ public sealed class DashboardQueryTests
 
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            CREATE TABLE stock_locations (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL
-            );
-
-            CREATE TABLE product_batches (
-                id TEXT PRIMARY KEY,
-                medicine_id TEXT NOT NULL,
-                stock_location_id TEXT NOT NULL,
-                batch_number TEXT NULL,
-                status TEXT NOT NULL,
-                available_quantity NUMERIC NOT NULL,
-                purchase_cost NUMERIC NOT NULL,
-                expires_at TEXT NULL
-            );
-
             CREATE TABLE sales (
                 id TEXT PRIMARY KEY,
                 status TEXT NOT NULL,
@@ -137,8 +121,21 @@ public sealed class DashboardQueryTests
                 is_active INTEGER NOT NULL DEFAULT 1
             );
 
-            INSERT INTO stock_locations (id, name)
-            VALUES ('loc-1', 'Main Store');
+            INSERT INTO branches (
+                id, code, name, is_default, is_active, created_at, updated_at
+            )
+            VALUES (
+                'branch-1', 'MAIN', 'Main Branch', 1, 1,
+                '2026-09-30T00:00:00+00:00', '2026-09-30T00:00:00+00:00'
+            );
+
+            INSERT INTO stock_locations (
+                id, branch_id, code, name, kind, is_default, is_active, created_at, updated_at
+            )
+            VALUES (
+                'loc-1', 'branch-1', 'MAIN', 'Main Store', 'store', 1, 1,
+                '2026-09-30T00:00:00+00:00', '2026-09-30T00:00:00+00:00'
+            );
 
             INSERT INTO medicines (
                 id, medicine_code, brand_name, purchase_unit, sale_unit,
@@ -152,13 +149,20 @@ public sealed class DashboardQueryTests
                 ('med-3', 'MED-003', 'Gamma', 'pack', 'unit', 1, 0, 0, 1, 1, 1, '2026-09-30T00:00:00+00:00', '2026-09-30T00:00:00+00:00');
 
             INSERT INTO product_batches (
-                id, medicine_id, stock_location_id, batch_number, status,
-                available_quantity, purchase_cost, expires_at
+                id, medicine_id, branch_id, stock_location_id, batch_number, batch_key,
+                expires_at, status, received_quantity, available_quantity,
+                purchase_cost, sale_price, created_at, updated_at
             )
             VALUES
-                ('batch-1', 'med-1', 'loc-1', 'NEAR-001', 'active', 5, 2, '2026-10-10'),
-                ('batch-2', 'med-2', 'loc-1', 'FAR-001', 'active', 20, 3, '2026-12-31'),
-                ('batch-3', 'med-2', 'loc-1', 'EXP-001', 'active', 2, 1, '2026-09-29');
+                ('batch-1', 'med-1', 'branch-1', 'loc-1', 'NEAR-001', 'key-1',
+                 '2026-10-10', 'active', 5, 5, 2, 3,
+                 '2026-09-30T00:00:00+00:00', '2026-09-30T00:00:00+00:00'),
+                ('batch-2', 'med-2', 'branch-1', 'loc-1', 'FAR-001', 'key-2',
+                 '2026-12-31', 'active', 20, 20, 3, 4,
+                 '2026-09-30T00:00:00+00:00', '2026-09-30T00:00:00+00:00'),
+                ('batch-3', 'med-2', 'branch-1', 'loc-1', 'EXP-001', 'key-3',
+                 '2026-09-29', 'active', 2, 2, 1, 2,
+                 '2026-09-30T00:00:00+00:00', '2026-09-30T00:00:00+00:00');
 
             INSERT INTO sales (id, status, business_date, grand_total, due_total)
             VALUES
