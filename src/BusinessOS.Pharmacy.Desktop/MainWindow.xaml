@@ -77,8 +77,19 @@
                             <TextBlock Text="{Binding UserDisplayName}" FontWeight="SemiBold" HorizontalAlignment="Right" />
                             <TextBlock Text="{Binding UserRoleText}" Style="{StaticResource MutedText}" HorizontalAlignment="Right" />
                         </StackPanel>
-                        <Border Background="#ECFDF5" CornerRadius="16" Padding="10,5" Margin="0,0,12,0">
+                        <Border Background="#ECFDF5" CornerRadius="16" Padding="10,5" Margin="0,0,8,0">
                             <TextBlock Text="{Binding OnlineText}" Foreground="#047857" FontSize="11" FontWeight="SemiBold" />
+                        </Border>
+                        <Border Background="{DynamicResource AppBackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="16"
+                                Padding="10,5"
+                                Margin="0,0,12,0">
+                            <TextBlock Text="{Binding LanStatusText}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       FontSize="11"
+                                       FontWeight="SemiBold" />
                         </Border>
                         <ComboBox Width="120" ItemsSource="{Binding Languages}"
                                   SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
