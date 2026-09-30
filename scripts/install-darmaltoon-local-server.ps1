@@ -3,13 +3,17 @@ param(
     [string]$ExecutablePath,
 
     [ValidateRange(1024, 65535)]
-    [int]$Port = 5280
+    [int]$Port = 5280,
+
+    [ValidateRange(1024, 65535)]
+    [int]$DiscoveryPort = 5281
 )
 
 $ErrorActionPreference = "Stop"
 
 $serviceName = "BusinessOS Pharmacy Local Server"
-$firewallRule = "Darmaltoon Local Server (Private LAN)"
+$firewallRule = "Darmaltoon Local Server API (Private LAN)"
+$discoveryFirewallRule = "Darmaltoon Local Server Discovery (Private LAN)"
 
 function Assert-Administrator {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
@@ -70,10 +74,14 @@ else {
 & netsh.exe advfirewall firewall delete rule name="$firewallRule" | Out-Null
 & netsh.exe advfirewall firewall add rule name="$firewallRule" dir=in action=allow protocol=TCP localport=$Port profile=private | Out-Null
 
+& netsh.exe advfirewall firewall delete rule name="$discoveryFirewallRule" | Out-Null
+& netsh.exe advfirewall firewall add rule name="$discoveryFirewallRule" dir=in action=allow protocol=UDP localport=$DiscoveryPort profile=private | Out-Null
+
 Start-Service -Name $serviceName
 
 Write-Host "Darmaltoon Local Server installed and started."
 Write-Host "Service: $serviceName"
-Write-Host "TCP port: $Port"
+Write-Host "HTTPS API TCP port: $Port"
+Write-Host "Discovery UDP port: $DiscoveryPort"
 Write-Host "Firewall profile: Private only"
 Write-Host "No pharmacy database or configuration data was deleted or reset."
