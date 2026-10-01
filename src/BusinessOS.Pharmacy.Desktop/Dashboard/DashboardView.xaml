@@ -329,7 +329,7 @@
                                           Style="{StaticResource DashboardGrid}"
                                           Height="140">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Medicine" Binding="{Binding Medicine}" Width="*">
+                                        <DataGridTextColumn Header="Medicine" Binding="{Binding Medicine}" Width="136">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock" BasedOn="{StaticResource DashboardCellText}">
                                                     <Setter Property="ToolTip" Value="{Binding Medicine}" />
@@ -385,7 +385,7 @@
                                           Style="{StaticResource DashboardGrid}"
                                           Height="140">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Medicine" Binding="{Binding Medicine}" Width="*">
+                                        <DataGridTextColumn Header="Medicine" Binding="{Binding Medicine}" Width="116">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock" BasedOn="{StaticResource DashboardCellText}">
                                                     <Setter Property="ToolTip" Value="{Binding Medicine}" />
@@ -435,8 +435,8 @@
                                       Style="{StaticResource DashboardGrid}"
                                       Height="145">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Date / Time" Binding="{Binding OccurredAt, StringFormat={}{0:dd MMM yyyy HH:mm}}" Width="112" />
-                                    <DataGridTemplateColumn Header="Type" Width="74">
+                                    <DataGridTextColumn Header="Date / Time" Binding="{Binding OccurredAt, StringFormat={}{0:dd MMM yyyy HH:mm}}" Width="106" />
+                                    <DataGridTemplateColumn Header="Type" Width="58">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Border Background="#E7F2FF" CornerRadius="7" Padding="7,2"
@@ -446,12 +446,12 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Document" Binding="{Binding DocumentNumber}" Width="112" />
-                                    <DataGridTextColumn Header="Party" Binding="{Binding Party}" Width="*" />
-                                    <DataGridTextColumn Header="Items" Binding="{Binding Items}" Width="48" />
-                                    <DataGridTextColumn Header="Total (AFN)" Binding="{Binding Total, StringFormat={}{0:N2}}" Width="82" />
-                                    <DataGridTextColumn Header="Payment" Binding="{Binding PaymentMethod}" Width="84" />
-                                    <DataGridTemplateColumn Header="Status" Width="72">
+                                    <DataGridTextColumn Header="Document" Binding="{Binding DocumentNumber}" Width="104" />
+                                    <DataGridTextColumn Header="Party" Binding="{Binding Party}" Width="118" />
+                                    <DataGridTextColumn Header="Items" Binding="{Binding Items}" Width="42" />
+                                    <DataGridTextColumn Header="Total (AFN)" Binding="{Binding Total, StringFormat={}{0:N2}}" Width="78" />
+                                    <DataGridTextColumn Header="Payment" Binding="{Binding PaymentMethod}" Width="74" />
+                                    <DataGridTemplateColumn Header="Status" Width="62">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Border CornerRadius="7" Padding="7,2"
