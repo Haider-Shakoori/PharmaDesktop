@@ -39,18 +39,50 @@ function Find-Iscc {
     return $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 }
 
+function Assert-ReleaseVerificationKeys($settings) {
+    $licenseKey = [string]$settings.BusinessOS.Licensing.SigningPublicKey
+    $updateKey = [string]$settings.BusinessOS.Updater.SigningPublicKeyPem
+
+    if ([string]::IsNullOrWhiteSpace($licenseKey) -or [string]::IsNullOrWhiteSpace($updateKey)) {
+        throw "Release packaging requires the committed Darmaltoon license and update verification public keys."
+    }
+
+    try {
+        $licenseBytes = [Convert]::FromBase64String($licenseKey.Trim())
+    }
+    catch {
+        throw "BusinessOS:Licensing:SigningPublicKey in appsettings.json is not valid Base64."
+    }
+
+    if ($licenseBytes.Length -ne 32) {
+        throw "BusinessOS:Licensing:SigningPublicKey must decode to exactly 32 bytes."
+    }
+
+    try {
+        $rsa = [Security.Cryptography.RSA]::Create()
+        $rsa.ImportFromPem($updateKey.Trim())
+        $rsa.Dispose()
+    }
+    catch {
+        throw "BusinessOS:Updater:SigningPublicKeyPem in appsettings.json is not a valid RSA public key."
+    }
+}
+
 function Set-ReleaseConfiguration([string]$payloadRoot) {
     $settingsPath = Join-Path $payloadRoot "appsettings.json"
     $settings = Get-Content $settingsPath -Raw | ConvertFrom-Json
-    $licenseKey = $env:DARMALTOON_LICENSE_SIGNING_PUBLIC_KEY
-    $updateKey = $env:DARMALTOON_UPDATE_SIGNING_PUBLIC_KEY_PEM
 
-    if ($RequireProductionKeys -and ([string]::IsNullOrWhiteSpace($licenseKey) -or [string]::IsNullOrWhiteSpace($updateKey))) {
-        throw "Production packaging requires DARMALTOON_LICENSE_SIGNING_PUBLIC_KEY and DARMALTOON_UPDATE_SIGNING_PUBLIC_KEY_PEM."
-    }
-    if (-not [string]::IsNullOrWhiteSpace($licenseKey)) { $settings.BusinessOS.Licensing.SigningPublicKey = $licenseKey }
-    if (-not [string]::IsNullOrWhiteSpace($updateKey)) { $settings.BusinessOS.Updater.SigningPublicKeyPem = $updateKey }
+    # These are public verification keys, not secrets. They are intentionally pinned
+    # in the released appsettings.json. Do not let CI secret values silently replace
+    # them, because an incorrectly pasted repository secret can make the desktop app
+    # fail before the activation screen is shown.
+    Assert-ReleaseVerificationKeys $settings
+
     $settings | ConvertTo-Json -Depth 12 | Set-Content -Path $settingsPath -Encoding utf8
+
+    # Re-read the exact file that will be packaged and validate it again.
+    $writtenSettings = Get-Content $settingsPath -Raw | ConvertFrom-Json
+    Assert-ReleaseVerificationKeys $writtenSettings
 }
 
 function Find-SignTool {

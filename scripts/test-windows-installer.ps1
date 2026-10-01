@@ -74,6 +74,25 @@ function Verify-InstalledApp([string]$expectedMode) {
 
     $fileVersion = [Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
     if ($fileVersion.ProductName -ne "Darmaltoon") { throw "Windows version metadata does not identify Darmaltoon." }
+
+    $settingsPath = Join-Path $installDir "appsettings.json"
+    $settings = Get-Content $settingsPath -Raw | ConvertFrom-Json
+    try {
+        $licenseBytes = [Convert]::FromBase64String(([string]$settings.BusinessOS.Licensing.SigningPublicKey).Trim())
+    }
+    catch {
+        throw "Installed licensing signing public key is not valid Base64."
+    }
+    if ($licenseBytes.Length -ne 32) { throw "Installed licensing signing public key is not 32 bytes." }
+
+    try {
+        $rsa = [Security.Cryptography.RSA]::Create()
+        $rsa.ImportFromPem(([string]$settings.BusinessOS.Updater.SigningPublicKeyPem).Trim())
+        $rsa.Dispose()
+    }
+    catch {
+        throw "Installed updater signing public key is not a valid RSA public key."
+    }
 }
 
 function Seed-PreservedData {
