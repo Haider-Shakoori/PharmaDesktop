@@ -34,6 +34,17 @@ function Install-Setup([string]$setup) {
     }
 }
 
+function Verify-FirstInteractiveLaunch {
+    $exe = Join-Path $installDir "Darmaltoon.exe"
+    $process = Start-Process $exe -PassThru
+    Start-Sleep -Seconds 6
+    if ($process.HasExited) {
+        throw "Darmaltoon exited during first interactive launch with exit code $($process.ExitCode)."
+    }
+    Stop-Process -Id $process.Id -Force
+    $process.WaitForExit()
+}
+
 function Uninstall-Darmaltoon {
     $uninstaller = Get-ChildItem $installDir -Filter "unins*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($null -eq $uninstaller) { throw "Darmaltoon uninstaller was not found." }
@@ -88,6 +99,7 @@ foreach ($file in @($standaloneSetup, $serverSetup, $clientSetup)) {
 # Clean standalone install.
 Install-Setup $standaloneSetup
 Verify-InstalledApp "Standalone"
+Verify-FirstInteractiveLaunch
 Seed-PreservedData
 Uninstall-Darmaltoon
 Verify-ProgramDataPreserved
