@@ -81,7 +81,7 @@
         </DataTemplate>
     </Window.Resources>
 
-    <Grid FlowDirection="{Binding LayoutDirection}">
+    <Grid FlowDirection="{Binding LayoutDirection}" Background="{DynamicResource AppBackgroundBrush}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="{Binding SidebarWidth}" />
             <ColumnDefinition Width="*" />

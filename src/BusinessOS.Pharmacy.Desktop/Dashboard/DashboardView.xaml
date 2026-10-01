@@ -80,7 +80,8 @@
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled">
+                  HorizontalScrollBarVisibility="Disabled"
+                  Background="{DynamicResource AppBackgroundBrush}">
         <StackPanel Margin="16,12,16,16">
             <StackPanel Margin="0,0,0,12">
                 <TextBlock Text="Dashboard"
@@ -276,7 +277,7 @@
                                           Height="162">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Medicine" Binding="{Binding Medicine}" Width="*" />
-                                        <DataGridTextColumn Header="Current Stock" Binding="{Binding CurrentStock, StringFormat={}{0:0.####}}" Width="82">
+                                        <DataGridTextColumn Header="Current Stock" Binding="{Binding CurrentStock, StringFormat={}{0:0.####}}" Width="68">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="#EF4444" />
@@ -285,8 +286,8 @@
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="Min. Stock" Binding="{Binding MinimumStock, StringFormat={}{0:0.####}}" Width="72" />
-                                        <DataGridTemplateColumn Header="Status" Width="78">
+                                        <DataGridTextColumn Header="Min. Stock" Binding="{Binding MinimumStock, StringFormat={}{0:0.####}}" Width="58" />
+                                        <DataGridTemplateColumn Header="Status" Width="70">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="#FFE7EA" CornerRadius="7" Padding="7,2"
@@ -326,9 +327,9 @@
                                           Height="162">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Medicine" Binding="{Binding Medicine}" Width="*" />
-                                        <DataGridTextColumn Header="Batch No." Binding="{Binding BatchNumber}" Width="72" />
-                                        <DataGridTextColumn Header="Expiry Date" Binding="{Binding ExpiryDate, StringFormat={}{0:dd MMM yyyy}}" Width="92" />
-                                        <DataGridTemplateColumn Header="Days Left" Width="70">
+                                        <DataGridTextColumn Header="Batch No." Binding="{Binding BatchNumber}" Width="60" />
+                                        <DataGridTextColumn Header="Expiry Date" Binding="{Binding ExpiryDate, StringFormat={}{0:dd MMM yyyy}}" Width="80" />
+                                        <DataGridTemplateColumn Header="Days Left" Width="62">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="#FFF1D6" CornerRadius="7" Padding="7,2"

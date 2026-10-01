@@ -274,16 +274,16 @@ public sealed partial class DashboardViewModel : ObservableObject
             _snapshot.LowStockCount.ToString("N0", CultureInfo.InvariantCulture),
             Translate("Items below threshold", "اقلام زیر حد", "توکي تر حد لاندې"),
             "inventory",
-            "#D97706",
-            "#FFFBEB"));
+            "#F59E0B",
+            "#FFF7ED"));
 
         Stats.Add(new DashboardStatViewModel(
             Translate("Expiring Soon", "نزدیک به انقضا", "ژر ختمېدونکي"),
             _snapshot.NearExpiryCount.ToString("N0", CultureInfo.InvariantCulture),
             Translate("Within 3 months", "در ۳ ماه آینده", "په ۳ میاشتو کې"),
             "batches",
-            "#DC2626",
-            "#FEF2F2"));
+            "#F43F5E",
+            "#FFF1F2"));
 
         Stats.Add(new DashboardStatViewModel(
             Translate("Cash in Drawer", "نقد صندوق", "په صندوق کې نغدې"),
@@ -293,8 +293,8 @@ public sealed partial class DashboardViewModel : ObservableObject
                 $"مورد انتظار: {FormatMoney(_snapshot.ExpectedCash)}",
                 $"تمه: {FormatMoney(_snapshot.ExpectedCash)}"),
             "expenses",
-            "#0F766E",
-            "#ECFDF5"));
+            "#6D28D9",
+            "#F5F3FF"));
 
         HasAlerts = _snapshot.TotalAlerts > 0;
         AttentionTitle = Translate("Attention required", "نیاز به توجه", "پاملرنه اړینه ده");
@@ -339,12 +339,12 @@ public sealed partial class DashboardViewModel : ObservableObject
     {
         QuickActions.Clear();
 
-        AddAction("pos", Translate("New Sale (POS)", "فروش جدید", "نوی خرڅلاو"), "pos.sell", true, "#0F766E", "F2");
+        AddAction("pos", Translate("New Sale (POS)", "فروش جدید", "نوی خرڅلاو"), "pos.sell", true, "#0B82F6", "F2");
         AddAction("purchases", Translate("New Purchase", "خرید جدید", "نوی پېرود"), "purchases.manage", true, "#059669", "F3");
-        AddAction("closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "daily_closing.perform", true, "#D97706", "F4");
+        AddAction("closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "daily_closing.perform", true, "#F97316", "F4");
         AddAction("backup", Translate("Backup Now", "پشتیبان‌گیری", "اوس بیک اپ"), "settings.manage", true, "#7C3AED", "F5");
-        AddAction("sync", Translate("Sync Now", "همگام‌سازی", "اوس همغږي"), "dashboard.view", _cloudSync is not null, "#0284C7", "F6");
-        AddAction("medicines", Translate("Medicines", "ادویه", "درمل"), "medicines.manage", true, "#0F766E", "F7");
+        AddAction("sync", Translate("Sync Now", "همگام‌سازی", "اوس همغږي"), "dashboard.view", _cloudSync is not null, "#0EA5E9", "F6");
+        AddAction("medicines", Translate("Medicines", "ادویه", "درمل"), "medicines.manage", true, "#0F8A83", "F7");
         AddAction("inventory", Translate("Inventory", "موجودی", "زېرمه"), "inventory.manage", true, "#475569", "F8");
     }
 
