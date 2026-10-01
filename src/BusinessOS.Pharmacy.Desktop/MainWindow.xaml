@@ -16,7 +16,7 @@
         xmlns:updates="clr-namespace:BusinessOS.Pharmacy.Desktop.Updates"
         Title="BusinessOS Pharmacy - Darmaltoon Pharmacy"
         Width="1600" Height="920"
-        MinWidth="1280" MinHeight="760"
+        MinWidth="1180" MinHeight="720"
         Background="{DynamicResource AppBackgroundBrush}"
         WindowStartupLocation="CenterScreen"
         SnapsToDevicePixels="True"
@@ -91,7 +91,7 @@
                 Background="{DynamicResource SidebarBrush}"
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,1,0">
-            <DockPanel Margin="12,14,12,12">
+            <DockPanel Margin="10,12,10,10">
                 <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -143,7 +143,7 @@
                     <Button Command="{Binding ToggleSidebarCommand}"
                             Style="{StaticResource GhostButton}"
                             Padding="8,6"
-                            Margin="0,8,0,0"
+                            Margin="0,5,0,0"
                             HorizontalAlignment="Right"
                             ToolTip="Collapse or expand navigation">
                         <StackPanel Orientation="Horizontal">
@@ -252,7 +252,7 @@
 
                     <Border Grid.Column="0"
                             MinWidth="240"
-                            MaxWidth="520"
+                            MaxWidth="470"
                             Height="38"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Center"

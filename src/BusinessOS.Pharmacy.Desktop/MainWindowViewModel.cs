@@ -126,7 +126,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public IAsyncRelayCommand<string> NavigateCommand { get; }
     public IAsyncRelayCommand GlobalSearchCommand { get; }
     public IRelayCommand ToggleSidebarCommand { get; }
-    public double SidebarWidth => SidebarCollapsed ? 72d : 240d;
+    public double SidebarWidth => SidebarCollapsed ? 70d : 224d;
     public DashboardViewModel Dashboard { get; }
     public CustomersViewModel Customers { get; }
     public MedicinesViewModel Medicines { get; }
