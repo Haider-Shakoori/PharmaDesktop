@@ -6,7 +6,7 @@ namespace BusinessOS.Pharmacy.Licensing;
 
 public sealed class WindowsUserSessionStore : IUserSessionStore
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = ProtectedStateJson.Options;
     private readonly IApplicationPaths _paths;
 
     public WindowsUserSessionStore(IApplicationPaths paths) => _paths = paths;
