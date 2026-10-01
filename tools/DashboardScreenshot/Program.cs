@@ -93,30 +93,32 @@ internal static class Program
             SelectedLanguage = UiLanguageCatalog.All[0];
             NavigationItems =
             [
-                new("dashboard", "Dashboard", "⌂", true),
-                new("pos", "POS (New Sale)", "▣"),
-                new("medicines", "Medicines", "✚"),
-                new("inventory", "Inventory", "▤"),
-                new("batches", "Batches", "◫"),
-                new("purchases", "Purchases", "↓"),
-                new("suppliers", "Suppliers", "♜"),
-                new("customers", "Customers", "♙"),
-                new("expenses", "Expenses", "₳"),
-                new("closing", "Daily Closing", "✓"),
-                new("reports", "Reports", "▥"),
-                new("users", "Users", "♟"),
-                new("backup", "Backup", "◫"),
-                new("settings", "Settings", "⚙"),
-                new("returns", "Returns", "↶"),
-                new("roles", "Roles & Permissions", "⚿"),
-                new("updates", "Sync & Updates", "⇧"),
-                new("network", "Network & Terminals", "⌁"),
+                new("dashboard", "Dashboard", "Operations", true),
+                new("pos", "POS", "Operations"),
+                new("customers", "Customers", "Operations"),
+                new("medicines", "Medicines", "Stock"),
+                new("inventory", "Inventory", "Stock"),
+                new("batches", "Batches", "Stock"),
+                new("purchases", "Purchases", "Purchasing"),
+                new("suppliers", "Suppliers", "Purchasing"),
+                new("returns", "Returns", "Purchasing"),
+                new("expenses", "Expenses", "Finance"),
+                new("closing", "Daily Closing", "Finance"),
+                new("reports", "Reports", "Finance"),
+                new("users", "Users", "Administration"),
+                new("roles", "Roles & Permissions", "Administration"),
+                new("backup", "Backup", "Administration"),
+                new("settings", "Settings", "Administration"),
+                new("updates", "Sync & Updates", "System"),
+                new("network", "Network & Terminals", "System"),
             ];
         }
         public string ApplicationName => "BusinessOS Pharmacy";
         public string ProductName => "Darmaltoon";
         public string ParentBrand => "BusinessOS.af";
         public FlowDirection LayoutDirection => FlowDirection.LeftToRight;
+        public bool SidebarCollapsed => false;
+        public double SidebarWidth => 252d;
         public string GlobalSearchText { get; set; } = string.Empty;
         public DashboardViewModel Dashboard { get; }
         public object CurrentPage { get; }
@@ -130,6 +132,7 @@ internal static class Program
         public ObservableCollection<NavigationItemViewModel> NavigationItems { get; }
         public ICommand NavigateCommand { get; } = new NoOpCommand();
         public ICommand GlobalSearchCommand { get; } = new NoOpCommand();
+        public ICommand ToggleSidebarCommand { get; } = new NoOpCommand();
         public ICommand LogoutCommand { get; } = new NoOpCommand();
     }
 

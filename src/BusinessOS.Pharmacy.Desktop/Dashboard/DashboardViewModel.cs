@@ -254,8 +254,9 @@ public sealed partial class DashboardViewModel : ObservableObject
                 $"{_snapshot.TodayTransactions:N0} invoices",
                 $"{_snapshot.TodayTransactions:N0} فاکتور",
                 $"{_snapshot.TodayTransactions:N0} بلونه"),
-            "▥",
-            "#22C55E"));
+            "reports",
+            "#059669",
+            "#ECFDF5"));
 
         Stats.Add(new DashboardStatViewModel(
             Translate("Purchases Today", "خرید امروز", "د نن ورځې پېرود"),
@@ -264,22 +265,25 @@ public sealed partial class DashboardViewModel : ObservableObject
                 $"{_snapshot.TodayPurchaseCount:N0} purchases",
                 $"{_snapshot.TodayPurchaseCount:N0} خرید",
                 $"{_snapshot.TodayPurchaseCount:N0} پېرود"),
-            "↓",
-            "#1687F8"));
+            "purchases",
+            "#0284C7",
+            "#F0F9FF"));
 
         Stats.Add(new DashboardStatViewModel(
             Translate("Low Stock Items", "اقلام کم موجود", "کم زېرمه توکي"),
             _snapshot.LowStockCount.ToString("N0", CultureInfo.InvariantCulture),
             Translate("Items below threshold", "اقلام زیر حد", "توکي تر حد لاندې"),
-            "◇",
-            "#F59E0B"));
+            "inventory",
+            "#D97706",
+            "#FFFBEB"));
 
         Stats.Add(new DashboardStatViewModel(
             Translate("Expiring Soon", "نزدیک به انقضا", "ژر ختمېدونکي"),
             _snapshot.NearExpiryCount.ToString("N0", CultureInfo.InvariantCulture),
             Translate("Within 3 months", "در ۳ ماه آینده", "په ۳ میاشتو کې"),
-            "▣",
-            "#F43F5E"));
+            "batches",
+            "#DC2626",
+            "#FEF2F2"));
 
         Stats.Add(new DashboardStatViewModel(
             Translate("Cash in Drawer", "نقد صندوق", "په صندوق کې نغدې"),
@@ -288,8 +292,9 @@ public sealed partial class DashboardViewModel : ObservableObject
                 $"Expected: {FormatMoney(_snapshot.ExpectedCash)}",
                 $"مورد انتظار: {FormatMoney(_snapshot.ExpectedCash)}",
                 $"تمه: {FormatMoney(_snapshot.ExpectedCash)}"),
-            "▰",
-            "#6D28D9"));
+            "expenses",
+            "#0F766E",
+            "#ECFDF5"));
 
         HasAlerts = _snapshot.TotalAlerts > 0;
         AttentionTitle = Translate("Attention required", "نیاز به توجه", "پاملرنه اړینه ده");
@@ -334,19 +339,18 @@ public sealed partial class DashboardViewModel : ObservableObject
     {
         QuickActions.Clear();
 
-        AddAction("pos", Translate("New Sale (POS)", "فروش جدید", "نوی خرڅلاو"), "+", "pos.sell", true, "#0868F7", "F2");
-        AddAction("purchases", Translate("New Purchase", "خرید جدید", "نوی پېرود"), "↓", "purchases.manage", true, "#059669", "F3");
-        AddAction("closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "▣", "daily_closing.perform", true, "#F97316", "F4");
-        AddAction("backup", Translate("Backup Now", "پشتیبان‌گیری", "اوس بیک اپ"), "☁", "settings.manage", true, "#7C3AED", "F5");
-        AddAction("sync", Translate("Sync Now", "همگام‌سازی", "اوس همغږي"), "↻", "dashboard.view", _cloudSync is not null, "#0EA5E9", "F6");
-        AddAction("medicines", Translate("Medicines", "ادویه", "درمل"), "✚", "medicines.manage", true, "#2563EB", "F7");
-        AddAction("inventory", Translate("Inventory", "موجودی", "زېرمه"), "◇", "inventory.manage", true, "#334155", "F8");
+        AddAction("pos", Translate("New Sale (POS)", "فروش جدید", "نوی خرڅلاو"), "pos.sell", true, "#0F766E", "F2");
+        AddAction("purchases", Translate("New Purchase", "خرید جدید", "نوی پېرود"), "purchases.manage", true, "#059669", "F3");
+        AddAction("closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "daily_closing.perform", true, "#D97706", "F4");
+        AddAction("backup", Translate("Backup Now", "پشتیبان‌گیری", "اوس بیک اپ"), "settings.manage", true, "#7C3AED", "F5");
+        AddAction("sync", Translate("Sync Now", "همگام‌سازی", "اوس همغږي"), "dashboard.view", _cloudSync is not null, "#0284C7", "F6");
+        AddAction("medicines", Translate("Medicines", "ادویه", "درمل"), "medicines.manage", true, "#0F766E", "F7");
+        AddAction("inventory", Translate("Inventory", "موجودی", "زېرمه"), "inventory.manage", true, "#475569", "F8");
     }
 
     private void AddAction(
         string key,
         string label,
-        string glyph,
         string permission,
         bool isAvailable,
         string accent,
@@ -357,7 +361,6 @@ public sealed partial class DashboardViewModel : ObservableObject
             QuickActions.Add(new DashboardQuickActionViewModel(
                 key,
                 label,
-                glyph,
                 permission,
                 isAvailable,
                 accent,

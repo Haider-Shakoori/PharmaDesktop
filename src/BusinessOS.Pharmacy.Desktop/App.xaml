@@ -7,6 +7,11 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Themes/Colors.xaml" />
                 <ResourceDictionary Source="Themes/Typography.xaml" />
+                <ResourceDictionary Source="Themes/Icons.xaml" />
+                <ResourceDictionary Source="Themes/Buttons.xaml" />
+                <ResourceDictionary Source="Themes/Forms.xaml" />
+                <ResourceDictionary Source="Themes/Cards.xaml" />
+                <ResourceDictionary Source="Themes/DataGrid.xaml" />
                 <ResourceDictionary Source="Themes/Controls.xaml" />
                 <ResourceDictionary Source="Themes/Navigation.xaml" />
             </ResourceDictionary.MergedDictionaries>

@@ -15,10 +15,12 @@
         xmlns:networking="clr-namespace:BusinessOS.Pharmacy.Desktop.Networking"
         xmlns:updates="clr-namespace:BusinessOS.Pharmacy.Desktop.Updates"
         Title="Darmaltoon"
-        Width="1500" Height="880"
+        Width="1500" Height="900"
         MinWidth="1180" MinHeight="720"
         Background="{DynamicResource AppBackgroundBrush}"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True">
     <Window.InputBindings>
         <KeyBinding Key="F2" Command="{Binding NavigateCommand}" CommandParameter="pos" />
         <KeyBinding Key="F3" Command="{Binding NavigateCommand}" CommandParameter="purchases" />
@@ -27,53 +29,61 @@
         <KeyBinding Key="F6" Command="{Binding NavigateCommand}" CommandParameter="sync" />
         <KeyBinding Key="F7" Command="{Binding NavigateCommand}" CommandParameter="medicines" />
         <KeyBinding Key="F8" Command="{Binding NavigateCommand}" CommandParameter="inventory" />
+        <KeyBinding Key="F" Modifiers="Control" Command="{Binding GlobalSearchCommand}" />
         <KeyBinding Key="S" Modifiers="Control" Command="{Binding GlobalSearchCommand}" />
     </Window.InputBindings>
+
     <Window.Resources>
+        <CollectionViewSource x:Key="GroupedNavigation" Source="{Binding NavigationItems}">
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="Group" />
+            </CollectionViewSource.GroupDescriptions>
+        </CollectionViewSource>
+
         <DataTemplate DataType="{x:Type dashboard:DashboardViewModel}">
-            <dashboard:DashboardView/>
+            <dashboard:DashboardView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type pos:PosViewModel}">
-            <pos:PosView/>
+            <pos:PosView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type returns:ReturnsViewModel}">
-            <returns:ReturnsView/>
+            <returns:ReturnsView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type expenses:ExpensesViewModel}">
-            <expenses:ExpensesView/>
+            <expenses:ExpensesView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type closing:DailyClosingViewModel}">
-            <closing:DailyClosingView/>
+            <closing:DailyClosingView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type reports:ReportsViewModel}">
-            <reports:ReportsView/>
+            <reports:ReportsView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type backup:BackupRestoreViewModel}">
-            <backup:BackupRestoreView/>
+            <backup:BackupRestoreView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type networking:NetworkSettingsViewModel}">
-            <networking:NetworkSettingsView/>
+            <networking:NetworkSettingsView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type updates:UpdateViewModel}">
-            <updates:UpdateView/>
+            <updates:UpdateView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type customers:CustomersViewModel}">
-            <customers:CustomersView/>
+            <customers:CustomersView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type medicines:MedicinesViewModel}">
-            <medicines:MedicinesView/>
+            <medicines:MedicinesView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type inventory:InventoryViewModel}">
-            <inventory:InventoryView/>
+            <inventory:InventoryView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type purchasing:PurchasingViewModel}">
-            <purchasing:PurchasingView/>
+            <purchasing:PurchasingView />
         </DataTemplate>
     </Window.Resources>
 
     <Grid FlowDirection="{Binding LayoutDirection}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="245" />
+            <ColumnDefinition Width="{Binding SidebarWidth}" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -81,50 +91,149 @@
                 Background="{DynamicResource SidebarBrush}"
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,1,0">
-            <DockPanel Margin="14,18">
-                <Grid DockPanel.Dock="Top" Margin="2,0,2,18">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="48" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Border Width="42" Height="42"
-                            CornerRadius="21"
-                            Background="#0B6FF4"
-                            VerticalAlignment="Top">
-                        <TextBlock Text="✚"
-                                   Foreground="White"
-                                   FontSize="24"
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center" />
-                    </Border>
-                    <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                        <TextBlock Text="{Binding ApplicationName}" Foreground="#0F172A" FontSize="17" FontWeight="Bold" />
-                        <TextBlock Text="{Binding ProductName}" Foreground="#2563EB" FontSize="12" FontWeight="SemiBold" Margin="0,1,0,0" />
-                        <TextBlock Text="Manage Today  •  Healthier Tomorrow" Foreground="#64748B" FontSize="9" Margin="0,3,0,0" />
-                    </StackPanel>
-                </Grid>
+            <DockPanel Margin="12,14,12,12">
+                <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="38" Height="38"
+                                CornerRadius="10"
+                                Background="{DynamicResource BrandPrimaryBrush}">
+                            <Path Data="{StaticResource IconMedicines}"
+                                  Width="21" Height="21"
+                                  Stretch="Uniform"
+                                  Stroke="White"
+                                  StrokeThickness="1.8"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  Fill="Transparent"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SidebarCollapsed}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="{Binding ProductName}" FontSize="16" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding ParentBrand}" Style="{StaticResource CaptionText}" />
+                        </StackPanel>
+                    </Grid>
 
-                <StackPanel DockPanel.Dock="Bottom" Margin="4,14,4,0">
-                    <TextBlock Text="BusinessOS Pharmacy" Foreground="#0F172A" FontSize="10" FontWeight="SemiBold" />
-                    <TextBlock Text="v1.0.0  |  Built for Afghanistan 🇦🇫" Foreground="#64748B" FontSize="9" Margin="0,2,0,0" />
-                    <TextBlock Text="{Binding ParentBrand}" Foreground="#2563EB" FontSize="9" Margin="0,2,0,0" />
+                    <Button Command="{Binding ToggleSidebarCommand}"
+                            Style="{StaticResource GhostButton}"
+                            Padding="8,6"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Right"
+                            ToolTip="Collapse or expand navigation">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconPanel}"
+                                  Width="16" Height="16"
+                                  Stretch="Uniform"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  StrokeThickness="1.7"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  Fill="Transparent" />
+                            <TextBlock Text="Collapse" Margin="7,0,0,0" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource CaptionText}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SidebarCollapsed}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
+
+                <Border DockPanel.Dock="Bottom"
+                        Background="{DynamicResource SurfaceMutedBrush}"
+                        CornerRadius="10"
+                        Padding="10"
+                        Margin="0,10,0,0">
+                    <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SidebarCollapsed}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="Darmaltoon Desktop" FontWeight="SemiBold" FontSize="11.5" />
+                        <TextBlock Text="Professional pharmacy operations" Style="{StaticResource CaptionText}" Margin="0,2,0,0" />
+                    </StackPanel>
+                </Border>
+
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
-                    <ItemsControl ItemsSource="{Binding NavigationItems}">
+                    <ItemsControl ItemsSource="{Binding Source={StaticResource GroupedNavigation}}">
+                        <ItemsControl.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource NavigationGroupHeader}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding DataContext.SidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                     Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ItemsControl.GroupStyle>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Button Style="{StaticResource SidebarNavigationButton}"
                                         Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding Key}">
+                                        CommandParameter="{Binding Key}"
+                                        ToolTip="{Binding Label}">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="28" />
+                                            <ColumnDefinition Width="32" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{Binding Glyph}" Foreground="#3B6FA8" VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="1" Text="{Binding Label}" Foreground="#1E293B" FontSize="12.5" VerticalAlignment="Center" />
+                                        <Path Style="{StaticResource NavigationIconPath}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Label}"
+                                                   FontSize="12.5"
+                                                   FontWeight="SemiBold"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding DataContext.SidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                     Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
                                     </Grid>
                                 </Button>
                             </DataTemplate>
@@ -136,43 +245,54 @@
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="68" />
+                <RowDefinition Height="64" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                <Grid Margin="26,0">
+            <Border Grid.Row="0"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="0,0,0,1">
+                <Grid Margin="20,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <Border Width="440"
+
+                    <Border Grid.Column="0"
+                            MinWidth="240"
+                            MaxWidth="390"
                             Height="38"
-                            Background="#F8FAFC"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AppBackgroundBrush}"
                             BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="8"
-                            VerticalAlignment="Center">
+                            CornerRadius="9"
+                            Margin="0,0,18,0">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="32" />
+                                <ColumnDefinition Width="38" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="42" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="⌕"
-                                       Foreground="#64748B"
-                                       FontSize="18"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
+                            <Path Data="{StaticResource IconSearch}"
+                                  Width="17" Height="17"
+                                  Stroke="{DynamicResource TextMutedBrush}"
+                                  StrokeThickness="1.8"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  Fill="Transparent"
+                                  Stretch="Uniform"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center" />
                             <Grid Grid.Column="1">
-                                <TextBlock Text="Search medicines, customers, suppliers..."
-                                           Foreground="#94A3B8"
-                                           FontSize="11"
+                                <TextBlock Text="Search medicines, customers, suppliers…"
                                            VerticalAlignment="Center"
                                            IsHitTestVisible="False">
                                     <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource CaptionText}">
                                             <Setter Property="Visibility" Value="Collapsed" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding GlobalSearchText}" Value="">
@@ -183,83 +303,128 @@
                                     </TextBlock.Style>
                                 </TextBlock>
                                 <TextBox Text="{Binding GlobalSearchText, UpdateSourceTrigger=PropertyChanged}"
-                                         Background="Transparent"
-                                         BorderThickness="0"
-                                         Padding="2,0"
+                                         Style="{StaticResource SearchTextBox}"
                                          VerticalContentAlignment="Center"
-                                         FontSize="11" />
+                                         ToolTip="Ctrl+F" />
                             </Grid>
                             <Button Grid.Column="2"
-                                    Content="Go"
                                     Command="{Binding GlobalSearchCommand}"
-                                    Margin="3"
-                                    Padding="5,2"
-                                    FontSize="10" />
+                                    Style="{StaticResource GhostButton}"
+                                    Padding="8,5"
+                                    Margin="2"
+                                    ToolTip="Search">
+                                <TextBlock Text="Ctrl+F" Style="{StaticResource CaptionText}" />
+                            </Button>
                         </Grid>
                     </Border>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#F8FAFC"
-                                BorderBrush="{DynamicResource BorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="8"
-                                Padding="9,5"
-                                Margin="0,0,8,0">
-                            <StackPanel>
-                                <TextBlock Text="{Binding Dashboard.PharmacyName}"
-                                           FontWeight="SemiBold"
-                                           FontSize="10" />
-                                <TextBlock Text="Afghanistan"
-                                           Foreground="#64748B"
-                                           FontSize="9" />
+                        <Border Style="{StaticResource SuccessBadge}" Margin="0,0,7,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconWifi}"
+                                      Width="14" Height="14"
+                                      Stroke="{DynamicResource SuccessBrush}"
+                                      StrokeThickness="1.8"
+                                      Fill="Transparent"
+                                      Stretch="Uniform"
+                                      Margin="0,0,6,0" />
+                                <TextBlock Text="{Binding OnlineText}" Foreground="{DynamicResource SuccessBrush}" FontSize="10.5" FontWeight="SemiBold" />
                             </StackPanel>
                         </Border>
+
+                        <Border Style="{StaticResource SuccessBadge}" Margin="0,0,7,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconBadgeCheck}"
+                                      Width="14" Height="14"
+                                      Stroke="{DynamicResource SuccessBrush}"
+                                      StrokeThickness="1.8"
+                                      Fill="Transparent"
+                                      Stretch="Uniform"
+                                      Margin="0,0,6,0" />
+                                <TextBlock Text="{Binding LicenseText}" Foreground="{DynamicResource SuccessBrush}" FontSize="10.5" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource NeutralBadge}" Margin="0,0,7,0">
+                            <TextBlock Text="{Binding LanStatusText}"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       FontSize="10.5"
+                                       FontWeight="SemiBold"
+                                       MaxWidth="130"
+                                       TextTrimming="CharacterEllipsis" />
+                        </Border>
+
+                        <ComboBox Width="112"
+                                  ItemsSource="{Binding Languages}"
+                                  SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
+                                  DisplayMemberPath="DisplayName"
+                                  Margin="0,0,7,0"
+                                  ToolTip="Language" />
+
                         <Button Command="{Binding NavigateCommand}"
                                 CommandParameter="inventory"
-                                Margin="0,0,8,0"
-                                Padding="8,5"
+                                Style="{StaticResource IconButton}"
+                                Margin="0,0,7,0"
                                 ToolTip="Inventory alerts">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🔔" Margin="0,0,4,0" />
-                                <TextBlock Text="{Binding Dashboard.Alerts.Count}" FontSize="10" />
-                            </StackPanel>
+                            <Grid>
+                                <Path Data="{StaticResource IconBell}"
+                                      Width="17" Height="17"
+                                      Stroke="{DynamicResource TextSecondaryBrush}"
+                                      StrokeThickness="1.8"
+                                      Fill="Transparent"
+                                      Stretch="Uniform" />
+                                <Border Background="{DynamicResource DangerBrush}"
+                                        CornerRadius="7"
+                                        MinWidth="14"
+                                        Height="14"
+                                        Padding="3,0"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Margin="12,-5,-7,0">
+                                    <TextBlock Text="{Binding Dashboard.Alerts.Count}"
+                                               Foreground="White"
+                                               FontSize="8"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
                         </Button>
-                        <StackPanel Margin="0,0,14,0" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding UserDisplayName}" FontWeight="SemiBold" HorizontalAlignment="Right" />
-                            <TextBlock Text="{Binding UserRoleText}" Style="{StaticResource MutedText}" HorizontalAlignment="Right" />
+
+                        <StackPanel Margin="0,0,10,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding UserDisplayName}"
+                                       FontWeight="SemiBold"
+                                       FontSize="11.5"
+                                       HorizontalAlignment="Right"
+                                       MaxWidth="120"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding UserRoleText}"
+                                       Style="{StaticResource CaptionText}"
+                                       HorizontalAlignment="Right"
+                                       MaxWidth="120"
+                                       TextTrimming="CharacterEllipsis" />
                         </StackPanel>
-                        <Border Background="#ECFDF5" CornerRadius="16" Padding="9,5" Margin="0,0,7,0">
-                            <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="7" Height="7" Fill="#16A34A" Margin="0,0,5,0" VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding OnlineText}" Foreground="#047857" FontSize="10" FontWeight="SemiBold" />
-                            </StackPanel>
-                        </Border>
-                        <Border Background="#ECFDF5" CornerRadius="16" Padding="9,5" Margin="0,0,7,0">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="◆" Foreground="#16A34A" FontSize="10" Margin="0,0,5,0" />
-                                <TextBlock Text="{Binding LicenseText}" Foreground="#047857" FontSize="10" FontWeight="SemiBold" />
-                            </StackPanel>
-                        </Border>
-                        <Border Background="{DynamicResource AppBackgroundBrush}"
-                                BorderBrush="{DynamicResource BorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="16"
-                                Padding="9,5"
-                                Margin="0,0,10,0">
-                            <TextBlock Text="{Binding LanStatusText}"
-                                       Foreground="{DynamicResource TextMutedBrush}"
-                                       FontSize="10"
-                                       FontWeight="SemiBold" />
-                        </Border>
-                        <ComboBox Width="120" ItemsSource="{Binding Languages}"
-                                  SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
-                                  DisplayMemberPath="DisplayName" Margin="0,0,10,0" />
-                        <Button Content="Sign Out" Command="{Binding LogoutCommand}" Padding="10,6" />
+
+                        <Button Command="{Binding LogoutCommand}"
+                                Style="{StaticResource IconButton}"
+                                ToolTip="Sign out">
+                            <Path Data="{StaticResource IconLogout}"
+                                  Width="17" Height="17"
+                                  Stroke="{DynamicResource TextSecondaryBrush}"
+                                  StrokeThickness="1.8"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  Fill="Transparent"
+                                  Stretch="Uniform" />
+                        </Button>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" />
+            <ContentControl Grid.Row="1"
+                            Content="{Binding CurrentPage}"
+                            Background="{DynamicResource AppBackgroundBrush}" />
         </Grid>
     </Grid>
 </Window>

@@ -34,6 +34,37 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="HorizontalAlignment" Value="Right" />
         </Style>
+
+        <Style x:Key="DashboardSectionIcon" TargetType="Path">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Stretch" Value="Uniform" />
+            <Setter Property="Fill" Value="Transparent" />
+            <Setter Property="StrokeThickness" Value="1.8" />
+            <Setter Property="StrokeStartLineCap" Value="Round" />
+            <Setter Property="StrokeEndLineCap" Value="Round" />
+            <Setter Property="StrokeLineJoin" Value="Round" />
+        </Style>
+
+        <Style x:Key="DashboardMetricIconPath" TargetType="Path">
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="Stretch" Value="Uniform" />
+            <Setter Property="Fill" Value="Transparent" />
+            <Setter Property="Stroke" Value="{Binding IconForeground}" />
+            <Setter Property="StrokeThickness" Value="1.8" />
+            <Setter Property="StrokeStartLineCap" Value="Round" />
+            <Setter Property="StrokeEndLineCap" Value="Round" />
+            <Setter Property="StrokeLineJoin" Value="Round" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IconKey}" Value="reports"><Setter Property="Data" Value="{StaticResource IconReports}" /></DataTrigger>
+                <DataTrigger Binding="{Binding IconKey}" Value="purchases"><Setter Property="Data" Value="{StaticResource IconPurchases}" /></DataTrigger>
+                <DataTrigger Binding="{Binding IconKey}" Value="inventory"><Setter Property="Data" Value="{StaticResource IconInventory}" /></DataTrigger>
+                <DataTrigger Binding="{Binding IconKey}" Value="batches"><Setter Property="Data" Value="{StaticResource IconBatches}" /></DataTrigger>
+                <DataTrigger Binding="{Binding IconKey}" Value="expenses"><Setter Property="Data" Value="{StaticResource IconExpenses}" /></DataTrigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -79,15 +110,12 @@
                                 </Grid.ColumnDefinitions>
                                 <Border Width="42"
                                         Height="42"
-                                        CornerRadius="9"
-                                        Background="{Binding Accent}"
+                                        CornerRadius="10"
+                                        Background="{Binding IconBackground}"
                                         VerticalAlignment="Top">
-                                    <TextBlock Text="{Binding Glyph}"
-                                               Foreground="White"
-                                               FontSize="19"
-                                               FontWeight="Bold"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center" />
+                                    <Path Style="{StaticResource DashboardMetricIconPath}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
                                 </Border>
                                 <StackPanel Grid.Column="1" Margin="10,0,0,0">
                                     <TextBlock Text="{Binding Label}"
@@ -128,11 +156,9 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="▥"
-                                               Foreground="#1687F8"
-                                               FontSize="18"
-                                               FontWeight="Bold"
-                                               Margin="0,0,8,0" />
+                                    <Path Data="{StaticResource IconReports}"
+                                          Style="{StaticResource DashboardSectionIcon}"
+                                          Stroke="{DynamicResource InfoBrush}" />
                                     <TextBlock Text="Sales Overview"
                                                FontSize="15"
                                                FontWeight="Bold" />
@@ -230,7 +256,9 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="◇" Foreground="#F59E0B" FontSize="18" Margin="0,0,7,0" />
+                                        <Path Data="{StaticResource IconInventory}"
+                                              Style="{StaticResource DashboardSectionIcon}"
+                                              Stroke="{DynamicResource WarningBrush}" />
                                         <TextBlock Text="Low Stock Items" FontSize="14" FontWeight="Bold" />
                                     </StackPanel>
                                     <Button Grid.Column="1"
@@ -260,7 +288,9 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="▣" Foreground="#F43F5E" FontSize="18" Margin="0,0,7,0" />
+                                        <Path Data="{StaticResource IconBatches}"
+                                              Style="{StaticResource DashboardSectionIcon}"
+                                              Stroke="{DynamicResource DangerBrush}" />
                                         <TextBlock Text="Expiring Soon" FontSize="14" FontWeight="Bold" />
                                     </StackPanel>
                                     <Button Grid.Column="1"
@@ -292,7 +322,9 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="▤" Foreground="#1687F8" FontSize="18" Margin="0,0,7,0" />
+                                    <Path Data="{StaticResource IconReports}"
+                                          Style="{StaticResource DashboardSectionIcon}"
+                                          Stroke="{DynamicResource InfoBrush}" />
                                     <TextBlock Text="Recent Transactions" FontSize="14" FontWeight="Bold" />
                                 </StackPanel>
                                 <Button Grid.Column="1"
@@ -354,7 +386,9 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="◆" Foreground="#16A34A" FontSize="18" Margin="0,0,7,0" />
+                                    <Path Data="{StaticResource IconBadgeCheck}"
+                                          Style="{StaticResource DashboardSectionIcon}"
+                                          Stroke="{DynamicResource SuccessBrush}" />
                                     <TextBlock Text="License &amp; Subscription" FontSize="14" FontWeight="Bold" />
                                 </StackPanel>
                                 <Border Grid.Column="1" Background="#DCFCE7" CornerRadius="9" Padding="8,3">
@@ -379,7 +413,10 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                                            <TextBlock Text="●" Foreground="#16A34A" FontSize="10" Margin="0,0,6,0" />
+                                            <Ellipse Width="6" Height="6"
+                                                     Fill="{DynamicResource SuccessBrush}"
+                                                     Margin="0,0,7,0"
+                                                     VerticalAlignment="Center" />
                                             <TextBlock Text="{Binding}" FontSize="10" Foreground="#475569" TextWrapping="Wrap" />
                                         </StackPanel>
                                     </DataTemplate>
@@ -391,9 +428,27 @@
                     <!-- Quick Actions -->
                     <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,12">
                         <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <TextBlock Text="⚡" Foreground="#F59E0B" FontSize="18" Margin="0,0,7,0" />
-                                <TextBlock Text="{Binding QuickActionsTitle}" FontSize="14" FontWeight="Bold" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <Border Width="28" Height="28"
+                                        CornerRadius="8"
+                                        Background="{DynamicResource SelectedBrush}"
+                                        Margin="0,0,8,0">
+                                    <Path Data="{StaticResource IconPos}"
+                                          Width="15" Height="15"
+                                          Stroke="{DynamicResource BrandPrimaryBrush}"
+                                          StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round"
+                                          Fill="Transparent"
+                                          Stretch="Uniform"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="{Binding QuickActionsTitle}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
                             </StackPanel>
 
                             <ItemsControl ItemsSource="{Binding QuickActions}">
@@ -402,41 +457,41 @@
                                         <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                 CommandParameter="{Binding Key}"
                                                 IsEnabled="{Binding IsAvailable}"
-                                                Background="{Binding Accent}"
-                                                Foreground="White"
-                                                BorderThickness="0"
-                                                Padding="10,8"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Padding="8,7"
                                                 Margin="0,0,0,6">
-                                            <Button.Template>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}"
-                                                            CornerRadius="6"
-                                                            Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter />
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Button.Template>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="24" />
+                                                    <ColumnDefinition Width="34" />
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Text="{Binding Glyph}"
-                                                           Foreground="White"
-                                                           FontWeight="Bold"
-                                                           VerticalAlignment="Center" />
+                                                <Border Width="28"
+                                                        Height="28"
+                                                        CornerRadius="8"
+                                                        Background="{DynamicResource SurfaceMutedBrush}"
+                                                        HorizontalAlignment="Left">
+                                                    <Path Style="{StaticResource NavigationIconPath}"
+                                                          Width="15"
+                                                          Height="15"
+                                                          Stroke="{Binding Accent}"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center" />
+                                                </Border>
                                                 <TextBlock Grid.Column="1"
                                                            Text="{Binding Label}"
-                                                           Foreground="White"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"
                                                            FontWeight="SemiBold"
                                                            VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="2"
-                                                           Text="{Binding Shortcut}"
-                                                           Foreground="White"
-                                                           Opacity="0.9"
-                                                           FontSize="10"
-                                                           VerticalAlignment="Center" />
+                                                <Border Grid.Column="2"
+                                                        Background="{DynamicResource SurfaceMutedBrush}"
+                                                        CornerRadius="6"
+                                                        Padding="6,3">
+                                                    <TextBlock Text="{Binding Shortcut}"
+                                                               Foreground="{DynamicResource TextMutedBrush}"
+                                                               FontSize="10"
+                                                               VerticalAlignment="Center" />
+                                                </Border>
                                             </Grid>
                                         </Button>
                                     </DataTemplate>
@@ -460,7 +515,9 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="◐" Foreground="#1687F8" FontSize="18" Margin="0,0,7,0" />
+                                    <Path Data="{StaticResource IconDashboard}"
+                                          Style="{StaticResource DashboardSectionIcon}"
+                                          Stroke="{DynamicResource InfoBrush}" />
                                     <TextBlock Text="Pharmacy Overview" FontSize="14" FontWeight="Bold" />
                                 </StackPanel>
                                 <Button Grid.Column="1"

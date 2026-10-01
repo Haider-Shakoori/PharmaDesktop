@@ -50,6 +50,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private string globalSearchText = string.Empty;
 
+    [ObservableProperty]
+    private bool sidebarCollapsed;
+
     public MainWindowViewModel(
         IClock clock,
         IUserSessionService sessions,
@@ -113,6 +116,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         LogoutCommand = new AsyncRelayCommand(LogoutAsync);
         NavigateCommand = new AsyncRelayCommand<string>(NavigateAsync);
         GlobalSearchCommand = new AsyncRelayCommand(GlobalSearchAsync);
+        ToggleSidebarCommand = new RelayCommand(ToggleSidebar);
         RefreshNavigation();
     }
 
@@ -121,6 +125,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public IAsyncRelayCommand LogoutCommand { get; }
     public IAsyncRelayCommand<string> NavigateCommand { get; }
     public IAsyncRelayCommand GlobalSearchCommand { get; }
+    public IRelayCommand ToggleSidebarCommand { get; }
+    public double SidebarWidth => SidebarCollapsed ? 78d : 252d;
     public DashboardViewModel Dashboard { get; }
     public CustomersViewModel Customers { get; }
     public MedicinesViewModel Medicines { get; }
@@ -294,48 +300,42 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         NavigationItems.Clear();
 
-        // Primary pharmacy navigation follows the reference dashboard order.
-        AddIfAllowed("dashboard.view", "dashboard", Translate("Dashboard", "داشبورد", "ډشبورډ"), "⌂");
-        AddIfAllowed("pos.sell", "pos", Translate("POS (New Sale)", "فروش (جدید)", "خرڅلاو (نوی)"), "▣");
-        AddIfAllowed("medicines.manage", "medicines", Translate("Medicines", "ادویه", "درمل"), "✚");
+        var operations = Translate("Operations", "عملیات", "عملیات");
+        var stock = Translate("Stock", "موجودی", "زېرمه");
+        var purchasing = Translate("Purchasing", "خریداری", "پېرود");
+        var finance = Translate("Finance", "مالی", "مالي");
+        var administration = Translate("Administration", "مدیریت", "اداره");
+        var system = Translate("System", "سیستم", "سیسټم");
+
+        AddIfAllowed("dashboard.view", "dashboard", Translate("Dashboard", "داشبورد", "ډشبورډ"), operations);
+        AddIfAllowed("pos.sell", "pos", Translate("POS", "فروش", "خرڅلاو"), operations);
+        AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), operations);
+        AddIfAllowed("medicines.manage", "medicines", Translate("Medicines", "ادویه", "درمل"), stock);
 
         if (_permissions.HasPermission("inventory.manage") ||
             _permissions.HasPermission("inventory.status"))
         {
-            AddNavigationItem(
-                "inventory",
-                Translate("Inventory", "موجودی", "زېرمه"),
-                "▤");
-            AddNavigationItem(
-                "batches",
-                Translate("Batches", "بچ‌ها", "بېچونه"),
-                "◫");
+            AddNavigationItem("inventory", Translate("Inventory", "موجودی", "زېرمه"), stock);
+            AddNavigationItem("batches", Translate("Batches", "بچ‌ها", "بېچونه"), stock);
         }
 
-        AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), "↓");
-        AddIfAllowed("purchases.manage", "suppliers", Translate("Suppliers", "تأمین‌کنندگان", "عرضه کوونکي"), "♜");
-        AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), "♙");
-        AddIfAllowed("accounting.manage", "expenses", Translate("Expenses", "مصارف", "لګښتونه"), "₳");
-        AddIfAllowed("daily_closing.perform", "closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "✓");
-        AddIfAllowed("reports.view", "reports", Translate("Reports", "گزارش‌ها", "راپورونه"), "▥");
-        AddIfAllowed("users.manage", "users", Translate("Users", "کاربران", "کارنان"), "♟");
+        AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), purchasing);
+        AddIfAllowed("purchases.manage", "suppliers", Translate("Suppliers", "تأمین‌کنندگان", "عرضه کوونکي"), purchasing);
+        AddIfAllowed("returns.manage", "returns", Translate("Returns", "برگشت", "ستنېدل"), purchasing);
+        AddIfAllowed("accounting.manage", "expenses", Translate("Expenses", "مصارف", "لګښتونه"), finance);
+        AddIfAllowed("daily_closing.perform", "closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), finance);
+        AddIfAllowed("reports.view", "reports", Translate("Reports", "گزارش‌ها", "راپورونه"), finance);
+        AddIfAllowed("users.manage", "users", Translate("Users", "کاربران", "کارنان"), administration);
+        AddIfAllowed("roles.manage", "roles", Translate("Roles & Permissions", "نقش‌ها و مجوزها", "رولونه او اجازې"), administration);
 
         if (_networkConfiguration.Mode != DeploymentMode.Client &&
             _permissions.HasPermission("settings.manage"))
         {
-            AddNavigationItem(
-                "backup",
-                Translate("Backup", "پشتیبان‌گیری", "بیک اپ"),
-                "◫");
+            AddNavigationItem("backup", Translate("Backup", "پشتیبان‌گیری", "بیک اپ"), administration);
         }
 
-        AddIfAllowed("settings.manage", "settings", Translate("Settings", "تنظیمات", "امستنې"), "⚙");
-
-        // Keep the advanced native modules available without displacing the
-        // reference dashboard options above.
-        AddIfAllowed("returns.manage", "returns", Translate("Returns", "برگشت", "ستنېدل"), "↶");
-        AddIfAllowed("roles.manage", "roles", Translate("Roles & Permissions", "نقش‌ها و مجوزها", "رولونه او اجازې"), "⚿");
-        AddIfAllowed("settings.manage", "updates", Translate("Sync & Updates", "همگام‌سازی و به‌روزرسانی", "همغږي او تازه کول"), "⇧");
+        AddIfAllowed("settings.manage", "settings", Translate("Settings", "تنظیمات", "امستنې"), administration);
+        AddIfAllowed("settings.manage", "updates", Translate("Sync & Updates", "همگام‌سازی و به‌روزرسانی", "همغږي او تازه کول"), system);
 
         if (_networkConfiguration.Mode == DeploymentMode.Server &&
             (_permissions.HasPermission("users.manage") ||
@@ -344,26 +344,33 @@ public sealed partial class MainWindowViewModel : ObservableObject
             AddNavigationItem(
                 "network",
                 Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
-                "⌁");
+                system);
         }
     }
 
-    private void AddIfAllowed(string permission, string key, string label, string glyph)
+    private void AddIfAllowed(string permission, string key, string label, string group)
     {
         if (_permissions.HasPermission(permission))
         {
-            AddNavigationItem(key, label, glyph);
+            AddNavigationItem(key, label, group);
         }
     }
 
-    private void AddNavigationItem(string key, string label, string glyph)
+    private void AddNavigationItem(string key, string label, string group)
     {
         NavigationItems.Add(new NavigationItemViewModel(
             key,
             label,
-            glyph,
+            group,
             string.Equals(key, CurrentSectionKey, StringComparison.OrdinalIgnoreCase)));
     }
+
+    partial void OnSidebarCollapsedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(SidebarWidth));
+    }
+
+    private void ToggleSidebar() => SidebarCollapsed = !SidebarCollapsed;
 
     private async Task NavigateAsync(string? key)
     {
