@@ -144,8 +144,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         "network" => Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
+        "batches" => Translate("Batches", "بچ‌ها", "بېچونه"),
         "purchases" => Translate("Purchases", "خریداری", "پېرود"),
+        "suppliers" => Translate("Suppliers", "تأمین‌کنندگان", "عرضه کوونکي"),
         "customers" => Translate("Customers", "مشتریان", "پېرودونکي"),
+        "settings" => Translate("Settings", "تنظیمات", "امستنې"),
         _ => Translate("Dashboard", "داشبورد", "ډشبورډ"),
     };
     public string PageSubtitle => CurrentSectionKey switch
@@ -190,10 +193,22 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "Batch-aware stock, expiry and movement control",
             "کنترل موجودی، بچ، انقضا و گردش کالا",
             "د بېچ، ختمېدو او زېرمتون حرکتونو کنټرول"),
+        "batches" => Translate(
+            "Medicine batches, quantities and expiry control",
+            "بچ‌های دوا، مقدار و کنترل انقضا",
+            "د درملو بېچونه، مقدار او د ختمېدو کنټرول"),
         "purchases" => Translate(
-            "Suppliers, purchase orders, receiving, invoices and supplier payments",
-            "تأمین‌کنندگان، سفارش خرید، دریافت، فاکتور و پرداخت",
-            "عرضه کوونکي، پېرود امرونه، ترلاسه کول، بلونه او تادیات"),
+            "Purchase orders, receiving, invoices and supplier payments",
+            "سفارش خرید، دریافت، فاکتور و پرداخت تأمین‌کننده",
+            "پېرود امرونه، ترلاسه کول، بلونه او د عرضه کوونکي تادیات"),
+        "suppliers" => Translate(
+            "Supplier records and purchasing relationships",
+            "اطلاعات تأمین‌کنندگان و روابط خرید",
+            "د عرضه کوونکو معلومات او د پېرود اړیکې"),
+        "settings" => Translate(
+            "Application, deployment and local network settings",
+            "تنظیمات برنامه، حالت نصب و شبکه محلی",
+            "د اپلېکېشن، نصب حالت او محلي شبکې امستنې"),
         "customers" => Translate(
             "Customer records and per-sale credit limits",
             "اطلاعات مشتری و سقف اعتبار هر فروش",
@@ -266,11 +281,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private void RefreshNavigation()
     {
         NavigationItems.Clear();
+
+        // Primary pharmacy navigation follows the reference dashboard order.
         AddIfAllowed("dashboard.view", "dashboard", Translate("Dashboard", "داشبورد", "ډشبورډ"), "⌂");
-        AddIfAllowed("pos.sell", "pos", Translate("POS", "فروش", "خرڅلاو"), "▣");
-        AddIfAllowed("returns.manage", "returns", Translate("Returns", "برگشت", "ستنېدل"), "↶");
-        AddIfAllowed("accounting.manage", "expenses", Translate("Expenses", "مصارف", "لګښتونه"), "₳");
+        AddIfAllowed("pos.sell", "pos", Translate("POS (New Sale)", "فروش (جدید)", "خرڅلاو (نوی)"), "▣");
         AddIfAllowed("medicines.manage", "medicines", Translate("Medicines", "ادویه", "درمل"), "✚");
+
         if (_permissions.HasPermission("inventory.manage") ||
             _permissions.HasPermission("inventory.status"))
         {
@@ -278,39 +294,46 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 "inventory",
                 Translate("Inventory", "موجودی", "زېرمه"),
                 "▤"));
-        }
-        AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), "↓");
-        AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), "♙");
-        AddIfAllowed("reports.view", "reports", Translate("Reports", "گزارش‌ها", "راپورونه"), "▥");
-
-        if (_networkConfiguration.Mode != DeploymentMode.Client && _permissions.HasPermission("settings.manage"))
-        {
-            NavigationItems.Add(new NavigationItemViewModel(
-                "backup",
-                Translate("Backup & Restore", "پشتیبان‌گیری و بازیابی", "بیک اپ او بېرته راګرځول"),
+            NavigationItems.Add(new(
+                "batches",
+                Translate("Batches", "بچ‌ها", "بېچونه"),
                 "◫"));
         }
 
-        if (_permissions.HasPermission("settings.manage"))
+        AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), "↓");
+        AddIfAllowed("purchases.manage", "suppliers", Translate("Suppliers", "تأمین‌کنندگان", "عرضه کوونکي"), "♜");
+        AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), "♙");
+        AddIfAllowed("accounting.manage", "expenses", Translate("Expenses", "مصارف", "لګښتونه"), "₳");
+        AddIfAllowed("daily_closing.perform", "closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "✓");
+        AddIfAllowed("reports.view", "reports", Translate("Reports", "گزارش‌ها", "راپورونه"), "▥");
+        AddIfAllowed("users.manage", "users", Translate("Users", "کاربران", "کارنان"), "♟");
+
+        if (_networkConfiguration.Mode != DeploymentMode.Client &&
+            _permissions.HasPermission("settings.manage"))
         {
-            NavigationItems.Add(new NavigationItemViewModel(
-                "updates",
-                Translate("Updates", "به‌روزرسانی", "تازه کول"),
-                "⇧"));
+            NavigationItems.Add(new(
+                "backup",
+                Translate("Backup", "پشتیبان‌گیری", "بیک اپ"),
+                "◫"));
         }
+
+        AddIfAllowed("settings.manage", "settings", Translate("Settings", "تنظیمات", "امستنې"), "⚙");
+
+        // Keep the advanced native modules available without displacing the
+        // reference dashboard options above.
+        AddIfAllowed("returns.manage", "returns", Translate("Returns", "برگشت", "ستنېدل"), "↶");
+        AddIfAllowed("roles.manage", "roles", Translate("Roles", "نقش‌ها", "رولونه"), "⚿");
+        AddIfAllowed("settings.manage", "updates", Translate("Updates", "به‌روزرسانی", "تازه کول"), "⇧");
 
         if (_networkConfiguration.Mode == DeploymentMode.Server &&
             (_permissions.HasPermission("users.manage") ||
              _permissions.HasPermission("settings.manage")))
         {
-            NavigationItems.Add(new NavigationItemViewModel(
+            NavigationItems.Add(new(
                 "network",
                 Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
                 "⌁"));
         }
-        AddIfAllowed("daily_closing.perform", "closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "✓");
-        AddIfAllowed("users.manage", "users", Translate("Users", "کاربران", "کارنان"), "♟");
-        AddIfAllowed("roles.manage", "roles", Translate("Roles", "نقش‌ها", "رولونه"), "⚿");
     }
 
     private void AddIfAllowed(string permission, string key, string label, string glyph)
@@ -397,10 +420,31 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 await Inventory.LoadAsync();
                 break;
 
+            case "batches" when
+                _permissions.HasPermission("inventory.manage") ||
+                _permissions.HasPermission("inventory.status"):
+                CurrentSectionKey = "batches";
+                CurrentPage = Inventory;
+                await Inventory.LoadAsync();
+                break;
+
             case "purchases" when _permissions.HasPermission("purchases.manage"):
                 CurrentSectionKey = "purchases";
                 CurrentPage = Purchasing;
                 await Purchasing.LoadAsync();
+                break;
+
+            case "suppliers" when _permissions.HasPermission("purchases.manage"):
+                CurrentSectionKey = "suppliers";
+                CurrentPage = Purchasing;
+                await Purchasing.LoadAsync();
+                break;
+
+            case "settings" when _permissions.HasPermission("settings.manage"):
+                CurrentSectionKey = "settings";
+                CurrentPage = NetworkSettings;
+                await NetworkSettings.LoadAsync();
+                RefreshLanStatusText();
                 break;
 
             case "customers" when _permissions.HasPermission("customers.manage"):

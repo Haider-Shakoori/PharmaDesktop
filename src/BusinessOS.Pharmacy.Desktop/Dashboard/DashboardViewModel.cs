@@ -264,12 +264,12 @@ public sealed partial class DashboardViewModel : ObservableObject
     {
         QuickActions.Clear();
 
-        AddAction("pos", Translate("Open POS", "باز کردن فروش", "خرڅلاو پرانیزئ"), "▣", "pos.sell", true);
-        AddAction("medicines", Translate("Add medicine", "افزودن دوا", "درمل زیات کړئ"), "✚", "medicines.manage", true);
-        AddAction("customers", Translate("Customers", "مشتریان", "پېرودونکي"), "♙", "customers.manage", true);
-        AddAction("purchases", Translate("New purchase", "خرید جدید", "نوی پېرود"), "↓", "purchases.manage", true);
+        AddAction("pos", Translate("New Sale (POS)", "فروش جدید", "نوی خرڅلاو"), "▣", "pos.sell", true);
+        AddAction("purchases", Translate("New Purchase", "خرید جدید", "نوی پېرود"), "↓", "purchases.manage", true);
+        AddAction("closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "✓", "daily_closing.perform", true);
+        AddAction("backup", Translate("Backup Now", "پشتیبان‌گیری", "اوس بیک اپ"), "◫", "settings.manage", true);
+        AddAction("medicines", Translate("Medicines", "ادویه", "درمل"), "✚", "medicines.manage", true);
         AddAction("inventory", Translate("Inventory", "موجودی", "زېرمه"), "▤", "inventory.manage", true);
-        AddAction("reports", Translate("Reports", "گزارش‌ها", "راپورونه"), "▥", "reports.view", false);
     }
 
     private void AddAction(
