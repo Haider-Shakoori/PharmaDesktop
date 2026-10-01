@@ -92,3 +92,27 @@ jobs:
             artifacts/windows/release-manifest.json
           if-no-files-found: error
           retention-days: 30
+
+      - name: Upload Standalone installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-Standalone-Setup-${{ env.RELEASE_VERSION }}
+          path: artifacts/windows/Darmaltoon-Standalone-Setup-${{ env.RELEASE_VERSION }}-win-x64.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Main Server installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-MainServer-Setup-${{ env.RELEASE_VERSION }}
+          path: artifacts/windows/Darmaltoon-MainServer-Setup-${{ env.RELEASE_VERSION }}-win-x64.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Client Terminal installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-ClientTerminal-Setup-${{ env.RELEASE_VERSION }}
+          path: artifacts/windows/Darmaltoon-ClientTerminal-Setup-${{ env.RELEASE_VERSION }}-win-x64.exe
+          if-no-files-found: error
+          retention-days: 30
