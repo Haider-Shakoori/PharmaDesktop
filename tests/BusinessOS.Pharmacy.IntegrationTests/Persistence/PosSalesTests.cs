@@ -3,7 +3,9 @@ using BusinessOS.Pharmacy.Application.Abstractions.Customers;
 using BusinessOS.Pharmacy.Application.Abstractions.Inventory;
 using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
+using System.Text.Json;
 using BusinessOS.Pharmacy.Application.Abstractions.Sales;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Domain.Authentication;
 using BusinessOS.Pharmacy.Infrastructure;
 using BusinessOS.Pharmacy.Infrastructure.Storage;
@@ -130,6 +132,32 @@ public sealed class PosSalesTests
             Assert.Equal(0m, sale.Sale.DueTotal);
             Assert.Equal(10m, sale.Sale.ChangeTotal);
             Assert.Equal("paid", sale.Sale.PaymentStatus);
+
+            var syncStore = provider.GetRequiredService<ICloudSyncStore>();
+            var pending = await syncStore.GetPendingAsync(
+                "tenant-pos",
+                "user-pos",
+                10,
+                DateTimeOffset.UtcNow.AddMinutes(1));
+            var outbox = Assert.Single(pending);
+            Assert.Equal("sale.completed", outbox.EventType);
+            Assert.Equal("pos-idempotency-1", outbox.IdempotencyKey);
+            Assert.Equal("tenant-pos", outbox.TenantId);
+            Assert.Equal("user-pos", outbox.ActorUserId);
+            using (var payload = JsonDocument.Parse(outbox.PayloadJson))
+            {
+                Assert.Equal(
+                    "user-pos",
+                    payload.RootElement
+                        .GetProperty("cashier_user_id")
+                        .GetString());
+                Assert.Equal(
+                    medicineId,
+                    payload.RootElement
+                        .GetProperty("lines")[0]
+                        .GetProperty("medicine_id")
+                        .GetString());
+            }
 
             var line = Assert.Single(sale.Lines);
             Assert.Equal(3m, line.Quantity);

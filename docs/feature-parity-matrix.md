@@ -4,7 +4,7 @@ This matrix is based on the current Laravel routes, tenant migrations, controlle
 
 | Laravel module | Current tenant tables / central source | Key audited rules | Planned C# surface | Ownership | Sync | Entitlement / permission | Status |
 |---|---|---|---|---|---|---|---|
-| Tenant/subscription/license | central tenants, businesses, plans, subscriptions, licenses, license_activations | server authority; Windows device limit; signed lease | Activation + subscription status | Cloud | Check-in | signed plan/license | Audited |
+| Tenant/subscription/license | central tenants, businesses, plans, subscriptions, licenses, license_activations | server authority; Windows device limit; signed lease | Activation + subscription status | Cloud | Check-in | signed plan/license | Integrated (Batch 22) |
 | Pharmacy auth | users, roles, permissions, role_user, permission_role | tenant resolved before user; RBAC enforced server-side | Login + session | Hybrid | Yes | role permissions | Audited |
 | Dashboard/alerts | derived | tenant operational state | Dashboard | Local-first | Delta | dashboard.view | Audited |
 | Medicine master | medicine_categories, manufacturers, medicines | tenant-owned master data | Medicines/categories/manufacturers | Hybrid | Yes | medicines.manage | Audited |
@@ -30,7 +30,7 @@ This matrix is based on the current Laravel routes, tenant migrations, controlle
 | Pharmacy settings | pharmacy_settings | locale/timezone/business-day/inventory policies | Settings | Hybrid | Yes | settings.manage | Audited |
 | Localization | settings + lang resources | English/Dari/Pashto, RTL | Whole UI | Local config | Optional | none | Audited |
 | Backup/restore | existing Laravel backup services/commands | safe backup/verify/restore | Native local backup | Local | Optional cloud later | owner/admin policy | Implemented (Batch 19) |
-| Offline sync | current mobile sync APIs/services | idempotent; retry-safe; tenant-safe; late-close conflicts explicit | Sync status/queue | Hybrid | Required | active lease | Audited |
+| Offline sync | desktop/mobile sync APIs/services | idempotent; retry-safe; tenant-safe; cashier-bound; late-close conflicts explicit | Transactional outbox + cursor snapshots | Hybrid | Required | active signed desktop session | Implemented (Batch 22) |
 | Printing | web receipts/reports | preserve tenant/financial data | 58/80mm + A4 native printing | Local | No | module permission | Planned |
 | Updater | platform responsibility | signed/checksummed release metadata required | Updater | Cloud | Check | min version | Implemented (Batch 20) |
 | Windows installer/release | desktop deployment responsibility | self-contained runtime; preserve ProgramData; mode-aware service/shortcuts; safe upgrade/uninstall | Setup.exe + release artifacts | Local | No | admin install | Implemented (Batch 21) |

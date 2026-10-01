@@ -75,6 +75,6 @@ public sealed class WindowsUserSessionStore : IUserSessionStore
             throw new PlatformNotSupportedException("Protected pharmacy user sessions require Windows DPAPI.");
         }
 
-        return ProtectedData.Unprotect(value, optionalEntropy: null, DataProtectionScope.LocalMachine);
+        return ProtectedData.Unprotect(value, optionalEntropy: null, DataProtectionScope.CurrentUser);
     }
 }

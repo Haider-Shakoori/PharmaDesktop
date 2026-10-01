@@ -1,4 +1,6 @@
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
+using System.Globalization;
+using System.Text.Json;
 using BusinessOS.Pharmacy.Application.Abstractions.Sales;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Domain.Authentication;
@@ -518,6 +520,45 @@ public sealed class PosService : IPosService
         sale.Status = "completed";
         sale.CompletedAt = now;
         sale.UpdatedAt = now;
+
+        var syncPayload = new Dictionary<string, object?>
+        {
+            ["v"] = 1,
+            ["local_id"] = sale.Id,
+            ["idempotency_key"] = sale.IdempotencyKey,
+            ["stock_location_id"] = sale.StockLocationId,
+            ["customer_id"] = sale.CustomerId,
+            ["cashier_user_id"] = actorId,
+            ["business_date"] = sale.BusinessDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            ["currency"] = sale.Currency,
+            ["lines"] = sale.Lines.Select(line => new Dictionary<string, object?>
+            {
+                ["medicine_id"] = line.MedicineId,
+                ["quantity"] = line.Quantity.ToString("0.0000", CultureInfo.InvariantCulture),
+                ["unit_price"] = line.UnitPrice.ToString("0.0000", CultureInfo.InvariantCulture),
+                ["discount_amount"] = line.DiscountAmount.ToString("0.0000", CultureInfo.InvariantCulture),
+            }).ToList(),
+            ["payments"] = sale.Payments.Select(payment => new Dictionary<string, object?>
+            {
+                ["method"] = payment.Method,
+                ["amount"] = payment.Amount.ToString("0.0000", CultureInfo.InvariantCulture),
+                ["reference"] = payment.Reference,
+            }).ToList(),
+        };
+
+        context.Add(new CloudSyncOutboxEntity
+        {
+            Id = Guid.CreateVersion7().ToString(),
+            TenantId = session.TenantId,
+            ActorUserId = actorId,
+            EventType = "sale.completed",
+            IdempotencyKey = sale.IdempotencyKey,
+            PayloadJson = JsonSerializer.Serialize(syncPayload),
+            Status = "pending",
+            AttemptCount = 0,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
 
         await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);

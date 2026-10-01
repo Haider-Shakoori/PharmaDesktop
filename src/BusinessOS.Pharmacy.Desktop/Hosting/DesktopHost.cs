@@ -1,5 +1,6 @@
 using System.Net.Http;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Desktop.Activation;
 using BusinessOS.Pharmacy.Desktop.Authentication;
 using BusinessOS.Pharmacy.Desktop.Backup;
@@ -22,6 +23,7 @@ using BusinessOS.Pharmacy.Infrastructure.Storage;
 using BusinessOS.Pharmacy.Licensing;
 using BusinessOS.Pharmacy.LocalClient;
 using BusinessOS.Pharmacy.Persistence;
+using BusinessOS.Pharmacy.Sync;
 using BusinessOS.Pharmacy.Updater;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,6 +68,49 @@ public static class DesktopHost
                 {
                     services.AddBusinessOSPersistence();
                     services.AddBusinessOSLicensing(context.Configuration);
+
+                    var syncSection =
+                        context.Configuration.GetSection("BusinessOS:Sync");
+                    var syncOptions = new CloudSyncOptions(
+                        syncSection["BaseUrl"] ??
+                        context.Configuration["BusinessOS:Licensing:BaseUrl"] ??
+                        "https://pharmacy.businessos.af",
+                        syncSection["PushPath"] ??
+                        "/api/v1/desktop/sync/push",
+                        syncSection["PullPath"] ??
+                        "/api/v1/desktop/sync/pull",
+                        int.TryParse(
+                            syncSection["TimeoutSeconds"],
+                            out var syncTimeout)
+                            ? syncTimeout
+                            : 20,
+                        int.TryParse(
+                            syncSection["BatchSize"],
+                            out var syncBatchSize)
+                            ? syncBatchSize
+                            : 25,
+                        int.TryParse(
+                            syncSection["PullPageSize"],
+                            out var syncPullPageSize)
+                            ? syncPullPageSize
+                            : 100,
+                        int.TryParse(
+                            syncSection["MaxPullPagesPerRun"],
+                            out var syncMaxPages)
+                            ? syncMaxPages
+                            : 5,
+                        int.TryParse(
+                            syncSection["IntervalSeconds"],
+                            out var syncInterval)
+                            ? syncInterval
+                            : 30);
+
+                    syncOptions.Validate();
+                    services.AddSingleton(syncOptions);
+                    services.AddSingleton<ICloudSyncTransport>(
+                        _ => new CloudSyncClient(syncOptions));
+                    services.AddSingleton<ICloudSyncService, CloudSyncService>();
+                    services.AddHostedService<CloudSyncWorker>();
                 }
 
                 var updaterSection = context.Configuration.GetSection("BusinessOS:Updater");

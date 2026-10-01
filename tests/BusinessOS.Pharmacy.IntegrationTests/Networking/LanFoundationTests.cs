@@ -8,6 +8,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Accounting;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Infrastructure;
 using BusinessOS.Pharmacy.Infrastructure.Networking;
 using BusinessOS.Pharmacy.Infrastructure.Storage;
@@ -254,6 +255,7 @@ public sealed class LanFoundationTests
             using var provider = services.BuildServiceProvider();
 
             Assert.Null(provider.GetService<ILocalDatabaseInitializer>());
+            Assert.Null(provider.GetService<ICloudSyncService>());
             Assert.NotNull(provider.GetRequiredService<BusinessOS.Pharmacy.Application.Abstractions.Authentication.IUserSessionService>());
             Assert.NotNull(provider.GetRequiredService<BusinessOS.Pharmacy.Application.Abstractions.Medicines.IMedicineCatalogService>());
             Assert.NotNull(provider.GetRequiredService<IInventoryService>());
