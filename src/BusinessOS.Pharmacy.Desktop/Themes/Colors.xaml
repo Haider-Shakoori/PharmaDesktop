@@ -5,7 +5,7 @@
     <Color x:Key="BrandAccentColor">#0F766E</Color>
     <Color x:Key="AppBackgroundColor">#F6F8FC</Color>
     <Color x:Key="SurfaceColor">#FFFFFF</Color>
-    <Color x:Key="SidebarColor">#0F172A</Color>
+    <Color x:Key="SidebarColor">#F8FBFF</Color>
     <Color x:Key="TextPrimaryColor">#172033</Color>
     <Color x:Key="TextMutedColor">#64748B</Color>
     <Color x:Key="BorderColor">#E2E8F0</Color>

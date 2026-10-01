@@ -28,15 +28,31 @@ public sealed class LocalDashboardQueryService : ILocalDashboardQueryService
         }
 
         var hasSales = await TableExistsAsync(connection, "sales", cancellationToken);
+        var hasSaleLines = await TableExistsAsync(connection, "sale_lines", cancellationToken);
+        var hasSalePayments = await TableExistsAsync(connection, "sale_payments", cancellationToken);
         var hasCustomers = await TableExistsAsync(connection, "customers", cancellationToken);
         var hasMedicines = await TableExistsAsync(connection, "medicines", cancellationToken);
         var hasBatches = await TableExistsAsync(connection, "product_batches", cancellationToken);
         var hasLocations = await TableExistsAsync(connection, "stock_locations", cancellationToken);
+        var hasPurchaseInvoices = await TableExistsAsync(connection, "purchase_invoices", cancellationToken);
+        var hasSuppliers = await TableExistsAsync(connection, "suppliers", cancellationToken);
+        var hasGoodsReceiptLines = await TableExistsAsync(connection, "goods_receipt_lines", cancellationToken);
+        var hasCashierShifts = await TableExistsAsync(connection, "cashier_shifts", cancellationToken);
+        var hasDailyClosings = await TableExistsAsync(connection, "daily_closings", cancellationToken);
+        var hasSaleReturns = await TableExistsAsync(connection, "sale_returns", cancellationToken);
+        var hasSaleReturnRefunds = await TableExistsAsync(connection, "sale_return_refunds", cancellationToken);
         var hasInventory = hasMedicines && hasBatches;
+
+        var businessDate = options.BusinessDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var monthStartDate = new DateOnly(options.BusinessDate.Year, options.BusinessDate.Month, 1);
+        var nextMonthDate = monthStartDate.AddMonths(1);
+        var monthStart = monthStartDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var nextMonth = nextMonthDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
         decimal todaySales = 0;
         int todayTransactions = 0;
         decimal outstandingCredit = 0;
+        decimal monthSales = 0;
 
         if (hasSales)
         {
@@ -69,6 +85,59 @@ public sealed class LocalDashboardQueryService : ILocalDashboardQueryService
                 """,
                 [],
                 cancellationToken);
+
+            monthSales = await ScalarDecimalAsync(
+                connection,
+                """
+                SELECT COALESCE(SUM(CAST(grand_total AS NUMERIC)), 0)
+                FROM sales
+                WHERE status = 'completed'
+                  AND date(business_date) >= date($monthStart)
+                  AND date(business_date) < date($nextMonth);
+                """,
+                [("$monthStart", monthStart), ("$nextMonth", nextMonth)],
+                cancellationToken);
+        }
+
+        decimal todayPurchases = 0;
+        int todayPurchaseCount = 0;
+        decimal monthPurchases = 0;
+
+        if (hasPurchaseInvoices)
+        {
+            todayPurchases = await ScalarDecimalAsync(
+                connection,
+                """
+                SELECT COALESCE(SUM(CAST(grand_total AS NUMERIC)), 0)
+                FROM purchase_invoices
+                WHERE status <> 'cancelled'
+                  AND date(invoice_date) = date($businessDate);
+                """,
+                [("$businessDate", businessDate)],
+                cancellationToken);
+
+            todayPurchaseCount = await ScalarIntAsync(
+                connection,
+                """
+                SELECT COUNT(*)
+                FROM purchase_invoices
+                WHERE status <> 'cancelled'
+                  AND date(invoice_date) = date($businessDate);
+                """,
+                [("$businessDate", businessDate)],
+                cancellationToken);
+
+            monthPurchases = await ScalarDecimalAsync(
+                connection,
+                """
+                SELECT COALESCE(SUM(CAST(grand_total AS NUMERIC)), 0)
+                FROM purchase_invoices
+                WHERE status <> 'cancelled'
+                  AND date(invoice_date) >= date($monthStart)
+                  AND date(invoice_date) < date($nextMonth);
+                """,
+                [("$monthStart", monthStart), ("$nextMonth", nextMonth)],
+                cancellationToken);
         }
 
         var activeCustomers = hasCustomers
@@ -79,6 +148,16 @@ public sealed class LocalDashboardQueryService : ILocalDashboardQueryService
                 cancellationToken)
             : 0;
 
+        var totalMedicines = hasMedicines
+            ? await ScalarIntAsync(connection, "SELECT COUNT(*) FROM medicines WHERE is_active = 1;", [], cancellationToken)
+            : 0;
+        var totalBatches = hasBatches
+            ? await ScalarIntAsync(connection, "SELECT COUNT(*) FROM product_batches;", [], cancellationToken)
+            : 0;
+        var totalSuppliers = hasSuppliers
+            ? await ScalarIntAsync(connection, "SELECT COUNT(*) FROM suppliers WHERE is_active = 1;", [], cancellationToken)
+            : 0;
+
         decimal stockValue = 0;
         int lowStock = 0;
         int nearExpiry = 0;
@@ -87,7 +166,6 @@ public sealed class LocalDashboardQueryService : ILocalDashboardQueryService
 
         if (hasInventory)
         {
-            var businessDate = options.BusinessDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             var nearExpiryEnd = options.BusinessDate
                 .AddDays(options.NearExpiryDays)
                 .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -182,18 +260,344 @@ public sealed class LocalDashboardQueryService : ILocalDashboardQueryService
                 cancellationToken));
         }
 
+        var lowStockItems = alerts
+            .Where(x => x.Kind == "low_stock")
+            .Take(5)
+            .Select(x => new DashboardLowStockItem(
+                x.Name,
+                x.AvailableQuantity,
+                x.Threshold ?? options.LowStockThreshold,
+                "Low Stock"))
+            .ToList();
+
+        var expiryItems = alerts
+            .Where(x => x.Kind == "near_expiry" && x.ExpiresAt is not null)
+            .Take(5)
+            .Select(x =>
+            {
+                var expiryDate = x.ExpiresAt!.Value;
+                return new DashboardExpiryItem(
+                    x.Name,
+                    x.BatchNumber ?? "—",
+                    expiryDate,
+                    expiryDate.DayNumber - options.BusinessDate.DayNumber,
+                    "Expiring");
+            })
+            .ToList();
+
+        var salesTimeline = hasSales
+            ? await ReadSalesTimelineAsync(connection, businessDate, cancellationToken)
+            : Enumerable.Range(8, 12)
+                .Select(hour => new DashboardSalesPoint(hour, 0m, 0))
+                .ToList();
+
+        var recentTransactions = new List<DashboardTransactionItem>();
+        if (hasSales)
+        {
+            recentTransactions.AddRange(await ReadSaleTransactionsAsync(
+                connection,
+                hasSaleLines,
+                hasSalePayments,
+                cancellationToken));
+        }
+
+        if (hasPurchaseInvoices)
+        {
+            recentTransactions.AddRange(await ReadPurchaseTransactionsAsync(
+                connection,
+                hasSuppliers,
+                hasGoodsReceiptLines,
+                cancellationToken));
+        }
+
+        recentTransactions = recentTransactions
+            .OrderByDescending(x => x.OccurredAt)
+            .Take(5)
+            .ToList();
+
+        var (cashInDrawer, expectedCash) = await ReadCashPositionAsync(
+            connection,
+            businessDate,
+            hasSales,
+            hasSalePayments,
+            hasCashierShifts,
+            hasDailyClosings,
+            hasSaleReturns,
+            hasSaleReturnRefunds,
+            cancellationToken);
+
         return new DashboardSnapshot(
             options.BusinessDate,
             todaySales,
+            todayPurchases,
+            todayPurchaseCount,
             lowStock,
             nearExpiry,
             expired,
             todayTransactions,
+            cashInDrawer,
+            expectedCash,
             stockValue,
             activeCustomers,
             outstandingCredit,
+            totalMedicines,
+            totalBatches,
+            totalSuppliers,
+            monthSales,
+            monthPurchases,
             alerts,
-            new DashboardDataAvailability(hasSales, hasInventory, hasCustomers));
+            lowStockItems,
+            expiryItems,
+            recentTransactions,
+            salesTimeline,
+            new DashboardDataAvailability(
+                hasSales,
+                hasInventory,
+                hasCustomers,
+                hasPurchaseInvoices,
+                hasSuppliers,
+                hasSales && hasSalePayments));
+    }
+
+    private static async Task<(decimal CashInDrawer, decimal ExpectedCash)> ReadCashPositionAsync(
+        DbConnection connection,
+        string businessDate,
+        bool hasSales,
+        bool hasSalePayments,
+        bool hasCashierShifts,
+        bool hasDailyClosings,
+        bool hasSaleReturns,
+        bool hasSaleReturnRefunds,
+        CancellationToken cancellationToken)
+    {
+        if (!hasSales)
+        {
+            return (0m, 0m);
+        }
+
+        var openingCash = hasCashierShifts
+            ? await ScalarDecimalAsync(
+                connection,
+                """
+                SELECT COALESCE(SUM(CAST(opening_cash AS NUMERIC)), 0)
+                FROM cashier_shifts
+                WHERE date(business_date) = date($businessDate);
+                """,
+                [("$businessDate", businessDate)],
+                cancellationToken)
+            : 0m;
+
+        var cashCollected = hasSalePayments
+            ? await ScalarDecimalAsync(
+                connection,
+                """
+                SELECT COALESCE(SUM(CAST(sp.amount AS NUMERIC)), 0)
+                FROM sale_payments sp
+                INNER JOIN sales s ON s.id = sp.sale_id
+                WHERE sp.method = 'cash'
+                  AND s.status = 'completed'
+                  AND date(s.business_date) = date($businessDate);
+                """,
+                [("$businessDate", businessDate)],
+                cancellationToken)
+            : 0m;
+
+        var changeGiven = await ScalarDecimalAsync(
+            connection,
+            """
+            SELECT COALESCE(SUM(CAST(change_total AS NUMERIC)), 0)
+            FROM sales
+            WHERE status = 'completed'
+              AND date(business_date) = date($businessDate);
+            """,
+            [("$businessDate", businessDate)],
+            cancellationToken);
+
+        var cashRefunds = hasSaleReturns && hasSaleReturnRefunds
+            ? await ScalarDecimalAsync(
+                connection,
+                """
+                SELECT COALESCE(SUM(CAST(rr.amount AS NUMERIC)), 0)
+                FROM sale_return_refunds rr
+                INNER JOIN sale_returns sr ON sr.id = rr.sale_return_id
+                WHERE rr.method = 'cash'
+                  AND sr.status = 'completed'
+                  AND date(sr.business_date) = date($businessDate);
+                """,
+                [("$businessDate", businessDate)],
+                cancellationToken)
+            : 0m;
+
+        var expected = openingCash + cashCollected - changeGiven - cashRefunds;
+
+        if (!hasDailyClosings)
+        {
+            return (expected, expected);
+        }
+
+        var counted = await ScalarNullableDecimalAsync(
+            connection,
+            """
+            SELECT counted_cash
+            FROM daily_closings
+            WHERE date(business_date) = date($businessDate)
+              AND counted_cash IS NOT NULL
+            ORDER BY updated_at DESC
+            LIMIT 1;
+            """,
+            [("$businessDate", businessDate)],
+            cancellationToken);
+
+        return (counted ?? expected, expected);
+    }
+
+    private static async Task<IReadOnlyList<DashboardSalesPoint>> ReadSalesTimelineAsync(
+        DbConnection connection,
+        string businessDate,
+        CancellationToken cancellationToken)
+    {
+        var byHour = new Dictionary<int, (decimal Sales, int Invoices)>();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT
+                CAST(strftime('%H', COALESCE(completed_at, created_at)) AS INTEGER) AS sale_hour,
+                COALESCE(SUM(CAST(grand_total AS NUMERIC)), 0) AS sales,
+                COUNT(*) AS invoices
+            FROM sales
+            WHERE status = 'completed'
+              AND date(business_date) = date($businessDate)
+            GROUP BY sale_hour;
+            """;
+        AddParameter(command, "$businessDate", businessDate);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var hour = Convert.ToInt32(reader.GetValue(0), CultureInfo.InvariantCulture);
+            byHour[hour] = (
+                ReadDecimal(reader, 1),
+                Convert.ToInt32(reader.GetValue(2), CultureInfo.InvariantCulture));
+        }
+
+        return Enumerable.Range(8, 12)
+            .Select(hour =>
+            {
+                var value = byHour.GetValueOrDefault(hour);
+                return new DashboardSalesPoint(hour, value.Sales, value.Invoices);
+            })
+            .ToList();
+    }
+
+    private static async Task<IReadOnlyList<DashboardTransactionItem>> ReadSaleTransactionsAsync(
+        DbConnection connection,
+        bool hasSaleLines,
+        bool hasSalePayments,
+        CancellationToken cancellationToken)
+    {
+        var itemExpression = hasSaleLines
+            ? "(SELECT COUNT(*) FROM sale_lines sl WHERE sl.sale_id = s.id)"
+            : "0";
+        var paymentExpression = hasSalePayments
+            ? """
+              COALESCE(
+                (
+                  SELECT group_concat(method, ', ')
+                  FROM (
+                    SELECT DISTINCT sp2.method AS method
+                    FROM sale_payments sp2
+                    WHERE sp2.sale_id = s.id
+                  )
+                ),
+                CASE WHEN CAST(s.due_total AS NUMERIC) > 0 THEN 'credit' ELSE '—' END
+              )
+              """
+            : "CASE WHEN CAST(s.due_total AS NUMERIC) > 0 THEN 'credit' ELSE '—' END";
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"""
+            SELECT
+                COALESCE(s.completed_at, s.created_at) AS occurred_at,
+                s.sale_number,
+                COALESCE(c.name, 'Walk-in Customer') AS party,
+                {itemExpression} AS items,
+                s.grand_total,
+                {paymentExpression} AS payment_method,
+                s.payment_status
+            FROM sales s
+            LEFT JOIN customers c ON c.id = s.customer_id
+            WHERE s.status = 'completed'
+            ORDER BY occurred_at DESC
+            LIMIT 8;
+            """;
+
+        var result = new List<DashboardTransactionItem>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(new DashboardTransactionItem(
+                ReadDateTimeOffset(reader, 0),
+                "Sale",
+                reader.IsDBNull(1) ? "—" : reader.GetString(1),
+                reader.IsDBNull(2) ? "Walk-in Customer" : reader.GetString(2),
+                reader.IsDBNull(3) ? 0 : Convert.ToInt32(reader.GetValue(3), CultureInfo.InvariantCulture),
+                ReadDecimal(reader, 4),
+                reader.IsDBNull(5) ? "—" : reader.GetString(5),
+                reader.IsDBNull(6) ? "completed" : reader.GetString(6)));
+        }
+
+        return result;
+    }
+
+    private static async Task<IReadOnlyList<DashboardTransactionItem>> ReadPurchaseTransactionsAsync(
+        DbConnection connection,
+        bool hasSuppliers,
+        bool hasGoodsReceiptLines,
+        CancellationToken cancellationToken)
+    {
+        var supplierExpression = hasSuppliers ? "COALESCE(su.name, 'Supplier')" : "'Supplier'";
+        var supplierJoin = hasSuppliers
+            ? "LEFT JOIN suppliers su ON su.id = pi.supplier_id"
+            : string.Empty;
+        var itemExpression = hasGoodsReceiptLines
+            ? "(SELECT COUNT(*) FROM goods_receipt_lines grl WHERE grl.goods_receipt_id = pi.goods_receipt_id)"
+            : "0";
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"""
+            SELECT
+                pi.created_at,
+                pi.invoice_number,
+                {supplierExpression} AS party,
+                {itemExpression} AS items,
+                pi.grand_total,
+                'Supplier invoice' AS payment_method,
+                pi.status
+            FROM purchase_invoices pi
+            {supplierJoin}
+            WHERE pi.status <> 'cancelled'
+            ORDER BY pi.created_at DESC
+            LIMIT 8;
+            """;
+
+        var result = new List<DashboardTransactionItem>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(new DashboardTransactionItem(
+                ReadDateTimeOffset(reader, 0),
+                "Purchase",
+                reader.IsDBNull(1) ? "—" : reader.GetString(1),
+                reader.IsDBNull(2) ? "Supplier" : reader.GetString(2),
+                reader.IsDBNull(3) ? 0 : Convert.ToInt32(reader.GetValue(3), CultureInfo.InvariantCulture),
+                ReadDecimal(reader, 4),
+                reader.IsDBNull(5) ? "—" : reader.GetString(5),
+                reader.IsDBNull(6) ? "open" : reader.GetString(6)));
+        }
+
+        return result;
     }
 
     private static async Task<IReadOnlyList<DashboardAlertItem>> ReadLowStockAlertsAsync(
@@ -355,6 +759,23 @@ public sealed class LocalDashboardQueryService : ILocalDashboardQueryService
         return ToDecimal(value);
     }
 
+    private static async Task<decimal?> ScalarNullableDecimalAsync(
+        DbConnection connection,
+        string sql,
+        IReadOnlyList<(string Name, object Value)> parameters,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        foreach (var parameter in parameters)
+        {
+            AddParameter(command, parameter.Name, parameter.Value);
+        }
+
+        var value = await command.ExecuteScalarAsync(cancellationToken);
+        return value is null or DBNull ? null : ToDecimal(value);
+    }
+
     private static async Task<int> ScalarIntAsync(
         DbConnection connection,
         string sql,
@@ -382,6 +803,21 @@ public sealed class LocalDashboardQueryService : ILocalDashboardQueryService
 
     private static decimal ReadDecimal(DbDataReader reader, int ordinal) =>
         ToDecimal(reader.GetValue(ordinal));
+
+    private static DateTimeOffset ReadDateTimeOffset(DbDataReader reader, int ordinal)
+    {
+        var text = reader.IsDBNull(ordinal)
+            ? null
+            : Convert.ToString(reader.GetValue(ordinal), CultureInfo.InvariantCulture);
+
+        return DateTimeOffset.TryParse(
+            text,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind,
+            out var parsed)
+            ? parsed
+            : DateTimeOffset.MinValue;
+    }
 
     private static decimal ToDecimal(object? value)
     {

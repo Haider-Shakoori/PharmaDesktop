@@ -1,13 +1,17 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Windows;
+using System.Windows.Media;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Dashboard;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.Licensing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BusinessOS.Pharmacy.Desktop.Dashboard;
 
@@ -22,6 +26,7 @@ public sealed partial class DashboardViewModel : ObservableObject
     private readonly IUserSessionService _sessions;
     private readonly IPermissionAuthorizer _permissions;
     private readonly IClock _clock;
+    private readonly ICloudSyncService? _cloudSync;
 
     private DashboardSnapshot? _snapshot;
     private UiLanguage _language = UiLanguageCatalog.All[0];
@@ -57,12 +62,28 @@ public sealed partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private string signedInUser = string.Empty;
 
+    [ObservableProperty]
+    private string planLabel = "Plan";
+
+    [ObservableProperty]
+    private string licenseValidityText = "License status unavailable";
+
+    [ObservableProperty]
+    private string licenseDaysRemainingText = string.Empty;
+
+    [ObservableProperty]
+    private double licenseProgressValue;
+
+    [ObservableProperty]
+    private string syncStatusText = "Cloud sync ready";
+
     public DashboardViewModel(
         ILocalDashboardQueryService dashboardQueries,
         INetworkConfigurationStore networkConfiguration,
         IUserSessionService sessions,
         IPermissionAuthorizer permissions,
         IClock clock,
+        IServiceProvider services,
         IActivationStore? activationStore = null)
     {
         _dashboardQueries = dashboardQueries;
@@ -71,6 +92,7 @@ public sealed partial class DashboardViewModel : ObservableObject
         _sessions = sessions;
         _permissions = permissions;
         _clock = clock;
+        _cloudSync = services.GetService<ICloudSyncService>();
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsLoading);
         NavigateCommand = new RelayCommand<string>(key =>
@@ -90,6 +112,43 @@ public sealed partial class DashboardViewModel : ObservableObject
     public ObservableCollection<DashboardStatViewModel> Stats { get; } = new();
     public ObservableCollection<DashboardQuickActionViewModel> QuickActions { get; } = new();
     public ObservableCollection<DashboardAlertViewModel> Alerts { get; } = new();
+    public ObservableCollection<string> LicenseFeatures { get; } = new();
+
+    public IReadOnlyList<DashboardLowStockItem> LowStockItems =>
+        _snapshot?.LowStockItems ?? Array.Empty<DashboardLowStockItem>();
+
+    public IReadOnlyList<DashboardExpiryItem> ExpiryItems =>
+        _snapshot?.ExpiryItems ?? Array.Empty<DashboardExpiryItem>();
+
+    public IReadOnlyList<DashboardTransactionItem> RecentTransactions =>
+        _snapshot?.RecentTransactions ?? Array.Empty<DashboardTransactionItem>();
+
+    public IReadOnlyList<DashboardSalesPoint> SalesTimeline =>
+        _snapshot?.SalesTimeline ?? Array.Empty<DashboardSalesPoint>();
+
+    public PointCollection SalesChartPoints { get; private set; } = new();
+    public PointCollection SalesAreaPoints { get; private set; } = new();
+
+    public string WelcomeText => Translate(
+        $"Welcome back, {SignedInUser}  |  {BusinessDateText}",
+        $"خوش آمدید، {SignedInUser}  |  {BusinessDateText}",
+        $"ښه راغلاست، {SignedInUser}  |  {BusinessDateText}");
+
+    public string SalesTotalText => FormatMoney(_snapshot?.TodaySales ?? 0m);
+    public string SalesInvoiceCountText => (_snapshot?.TodayTransactions ?? 0).ToString("N0", CultureInfo.InvariantCulture);
+    public string AverageInvoiceText => FormatMoney(
+        (_snapshot?.TodayTransactions ?? 0) == 0
+            ? 0m
+            : (_snapshot?.TodaySales ?? 0m) / _snapshot!.TodayTransactions);
+
+    public string OverviewMedicinesText => (_snapshot?.TotalMedicines ?? 0).ToString("N0", CultureInfo.InvariantCulture);
+    public string OverviewBatchesText => (_snapshot?.TotalBatches ?? 0).ToString("N0", CultureInfo.InvariantCulture);
+    public string OverviewSuppliersText => (_snapshot?.TotalSuppliers ?? 0).ToString("N0", CultureInfo.InvariantCulture);
+    public string OverviewCustomersText => (_snapshot?.ActiveCustomers ?? 0).ToString("N0", CultureInfo.InvariantCulture);
+    public string OverviewMonthSalesText => FormatMoney(_snapshot?.MonthSales ?? 0m);
+    public string OverviewMonthPurchasesText => FormatMoney(_snapshot?.MonthPurchases ?? 0m);
+    public string OverviewStockValueText => FormatMoney(_snapshot?.StockValue ?? 0m);
+    public string OverviewCreditDueText => FormatMoney(_snapshot?.OutstandingCredit ?? 0m);
 
     public string QuickActionsTitle => Translate("Quick actions", "اقدامات سریع", "چټک کارونه");
     public string RunPharmacyTitle => Translate("Run the pharmacy", "مدیریت دواخانه", "درملتون اداره کړئ");
@@ -152,6 +211,7 @@ public sealed partial class DashboardViewModel : ObservableObject
                 : HumanizeHealth(activation?.SubscriptionHealth);
             SignedInUser = _sessions.Current?.Name ?? "—";
             _currency = string.IsNullOrWhiteSpace(tenant?.Currency) ? "AFN" : tenant.Currency;
+            ApplyLicensePresentation(activation, network.Mode);
 
             var businessDate = ResolveBusinessDate(tenant?.Timezone);
             _snapshot = await _dashboardQueries.GetSnapshotAsync(
@@ -182,50 +242,54 @@ public sealed partial class DashboardViewModel : ObservableObject
         if (_snapshot is null)
         {
             RebuildQuickActions();
+            RaiseDashboardDataProperties();
             return;
         }
 
         Stats.Clear();
         Stats.Add(new DashboardStatViewModel(
-            Translate("Today's sales", "فروش امروز", "د نن ورځې خرڅلاو"),
+            Translate("Total Sales Today", "فروش امروز", "د نن ورځې خرڅلاو"),
             FormatMoney(_snapshot.TodaySales),
-            LocalNote(_snapshot.Availability.Sales),
-            "؋"));
+            Translate(
+                $"{_snapshot.TodayTransactions:N0} invoices",
+                $"{_snapshot.TodayTransactions:N0} فاکتور",
+                $"{_snapshot.TodayTransactions:N0} بلونه"),
+            "▥",
+            "#22C55E"));
+
         Stats.Add(new DashboardStatViewModel(
-            Translate("Low stock", "کمبود موجودی", "کم زېرمه"),
-            _snapshot.LowStockCount.ToString(CultureInfo.InvariantCulture),
-            LocalNote(_snapshot.Availability.Inventory),
-            "↓"));
+            Translate("Purchases Today", "خرید امروز", "د نن ورځې پېرود"),
+            FormatMoney(_snapshot.TodayPurchases),
+            Translate(
+                $"{_snapshot.TodayPurchaseCount:N0} purchases",
+                $"{_snapshot.TodayPurchaseCount:N0} خرید",
+                $"{_snapshot.TodayPurchaseCount:N0} پېرود"),
+            "↓",
+            "#1687F8"));
+
         Stats.Add(new DashboardStatViewModel(
-            Translate("Expiring soon", "نزدیک به انقضا", "ژر ختمېدونکي"),
-            _snapshot.NearExpiryCount.ToString(CultureInfo.InvariantCulture),
-            LocalNote(_snapshot.Availability.Inventory),
-            "◷"));
+            Translate("Low Stock Items", "اقلام کم موجود", "کم زېرمه توکي"),
+            _snapshot.LowStockCount.ToString("N0", CultureInfo.InvariantCulture),
+            Translate("Items below threshold", "اقلام زیر حد", "توکي تر حد لاندې"),
+            "◇",
+            "#F59E0B"));
+
         Stats.Add(new DashboardStatViewModel(
-            Translate("Alerts", "هشدارها", "خبرتیاوې"),
-            _snapshot.TotalAlerts.ToString(CultureInfo.InvariantCulture),
-            LocalNote(_snapshot.Availability.Inventory),
-            "!"));
+            Translate("Expiring Soon", "نزدیک به انقضا", "ژر ختمېدونکي"),
+            _snapshot.NearExpiryCount.ToString("N0", CultureInfo.InvariantCulture),
+            Translate("Within 3 months", "در ۳ ماه آینده", "په ۳ میاشتو کې"),
+            "▣",
+            "#F43F5E"));
+
         Stats.Add(new DashboardStatViewModel(
-            Translate("Today's transactions", "تراکنش‌های امروز", "د نن راکړې ورکړې"),
-            _snapshot.TodayTransactions.ToString(CultureInfo.InvariantCulture),
-            LocalNote(_snapshot.Availability.Sales),
-            "#"));
-        Stats.Add(new DashboardStatViewModel(
-            Translate("Stock value", "ارزش موجودی", "د زېرمتون ارزښت"),
-            FormatMoney(_snapshot.StockValue),
-            LocalNote(_snapshot.Availability.Inventory),
-            "▤"));
-        Stats.Add(new DashboardStatViewModel(
-            Translate("Customers", "مشتریان", "پېرودونکي"),
-            _snapshot.ActiveCustomers.ToString(CultureInfo.InvariantCulture),
-            LocalNote(_snapshot.Availability.Customers),
-            "♙"));
-        Stats.Add(new DashboardStatViewModel(
-            Translate("Credit due", "اعتبار قابل دریافت", "پور پاتې"),
-            FormatMoney(_snapshot.OutstandingCredit),
-            LocalNote(_snapshot.Availability.Sales),
-            "◈"));
+            Translate("Cash in Drawer", "نقد صندوق", "په صندوق کې نغدې"),
+            FormatMoney(_snapshot.CashInDrawer),
+            Translate(
+                $"Expected: {FormatMoney(_snapshot.ExpectedCash)}",
+                $"مورد انتظار: {FormatMoney(_snapshot.ExpectedCash)}",
+                $"تمه: {FormatMoney(_snapshot.ExpectedCash)}"),
+            "▰",
+            "#6D28D9"));
 
         HasAlerts = _snapshot.TotalAlerts > 0;
         AttentionTitle = Translate("Attention required", "نیاز به توجه", "پاملرنه اړینه ده");
@@ -240,6 +304,7 @@ public sealed partial class DashboardViewModel : ObservableObject
             Alerts.Add(ToAlertViewModel(alert));
         }
 
+        BuildSalesChart();
         RebuildQuickActions();
 
         var availableModules = new[]
@@ -247,6 +312,9 @@ public sealed partial class DashboardViewModel : ObservableObject
             _snapshot.Availability.Sales,
             _snapshot.Availability.Inventory,
             _snapshot.Availability.Customers,
+            _snapshot.Availability.Purchases,
+            _snapshot.Availability.Suppliers,
+            _snapshot.Availability.Cash,
         }.Count(value => value);
 
         StatusText = availableModules == 0
@@ -255,21 +323,24 @@ public sealed partial class DashboardViewModel : ObservableObject
                 "پایگاه‌داده محلی آماده است. کارت‌های داشبورد با اضافه‌شدن داده‌های عملیاتی تکمیل می‌شوند.",
                 "محلي ډیټابیس چمتو دی. د عملیاتي معلوماتو په زیاتېدو سره ډشبورډ ډکېږي.")
             : Translate(
-                $"Local dashboard loaded · {availableModules}/3 data groups available",
-                $"داشبورد محلی بارگذاری شد · {availableModules}/3 گروه داده موجود است",
-                $"محلي ډشبورډ پورته شو · {availableModules}/3 د معلوماتو ډلې شته");
+                $"Live local dashboard loaded · {availableModules}/6 data groups available",
+                $"داشبورد زنده محلی بارگذاری شد · {availableModules}/6 گروه داده موجود است",
+                $"ژوندی محلي ډشبورډ پورته شو · {availableModules}/6 د معلوماتو ډلې شته");
+
+        RaiseDashboardDataProperties();
     }
 
     private void RebuildQuickActions()
     {
         QuickActions.Clear();
 
-        AddAction("pos", Translate("New Sale (POS)", "فروش جدید", "نوی خرڅلاو"), "▣", "pos.sell", true);
-        AddAction("purchases", Translate("New Purchase", "خرید جدید", "نوی پېرود"), "↓", "purchases.manage", true);
-        AddAction("closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "✓", "daily_closing.perform", true);
-        AddAction("backup", Translate("Backup Now", "پشتیبان‌گیری", "اوس بیک اپ"), "◫", "settings.manage", true);
-        AddAction("medicines", Translate("Medicines", "ادویه", "درمل"), "✚", "medicines.manage", true);
-        AddAction("inventory", Translate("Inventory", "موجودی", "زېرمه"), "▤", "inventory.manage", true);
+        AddAction("pos", Translate("New Sale (POS)", "فروش جدید", "نوی خرڅلاو"), "+", "pos.sell", true, "#0868F7", "F2");
+        AddAction("purchases", Translate("New Purchase", "خرید جدید", "نوی پېرود"), "↓", "purchases.manage", true, "#059669", "F3");
+        AddAction("closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "▣", "daily_closing.perform", true, "#F97316", "F4");
+        AddAction("backup", Translate("Backup Now", "پشتیبان‌گیری", "اوس بیک اپ"), "☁", "settings.manage", true, "#7C3AED", "F5");
+        AddAction("sync", Translate("Sync Now", "همگام‌سازی", "اوس همغږي"), "↻", "dashboard.view", _cloudSync is not null, "#0EA5E9", "F6");
+        AddAction("medicines", Translate("Medicines", "ادویه", "درمل"), "✚", "medicines.manage", true, "#2563EB", "F7");
+        AddAction("inventory", Translate("Inventory", "موجودی", "زېرمه"), "◇", "inventory.manage", true, "#334155", "F8");
     }
 
     private void AddAction(
@@ -277,7 +348,9 @@ public sealed partial class DashboardViewModel : ObservableObject
         string label,
         string glyph,
         string permission,
-        bool isAvailable)
+        bool isAvailable,
+        string accent,
+        string shortcut)
     {
         if (_permissions.HasPermission(permission))
         {
@@ -286,7 +359,9 @@ public sealed partial class DashboardViewModel : ObservableObject
                 label,
                 glyph,
                 permission,
-                isAvailable));
+                isAvailable,
+                accent,
+                shortcut));
         }
     }
 
@@ -319,6 +394,190 @@ public sealed partial class DashboardViewModel : ObservableObject
                     $"بېچ {alert.BatchNumber ?? "—"} · ختمېږي {alert.ExpiresAt:yyyy-MM-dd}"),
                 "attention"),
         };
+    }
+
+    public async Task SyncNowAsync()
+    {
+        if (_cloudSync is null)
+        {
+            SyncStatusText = Translate(
+                "Cloud sync is handled by the Main Pharmacy Server in this deployment mode.",
+                "همگام‌سازی ابری در این حالت توسط سرور اصلی دواخانه انجام می‌شود.",
+                "په دې حالت کې کلاوډ همغږي د اصلي درملتون سرور ترسره کوي.");
+            return;
+        }
+
+        try
+        {
+            SyncStatusText = Translate("Synchronizing…", "در حال همگام‌سازی…", "همغږي روانه ده…");
+            var result = await _cloudSync.SyncOnceAsync();
+            SyncStatusText = result.Message;
+            StatusText = result.Message;
+        }
+        catch (Exception)
+        {
+            SyncStatusText = Translate(
+                "Sync could not complete. Local pharmacy work remains available.",
+                "همگام‌سازی کامل نشد. کار محلی دواخانه همچنان در دسترس است.",
+                "همغږي بشپړه نه شوه. محلي درملتون کار لا هم شته.");
+        }
+    }
+
+    private void ApplyLicensePresentation(ActivationState? activation, DeploymentMode mode)
+    {
+        LicenseFeatures.Clear();
+
+        if (mode == DeploymentMode.Client)
+        {
+            PlanLabel = Translate("Main Server", "سرور اصلی", "اصلي سرور");
+            LicenseValidityText = Translate(
+                "License is managed by the Main Pharmacy Server",
+                "مجوز توسط سرور اصلی دواخانه مدیریت می‌شود",
+                "جواز د اصلي درملتون سرور لخوا اداره کېږي");
+            LicenseDaysRemainingText = string.Empty;
+            LicenseProgressValue = 100;
+        }
+        else if (activation is null)
+        {
+            PlanLabel = Translate("License", "مجوز", "جواز");
+            LicenseValidityText = Translate("Activation required", "فعال‌سازی لازم است", "فعالول اړین دي");
+            LicenseDaysRemainingText = string.Empty;
+            LicenseProgressValue = 0;
+        }
+        else
+        {
+            PlanLabel = HumanizeFeature(
+                activation.Plan?.Code
+                ?? activation.Entitlement.PlanCode
+                ?? "Plan");
+
+            var issued = activation.Entitlement.IssuedAt;
+            var expires = activation.Entitlement.ExpiresAt;
+            var now = _clock.UtcNow;
+            var totalSeconds = Math.Max(1, (expires - issued).TotalSeconds);
+            var remainingSeconds = Math.Clamp((expires - now).TotalSeconds, 0, totalSeconds);
+            LicenseProgressValue = remainingSeconds / totalSeconds * 100d;
+
+            LicenseValidityText = Translate(
+                $"Valid until {expires:dd MMMM yyyy}",
+                $"معتبر تا {expires:dd MMMM yyyy}",
+                $"تر {expires:dd MMMM yyyy} پورې معتبر");
+
+            var days = Math.Max(0, (int)Math.Ceiling((expires - now).TotalDays));
+            LicenseDaysRemainingText = Translate(
+                $"{days:N0} days remaining",
+                $"{days:N0} روز باقی مانده",
+                $"{days:N0} ورځې پاتې");
+        }
+
+        var featureNames = activation?.Entitlement.Features
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(HumanizeFeature)
+            .Take(4)
+            .ToList()
+            ?? [];
+
+        foreach (var feature in featureNames)
+        {
+            LicenseFeatures.Add(feature);
+        }
+
+        var fallback = new[]
+        {
+            Translate("Secure offline license", "مجوز امن آفلاین", "خوندي افلاین جواز"),
+            Translate("Local-first operation", "عملیات محلی", "محلي لومړنی کار"),
+            Translate("Automatic entitlement refresh", "تازه‌سازی خودکار مجوز", "اتومات جواز تازه کول"),
+            Translate("Cloud synchronization", "همگام‌سازی ابری", "کلاوډ همغږي"),
+        };
+
+        foreach (var item in fallback)
+        {
+            if (LicenseFeatures.Count >= 4)
+            {
+                break;
+            }
+
+            if (!LicenseFeatures.Contains(item))
+            {
+                LicenseFeatures.Add(item);
+            }
+        }
+
+        SyncStatusText = _cloudSync is null
+            ? Translate("Sync via Main Server", "همگام‌سازی از سرور اصلی", "همغږي د اصلي سرور له لارې")
+            : _cloudSync.LastResult.Message;
+    }
+
+    private void BuildSalesChart()
+    {
+        const double left = 24d;
+        const double right = 696d;
+        const double top = 18d;
+        const double bottom = 148d;
+
+        var source = _snapshot?.SalesTimeline ?? Array.Empty<DashboardSalesPoint>();
+        var max = source.Count == 0 ? 1m : Math.Max(1m, source.Max(x => x.Sales));
+        var step = source.Count <= 1 ? 0d : (right - left) / (source.Count - 1);
+
+        var line = new PointCollection();
+        var area = new PointCollection { new(left, bottom) };
+
+        for (var index = 0; index < source.Count; index++)
+        {
+            var item = source[index];
+            var x = left + (index * step);
+            var ratio = (double)(item.Sales / max);
+            var y = bottom - ((bottom - top) * ratio);
+            var point = new Point(x, y);
+            line.Add(point);
+            area.Add(point);
+        }
+
+        if (source.Count > 0)
+        {
+            area.Add(new(right, bottom));
+        }
+
+        SalesChartPoints = line;
+        SalesAreaPoints = area;
+        OnPropertyChanged(nameof(SalesChartPoints));
+        OnPropertyChanged(nameof(SalesAreaPoints));
+    }
+
+    private void RaiseDashboardDataProperties()
+    {
+        OnPropertyChanged(nameof(WelcomeText));
+        OnPropertyChanged(nameof(LowStockItems));
+        OnPropertyChanged(nameof(ExpiryItems));
+        OnPropertyChanged(nameof(RecentTransactions));
+        OnPropertyChanged(nameof(SalesTimeline));
+        OnPropertyChanged(nameof(SalesTotalText));
+        OnPropertyChanged(nameof(SalesInvoiceCountText));
+        OnPropertyChanged(nameof(AverageInvoiceText));
+        OnPropertyChanged(nameof(OverviewMedicinesText));
+        OnPropertyChanged(nameof(OverviewBatchesText));
+        OnPropertyChanged(nameof(OverviewSuppliersText));
+        OnPropertyChanged(nameof(OverviewCustomersText));
+        OnPropertyChanged(nameof(OverviewMonthSalesText));
+        OnPropertyChanged(nameof(OverviewMonthPurchasesText));
+        OnPropertyChanged(nameof(OverviewStockValueText));
+        OnPropertyChanged(nameof(OverviewCreditDueText));
+    }
+
+    private static string HumanizeFeature(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "Plan";
+        }
+
+        var normalized = value
+            .Replace('_', ' ')
+            .Replace('-', ' ')
+            .Trim()
+            .ToLowerInvariant();
+
+        return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(normalized);
     }
 
     private string LocalNote(bool available) => available

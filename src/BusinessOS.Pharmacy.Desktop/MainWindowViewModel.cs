@@ -47,6 +47,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private string lanStatusText = string.Empty;
 
+    [ObservableProperty]
+    private string globalSearchText = string.Empty;
+
     public MainWindowViewModel(
         IClock clock,
         IUserSessionService sessions,
@@ -109,6 +112,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         LogoutCommand = new AsyncRelayCommand(LogoutAsync);
         NavigateCommand = new AsyncRelayCommand<string>(NavigateAsync);
+        GlobalSearchCommand = new AsyncRelayCommand(GlobalSearchAsync);
         RefreshNavigation();
     }
 
@@ -116,6 +120,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public IAsyncRelayCommand LogoutCommand { get; }
     public IAsyncRelayCommand<string> NavigateCommand { get; }
+    public IAsyncRelayCommand GlobalSearchCommand { get; }
     public DashboardViewModel Dashboard { get; }
     public CustomersViewModel Customers { get; }
     public MedicinesViewModel Medicines { get; }
@@ -130,7 +135,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public UpdateViewModel Updates { get; }
     public NetworkSettingsViewModel NetworkSettings { get; }
 
-    public string ApplicationName => "Darmaltoon";
+    public string ApplicationName => "BusinessOS Pharmacy";
+    public string ProductName => "Darmaltoon";
     public string ParentBrand => "BusinessOS.af";
     public string PageTitle => CurrentSectionKey switch
     {
@@ -218,7 +224,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "عملیات محلی دواخانه",
             "د درملتون محلي عملیات"),
     };
-    public string OnlineText => Translate("Licensed", "فعال", "فعال");
+    public string OnlineText => Translate("Online", "آنلاین", "آنلاین");
+    public string LicenseText => Translate("Licensed", "مجوز فعال", "جواز فعال");
     public string LastVerifiedText => $"{Translate("Ready", "آماده", "چمتو")} • {_clock.UtcNow:yyyy-MM-dd HH:mm} UTC";
     public string UserDisplayName => _sessions.Current?.Name ?? Translate("No user", "بدون کاربر", "کارن نشته");
     public string UserRoleText => _sessions.Current is null
@@ -272,11 +279,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
         RefreshNavigation();
         RaisePageText();
         OnPropertyChanged(nameof(OnlineText));
+        OnPropertyChanged(nameof(LicenseText));
         OnPropertyChanged(nameof(LastVerifiedText));
         OnPropertyChanged(nameof(UserDisplayName));
     }
 
-    partial void OnCurrentSectionKeyChanged(string value) => RaisePageText();
+    partial void OnCurrentSectionKeyChanged(string value)
+    {
+        RaisePageText();
+        RefreshNavigation();
+    }
 
     private void RefreshNavigation()
     {
@@ -290,14 +302,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (_permissions.HasPermission("inventory.manage") ||
             _permissions.HasPermission("inventory.status"))
         {
-            NavigationItems.Add(new(
+            AddNavigationItem(
                 "inventory",
                 Translate("Inventory", "موجودی", "زېرمه"),
-                "▤"));
-            NavigationItems.Add(new(
+                "▤");
+            AddNavigationItem(
                 "batches",
                 Translate("Batches", "بچ‌ها", "بېچونه"),
-                "◫"));
+                "◫");
         }
 
         AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), "↓");
@@ -311,10 +323,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (_networkConfiguration.Mode != DeploymentMode.Client &&
             _permissions.HasPermission("settings.manage"))
         {
-            NavigationItems.Add(new(
+            AddNavigationItem(
                 "backup",
                 Translate("Backup", "پشتیبان‌گیری", "بیک اپ"),
-                "◫"));
+                "◫");
         }
 
         AddIfAllowed("settings.manage", "settings", Translate("Settings", "تنظیمات", "امستنې"), "⚙");
@@ -322,17 +334,17 @@ public sealed partial class MainWindowViewModel : ObservableObject
         // Keep the advanced native modules available without displacing the
         // reference dashboard options above.
         AddIfAllowed("returns.manage", "returns", Translate("Returns", "برگشت", "ستنېدل"), "↶");
-        AddIfAllowed("roles.manage", "roles", Translate("Roles", "نقش‌ها", "رولونه"), "⚿");
-        AddIfAllowed("settings.manage", "updates", Translate("Updates", "به‌روزرسانی", "تازه کول"), "⇧");
+        AddIfAllowed("roles.manage", "roles", Translate("Roles & Permissions", "نقش‌ها و مجوزها", "رولونه او اجازې"), "⚿");
+        AddIfAllowed("settings.manage", "updates", Translate("Sync & Updates", "همگام‌سازی و به‌روزرسانی", "همغږي او تازه کول"), "⇧");
 
         if (_networkConfiguration.Mode == DeploymentMode.Server &&
             (_permissions.HasPermission("users.manage") ||
              _permissions.HasPermission("settings.manage")))
         {
-            NavigationItems.Add(new(
+            AddNavigationItem(
                 "network",
                 Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
-                "⌁"));
+                "⌁");
         }
     }
 
@@ -340,8 +352,17 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         if (_permissions.HasPermission(permission))
         {
-            NavigationItems.Add(new(key, label, glyph));
+            AddNavigationItem(key, label, glyph);
         }
+    }
+
+    private void AddNavigationItem(string key, string label, string glyph)
+    {
+        NavigationItems.Add(new NavigationItemViewModel(
+            key,
+            label,
+            glyph,
+            string.Equals(key, CurrentSectionKey, StringComparison.OrdinalIgnoreCase)));
     }
 
     private async Task NavigateAsync(string? key)
@@ -398,6 +419,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentPage = NetworkSettings;
                 await NetworkSettings.LoadAsync();
                 RefreshLanStatusText();
+                break;
+
+            case "sync" when _permissions.HasPermission("dashboard.view"):
+                await Dashboard.SyncNowAsync();
                 break;
 
             case "closing" when _permissions.HasPermission("daily_closing.perform"):
@@ -458,6 +483,49 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private async void OnDashboardNavigationRequested(string key)
     {
         await NavigateAsync(key);
+    }
+
+    private async Task GlobalSearchAsync()
+    {
+        var term = GlobalSearchText.Trim();
+        if (term.Length == 0)
+        {
+            return;
+        }
+
+        if (_permissions.HasPermission("medicines.manage"))
+        {
+            Medicines.SearchText = term;
+            CurrentSectionKey = "medicines";
+            CurrentPage = Medicines;
+            await Medicines.LoadAsync();
+
+            if (Medicines.Medicines.Count > 0)
+            {
+                return;
+            }
+        }
+
+        if (_permissions.HasPermission("customers.manage"))
+        {
+            Customers.SearchText = term;
+            CurrentSectionKey = "customers";
+            CurrentPage = Customers;
+            await Customers.LoadAsync();
+
+            if (Customers.Customers.Count > 0)
+            {
+                return;
+            }
+        }
+
+        if (_permissions.HasPermission("purchases.manage"))
+        {
+            Purchasing.SupplierSearchText = term;
+            CurrentSectionKey = "purchases";
+            CurrentPage = Purchasing;
+            await Purchasing.LoadAsync();
+        }
     }
 
     private async Task LogoutAsync()
