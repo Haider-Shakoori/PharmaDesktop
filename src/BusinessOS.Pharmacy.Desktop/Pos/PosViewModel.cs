@@ -325,8 +325,10 @@ public sealed partial class PosViewModel : ObservableObject
                 return;
             }
 
-            if (!autoAddExactBarcode &&
-                !string.Equals(SearchText.Trim(), query, StringComparison.Ordinal))
+            // Barcode scanners often append Enter, while some do not. The
+            // debounced lookup and Enter command may overlap, so only the query
+            // that is still current may update results or add a scanned item.
+            if (!string.Equals(SearchText.Trim(), query, StringComparison.Ordinal))
             {
                 return;
             }

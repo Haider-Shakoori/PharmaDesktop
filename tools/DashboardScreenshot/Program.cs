@@ -63,18 +63,26 @@ internal static class Program
                 clock);
             pos.LoadAsync().GetAwaiter().GetResult();
 
-            // Exercise the real barcode flow twice. Each scan must remain an independent cart line.
+            // Exercise both scanner modes: no terminator and the common Enter terminator.
+            // One physical scan must add exactly one independent cart line in either case.
+            pos.SearchText = FakePosService.PrimaryBarcode;
+            Thread.Sleep(350);
+            if (pos.Cart.Count != 1)
+            {
+                throw new InvalidOperationException(
+                    "An exact barcode must auto-add even when the scanner sends no Enter terminator.");
+            }
+
             pos.SearchText = FakePosService.PrimaryBarcode;
             pos.SearchCommand.ExecuteAsync(null).GetAwaiter().GetResult();
-            pos.SearchText = FakePosService.PrimaryBarcode;
-            pos.SearchCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+            Thread.Sleep(250);
 
             if (pos.Cart.Count != 2 ||
                 pos.Cart.Any(line => line.Quantity != 1m) ||
                 pos.Cart.Select(line => line).Distinct().Count() != 2)
             {
                 throw new InvalidOperationException(
-                    "Repeated barcode scans must create two independent quantity-1 cart lines.");
+                    "Repeated barcode scans must create exactly two independent quantity-1 cart lines.");
             }
 
             pos.SearchText = "Amoxicillin";
