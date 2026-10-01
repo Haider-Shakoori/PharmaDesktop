@@ -11,12 +11,15 @@ public interface IOfflinePasswordVerifier
 public sealed class OfflinePasswordVerifier : IOfflinePasswordVerifier
 {
     public const int DefaultIterations = 600_000;
+    public const int MinimumIterations = 100_000;
+    public const int MaximumIterations = 1_500_000;
+    public const int MaximumPasswordLength = 1024;
     private const int SaltSize = 16;
     private const int HashSize = 32;
 
     public OfflinePasswordCredential Create(string password)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+        ValidatePassword(password);
 
         var salt = RandomNumberGenerator.GetBytes(SaltSize);
         var hash = Rfc2898DeriveBytes.Pbkdf2(
@@ -35,7 +38,8 @@ public sealed class OfflinePasswordVerifier : IOfflinePasswordVerifier
     public bool Verify(string password, OfflinePasswordCredential credential)
     {
         if (string.IsNullOrEmpty(password) ||
-            credential.Iterations < 100_000)
+            password.Length > MaximumPasswordLength ||
+            credential.Iterations is < MinimumIterations or > MaximumIterations)
         {
             return false;
         }
@@ -44,6 +48,12 @@ public sealed class OfflinePasswordVerifier : IOfflinePasswordVerifier
         {
             var salt = Convert.FromBase64String(credential.SaltBase64);
             var expected = Convert.FromBase64String(credential.HashBase64);
+            if (salt.Length != SaltSize || expected.Length != HashSize)
+            {
+                CryptographicOperations.ZeroMemory(expected);
+                return false;
+            }
+
             var actual = Rfc2898DeriveBytes.Pbkdf2(
                 password,
                 salt,
@@ -64,6 +74,17 @@ public sealed class OfflinePasswordVerifier : IOfflinePasswordVerifier
         catch (FormatException)
         {
             return false;
+        }
+    }
+
+    private static void ValidatePassword(string password)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+        if (password.Length > MaximumPasswordLength)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(password),
+                $"Password length cannot exceed {MaximumPasswordLength} characters.");
         }
     }
 }

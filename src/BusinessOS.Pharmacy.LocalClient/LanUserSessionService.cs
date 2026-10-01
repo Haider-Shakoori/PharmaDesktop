@@ -36,11 +36,21 @@ public sealed class LanUserSessionService : IUserSessionService
         var configuration = await _configurationStore.LoadAsync(cancellationToken);
         configuration.Validate();
 
-        var client = await _transport.GetPairedClientAsync(cancellationToken);
+        if (email.Trim().Length > 254 || password.Length > 1024)
+        {
+            throw new ArgumentOutOfRangeException(nameof(email), "Client Terminal login input is too long.");
+        }
 
-        using var response = await client.PostAsJsonAsync(
-            "auth/login",
-            new LoginRequest(email.Trim(), password),
+        var connection = await _transport.GetPairedConnectionAsync(cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "auth/login")
+        {
+            Content = JsonContent.Create(new LoginRequest(email.Trim(), password)),
+        };
+        AddTerminalCredential(request, connection.Pairing);
+
+        using var response = await connection.Client.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
 
         var body = await response.Content.ReadFromJsonAsync<LoginResponse>(
@@ -83,12 +93,16 @@ public sealed class LanUserSessionService : IUserSessionService
                 "The LAN pharmacy-user session has expired. Sign in again.");
         }
 
-        var client = await _transport.GetPairedClientAsync(cancellationToken);
+        var connection = await _transport.GetPairedConnectionAsync(cancellationToken);
         using var request = new HttpRequestMessage(HttpMethod.Post, "terminals/heartbeat");
+        AddTerminalCredential(request, connection.Pairing);
         request.Headers.Authorization =
             new AuthenticationHeaderValue("Bearer", current.AccessToken);
 
-        using var response = await client.SendAsync(request, cancellationToken);
+        using var response = await connection.Client.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
         response.EnsureSuccessStatusCode();
 
         return current.User;
@@ -98,6 +112,18 @@ public sealed class LanUserSessionService : IUserSessionService
     {
         _state.Clear();
         return Task.CompletedTask;
+    }
+
+    private static void AddTerminalCredential(
+        HttpRequestMessage request,
+        TerminalPairingSecret pairing)
+    {
+        request.Headers.TryAddWithoutValidation(
+            "X-BusinessOS-Terminal-Id",
+            pairing.TerminalId);
+        request.Headers.TryAddWithoutValidation(
+            "X-BusinessOS-Terminal-Secret",
+            pairing.TerminalSecret);
     }
 
     private sealed record LoginRequest(string Email, string Password);

@@ -1,4 +1,6 @@
+using System.Net;
 using System.Net.Http;
+using System.Security.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Desktop.Activation;
@@ -126,7 +128,7 @@ public static class DesktopHost
 
                 services.AddSingleton(updaterOptions);
                 services.AddSingleton(_ => new UpdateService(
-                    new HttpClient { Timeout = TimeSpan.FromSeconds(Math.Clamp(updaterOptions.TimeoutSeconds, 5, 300)) },
+                    CreateUpdateHttpClient(updaterOptions.TimeoutSeconds),
                     updaterOptions,
                     paths.UpdatesDirectory));
                 services.AddSingleton(networkConfiguration);
@@ -153,5 +155,30 @@ public static class DesktopHost
                 services.AddSingleton<StartupCoordinator>();
             })
             .Build();
+    }
+
+    private static HttpClient CreateUpdateHttpClient(int timeoutSeconds)
+    {
+        var handler = new SocketsHttpHandler
+        {
+            AllowAutoRedirect = false,
+            AutomaticDecompression =
+                DecompressionMethods.GZip |
+                DecompressionMethods.Deflate |
+                DecompressionMethods.Brotli,
+            ConnectTimeout = TimeSpan.FromSeconds(5),
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1),
+            MaxConnectionsPerServer = 4,
+            SslOptions = new()
+            {
+                EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
+            },
+        };
+
+        return new HttpClient(handler, disposeHandler: true)
+        {
+            Timeout = TimeSpan.FromSeconds(Math.Clamp(timeoutSeconds, 5, 300)),
+        };
     }
 }

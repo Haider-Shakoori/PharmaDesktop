@@ -24,25 +24,29 @@ internal sealed class SqlitePragmaInterceptor : DbConnectionInterceptor
 
     private static void Apply(DbConnection connection)
     {
-        using var synchronous = connection.CreateCommand();
-        synchronous.CommandText = "PRAGMA synchronous=NORMAL;";
-        synchronous.ExecuteNonQuery();
-
-        using var busyTimeout = connection.CreateCommand();
-        busyTimeout.CommandText = "PRAGMA busy_timeout=5000;";
-        busyTimeout.ExecuteNonQuery();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            PRAGMA foreign_keys=ON;
+            PRAGMA synchronous=NORMAL;
+            PRAGMA busy_timeout=10000;
+            PRAGMA temp_store=MEMORY;
+            PRAGMA cache_size=-32768;
+            """;
+        command.ExecuteNonQuery();
     }
 
     private static async Task ApplyAsync(
         DbConnection connection,
         CancellationToken cancellationToken)
     {
-        await using var synchronous = connection.CreateCommand();
-        synchronous.CommandText = "PRAGMA synchronous=NORMAL;";
-        await synchronous.ExecuteNonQueryAsync(cancellationToken);
-
-        await using var busyTimeout = connection.CreateCommand();
-        busyTimeout.CommandText = "PRAGMA busy_timeout=5000;";
-        await busyTimeout.ExecuteNonQueryAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            PRAGMA foreign_keys=ON;
+            PRAGMA synchronous=NORMAL;
+            PRAGMA busy_timeout=10000;
+            PRAGMA temp_store=MEMORY;
+            PRAGMA cache_size=-32768;
+            """;
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }

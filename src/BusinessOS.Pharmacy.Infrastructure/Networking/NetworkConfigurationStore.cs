@@ -12,6 +12,7 @@ public sealed class NetworkConfigurationStore : INetworkConfigurationStore
     };
 
     private readonly IApplicationPaths _paths;
+    private readonly SemaphoreSlim _writeGate = new(1, 1);
 
     public NetworkConfigurationStore(IApplicationPaths paths) => _paths = paths;
 
@@ -23,7 +24,14 @@ public sealed class NetworkConfigurationStore : INetworkConfigurationStore
             return new NetworkConfiguration();
         }
 
-        await using var stream = File.OpenRead(_paths.NetworkConfigurationPath);
+        await using var stream = new FileStream(
+            _paths.NetworkConfigurationPath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            16 * 1024,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+
         var configuration = await JsonSerializer.DeserializeAsync<NetworkConfiguration>(
             stream,
             JsonOptions,
@@ -42,17 +50,37 @@ public sealed class NetworkConfigurationStore : INetworkConfigurationStore
         configuration.Validate();
 
         _paths.EnsureCreated();
+        await _writeGate.WaitAsync(cancellationToken);
+        var temporary = _paths.NetworkConfigurationPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
 
-        var temporary = _paths.NetworkConfigurationPath + ".tmp";
-        await using (var stream = File.Create(temporary))
+        try
         {
-            await JsonSerializer.SerializeAsync(
-                stream,
-                configuration,
-                JsonOptions,
-                cancellationToken);
-        }
+            await using (var stream = new FileStream(
+                temporary,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                16 * 1024,
+                FileOptions.Asynchronous | FileOptions.WriteThrough))
+            {
+                await JsonSerializer.SerializeAsync(
+                    stream,
+                    configuration,
+                    JsonOptions,
+                    cancellationToken);
+                await stream.FlushAsync(cancellationToken);
+            }
 
-        File.Move(temporary, _paths.NetworkConfigurationPath, overwrite: true);
+            File.Move(temporary, _paths.NetworkConfigurationPath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporary))
+            {
+                File.Delete(temporary);
+            }
+
+            _writeGate.Release();
+        }
     }
 }

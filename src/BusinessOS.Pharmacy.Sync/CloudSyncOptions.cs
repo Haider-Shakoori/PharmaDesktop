@@ -13,14 +13,16 @@ public sealed record CloudSyncOptions(
     public void Validate()
     {
         if (!Uri.TryCreate(BaseUrl, UriKind.Absolute, out var uri) ||
-            uri.Scheme != Uri.UriSchemeHttps)
+            uri.Scheme != Uri.UriSchemeHttps ||
+            !string.IsNullOrEmpty(uri.UserInfo) ||
+            !string.IsNullOrEmpty(uri.Query) ||
+            !string.IsNullOrEmpty(uri.Fragment))
             throw new InvalidOperationException(
                 "BusinessOS cloud synchronization requires an HTTPS base URL.");
 
-        if (!PushPath.StartsWith("/", StringComparison.Ordinal) ||
-            !PullPath.StartsWith("/", StringComparison.Ordinal))
+        if (!IsApiPath(PushPath) || !IsApiPath(PullPath))
             throw new InvalidOperationException(
-                "Cloud synchronization API paths must be absolute application paths.");
+                "Cloud synchronization API paths must be relative /api/ application paths without query strings or fragments.");
 
         if (TimeoutSeconds is < 5 or > 300)
             throw new InvalidOperationException("Cloud sync timeout must be between 5 and 300 seconds.");
@@ -33,4 +35,11 @@ public sealed record CloudSyncOptions(
         if (IntervalSeconds is < 15 or > 3600)
             throw new InvalidOperationException("Cloud sync interval must be between 15 and 3600 seconds.");
     }
+
+    private static bool IsApiPath(string path) =>
+        path.StartsWith("/api/", StringComparison.Ordinal) &&
+        !path.StartsWith("//", StringComparison.Ordinal) &&
+        !path.Contains('?', StringComparison.Ordinal) &&
+        !path.Contains('#', StringComparison.Ordinal) &&
+        Uri.TryCreate(path, UriKind.Relative, out _);
 }

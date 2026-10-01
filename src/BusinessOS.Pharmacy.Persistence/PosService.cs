@@ -98,7 +98,6 @@ public sealed class PosService : IPosService
 
         var locationExists = await context.Set<StockLocationEntity>()
             .AsNoTracking()
-            .Include(x => x.Branch)
             .AnyAsync(
                 x => x.Id == filter.StockLocationId &&
                      x.IsActive &&
@@ -110,65 +109,113 @@ public sealed class PosService : IPosService
             throw new InvalidOperationException("Stock location was not found or is inactive.");
         }
 
+        var medicines = await context.Set<MedicineEntity>()
+            .AsNoTracking()
+            .Where(x =>
+                x.IsActive &&
+                (
+                    x.Barcode == queryText ||
+                    EF.Functions.Like(x.MedicineCode, pattern) ||
+                    EF.Functions.Like(x.BrandName, pattern) ||
+                    (x.GenericName != null && EF.Functions.Like(x.GenericName, pattern)) ||
+                    (x.Strength != null && EF.Functions.Like(x.Strength, pattern))
+                ) &&
+                context.Set<ProductBatchEntity>().Any(batch =>
+                    batch.MedicineId == x.Id &&
+                    batch.StockLocationId == filter.StockLocationId &&
+                    batch.Status == "active" &&
+                    batch.AvailableQuantity > 0m &&
+                    batch.SalePrice != null &&
+                    (batch.ExpiresAt == null || batch.ExpiresAt >= businessDate)))
+            .OrderByDescending(x => x.Barcode == queryText)
+            .ThenBy(x => x.BrandName)
+            .Take(take)
+            .Select(x => new
+            {
+                x.Id,
+                x.MedicineCode,
+                x.Barcode,
+                x.BrandName,
+                x.GenericName,
+                x.Strength,
+                x.SaleUnit,
+                x.PrescriptionRequired,
+            })
+            .ToListAsync(cancellationToken);
+
+        if (medicines.Count == 0)
+        {
+            return [];
+        }
+
+        var medicineIds = medicines.Select(x => x.Id).ToList();
         var batches = await context.Set<ProductBatchEntity>()
             .AsNoTracking()
-            .Include(x => x.Medicine)
             .Where(x =>
+                medicineIds.Contains(x.MedicineId) &&
                 x.StockLocationId == filter.StockLocationId &&
                 x.Status == "active" &&
                 x.AvailableQuantity > 0m &&
                 x.SalePrice != null &&
-                (x.ExpiresAt == null || x.ExpiresAt >= businessDate) &&
-                x.Medicine.IsActive &&
-                (
-                    x.Medicine.Barcode == queryText ||
-                    EF.Functions.Like(x.Medicine.MedicineCode, pattern) ||
-                    EF.Functions.Like(x.Medicine.BrandName, pattern) ||
-                    (x.Medicine.GenericName != null &&
-                        EF.Functions.Like(x.Medicine.GenericName, pattern)) ||
-                    (x.Medicine.Strength != null &&
-                        EF.Functions.Like(x.Medicine.Strength, pattern))
-                ))
-            .OrderBy(x => x.Medicine.BrandName)
+                (x.ExpiresAt == null || x.ExpiresAt >= businessDate))
+            .OrderBy(x => x.MedicineId)
             .ThenBy(x => x.ExpiresAt == null)
             .ThenBy(x => x.ExpiresAt)
             .ThenBy(x => x.Id)
+            .Select(x => new
+            {
+                x.Id,
+                x.MedicineId,
+                x.BatchNumber,
+                x.AvailableQuantity,
+                SalePrice = x.SalePrice!.Value,
+                x.ExpiresAt,
+                x.CreatedAt,
+            })
             .ToListAsync(cancellationToken);
 
-        return batches
+        var batchesByMedicine = batches
             .GroupBy(x => x.MedicineId)
-            .Take(take)
-            .Select(group =>
-            {
-                var ordered = group
-                    .OrderBy(x => x.ExpiresAt == null)
-                    .ThenBy(x => x.ExpiresAt)
-                    .ThenBy(x => x.CreatedAt)
-                    .ToList();
-                var medicine = ordered[0].Medicine;
-                var prices = ordered.Select(x => x.SalePrice!.Value).ToList();
+            .ToDictionary(x => x.Key, x => x.ToList(), StringComparer.Ordinal);
 
-                return new PosProductSearchItem(
-                    medicine.Id,
-                    medicine.MedicineCode,
-                    medicine.Barcode,
-                    medicine.BrandName,
-                    medicine.GenericName,
-                    medicine.Strength,
-                    medicine.SaleUnit,
-                    StockLedger.Scale(ordered.Sum(x => x.AvailableQuantity)),
-                    ordered[0].SalePrice,
-                    prices.Min(),
-                    prices.Max(),
-                    medicine.PrescriptionRequired,
-                    ordered.Select(x => new PosBatchPriceItem(
-                        x.Id,
-                        x.BatchNumber,
-                        x.AvailableQuantity,
-                        x.SalePrice!.Value,
-                        x.ExpiresAt)).ToList());
-            })
-            .ToList();
+        var result = new List<PosProductSearchItem>(medicines.Count);
+        foreach (var medicine in medicines)
+        {
+            if (!batchesByMedicine.TryGetValue(medicine.Id, out var eligible) ||
+                eligible.Count == 0)
+            {
+                continue;
+            }
+
+            var ordered = eligible
+                .OrderBy(x => x.ExpiresAt == null)
+                .ThenBy(x => x.ExpiresAt)
+                .ThenBy(x => x.CreatedAt)
+                .ToList();
+            var prices = ordered.Select(x => x.SalePrice).ToList();
+
+            result.Add(new PosProductSearchItem(
+                medicine.Id,
+                medicine.MedicineCode,
+                medicine.Barcode,
+                medicine.BrandName,
+                medicine.GenericName,
+                medicine.Strength,
+                medicine.SaleUnit,
+                StockLedger.Scale(ordered.Sum(x => x.AvailableQuantity)),
+                ordered[0].SalePrice,
+                prices.Min(),
+                prices.Max(),
+                medicine.PrescriptionRequired,
+                ordered.Select(x => new PosBatchPriceItem(
+                    x.Id,
+                    x.BatchNumber,
+                    x.AvailableQuantity,
+                    x.SalePrice,
+                    x.ExpiresAt)).ToList()));
+        }
+
+        return result;
     }
 
     public async Task<SaleDetail> CheckoutAsync(
@@ -240,6 +287,24 @@ public sealed class PosService : IPosService
             throw new InvalidOperationException(
                 "A prescription reference is required for prescription-only medicines.");
         }
+
+        var eligibleBatches = await context.Set<ProductBatchEntity>()
+            .Where(x =>
+                medicineIds.Contains(x.MedicineId) &&
+                x.StockLocationId == location.Id &&
+                x.Status == "active" &&
+                x.AvailableQuantity > 0m &&
+                x.SalePrice != null &&
+                (x.ExpiresAt == null || x.ExpiresAt >= businessDate))
+            .OrderBy(x => x.MedicineId)
+            .ThenBy(x => x.ExpiresAt == null)
+            .ThenBy(x => x.ExpiresAt)
+            .ThenBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        var batchesByMedicine = eligibleBatches
+            .GroupBy(x => x.MedicineId)
+            .ToDictionary(x => x.Key, x => x.ToList(), StringComparer.Ordinal);
 
         var sale = new SaleEntity
         {
@@ -319,18 +384,9 @@ public sealed class PosService : IPosService
             };
             sale.Lines.Add(line);
 
-            var candidates = await context.Set<ProductBatchEntity>()
-                .Where(x =>
-                    x.MedicineId == medicine.Id &&
-                    x.StockLocationId == location.Id &&
-                    x.Status == "active" &&
-                    x.AvailableQuantity > 0m &&
-                    x.SalePrice != null &&
-                    (x.ExpiresAt == null || x.ExpiresAt >= businessDate))
-                .OrderBy(x => x.ExpiresAt == null)
-                .ThenBy(x => x.ExpiresAt)
-                .ThenBy(x => x.Id)
-                .ToListAsync(cancellationToken);
+            var candidates = batchesByMedicine.TryGetValue(medicine.Id, out var prefetched)
+                ? prefetched
+                : [];
 
             var remaining = quantity;
             decimal costTotal = 0m;

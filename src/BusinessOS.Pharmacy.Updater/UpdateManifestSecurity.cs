@@ -19,8 +19,12 @@ public static class UpdateManifestSecurity
         if (!Version.TryParse(manifest.MinimumSupportedVersion, out _)) throw new InvalidOperationException("Minimum supported version is invalid.");
         if (manifest.MinimumServerVersion is not null && !Version.TryParse(manifest.MinimumServerVersion, out _))
             throw new InvalidOperationException("Minimum server version is invalid.");
-        if (!Uri.TryCreate(manifest.PackageUrl, UriKind.Absolute, out var packageUri) || packageUri.Scheme != Uri.UriSchemeHttps)
-            throw new InvalidOperationException("Update packages must use HTTPS.");
+        if (!Uri.TryCreate(manifest.PackageUrl, UriKind.Absolute, out var packageUri) ||
+            packageUri.Scheme != Uri.UriSchemeHttps ||
+            !string.IsNullOrEmpty(packageUri.UserInfo) ||
+            !string.IsNullOrEmpty(packageUri.Fragment))
+            throw new InvalidOperationException(
+                "Update packages must use HTTPS without embedded credentials or fragments.");
         if (manifest.PackageSha256.Length != 64 || !manifest.PackageSha256.All(Uri.IsHexDigit))
             throw new InvalidOperationException("Update package checksum is invalid.");
         if (string.IsNullOrWhiteSpace(publicKeyPem))

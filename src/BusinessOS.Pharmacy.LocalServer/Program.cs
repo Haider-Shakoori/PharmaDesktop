@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using BusinessOS.Pharmacy.Application.Abstractions.Sales;
 using BusinessOS.Pharmacy.Application.Abstractions.Reports;
 using BusinessOS.Pharmacy.Application.Abstractions.Purchasing;
@@ -24,6 +25,7 @@ using BusinessOS.Pharmacy.LocalServer.Runtime;
 using BusinessOS.Pharmacy.LocalServer.Security;
 using BusinessOS.Pharmacy.Persistence;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 
 var paths = new ApplicationPaths();
 paths.EnsureCreated();
@@ -64,6 +66,13 @@ builder.Host.UseWindowsService(options =>
 
 builder.WebHost.ConfigureKestrel(options =>
 {
+    options.AddServerHeader = false;
+    options.Limits.MaxRequestBodySize = 2 * 1024 * 1024;
+    options.Limits.MaxRequestHeaderCount = 64;
+    options.Limits.MaxRequestHeadersTotalSize = 32 * 1024;
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(10);
+    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(2);
+
     options.ListenAnyIP(networkConfiguration.ServerPort, listen =>
     {
         listen.UseHttps(certificate);
@@ -84,30 +93,54 @@ builder.Services.AddScoped<LanUserAuthenticationService>();
 builder.Services.AddSingleton<LocalServerRuntimeState>();
 builder.Services.AddSingleton<NetworkFileLogger>();
 builder.Services.AddHostedService<UdpDiscoveryResponder>();
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+    options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+    options.Level = CompressionLevel.Fastest);
 
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    options.AddFixedWindowLimiter("pairing", limiter =>
-    {
-        limiter.PermitLimit = 10;
-        limiter.Window = TimeSpan.FromMinutes(1);
-        limiter.QueueLimit = 0;
-    });
+    options.AddPolicy("pairing", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            }));
 
-    options.AddFixedWindowLimiter("lan", limiter =>
-    {
-        limiter.PermitLimit = 300;
-        limiter.Window = TimeSpan.FromMinutes(1);
-        limiter.QueueLimit = 20;
-        limiter.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-    });
+    options.AddPolicy("lan", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 600,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 10,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            }));
 });
 
 var app = builder.Build();
 
+app.UseResponseCompression();
 app.UseRateLimiter();
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["Cache-Control"] = "no-store";
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    await next();
+});
 
 app.Use(async (context, next) =>
 {

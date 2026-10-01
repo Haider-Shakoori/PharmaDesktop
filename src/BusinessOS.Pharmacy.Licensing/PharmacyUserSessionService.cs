@@ -48,8 +48,7 @@ public sealed class PharmacyUserSessionService : IUserSessionService
         bool allowOfflineSignIn,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(email);
-        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+        ValidateLoginInput(email, password);
 
         try
         {
@@ -201,6 +200,22 @@ public sealed class PharmacyUserSessionService : IUserSessionService
         await _sessionStore.SaveAsync(state, cancellationToken);
         Current = signedUser;
         return signedUser;
+    }
+
+    private static void ValidateLoginInput(string email, string password)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+
+        if (email.Trim().Length > 254)
+        {
+            throw new ArgumentOutOfRangeException(nameof(email));
+        }
+
+        if (password.Length > OfflinePasswordVerifier.MaximumPasswordLength)
+        {
+            throw new ArgumentOutOfRangeException(nameof(password));
+        }
     }
 
     private static void EnsureDeviceMatches(string actual, string expected)

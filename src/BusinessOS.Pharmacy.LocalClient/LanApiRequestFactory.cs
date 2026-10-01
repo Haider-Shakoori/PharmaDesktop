@@ -21,11 +21,17 @@ public sealed class LanApiRequestFactory(
                 "The LAN pharmacy-user session has expired. Sign in again.");
         }
 
-        var client = await transport.GetPairedClientAsync(cancellationToken);
+        var connection = await transport.GetPairedConnectionAsync(cancellationToken);
         var request = new HttpRequestMessage(method, relativeUri);
+        request.Headers.TryAddWithoutValidation(
+            "X-BusinessOS-Terminal-Id",
+            connection.Pairing.TerminalId);
+        request.Headers.TryAddWithoutValidation(
+            "X-BusinessOS-Terminal-Secret",
+            connection.Pairing.TerminalSecret);
         request.Headers.Authorization =
             new AuthenticationHeaderValue("Bearer", state.AccessToken);
 
-        return (client, request);
+        return (connection.Client, request);
     }
 }

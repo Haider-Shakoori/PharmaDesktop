@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Net.Http.Json;
@@ -17,6 +18,7 @@ public sealed class UpdateService
         _http = http;
         _options = options;
         _updatesRoot = Path.GetFullPath(updatesRoot);
+        ValidateManifestUrl(options.ManifestUrl);
         Directory.CreateDirectory(_updatesRoot);
     }
 
@@ -31,10 +33,11 @@ public sealed class UpdateService
             return new(UpdateAvailability.Blocked, currentVersion, null, null, "Trusted update signing key is not configured.");
 
         var uri = BuildManifestUri(currentVersion, deploymentMode, mainServerVersion);
-        using var response = await _http.GetAsync(uri, cancellationToken);
+        using var response = await _http.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
-        var manifest = await response.Content.ReadFromJsonAsync<UpdateManifest>(cancellationToken: cancellationToken)
-            ?? throw new InvalidOperationException("The update service returned an empty manifest.");
+        if (response.Content.Headers.ContentLength is long manifestLength && manifestLength > 1_048_576)
+            throw new InvalidOperationException("The update manifest response is too large.");
+        var manifest = await ReadManifestAsync(response.Content, cancellationToken);
 
         UpdateManifestSecurity.ValidateAndVerify(manifest, _options.SigningPublicKeyPem);
         if (!string.Equals(manifest.Channel, _options.Channel.ToString(), StringComparison.OrdinalIgnoreCase))
@@ -97,19 +100,27 @@ public sealed class UpdateService
                 partial, FileMode.CreateNew, FileAccess.Write, FileShare.None,
                 81920, FileOptions.Asynchronous | FileOptions.WriteThrough);
             using var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-            var buffer = new byte[81920];
-            long total = 0;            while (true)
+            var buffer = ArrayPool<byte>.Shared.Rent(81920);
+            long total = 0;
+            try
             {
-                var read = await source.ReadAsync(buffer, cancellationToken);
-                if (read == 0)
-                    break;
+                while (true)
+                {
+                    var read = await source.ReadAsync(buffer.AsMemory(0, 81920), cancellationToken);
+                    if (read == 0)
+                        break;
 
-                total += read;
-                if (total > _options.MaximumPackageBytes)
-                    throw new InvalidOperationException("Update package is larger than the allowed maximum size.");
+                    total += read;
+                    if (total > _options.MaximumPackageBytes)
+                        throw new InvalidOperationException("Update package is larger than the allowed maximum size.");
 
-                sha.AppendData(buffer, 0, read);
-                await target.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                    sha.AppendData(buffer, 0, read);
+                    await target.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer, clearArray: false);
             }
 
             await target.FlushAsync(cancellationToken);
@@ -186,7 +197,53 @@ public sealed class UpdateService
 
         return Process.Start(start)
             ?? throw new InvalidOperationException("Could not start the Darmaltoon update agent.");
-    }    private Uri BuildManifestUri(
+    }    private static void ValidateManifestUrl(string manifestUrl)
+    {
+        if (string.IsNullOrWhiteSpace(manifestUrl))
+            return;
+
+        if (!Uri.TryCreate(manifestUrl, UriKind.Absolute, out var uri) ||
+            uri.Scheme != Uri.UriSchemeHttps ||
+            !string.IsNullOrEmpty(uri.UserInfo) ||
+            !string.IsNullOrEmpty(uri.Fragment))
+            throw new InvalidOperationException(
+                "The update manifest endpoint must be HTTPS without embedded credentials or a fragment.");
+    }
+
+    private static async Task<UpdateManifest> ReadManifestAsync(HttpContent content, CancellationToken cancellationToken)
+    {
+        const int maximumBytes = 1_048_576;
+        await using var source = await content.ReadAsStreamAsync(cancellationToken);
+        await using var buffer = new MemoryStream();
+        var rented = ArrayPool<byte>.Shared.Rent(16_384);
+        try
+        {
+            var total = 0;
+            while (true)
+            {
+                var read = await source.ReadAsync(rented.AsMemory(0, 16_384), cancellationToken);
+                if (read == 0)
+                    break;
+                total += read;
+                if (total > maximumBytes)
+                    throw new InvalidOperationException("The update manifest response is too large.");
+                await buffer.WriteAsync(rented.AsMemory(0, read), cancellationToken);
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(rented, clearArray: false);
+        }
+
+        buffer.Position = 0;
+        return await JsonSerializer.DeserializeAsync<UpdateManifest>(
+                   buffer,
+                   new JsonSerializerOptions(JsonSerializerDefaults.Web),
+                   cancellationToken)
+               ?? throw new InvalidOperationException("The update service returned an empty manifest.");
+    }
+
+    private Uri BuildManifestUri(
         Version currentVersion,
         string deploymentMode,
         Version? serverVersion)
@@ -230,14 +287,28 @@ public sealed class UpdateService
         return runner;
     }
 
-    private static void ExtractValidated(string packagePath, string staging)
+    private void ExtractValidated(string packagePath, string staging)
     {
         using var archive = ZipFile.OpenRead(packagePath);
+        if (archive.Entries.Count > 10_000)
+            throw new InvalidOperationException("Update package contains too many files.");
+
+        var expandedLimit = _options.MaximumPackageBytes > long.MaxValue / 4
+            ? long.MaxValue
+            : Math.Min(_options.MaximumPackageBytes * 4, 2_147_483_648L);
+        long expandedBytes = 0;
+
         foreach (var entry in archive.Entries)
         {
             var normalized = entry.FullName.Replace('\\', '/');
             if (string.IsNullOrWhiteSpace(normalized) || normalized.EndsWith('/'))
                 continue;
+
+            if (((entry.ExternalAttributes >> 16) & 0xF000) == 0xA000)
+                throw new InvalidOperationException("Update packages may not contain symbolic links.");
+            if (entry.Length > expandedLimit - expandedBytes)
+                throw new InvalidOperationException("Update package expands beyond the allowed maximum size.");
+            expandedBytes += entry.Length;
 
             if (normalized.StartsWith('/') ||
                 normalized.Contains("../", StringComparison.Ordinal) ||

@@ -338,7 +338,7 @@ public sealed class InventoryBatchTests
             Assert.NotNull(detail);
             Assert.Equal(1m, detail!.Batch.AvailableQuantity);
             Assert.DoesNotContain(detail.Movements, movement => movement.BalanceAfter < 0);
-            Assert.Single(detail.Movements.Where(x => x.MovementType == "sale"));
+            Assert.Single(detail.Movements, x => x.MovementType == "sale");
         }
         finally
         {

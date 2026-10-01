@@ -60,4 +60,33 @@ public sealed class LicenseApiOptionsValidatorTests
         Assert.True(result.Failed);
     }
 
+    [Theory]
+    [InlineData("https://user:secret@pharmacy.businessos.af")]
+    [InlineData("https://pharmacy.businessos.af?tenant=other")]
+    [InlineData("https://pharmacy.businessos.af#fragment")]
+    public void BaseUrl_with_embedded_state_Fails(string baseUrl)
+    {
+        var result = _validator.Validate(null, new LicenseApiOptions
+        {
+            BaseUrl = baseUrl,
+            ActivationPath = "/api/v1/license/activate",
+            TimeoutSeconds = 15,
+        });
+
+        Assert.True(result.Failed);
+    }
+
+    [Fact]
+    public void ApiPath_with_query_Fails()
+    {
+        var result = _validator.Validate(null, new LicenseApiOptions
+        {
+            BaseUrl = "https://pharmacy.businessos.af",
+            ActivationPath = "/api/v1/license/activate?tenant=other",
+            TimeoutSeconds = 15,
+        });
+
+        Assert.True(result.Failed);
+    }
+
 }

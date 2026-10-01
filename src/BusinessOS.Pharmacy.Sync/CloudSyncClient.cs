@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Authentication;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BusinessOS.Pharmacy.Application.Abstractions.Sync;
@@ -24,7 +25,7 @@ public sealed class CloudSyncClient : ICloudSyncTransport, IDisposable
         _options = options;
         _ownsClient = true;
         _httpClient = handler is null
-            ? new HttpClient()
+            ? new HttpClient(CreateDefaultHandler(options), disposeHandler: true)
             : new HttpClient(handler, disposeHandler: true);
         _httpClient.BaseAddress = new Uri(options.BaseUrl, UriKind.Absolute);
         _httpClient.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
@@ -44,6 +45,25 @@ public sealed class CloudSyncClient : ICloudSyncTransport, IDisposable
         if (_httpClient.BaseAddress is null)
             _httpClient.BaseAddress = new Uri(options.BaseUrl, UriKind.Absolute);
     }
+
+    private static SocketsHttpHandler CreateDefaultHandler(CloudSyncOptions options) =>
+        new()
+        {
+            AllowAutoRedirect = false,
+            AutomaticDecompression =
+                DecompressionMethods.GZip |
+                DecompressionMethods.Deflate |
+                DecompressionMethods.Brotli,
+            ConnectTimeout = TimeSpan.FromSeconds(Math.Min(5, options.TimeoutSeconds)),
+            PooledConnectionLifetime = TimeSpan.FromMinutes(10),
+            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+            MaxConnectionsPerServer = 8,
+            EnableMultipleHttp2Connections = true,
+            SslOptions = new()
+            {
+                EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
+            },
+        };
 
     public async Task<IReadOnlyList<CloudSyncPushAcknowledgement>> PushAsync(
         string accessToken,

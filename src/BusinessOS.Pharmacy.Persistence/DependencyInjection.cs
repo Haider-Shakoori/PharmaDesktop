@@ -24,7 +24,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<SqlitePragmaInterceptor>();
 
-        services.AddDbContextFactory<PharmacyDbContext>((serviceProvider, options) =>
+        services.AddPooledDbContextFactory<PharmacyDbContext>((serviceProvider, options) =>
         {
             var paths = serviceProvider.GetRequiredService<IApplicationPaths>();
             paths.EnsureCreated();
@@ -36,12 +36,12 @@ public static class DependencyInjection
                 Cache = SqliteCacheMode.Shared,
                 Pooling = true,
                 ForeignKeys = true,
-                DefaultTimeout = 5,
+                DefaultTimeout = 10,
             }.ToString();
 
             options.UseSqlite(connectionString);
             options.AddInterceptors(serviceProvider.GetRequiredService<SqlitePragmaInterceptor>());
-        });
+        }, poolSize: 32);
 
         services.AddSingleton<ILocalDatabaseInitializer, LocalDatabaseInitializer>();
         services.AddSingleton<ILocalBackupService, LocalBackupService>();

@@ -33,6 +33,52 @@ public sealed class UpdateSystemTests
     }
 
     [Fact]
+    public void Update_manifest_endpoint_requires_credential_free_https()
+    {
+        using var rsa = RSA.Create(2048);
+        using var http = new HttpClient(new StaticHandler(() => new HttpResponseMessage(HttpStatusCode.OK)));
+        var root = Temp();
+
+        try
+        {
+            Assert.Throws<InvalidOperationException>(() => new UpdateService(
+                http,
+                Options(rsa, "http://updates.example.test/manifest"),
+                root));
+
+            Assert.Throws<InvalidOperationException>(() => new UpdateService(
+                http,
+                Options(rsa, "https://user:secret@updates.example.test/manifest"),
+                root));
+        }
+        finally
+        {
+            Delete(root);
+        }
+    }
+
+    [Fact]
+    public void Signed_manifest_rejects_credentialed_package_url()
+    {
+        using var rsa = RSA.Create(2048);
+        var manifest = Sign(
+            rsa,
+            NewManifest(
+                version: "1.1.0",
+                minimumSupported: "1.0.0",
+                minimumServer: null,
+                packageHash: new string('A', 64)) with
+            {
+                PackageUrl = "https://user:secret@updates.example.test/darmaltoon.zip",
+            });
+
+        Assert.Throws<InvalidOperationException>(() =>
+            UpdateManifestSecurity.ValidateAndVerify(
+                manifest,
+                rsa.ExportSubjectPublicKeyInfoPem()));
+    }
+
+    [Fact]
     public async Task Client_update_is_blocked_until_main_server_is_compatible()
     {
         using var rsa = RSA.Create(2048);

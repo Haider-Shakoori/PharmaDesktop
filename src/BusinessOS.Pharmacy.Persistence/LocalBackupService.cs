@@ -203,6 +203,10 @@ public sealed class LocalBackupService : ILocalBackupService
                 ?? throw new InvalidOperationException("Backup manifest is invalid.");
             if (manifest.Version != ManifestVersion || !string.Equals(manifest.TenantId, tenantId, StringComparison.Ordinal) || manifest.DatabaseInstanceId != databaseInstanceId)
                 throw new InvalidOperationException("Backup manifest identity does not match the database.");
+            if (manifest.Length != info.Length)
+                throw new InvalidOperationException("Backup length does not match its manifest.");
+            if (manifest.Kind is not ("manual" or "pre-restore"))
+                throw new InvalidOperationException("Backup manifest kind is invalid.");
             if (!string.Equals(manifest.Sha256, sha256, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Backup checksum does not match its manifest. The backup may be damaged or modified.");
             createdAt = manifest.CreatedAt;
@@ -221,8 +225,11 @@ public sealed class LocalBackupService : ILocalBackupService
         var manifest = new BackupManifest(ManifestVersion, snapshot.TenantId, snapshot.DatabaseInstanceId, snapshot.CreatedAt, snapshot.Length, snapshot.Sha256, snapshot.LatestMigration, snapshot.Kind);
         var final = snapshot.FullPath + ".manifest.json";
         var temp = final + ".partial";
-        await using (var stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, FileOptions.Asynchronous))
+        await using (var stream = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, FileOptions.Asynchronous | FileOptions.WriteThrough))
+        {
             await JsonSerializer.SerializeAsync(stream, manifest, JsonOptions, ct);
+            await stream.FlushAsync(ct);
+        }
         File.Move(temp, final, overwrite: true);
     }
 

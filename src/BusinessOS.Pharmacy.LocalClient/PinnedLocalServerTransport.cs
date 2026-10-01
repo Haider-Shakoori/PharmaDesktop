@@ -1,4 +1,6 @@
+using System.Net;
 using System.Net.Security;
+using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
@@ -25,6 +27,13 @@ public sealed class PinnedLocalServerTransport : IDisposable
     public async Task<HttpClient> GetPairedClientAsync(
         CancellationToken cancellationToken = default)
     {
+        var connection = await GetPairedConnectionAsync(cancellationToken);
+        return connection.Client;
+    }
+
+    public async Task<(HttpClient Client, TerminalPairingSecret Pairing)> GetPairedConnectionAsync(
+        CancellationToken cancellationToken = default)
+    {
         var configuration = await _configurationStore.LoadAsync(cancellationToken);
         configuration.Validate();
 
@@ -48,35 +57,27 @@ public sealed class PinnedLocalServerTransport : IDisposable
             "|",
             configuration.ServerHost,
             configuration.ServerPort,
-            configuration.ServerCertificateSha256,
-            pairing.TerminalId);
+            configuration.ServerCertificateSha256);
 
         if (_client is not null && string.Equals(_clientKey, key, StringComparison.Ordinal))
         {
-            return _client;
+            return (_client, pairing);
         }
 
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            if (_client is not null && string.Equals(_clientKey, key, StringComparison.Ordinal))
+            if (_client is null || !string.Equals(_clientKey, key, StringComparison.Ordinal))
             {
-                return _client;
+                _client?.Dispose();
+                _client = CreatePinnedClient(
+                    configuration.ServerHost!,
+                    configuration.ServerPort,
+                    configuration.ServerCertificateSha256!);
+                _clientKey = key;
             }
 
-            _client?.Dispose();
-            _client = CreatePinnedClient(
-                configuration.ServerHost!,
-                configuration.ServerPort,
-                configuration.ServerCertificateSha256!);
-
-            _client.DefaultRequestHeaders.Remove("X-BusinessOS-Terminal-Id");
-            _client.DefaultRequestHeaders.Remove("X-BusinessOS-Terminal-Secret");
-            _client.DefaultRequestHeaders.Add("X-BusinessOS-Terminal-Id", pairing.TerminalId);
-            _client.DefaultRequestHeaders.Add("X-BusinessOS-Terminal-Secret", pairing.TerminalSecret);
-            _clientKey = key;
-
-            return _client;
+            return (_client, pairing);
         }
         finally
         {
@@ -92,36 +93,66 @@ public sealed class PinnedLocalServerTransport : IDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(host);
         ArgumentException.ThrowIfNullOrWhiteSpace(expectedCertificateSha256);
 
-        var normalizedExpected = NormalizeFingerprint(expectedCertificateSha256);
+        if (port is < 1 or > 65535)
+            throw new ArgumentOutOfRangeException(nameof(port));
 
-        var handler = new HttpClientHandler
+        host = host.Trim();
+        if (Uri.CheckHostName(host) == UriHostNameType.Unknown)
+            throw new InvalidOperationException("The configured Main Pharmacy Server host is invalid.");
+
+        var expectedHash = Convert.FromHexString(
+            NormalizeFingerprint(expectedCertificateSha256));
+
+        var handler = new SocketsHttpHandler
         {
-            ServerCertificateCustomValidationCallback = (_, certificate, _, _) =>
-                CertificateMatches(certificate, normalizedExpected),
+            AllowAutoRedirect = false,
+            AutomaticDecompression =
+                DecompressionMethods.GZip |
+                DecompressionMethods.Deflate |
+                DecompressionMethods.Brotli,
+            ConnectTimeout = TimeSpan.FromSeconds(3),
+            PooledConnectionLifetime = TimeSpan.FromMinutes(10),
+            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+            MaxConnectionsPerServer = 32,
+            SslOptions = new SslClientAuthenticationOptions
+            {
+                EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
+                RemoteCertificateValidationCallback = (_, certificate, _, _) =>
+                    CertificateMatches(certificate, expectedHash),
+            },
         };
+
+        var baseAddress = new UriBuilder(
+            Uri.UriSchemeHttps,
+            host,
+            port,
+            "api/local/v1/").Uri;
 
         return new HttpClient(handler, disposeHandler: true)
         {
-            BaseAddress = new Uri($"https://{host}:{port}/api/local/v1/"),
+            BaseAddress = baseAddress,
             Timeout = TimeSpan.FromSeconds(8),
         };
     }
 
     private static bool CertificateMatches(
-        X509Certificate2? certificate,
-        string normalizedExpected)
+        X509Certificate? certificate,
+        byte[] expectedHash)
     {
         if (certificate is null)
         {
             return false;
         }
 
-        var actual = Convert.ToHexString(
-            certificate.GetCertHash(HashAlgorithmName.SHA256));
-
-        return CryptographicOperations.FixedTimeEquals(
-            Convert.FromHexString(actual),
-            Convert.FromHexString(normalizedExpected));
+        var actual = certificate.GetCertHash(HashAlgorithmName.SHA256);
+        try
+        {
+            return CryptographicOperations.FixedTimeEquals(actual, expectedHash);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(actual);
+        }
     }
 
     private static string NormalizeFingerprint(string value)
