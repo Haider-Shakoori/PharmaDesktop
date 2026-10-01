@@ -281,7 +281,7 @@ public sealed partial class PosViewModel : ObservableObject
                 return;
             }
 
-            await SearchProductsCoreAsync(query, autoAddExactBarcode: false);
+            await SearchProductsCoreAsync(query, autoAddExactBarcode: true);
         }
         catch (Exception exception)
         {
@@ -488,6 +488,14 @@ public sealed partial class PosViewModel : ObservableObject
 
         TrackCartLine(line);
         Cart.Add(line);
+
+        if (product.PrescriptionRequired &&
+            string.IsNullOrWhiteSpace(PrescriptionDateText))
+        {
+            PrescriptionDateText = _clock.UtcNow
+                .ToOffset(TimeSpan.FromMinutes(270))
+                .ToString("yyyy-MM-dd");
+        }
 
         ClearSearchDraft();
         RecalculateFefoPlans();

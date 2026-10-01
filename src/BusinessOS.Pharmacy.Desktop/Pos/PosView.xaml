@@ -116,7 +116,7 @@
                                    VerticalAlignment="Center" />
                     </Border>
                     <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding WorkspaceTitle}"
+                        <TextBlock Text="{Binding DataContext.Dashboard.PharmacyName, RelativeSource={RelativeSource AncestorType=Window}}"
                                    FontSize="15"
                                    FontWeight="Bold"
                                    Foreground="#0F172A" />
@@ -138,7 +138,17 @@
                               Margin="0,0,8,0" />
                     <Button Content="Refresh"
                             Command="{Binding LoadCommand}"
-                            Style="{StaticResource PosOutlineButton}" />
+                            Style="{StaticResource PosOutlineButton}"
+                            Margin="0,0,8,0" />
+                    <Button Content="Exit POS"
+                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="dashboard"
+                            Background="#0F172A"
+                            BorderBrush="#0F172A"
+                            Foreground="White"
+                            FontWeight="Bold"
+                            Padding="13,8"
+                            MinHeight="36" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -146,7 +156,7 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="390" />
+                <ColumnDefinition Width="430" />
             </Grid.ColumnDefinitions>
 
             <!-- Main sale workspace -->
@@ -617,21 +627,32 @@
                             <StackPanel>
                                 <TextBlock Text="{Binding CustomerLabel}"
                                            Style="{StaticResource PosSectionTitle}" />
-                                <ComboBox ItemsSource="{Binding Customers}"
-                                          SelectedItem="{Binding SelectedCustomer}"
-                                          DisplayMemberPath="Name"
-                                          Margin="0,9,0,0" />
-                                <TextBlock Text="{Binding WalkInCustomerText}"
+                                <Grid Margin="0,9,0,0">
+                                    <ComboBox ItemsSource="{Binding Customers}"
+                                              SelectedItem="{Binding SelectedCustomer}"
+                                              DisplayMemberPath="Name" />
+                                    <TextBlock Text="{Binding WalkInCustomerText}"
+                                               Margin="12,0,28,0"
+                                               VerticalAlignment="Center"
+                                               Foreground="#475569"
+                                               FontSize="11.5"
+                                               IsHitTestVisible="False">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedCustomer}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                                <TextBlock Text="Leave blank for a walk-in cash sale."
                                            Margin="2,5,0,0">
                                     <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource PosCaption}">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding SelectedCustomer}" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource PosCaption}" />
                                     </TextBlock.Style>
                                 </TextBlock>
                             </StackPanel>
@@ -664,19 +685,31 @@
                                            Foreground="#92400E"
                                            TextWrapping="Wrap"
                                            Margin="0,3,0,0" />
+                                <TextBlock Text="Prescription / Rx reference"
+                                           FontSize="9.2"
+                                           FontWeight="SemiBold"
+                                           Foreground="#92400E"
+                                           Margin="1,9,0,3" />
                                 <TextBox Text="{Binding PrescriptionReference, UpdateSourceTrigger=PropertyChanged}"
                                          ToolTip="Prescription / Rx reference"
-                                         Margin="0,9,0,0"
                                          Background="White"
                                          BorderBrush="#FCD34D" />
+                                <TextBlock Text="Prescriber / doctor"
+                                           FontSize="9.2"
+                                           FontWeight="SemiBold"
+                                           Foreground="#92400E"
+                                           Margin="1,6,0,3" />
                                 <TextBox Text="{Binding PrescriberName}"
                                          ToolTip="Prescriber / doctor name"
-                                         Margin="0,6,0,0"
                                          Background="White"
                                          BorderBrush="#FCD34D" />
+                                <TextBlock Text="Prescription date"
+                                           FontSize="9.2"
+                                           FontWeight="SemiBold"
+                                           Foreground="#92400E"
+                                           Margin="1,6,0,3" />
                                 <TextBox Text="{Binding PrescriptionDateText}"
                                          ToolTip="Prescription date"
-                                         Margin="0,6,0,0"
                                          Background="White"
                                          BorderBrush="#FCD34D" />
                             </StackPanel>

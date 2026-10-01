@@ -109,17 +109,16 @@ internal static class Program
         window.Show();
         window.UpdateLayout();
 
-        const int width = 1600;
-        const int height = 920;
-        if (window.Content is FrameworkElement rootVisual)
+        if (window.Content is not FrameworkElement rootVisual)
         {
-            rootVisual.Measure(new Size(width, height));
-            rootVisual.Arrange(new Rect(0, 0, width, height));
-            rootVisual.UpdateLayout();
+            throw new InvalidOperationException("Screenshot shell content was not available.");
         }
 
+        rootVisual.UpdateLayout();
+        var width = Math.Max(1, (int)Math.Ceiling(rootVisual.ActualWidth));
+        var height = Math.Max(1, (int)Math.Ceiling(rootVisual.ActualHeight));
         var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
-        bitmap.Render((Visual)window.Content);
+        bitmap.Render(rootVisual);
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
         using (var stream = File.Create(output)) encoder.Save(stream);
@@ -140,6 +139,7 @@ internal static class Program
         {
             Dashboard = dashboard;
             CurrentPage = currentPage;
+            IsPosMode = string.Equals(selectedKey, "pos", StringComparison.OrdinalIgnoreCase);
             UserDisplayName = user.Name;
             UserRoleText = "Administrator";
             SelectedLanguage = UiLanguageCatalog.All[0];
@@ -177,7 +177,8 @@ internal static class Program
         public string ParentBrand => "Darmaltoon Pharmacy";
         public FlowDirection LayoutDirection => FlowDirection.LeftToRight;
         public bool SidebarCollapsed => false;
-        public double SidebarWidth => 224d;
+        public bool IsPosMode { get; }
+        public double SidebarWidth => IsPosMode ? 0d : 224d;
         public string GlobalSearchText { get; set; } = string.Empty;
         public DashboardViewModel Dashboard { get; }
         public object CurrentPage { get; }
