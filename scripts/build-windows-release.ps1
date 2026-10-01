@@ -25,6 +25,20 @@ $updaterPublish = Join-Path $publishRoot "updater"
 if (Test-Path $outputRoot) { Remove-Item $outputRoot -Recurse -Force }
 New-Item -ItemType Directory -Path $outputRoot, $workRoot, $publishRoot | Out-Null
 
+# Temporary CI capture mode used to retrieve a real WPF screenshot from a Windows runner.
+$captureOnlyMarker = Join-Path $repoRoot "tools/DashboardScreenshot/capture-only.marker"
+if (Test-Path $captureOnlyMarker) {
+    $dashboardScreenshot = Join-Path $outputRoot "dashboard-real.png"
+    dotnet run --project (Join-Path $repoRoot "tools/DashboardScreenshot/DashboardScreenshot.csproj") -c Release -- $dashboardScreenshot
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $dashboardScreenshot)) {
+        throw "Real dashboard screenshot capture failed."
+    }
+    Write-Host "DASHBOARD_PNG_BASE64_BEGIN"
+    Write-Host ([Convert]::ToBase64String([IO.File]::ReadAllBytes($dashboardScreenshot)))
+    Write-Host "DASHBOARD_PNG_BASE64_END"
+    return
+}
+
 function Find-Iscc {
     if (-not [string]::IsNullOrWhiteSpace($env:INNO_SETUP_COMPILER) -and (Test-Path $env:INNO_SETUP_COMPILER)) {
         return $env:INNO_SETUP_COMPILER
