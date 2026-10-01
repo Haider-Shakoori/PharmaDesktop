@@ -422,25 +422,26 @@ public sealed partial class PosViewModel : ObservableObject
             return false;
         }
 
-        var draft = new PosCartLineViewModel(
-            SelectedProduct,
-            roundedQuantity,
-            OverridePrice ? OverrideUnitPrice : null,
-            OverridePrice,
-            ScaleMoney(DiscountAmount));
+        var estimatedSubtotal = OverridePrice
+            ? ScaleMoney(roundedQuantity * (OverrideUnitPrice ?? 0m))
+            : EstimateStandardSubtotal(
+                SelectedProduct,
+                roundedQuantity,
+                CurrentCartQuantity(SelectedProduct.Id));
 
-        return draft.DiscountAmount <= draft.EstimatedSubtotal;
+        return ScaleMoney(DiscountAmount) <= estimatedSubtotal;
     }
 
     private void AddToCart()
     {
-        if (SelectedProduct is null)
+        var product = SelectedProduct;
+        if (product is null)
         {
             return;
         }
 
         AddProductAsIndependentLine(
-            SelectedProduct,
+            product,
             ScaleQuantity(Quantity),
             OverridePrice ? OverrideUnitPrice : null,
             OverridePrice,
@@ -450,7 +451,7 @@ public sealed partial class PosViewModel : ObservableObject
         Quantity = 1m;
         DiscountAmount = 0m;
         OverridePrice = false;
-        OverrideUnitPrice = SelectedProduct.FefoPrice;
+        OverrideUnitPrice = product.FefoPrice;
     }
 
     private void AddProductAsIndependentLine(
@@ -629,6 +630,43 @@ public sealed partial class PosViewModel : ObservableObject
                     medicineId,
                     StringComparison.Ordinal))
                 .Sum(x => Math.Max(0m, x.Quantity)));
+
+    private static decimal EstimateStandardSubtotal(
+        PosProductSearchItem product,
+        decimal quantity,
+        decimal alreadyReserved)
+    {
+        var skip = Math.Max(0m, alreadyReserved);
+        var remaining = Math.Max(0m, quantity);
+        decimal subtotal = 0m;
+
+        foreach (var batch in product.Batches)
+        {
+            if (remaining <= 0m)
+            {
+                break;
+            }
+
+            var available = Math.Max(0m, batch.AvailableQuantity);
+            if (skip > 0m)
+            {
+                var skipped = Math.Min(skip, available);
+                skip -= skipped;
+                available -= skipped;
+            }
+
+            if (available <= 0m)
+            {
+                continue;
+            }
+
+            var take = Math.Min(remaining, available);
+            subtotal += take * batch.SalePrice;
+            remaining -= take;
+        }
+
+        return ScaleMoney(subtotal);
+    }
 
     private bool CanAddPayment() =>
         !IsBusy &&

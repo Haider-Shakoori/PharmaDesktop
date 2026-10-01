@@ -399,10 +399,23 @@ public sealed class PosService : IPosService
                     break;
                 }
 
+                // Repeated scans intentionally remain independent sale lines. A prior line
+                // may already have exhausted an earlier FEFO batch in this same checkout,
+                // so skip depleted candidates instead of attempting a zero movement.
+                if (batch.AvailableQuantity <= 0m)
+                {
+                    continue;
+                }
+
                 var allocatedQuantity = ScaleQuantity(
                     batch.AvailableQuantity < remaining
                         ? batch.AvailableQuantity
                         : remaining);
+
+                if (allocatedQuantity <= 0m)
+                {
+                    continue;
+                }
 
                 var chargedUnitPrice = overridePrice ?? batch.SalePrice!.Value;
                 chargedUnitPrice = ScaleMoney(chargedUnitPrice);

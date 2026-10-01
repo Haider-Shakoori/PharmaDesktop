@@ -191,6 +191,85 @@ public sealed class PosSalesTests
     }
 
     [Fact]
+    public async Task Checkout_preserves_repeated_same_medicine_as_independent_lines_and_consumes_fefo_in_sequence()
+    {
+        var root = CreateTemporaryRoot();
+
+        try
+        {
+            await using var provider = BuildProvider(root);
+            await InitializeAsync(provider);
+
+            var medicineId = await CreateMedicineAsync(provider, "POS-DUP-1", "Ibuprofen");
+            var inventory = provider.GetRequiredService<IInventoryService>();
+            await inventory.EnsureDefaultsAsync();
+            var location = (await inventory.GetReferenceDataAsync()).Locations.Single();
+
+            await inventory.CreateOpeningStockAsync(new CreateOpeningStockRequest(
+                medicineId,
+                location.Id,
+                "DUP-EARLY",
+                null,
+                new DateOnly(2027, 1, 1),
+                1m,
+                5m,
+                10m,
+                null));
+
+            await inventory.CreateOpeningStockAsync(new CreateOpeningStockRequest(
+                medicineId,
+                location.Id,
+                "DUP-LATE",
+                null,
+                new DateOnly(2027, 6, 1),
+                3m,
+                6m,
+                20m,
+                null));
+
+            var pos = provider.GetRequiredService<IPosService>();
+            var sale = await pos.CheckoutAsync(new PosCheckoutRequest(
+                location.Id,
+                null,
+                "pos-duplicate-lines-1",
+                "Repeated barcode-style sale",
+                null,
+                null,
+                null,
+                [
+                    new PosCheckoutLineRequest(medicineId, 1m),
+                    new PosCheckoutLineRequest(medicineId, 1m),
+                ],
+                [new PosPaymentRequest("cash", 30m)]));
+
+            Assert.Equal(2, sale.Lines.Count);
+            Assert.All(sale.Lines, line => Assert.Equal(1m, line.Quantity));
+            Assert.Equal([10m, 20m], sale.Lines.Select(x => x.UnitPrice).OrderBy(x => x).ToArray());
+            Assert.Equal(
+                new string?[] { "DUP-EARLY", "DUP-LATE" },
+                sale.Lines
+                    .SelectMany(x => x.Allocations)
+                    .OrderBy(x => x.UnitPrice)
+                    .Select(x => x.BatchNumber)
+                    .ToArray());
+            Assert.Equal(30m, sale.Sale.GrandTotal);
+
+            var batches = await inventory.SearchBatchesAsync(
+                new InventoryBatchFilter(
+                    StockLocationId: location.Id,
+                    BusinessDate: new DateOnly(2026, 9, 30)));
+
+            Assert.Equal(0m, batches.Single(x => x.BatchNumber == "DUP-EARLY").AvailableQuantity);
+            Assert.Equal(2m, batches.Single(x => x.BatchNumber == "DUP-LATE").AvailableQuantity);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
+    [Fact]
     public async Task Checkout_consumes_fefo_calculates_weighted_price_discount_and_cash_change()
     {
         var root = CreateTemporaryRoot();
