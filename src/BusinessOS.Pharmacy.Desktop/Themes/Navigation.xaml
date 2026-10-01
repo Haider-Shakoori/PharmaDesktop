@@ -5,9 +5,9 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="Padding" Value="9,5" />
-        <Setter Property="Margin" Value="0,1" />
-        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="7,3" />
+        <Setter Property="Margin" Value="0,2" />
+        <Setter Property="MinHeight" Value="36" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -32,18 +32,18 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#EFF6FF" />
+                            <Setter TargetName="Chrome" Property="Background" Value="#F1F7FF" />
                             <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryDarkBrush}" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#DBEAFE" />
+                            <Setter TargetName="Chrome" Property="Background" Value="#E5F1FF" />
                         </Trigger>
                         <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#E7F2FF" />
-                            <Setter TargetName="Chrome" Property="BorderBrush" Value="#BFD9F4" />
+                            <Setter TargetName="Chrome" Property="Background" Value="#EAF4FF" />
+                            <Setter TargetName="Chrome" Property="BorderBrush" Value="#C7DDF4" />
                             <Setter TargetName="SelectionRail" Property="Opacity" Value="1" />
                             <Setter Property="Foreground" Value="#0B5FC6" />
                         </DataTrigger>

@@ -88,9 +88,14 @@
         </Grid.ColumnDefinitions>
 
         <Border Grid.Column="0"
-                Background="{DynamicResource SidebarBrush}"
-                BorderBrush="{DynamicResource BorderBrush}"
+                BorderBrush="#D9E5F1"
                 BorderThickness="0,0,1,0">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#FBFDFF" Offset="0" />
+                    <GradientStop Color="#F3F7FC" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
             <DockPanel Margin="10,12,10,10">
                 <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
                     <Grid>
@@ -201,22 +206,42 @@
                                         ToolTip="{Binding Label}">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="34" />
+                                            <ColumnDefinition Width="36" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
-                                        <Path Style="{StaticResource NavigationIconPath}"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
+
+                                        <Border Width="28"
+                                                Height="28"
+                                                CornerRadius="8"
+                                                Background="{Binding AccentSoftHex}"
+                                                BorderBrush="{Binding AccentSoftHex}"
+                                                BorderThickness="1"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                            <Path Style="{StaticResource NavigationIconPath}"
+                                                  Width="14"
+                                                  Height="14"
+                                                  Stroke="{Binding AccentHex}"
+                                                  StrokeThickness="1.9"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center" />
+                                        </Border>
+
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Label}"
+                                                   Margin="4,0,0,0"
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                                                    <Setter Property="Foreground" Value="#314763" />
                                                     <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="Foreground" Value="#0B5FC6" />
+                                                            <Setter Property="FontWeight" Value="Bold" />
+                                                        </DataTrigger>
                                                         <DataTrigger Binding="{Binding DataContext.SidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                      Value="True">
                                                             <Setter Property="Visibility" Value="Collapsed" />
