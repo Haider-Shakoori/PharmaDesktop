@@ -44,6 +44,7 @@ public sealed class CloudSyncClient : ICloudSyncTransport, IDisposable
 
         if (_httpClient.BaseAddress is null)
             _httpClient.BaseAddress = new Uri(options.BaseUrl, UriKind.Absolute);
+        _httpClient.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
     }
 
     private static SocketsHttpHandler CreateDefaultHandler(CloudSyncOptions options) =>

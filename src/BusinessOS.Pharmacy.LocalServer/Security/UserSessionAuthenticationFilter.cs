@@ -1,10 +1,12 @@
 using System.Net.Http.Headers;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
+using BusinessOS.Pharmacy.LocalServer.Runtime;
 
 namespace BusinessOS.Pharmacy.LocalServer.Security;
 
 public sealed class UserSessionAuthenticationFilter(
-    ILocalLanCredentialStore sessions) : IEndpointFilter
+    ILocalLanCredentialStore sessions,
+    LocalServerRuntimeState runtime) : IEndpointFilter
 {
     public async ValueTask<object?> InvokeAsync(
         EndpointFilterInvocationContext context,
@@ -31,7 +33,16 @@ public sealed class UserSessionAuthenticationFilter(
             authorization.Parameter,
             http.RequestAborted);
 
-        if (principal is null)
+        var server = runtime.Require();
+        if (principal is null ||
+            !string.Equals(
+                principal.TerminalId,
+                terminal.TerminalId,
+                StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(
+                principal.TenantId,
+                server.Identity.TenantId,
+                StringComparison.Ordinal))
         {
             return Results.Unauthorized();
         }

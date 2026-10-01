@@ -36,10 +36,10 @@ public sealed class LanUserSessionService : IUserSessionService
         var configuration = await _configurationStore.LoadAsync(cancellationToken);
         configuration.Validate();
 
-        if (email.Trim().Length > 254 || password.Length > 1024)
-        {
-            throw new ArgumentOutOfRangeException(nameof(email), "Client Terminal login input is too long.");
-        }
+        if (email.Trim().Length > 254)
+            throw new ArgumentOutOfRangeException(nameof(email), "Email length cannot exceed 254 characters.");
+        if (password.Length > 1024)
+            throw new ArgumentOutOfRangeException(nameof(password), "Password length cannot exceed 1024 characters.");
 
         var connection = await _transport.GetPairedConnectionAsync(cancellationToken);
         using var request = new HttpRequestMessage(HttpMethod.Post, "auth/login")

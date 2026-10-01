@@ -48,4 +48,24 @@ public sealed class OfflinePasswordVerifierTests
                 OfflinePasswordVerifier.MaximumIterations + 1)));
     }
 
+    [Fact]
+    public void Oversized_password_and_malformed_credentials_are_rejected_without_expensive_derivation()
+    {
+        var verifier = new OfflinePasswordVerifier();
+        var oversized = new string('x', OfflinePasswordVerifier.MaximumPasswordLength + 1);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => verifier.Create(oversized));
+
+        var malformed = new OfflinePasswordCredential(
+            Convert.ToBase64String(new byte[4]),
+            Convert.ToBase64String(new byte[8]),
+            OfflinePasswordVerifier.DefaultIterations);
+
+        Assert.False(verifier.Verify("password", malformed));
+        Assert.False(verifier.Verify(
+            "password",
+            malformed with { Iterations = OfflinePasswordVerifier.MaximumIterations + 1 }));
+        Assert.False(verifier.Verify(oversized, malformed));
+    }
+
 }

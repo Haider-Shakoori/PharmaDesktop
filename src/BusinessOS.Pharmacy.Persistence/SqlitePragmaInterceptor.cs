@@ -30,7 +30,8 @@ internal sealed class SqlitePragmaInterceptor : DbConnectionInterceptor
             PRAGMA synchronous=NORMAL;
             PRAGMA busy_timeout=10000;
             PRAGMA temp_store=MEMORY;
-            PRAGMA cache_size=-32768;
+            PRAGMA cache_size=-8192;
+            PRAGMA mmap_size=67108864;
             """;
         command.ExecuteNonQuery();
     }
@@ -45,7 +46,8 @@ internal sealed class SqlitePragmaInterceptor : DbConnectionInterceptor
             PRAGMA synchronous=NORMAL;
             PRAGMA busy_timeout=10000;
             PRAGMA temp_store=MEMORY;
-            PRAGMA cache_size=-32768;
+            PRAGMA cache_size=-8192;
+            PRAGMA mmap_size=67108864;
             """;
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

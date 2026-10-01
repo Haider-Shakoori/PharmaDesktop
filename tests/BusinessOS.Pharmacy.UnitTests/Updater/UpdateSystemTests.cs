@@ -79,6 +79,50 @@ public sealed class UpdateSystemTests
     }
 
     [Fact]
+    public void Signed_manifest_rejects_package_url_with_embedded_credentials()
+    {
+        using var rsa = RSA.Create(2048);
+        var manifest = Sign(
+            rsa,
+            NewManifest(
+                "1.1.0",
+                "1.0.0",
+                null,
+                new string('A', 64)) with
+            {
+                PackageUrl = "https://user:secret@updates.example.test/darmaltoon.zip",
+            });
+
+        Assert.Throws<InvalidOperationException>(() =>
+            UpdateManifestSecurity.ValidateAndVerify(
+                manifest,
+                rsa.ExportSubjectPublicKeyInfoPem()));
+    }
+
+    [Fact]
+    public void Update_service_rejects_unsafe_endpoint_and_resource_limits()
+    {
+        using var rsa = RSA.Create(2048);
+        using var http = new HttpClient();
+        var root = Temp();
+
+        Assert.Throws<InvalidOperationException>(() =>
+            new UpdateService(
+                http,
+                Options(rsa, "http://updates.example.test/manifest"),
+                root));
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new UpdateService(
+                http,
+                Options(rsa, "https://updates.example.test/manifest") with
+                {
+                    MaximumPackageBytes = 1024,
+                },
+                root));
+    }
+
+    [Fact]
     public async Task Client_update_is_blocked_until_main_server_is_compatible()
     {
         using var rsa = RSA.Create(2048);

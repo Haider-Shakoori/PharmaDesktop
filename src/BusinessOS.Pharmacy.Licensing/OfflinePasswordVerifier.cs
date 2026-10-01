@@ -50,6 +50,7 @@ public sealed class OfflinePasswordVerifier : IOfflinePasswordVerifier
             var expected = Convert.FromBase64String(credential.HashBase64);
             if (salt.Length != SaltSize || expected.Length != HashSize)
             {
+                CryptographicOperations.ZeroMemory(salt);
                 CryptographicOperations.ZeroMemory(expected);
                 return false;
             }
@@ -69,6 +70,7 @@ public sealed class OfflinePasswordVerifier : IOfflinePasswordVerifier
             {
                 CryptographicOperations.ZeroMemory(actual);
                 CryptographicOperations.ZeroMemory(expected);
+                CryptographicOperations.ZeroMemory(salt);
             }
         }
         catch (FormatException)

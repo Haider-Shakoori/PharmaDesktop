@@ -36,7 +36,8 @@ public sealed record CloudSyncOptions(
             throw new InvalidOperationException("Cloud sync interval must be between 15 and 3600 seconds.");
     }
 
-    private static bool IsApiPath(string path) =>
+    private static bool IsApiPath(string? path) =>
+        !string.IsNullOrWhiteSpace(path) &&
         path.StartsWith("/api/", StringComparison.Ordinal) &&
         !path.StartsWith("//", StringComparison.Ordinal) &&
         !path.Contains('?', StringComparison.Ordinal) &&

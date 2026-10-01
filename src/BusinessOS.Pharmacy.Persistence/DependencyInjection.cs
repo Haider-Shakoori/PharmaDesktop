@@ -41,7 +41,7 @@ public static class DependencyInjection
 
             options.UseSqlite(connectionString);
             options.AddInterceptors(serviceProvider.GetRequiredService<SqlitePragmaInterceptor>());
-        }, poolSize: 32);
+        }, poolSize: 16);
 
         services.AddSingleton<ILocalDatabaseInitializer, LocalDatabaseInitializer>();
         services.AddSingleton<ILocalBackupService, LocalBackupService>();

@@ -17,6 +17,10 @@ public sealed class UpdateService
     {
         _http = http;
         _options = options;
+        if (options.TimeoutSeconds is < 5 or > 300)
+            throw new ArgumentOutOfRangeException(nameof(options), "Update timeout must be between 5 and 300 seconds.");
+        if (options.MaximumPackageBytes is < 1_048_576 or > 2_147_483_648L)
+            throw new ArgumentOutOfRangeException(nameof(options), "Update package limit must be between 1 MiB and 2 GiB.");
         _updatesRoot = Path.GetFullPath(updatesRoot);
         ValidateManifestUrl(options.ManifestUrl);
         Directory.CreateDirectory(_updatesRoot);
