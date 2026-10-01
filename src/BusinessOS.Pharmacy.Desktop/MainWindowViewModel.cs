@@ -126,7 +126,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public IAsyncRelayCommand<string> NavigateCommand { get; }
     public IAsyncRelayCommand GlobalSearchCommand { get; }
     public IRelayCommand ToggleSidebarCommand { get; }
-    public double SidebarWidth => SidebarCollapsed ? 78d : 252d;
+    public double SidebarWidth => SidebarCollapsed ? 72d : 240d;
     public DashboardViewModel Dashboard { get; }
     public CustomersViewModel Customers { get; }
     public MedicinesViewModel Medicines { get; }
@@ -142,8 +142,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public NetworkSettingsViewModel NetworkSettings { get; }
 
     public string ApplicationName => "BusinessOS Pharmacy";
-    public string ProductName => "Darmaltoon";
-    public string ParentBrand => "BusinessOS.af";
+    public string ProductName => "BusinessOS Pharmacy";
+    public string ParentBrand => "Darmaltoon Pharmacy";
     public string PageTitle => CurrentSectionKey switch
     {
         "pos" => Translate("Point of Sale", "فروش", "خرڅلاو"),
@@ -308,8 +308,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         var system = Translate("System", "سیستم", "سیسټم");
 
         AddIfAllowed("dashboard.view", "dashboard", Translate("Dashboard", "داشبورد", "ډشبورډ"), operations);
-        AddIfAllowed("pos.sell", "pos", Translate("POS", "فروش", "خرڅلاو"), operations);
-        AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), operations);
+        AddIfAllowed("pos.sell", "pos", Translate("POS (New Sale)", "فروش جدید", "نوی خرڅلاو"), operations);
         AddIfAllowed("medicines.manage", "medicines", Translate("Medicines", "ادویه", "درمل"), stock);
 
         if (_permissions.HasPermission("inventory.manage") ||
@@ -321,10 +320,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), purchasing);
         AddIfAllowed("purchases.manage", "suppliers", Translate("Suppliers", "تأمین‌کنندگان", "عرضه کوونکي"), purchasing);
-        AddIfAllowed("returns.manage", "returns", Translate("Returns", "برگشت", "ستنېدل"), purchasing);
+        AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), operations);
         AddIfAllowed("accounting.manage", "expenses", Translate("Expenses", "مصارف", "لګښتونه"), finance);
         AddIfAllowed("daily_closing.perform", "closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), finance);
         AddIfAllowed("reports.view", "reports", Translate("Reports", "گزارش‌ها", "راپورونه"), finance);
+        AddIfAllowed("returns.manage", "returns", Translate("Returns", "برگشت", "ستنېدل"), purchasing);
         AddIfAllowed("users.manage", "users", Translate("Users", "کاربران", "کارنان"), administration);
         AddIfAllowed("roles.manage", "roles", Translate("Roles & Permissions", "نقش‌ها و مجوزها", "رولونه او اجازې"), administration);
 
@@ -334,7 +334,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
             AddNavigationItem("backup", Translate("Backup", "پشتیبان‌گیری", "بیک اپ"), administration);
         }
 
-        AddIfAllowed("settings.manage", "settings", Translate("Settings", "تنظیمات", "امستنې"), administration);
         AddIfAllowed("settings.manage", "updates", Translate("Sync & Updates", "همگام‌سازی و به‌روزرسانی", "همغږي او تازه کول"), system);
 
         if (_networkConfiguration.Mode == DeploymentMode.Server &&
@@ -346,6 +345,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
                 system);
         }
+
+        AddIfAllowed("settings.manage", "settings", Translate("Settings", "تنظیمات", "امستنې"), administration);
     }
 
     private void AddIfAllowed(string permission, string key, string label, string group)

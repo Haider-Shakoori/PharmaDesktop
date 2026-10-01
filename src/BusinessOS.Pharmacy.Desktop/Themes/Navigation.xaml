@@ -5,9 +5,9 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="Padding" Value="11,9" />
+        <Setter Property="Padding" Value="10,7" />
         <Setter Property="Margin" Value="0,1" />
-        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="MinHeight" Value="36" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -15,21 +15,21 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="9"
+                            CornerRadius="7"
                             Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#F0FDFA" />
+                            <Setter TargetName="Chrome" Property="Background" Value="#EFF6FF" />
                             <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryDarkBrush}" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#CCFBF1" />
+                            <Setter TargetName="Chrome" Property="Background" Value="#DBEAFE" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -38,7 +38,7 @@
         <Style.Triggers>
             <DataTrigger Binding="{Binding IsSelected}" Value="True">
                 <Setter Property="Background" Value="{DynamicResource SelectedBrush}" />
-                <Setter Property="BorderBrush" Value="#99F6E4" />
+                <Setter Property="BorderBrush" Value="#BFDBFE" />
                 <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryDarkBrush}" />
             </DataTrigger>
         </Style.Triggers>
