@@ -14,7 +14,6 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $desktopProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.Desktop/BusinessOS.Pharmacy.Desktop.csproj"
 $serverProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.LocalServer/BusinessOS.Pharmacy.LocalServer.csproj"
 $updaterProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.Updater/BusinessOS.Pharmacy.Updater.csproj"
-$dashboardProject = Join-Path $repoRoot "tools/DashboardScreenshot/DashboardScreenshot.csproj"
 $installerScript = Join-Path $repoRoot "packaging/windows/Darmaltoon.iss"
 $outputRoot = [IO.Path]::GetFullPath((Join-Path $repoRoot $OutputDirectory))
 $workRoot = Join-Path $outputRoot "_work"
@@ -22,7 +21,6 @@ $publishRoot = Join-Path $workRoot "publish"
 $desktopPublish = Join-Path $publishRoot "desktop"
 $serverPublish = Join-Path $publishRoot "server"
 $updaterPublish = Join-Path $publishRoot "updater"
-$dashboardPublish = Join-Path $publishRoot "dashboard-screenshot"
 
 if (Test-Path $outputRoot) { Remove-Item $outputRoot -Recurse -Force }
 New-Item -ItemType Directory -Path $outputRoot, $workRoot, $publishRoot | Out-Null
@@ -84,10 +82,6 @@ if (-not [string]::IsNullOrWhiteSpace($env:INNO_SETUP_LICENSE_KEY)) {
 }
 
 dotnet publish $desktopProject -c $Configuration -r $RuntimeIdentifier --self-contained true -p:Version=$Version -p:PublishReadyToRun=true -p:PublishSingleFile=false -o $desktopPublish
-dotnet publish $dashboardProject -c $Configuration -r $RuntimeIdentifier --self-contained true -p:Version=$Version -p:PublishReadyToRun=true -p:PublishSingleFile=false -o $dashboardPublish
-$dashboardTarget = Join-Path $desktopPublish "Diagnostics"
-New-Item -ItemType Directory -Path $dashboardTarget | Out-Null
-Copy-Item (Join-Path $dashboardPublish "*") $dashboardTarget -Recurse -Force
 dotnet publish $updaterProject -c $Configuration -r $RuntimeIdentifier --self-contained true -p:Version=$Version -p:PublishReadyToRun=true -p:PublishSingleFile=false -o $updaterPublish
 $embeddedUpdater = Join-Path $desktopPublish "Updater"
 New-Item -ItemType Directory -Path $embeddedUpdater | Out-Null
