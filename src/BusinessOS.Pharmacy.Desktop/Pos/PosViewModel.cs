@@ -576,6 +576,7 @@ public sealed partial class PosViewModel : ObservableObject
         foreach (var line in Cart)
         {
             var remaining = Math.Max(0m, line.Quantity);
+            decimal fefoSubtotal = 0m;
             var parts = new List<string>();
 
             foreach (var batch in line.Product.Batches)
@@ -595,6 +596,7 @@ public sealed partial class PosViewModel : ObservableObject
                 var take = Math.Min(remaining, available);
                 consumedByBatch[batch.Id] = consumed + take;
                 remaining -= take;
+                fefoSubtotal += take * batch.SalePrice;
 
                 var expiry = batch.ExpiresAt is null
                     ? string.Empty
@@ -603,6 +605,7 @@ public sealed partial class PosViewModel : ObservableObject
                     $"{batch.BatchNumber ?? "Unbatched"}: {take:0.####} × AFN {batch.SalePrice:N2}{expiry}");
             }
 
+            line.FefoSubtotal = ScaleMoney(fefoSubtotal);
             line.HasShortage = remaining > 0m;
             if (remaining > 0m)
             {
@@ -980,6 +983,7 @@ public sealed partial class PosCartLineViewModel : ObservableObject
     [ObservableProperty] private decimal? unitPrice;
     [ObservableProperty] private bool overridePrice;
     [ObservableProperty] private decimal discountAmount;
+    [ObservableProperty] private decimal fefoSubtotal;
     [ObservableProperty] private string fefoPlanText = string.Empty;
     [ObservableProperty] private bool hasShortage;
 
@@ -1026,23 +1030,8 @@ public sealed partial class PosCartLineViewModel : ObservableObject
                     MidpointRounding.AwayFromZero);
             }
 
-            var remaining = Quantity;
-            decimal subtotal = 0m;
-
-            foreach (var batch in Product.Batches)
-            {
-                if (remaining <= 0m)
-                {
-                    break;
-                }
-
-                var allocated = Math.Min(remaining, batch.AvailableQuantity);
-                subtotal += allocated * batch.SalePrice;
-                remaining -= allocated;
-            }
-
             return decimal.Round(
-                subtotal,
+                FefoSubtotal,
                 4,
                 MidpointRounding.AwayFromZero);
         }
@@ -1065,6 +1054,7 @@ public sealed partial class PosCartLineViewModel : ObservableObject
     partial void OnUnitPriceChanged(decimal? value) => RaiseComputedValues();
     partial void OnOverridePriceChanged(bool value) => RaiseComputedValues();
     partial void OnDiscountAmountChanged(decimal value) => RaiseComputedValues();
+    partial void OnFefoSubtotalChanged(decimal value) => RaiseComputedValues();
 
     private void RaiseComputedValues()
     {
