@@ -1,0 +1,219 @@
+<UserControl x:Class="BusinessOS.Pharmacy.Desktop.Networking.NetworkSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="26">
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitleText}"/>
+                    <TextBlock Text="{Binding Subtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Content="{Binding RefreshLabel}"
+                        Command="{Binding RefreshCommand}"
+                        Padding="14,8"/>
+            </Grid>
+
+            <UniformGrid Columns="2" Margin="0,0,0,16">
+                <Border Style="{StaticResource SurfaceCard}" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding DeploymentModeLabel}" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding CurrentMode}" FontSize="22" FontWeight="Bold" Margin="0,7,0,0"/>
+                        <TextBlock Text="{Binding ServiceStatus}" Style="{StaticResource MutedText}" Margin="0,7,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource SurfaceCard}" Margin="8,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding ConnectionLabel}" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding ConnectionStatus}" Margin="0,7,0,0" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" Margin="0,7,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="{Binding DeploymentModeLabel}" Style="{StaticResource SectionTitleText}" Margin="0,0,0,12"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox ItemsSource="{Binding Modes}"
+                                  SelectedItem="{Binding RequestedMode}"
+                                  Padding="6"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="Standalone ↔ Server preserves the same local database. Client ownership changes require migration/recovery."
+                                   Margin="14,0"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource MutedText}"
+                                   TextWrapping="Wrap"/>
+                        <Button Grid.Column="2"
+                                Content="{Binding ApplyModeLabel}"
+                                Command="{Binding ApplyModeCommand}"
+                                Padding="12,8"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="{Binding ServiceLabel}" Style="{StaticResource SectionTitleText}" Margin="0,0,0,12"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="120"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,10,0">
+                            <TextBlock Text="{Binding ServerNameLabel}" FontWeight="SemiBold"/>
+                            <TextBox Text="{Binding ServerName}" Margin="0,5,0,10" Padding="9,7"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding PortLabel}" FontWeight="SemiBold"/>
+                            <TextBox Text="{Binding ServerPort}" Margin="0,5,0,10" Padding="9,7"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="{Binding ServerAddressLabel}" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding ServerHost}" Margin="0,5,0,10" Padding="9,7"/>
+
+                    <TextBlock Text="{Binding ServerIdLabel}" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding ServerId}" IsReadOnly="True" Margin="0,5,0,10" Padding="9,7" FontFamily="Consolas"/>
+
+                    <TextBlock Text="{Binding CertificateLabel}" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding CertificateFingerprint}" IsReadOnly="True" Margin="0,5,0,12" Padding="9,7" FontFamily="Consolas"/>
+
+                    <WrapPanel>
+                        <Button Content="{Binding SaveConnectionLabel}" Command="{Binding SaveConnectionCommand}" Padding="12,8" Margin="0,0,8,8"/>
+                        <Button Content="{Binding StartServerLabel}" Command="{Binding StartServerCommand}" Padding="12,8" Margin="0,0,8,8"/>
+                        <Button Content="{Binding FirewallLabel}" Command="{Binding ConfigureFirewallCommand}" Padding="12,8" Margin="0,0,8,8"/>
+                        <Button Content="{Binding TestConnectionLabel}" Command="{Binding TestConnectionCommand}" Padding="12,8" Margin="0,0,8,8"/>
+                        <Button Content="{Binding RediscoverLabel}" Command="{Binding RediscoverCommand}" Padding="12,8" Margin="0,0,8,8"/>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.05*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="0.95*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource SurfaceCard}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding PairingLabel}" Style="{StaticResource SectionTitleText}" Margin="0,0,0,12"/>
+                        <Button Content="{Binding CreatePairingLabel}"
+                                Command="{Binding CreatePairingCodeCommand}"
+                                Style="{StaticResource PrimaryButton}"
+                                HorizontalAlignment="Left"
+                                Padding="14,9"/>
+                        <Border Background="{DynamicResource AppBackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,14,0,0"
+                                Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="{Binding PairingCode}"
+                                           FontFamily="Consolas"
+                                           FontSize="32"
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding PairingExpiry}"
+                                           Style="{StaticResource MutedText}"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="Pairing codes are short-lived, one-time credentials. Do not reuse or store them."
+                                   Style="{StaticResource MutedText}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource SurfaceCard}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding TerminalsLabel}" Style="{StaticResource SectionTitleText}" Margin="0,0,0,12"/>
+                        <ComboBox ItemsSource="{Binding Terminals}"
+                                  SelectedItem="{Binding SelectedTerminal}"
+                                  DisplayMemberPath="Name"
+                                  Padding="6"
+                                  Margin="0,0,0,10"/>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding RenameTerminalTo}" Padding="9,7"/>
+                            <Button Grid.Column="1"
+                                    Content="{Binding RenameLabel}"
+                                    Command="{Binding RenameTerminalCommand}"
+                                    Margin="8,0,0,0"
+                                    Padding="12,8"/>
+                        </Grid>
+
+                        <Border Background="{DynamicResource AppBackgroundBrush}"
+                                CornerRadius="8"
+                                Padding="12"
+                                Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="{Binding SelectedTerminal.ComputerName, StringFormat=Computer: {0}}"/>
+                                <TextBlock Text="{Binding SelectedTerminal.TerminalRole, StringFormat=Role: {0}}" Margin="0,3,0,0"/>
+                                <TextBlock Text="{Binding SelectedTerminal.LastSeenAt, StringFormat=Last seen: {0}}" Margin="0,3,0,0"/>
+                                <TextBlock Text="{Binding SelectedTerminal.IsActive, StringFormat=Active: {0}}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Button Content="{Binding RevokeLabel}"
+                                Command="{Binding RevokeTerminalCommand}"
+                                Padding="12,8"
+                                HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Style="{StaticResource SurfaceCard}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Diagnostics" Style="{StaticResource SectionTitleText}"/>
+                        <Button Grid.Column="1"
+                                Content="{Binding RunDiagnosticsLabel}"
+                                Command="{Binding RunDiagnosticsCommand}"
+                                Padding="12,8"/>
+                    </Grid>
+
+                    <TextBlock Text="{Binding NetworkProfileLabel}" FontWeight="SemiBold" Margin="0,12,0,0"/>
+                    <TextBlock Text="{Binding NetworkProfileStatus}" Style="{StaticResource MutedText}"
+                               Margin="0,4,0,0" TextWrapping="Wrap"/>
+
+                    <TextBlock Text="{Binding FirewallStatusLabel}" FontWeight="SemiBold" Margin="0,10,0,0"/>
+                    <TextBlock Text="{Binding FirewallStatus}" Style="{StaticResource MutedText}"
+                               Margin="0,4,0,0" TextWrapping="Wrap"/>
+
+                    <TextBox Text="{Binding DiagnosticsReport}"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             MinHeight="160"
+                             Margin="0,12,0,0"
+                             Padding="10"
+                             FontFamily="Consolas"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

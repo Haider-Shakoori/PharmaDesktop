@@ -1,6 +1,7 @@
 <UserControl x:Class="BusinessOS.Pharmacy.Desktop.Medicines.MedicinesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:BusinessOS.Pharmacy.Desktop.Controls">
     <Grid Margin="22">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -8,24 +9,26 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,0,0,14">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <StackPanel>
-                <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitleText}"/>
-                <TextBlock Text="{Binding Subtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
-            </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <Button Content="{Binding AddMedicineLabel}" Command="{Binding NewCommand}"
-                        Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"/>
-                <Button Content="{Binding TemplateLabel}" Click="OnDownloadTemplateClick"
-                        Padding="12,8" Margin="0,0,8,0"/>
-                <Button Content="{Binding ImportLabel}" Click="OnImportCsvClick"
-                        Padding="12,8"/>
-            </StackPanel>
-        </Grid>
+        <controls:PageHeader Grid.Row="0"
+                             Eyebrow="Medicine catalog"
+                             Title="{Binding Title}"
+                             Description="{Binding Subtitle}">
+            <controls:PageHeader.Actions>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="{Binding TemplateLabel}"
+                            Click="OnDownloadTemplateClick"
+                            Style="{StaticResource SecondaryButton}"
+                            Margin="0,0,8,0"/>
+                    <Button Content="{Binding ImportLabel}"
+                            Click="OnImportCsvClick"
+                            Style="{StaticResource SecondaryButton}"
+                            Margin="0,0,8,0"/>
+                    <Button Content="{Binding AddMedicineLabel}"
+                            Command="{Binding NewCommand}"
+                            Style="{StaticResource PrimaryButton}"/>
+                </StackPanel>
+            </controls:PageHeader.Actions>
+        </controls:PageHeader>
 
         <Border Grid.Row="1" Style="{StaticResource SurfaceCard}" Margin="0,0,0,14">
             <Grid>

@@ -6,7 +6,7 @@ namespace BusinessOS.Pharmacy.Licensing;
 
 public sealed class WindowsActivationStore : IActivationStore
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = ProtectedStateJson.Options;
     private readonly IApplicationPaths _paths;
 
     public WindowsActivationStore(IApplicationPaths paths) => _paths = paths;
@@ -20,19 +20,32 @@ public sealed class WindowsActivationStore : IActivationStore
 
         var protectedBytes = await File.ReadAllBytesAsync(_paths.ActivationStatePath, cancellationToken);
         var plainBytes = Unprotect(protectedBytes);
-        return JsonSerializer.Deserialize<ActivationState>(plainBytes, JsonOptions)
-            ?? throw new CryptographicException("The protected activation state is invalid.");
+        try
+        {
+            return JsonSerializer.Deserialize<ActivationState>(plainBytes, JsonOptions)
+                ?? throw new CryptographicException("The protected activation state is invalid.");
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(plainBytes);
+        }
     }
 
     public async Task SaveAsync(ActivationState state, CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(_paths.LicensingDirectory);
         var plainBytes = JsonSerializer.SerializeToUtf8Bytes(state, JsonOptions);
-        var protectedBytes = Protect(plainBytes);
-        var temporary = _paths.ActivationStatePath + ".tmp";
-        await File.WriteAllBytesAsync(temporary, protectedBytes, cancellationToken);
-        File.Move(temporary, _paths.ActivationStatePath, overwrite: true);
-        CryptographicOperations.ZeroMemory(plainBytes);
+        try
+        {
+            var protectedBytes = Protect(plainBytes);
+            var temporary = _paths.ActivationStatePath + ".tmp";
+            await File.WriteAllBytesAsync(temporary, protectedBytes, cancellationToken);
+            File.Move(temporary, _paths.ActivationStatePath, overwrite: true);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(plainBytes);
+        }
     }
 
     public Task ClearAsync(CancellationToken cancellationToken = default)

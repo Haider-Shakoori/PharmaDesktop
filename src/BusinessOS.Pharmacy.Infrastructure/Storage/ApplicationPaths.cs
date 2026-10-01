@@ -17,8 +17,17 @@ public sealed class ApplicationPaths : IApplicationPaths
         RootDirectory = Path.GetFullPath(root);
         DatabasePath = Path.Combine(RootDirectory, "pharmacy.db");
         BackupsDirectory = Path.Combine(RootDirectory, "backups");
+        UpdatesDirectory = Path.Combine(RootDirectory, "updates");
         LogsDirectory = Path.Combine(RootDirectory, "logs");
         LicensingDirectory = Path.Combine(RootDirectory, "licensing");
+        ConfigDirectory = Path.Combine(RootDirectory, "Config");
+        CertificatesDirectory = Path.Combine(RootDirectory, "certificates");
+
+        NetworkConfigurationPath = Path.Combine(ConfigDirectory, "network.json");
+        NetworkSecretsPath = Path.Combine(ConfigDirectory, "network-secrets.bin");
+        ServerCertificatePath = Path.Combine(CertificatesDirectory, "local-server.pfx");
+        NetworkLogPath = Path.Combine(LogsDirectory, "network.log");
+
         InstallationIdPath = Path.Combine(LicensingDirectory, "installation.id");
         ActivationStatePath = Path.Combine(LicensingDirectory, "activation.bin");
         UserSessionStatePath = Path.Combine(LicensingDirectory, "user-session.bin");
@@ -27,8 +36,15 @@ public sealed class ApplicationPaths : IApplicationPaths
     public string RootDirectory { get; }
     public string DatabasePath { get; }
     public string BackupsDirectory { get; }
+    public string UpdatesDirectory { get; }
     public string LogsDirectory { get; }
     public string LicensingDirectory { get; }
+    public string ConfigDirectory { get; }
+    public string CertificatesDirectory { get; }
+    public string NetworkConfigurationPath { get; }
+    public string NetworkSecretsPath { get; }
+    public string ServerCertificatePath { get; }
+    public string NetworkLogPath { get; }
     public string InstallationIdPath { get; }
     public string ActivationStatePath { get; }
     public string UserSessionStatePath { get; }
@@ -37,7 +53,10 @@ public sealed class ApplicationPaths : IApplicationPaths
     {
         Directory.CreateDirectory(RootDirectory);
         Directory.CreateDirectory(BackupsDirectory);
+        Directory.CreateDirectory(UpdatesDirectory);
         Directory.CreateDirectory(LogsDirectory);
         Directory.CreateDirectory(LicensingDirectory);
+        Directory.CreateDirectory(ConfigDirectory);
+        Directory.CreateDirectory(CertificatesDirectory);
     }
 }

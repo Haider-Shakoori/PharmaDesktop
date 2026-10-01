@@ -27,4 +27,45 @@ public sealed class OfflinePasswordVerifierTests
         Assert.NotEqual(first.SaltBase64, second.SaltBase64);
         Assert.NotEqual(first.HashBase64, second.HashBase64);
     }
+    [Fact]
+    public void Oversized_password_and_corrupt_credential_are_rejected_without_expensive_work()
+    {
+        var verifier = new OfflinePasswordVerifier();
+        var oversized = new string('x', OfflinePasswordVerifier.MaximumPasswordLength + 1);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => verifier.Create(oversized));
+        Assert.False(verifier.Verify(
+            "password",
+            new OfflinePasswordCredential(
+                Convert.ToBase64String(new byte[16]),
+                Convert.ToBase64String(new byte[31]),
+                OfflinePasswordVerifier.DefaultIterations)));
+        Assert.False(verifier.Verify(
+            "password",
+            new OfflinePasswordCredential(
+                Convert.ToBase64String(new byte[16]),
+                Convert.ToBase64String(new byte[32]),
+                OfflinePasswordVerifier.MaximumIterations + 1)));
+    }
+
+    [Fact]
+    public void Oversized_password_and_malformed_credentials_are_rejected_without_expensive_derivation()
+    {
+        var verifier = new OfflinePasswordVerifier();
+        var oversized = new string('x', OfflinePasswordVerifier.MaximumPasswordLength + 1);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => verifier.Create(oversized));
+
+        var malformed = new OfflinePasswordCredential(
+            Convert.ToBase64String(new byte[4]),
+            Convert.ToBase64String(new byte[8]),
+            OfflinePasswordVerifier.DefaultIterations);
+
+        Assert.False(verifier.Verify("password", malformed));
+        Assert.False(verifier.Verify(
+            "password",
+            malformed with { Iterations = OfflinePasswordVerifier.MaximumIterations + 1 }));
+        Assert.False(verifier.Verify(oversized, malformed));
+    }
+
 }

@@ -1,12 +1,32 @@
+using System.Net;
+using System.Net.Http;
+using System.Security.Authentication;
+using BusinessOS.Pharmacy.Application.Abstractions.Networking;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Desktop.Activation;
 using BusinessOS.Pharmacy.Desktop.Authentication;
+using BusinessOS.Pharmacy.Desktop.Backup;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Diagnostics;
+using BusinessOS.Pharmacy.Desktop.Inventory;
+using BusinessOS.Pharmacy.Desktop.Purchasing;
+using BusinessOS.Pharmacy.Desktop.Customers;
+using BusinessOS.Pharmacy.Desktop.Pos;
+using BusinessOS.Pharmacy.Desktop.Returns;
+using BusinessOS.Pharmacy.Desktop.Expenses;
+using BusinessOS.Pharmacy.Desktop.DailyClosing;
+using BusinessOS.Pharmacy.Desktop.Reports;
 using BusinessOS.Pharmacy.Desktop.Medicines;
+using BusinessOS.Pharmacy.Desktop.Networking;
+using BusinessOS.Pharmacy.Desktop.Updates;
 using BusinessOS.Pharmacy.Infrastructure;
+using BusinessOS.Pharmacy.Infrastructure.Networking;
 using BusinessOS.Pharmacy.Infrastructure.Storage;
 using BusinessOS.Pharmacy.Licensing;
+using BusinessOS.Pharmacy.LocalClient;
 using BusinessOS.Pharmacy.Persistence;
+using BusinessOS.Pharmacy.Sync;
+using BusinessOS.Pharmacy.Updater;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -16,9 +36,18 @@ namespace BusinessOS.Pharmacy.Desktop.Hosting;
 
 public static class DesktopHost
 {
-    public static IHost Build()
+    public static IHost Build(
+        ApplicationPaths? paths = null,
+        NetworkConfiguration? networkConfiguration = null)
     {
-        var paths = new ApplicationPaths();
+        paths ??= new ApplicationPaths();
+        paths.EnsureCreated();
+
+        networkConfiguration ??= new NetworkConfigurationStore(paths)
+            .LoadAsync()
+            .GetAwaiter()
+            .GetResult();
+
         Log.Logger = LoggingBootstrapper.CreateLogger(paths);
 
         return Host.CreateDefaultBuilder()
@@ -31,9 +60,78 @@ public static class DesktopHost
             .ConfigureServices((context, services) =>
             {
                 services.AddBusinessOSInfrastructure(paths);
-                services.AddBusinessOSPersistence();
-                services.AddBusinessOSLicensing(context.Configuration);
 
+                if (networkConfiguration.Mode == DeploymentMode.Client &&
+                    networkConfiguration.IsConfigured)
+                {
+                    services.AddBusinessOSLocalClient();
+                }
+                else
+                {
+                    services.AddBusinessOSPersistence();
+                    services.AddBusinessOSLicensing(context.Configuration);
+
+                    var syncSection =
+                        context.Configuration.GetSection("BusinessOS:Sync");
+                    var syncOptions = new CloudSyncOptions(
+                        syncSection["BaseUrl"] ??
+                        context.Configuration["BusinessOS:Licensing:BaseUrl"] ??
+                        "https://pharmacy.businessos.af",
+                        syncSection["PushPath"] ??
+                        "/api/v1/desktop/sync/push",
+                        syncSection["PullPath"] ??
+                        "/api/v1/desktop/sync/pull",
+                        int.TryParse(
+                            syncSection["TimeoutSeconds"],
+                            out var syncTimeout)
+                            ? syncTimeout
+                            : 20,
+                        int.TryParse(
+                            syncSection["BatchSize"],
+                            out var syncBatchSize)
+                            ? syncBatchSize
+                            : 25,
+                        int.TryParse(
+                            syncSection["PullPageSize"],
+                            out var syncPullPageSize)
+                            ? syncPullPageSize
+                            : 100,
+                        int.TryParse(
+                            syncSection["MaxPullPagesPerRun"],
+                            out var syncMaxPages)
+                            ? syncMaxPages
+                            : 5,
+                        int.TryParse(
+                            syncSection["IntervalSeconds"],
+                            out var syncInterval)
+                            ? syncInterval
+                            : 30);
+
+                    syncOptions.Validate();
+                    services.AddSingleton(syncOptions);
+                    services.AddSingleton<ICloudSyncTransport>(
+                        _ => new CloudSyncClient(syncOptions));
+                    services.AddSingleton<ICloudSyncService, CloudSyncService>();
+                    services.AddHostedService<CloudSyncWorker>();
+                }
+
+                var updaterSection = context.Configuration.GetSection("BusinessOS:Updater");
+                var updaterChannel = Enum.TryParse<UpdateChannel>(updaterSection["Channel"], true, out var parsedChannel)
+                    ? parsedChannel
+                    : UpdateChannel.Stable;
+                var updaterOptions = new UpdateOptions(
+                    updaterSection["ManifestUrl"] ?? string.Empty,
+                    updaterSection["SigningPublicKeyPem"] ?? string.Empty,
+                    int.TryParse(updaterSection["TimeoutSeconds"], out var updateTimeout) ? updateTimeout : 30,
+                    updaterChannel,
+                    long.TryParse(updaterSection["MaximumPackageBytes"], out var maxPackageBytes) ? maxPackageBytes : 536_870_912);
+
+                services.AddSingleton(updaterOptions);
+                services.AddSingleton(_ => new UpdateService(
+                    CreateUpdateHttpClient(updaterOptions.TimeoutSeconds),
+                    updaterOptions,
+                    paths.UpdatesDirectory));
+                services.AddSingleton(networkConfiguration);
                 services.AddSingleton<GlobalExceptionHandler>();
                 services.AddSingleton<ActivationViewModel>();
                 services.AddSingleton<ActivationWindow>();
@@ -41,10 +139,46 @@ public static class DesktopHost
                 services.AddTransient<LoginWindow>();
                 services.AddSingleton<DashboardViewModel>();
                 services.AddSingleton<MedicinesViewModel>();
+                services.AddSingleton<InventoryViewModel>();
+                services.AddSingleton<PurchasingViewModel>();
+                services.AddSingleton<CustomersViewModel>();
+                services.AddSingleton<PosViewModel>();
+                services.AddSingleton<ReturnsViewModel>();
+                services.AddSingleton<ExpensesViewModel>();
+                services.AddSingleton<DailyClosingViewModel>();
+                services.AddSingleton<ReportsViewModel>();
+                services.AddSingleton<BackupRestoreViewModel>();
+                services.AddSingleton<UpdateViewModel>();
+                services.AddSingleton<NetworkSettingsViewModel>();
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<StartupCoordinator>();
             })
             .Build();
+    }
+
+    private static HttpClient CreateUpdateHttpClient(int timeoutSeconds)
+    {
+        var handler = new SocketsHttpHandler
+        {
+            AllowAutoRedirect = false,
+            AutomaticDecompression =
+                DecompressionMethods.GZip |
+                DecompressionMethods.Deflate |
+                DecompressionMethods.Brotli,
+            ConnectTimeout = TimeSpan.FromSeconds(5),
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1),
+            MaxConnectionsPerServer = 4,
+            SslOptions = new()
+            {
+                EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
+            },
+        };
+
+        return new HttpClient(handler, disposeHandler: true)
+        {
+            Timeout = TimeSpan.FromSeconds(Math.Clamp(timeoutSeconds, 5, 300)),
+        };
     }
 }

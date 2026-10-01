@@ -1,0 +1,59 @@
+name: ui-visual-regression
+
+on:
+  push:
+    branches:
+      - "feat/ui-*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-visual-qa:
+    runs-on: windows-2025
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore solution
+        run: dotnet restore BusinessOS.Pharmacy.sln
+
+      - name: Restore screenshot harness
+        run: dotnet restore tools/DashboardScreenshot/DashboardScreenshot.csproj
+
+      - name: Release build
+        run: dotnet build BusinessOS.Pharmacy.sln -c Release --no-restore
+
+      - name: Build screenshot harness
+        run: dotnet build tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-restore
+
+      - name: Unit tests
+        run: dotnet test tests/BusinessOS.Pharmacy.UnitTests/BusinessOS.Pharmacy.UnitTests.csproj -c Release --no-build --verbosity minimal
+
+      - name: Integration tests
+        run: dotnet test tests/BusinessOS.Pharmacy.IntegrationTests/BusinessOS.Pharmacy.IntegrationTests.csproj -c Release --no-build --verbosity minimal
+
+      - name: Capture real WPF dashboard
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/ui-batch-01 | Out-Null
+          dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui-batch-01/dashboard-real.png
+          if (-not (Test-Path artifacts/ui-batch-01/dashboard-real.png)) {
+            throw "Real WPF dashboard screenshot was not produced."
+          }
+
+      - name: Upload visual QA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-UI-Batch-01-Visual-QA
+          path: artifacts/ui-batch-01/dashboard-real.png
+          if-no-files-found: error
+          retention-days: 30

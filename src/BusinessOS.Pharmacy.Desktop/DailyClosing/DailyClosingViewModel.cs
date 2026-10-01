@@ -1,0 +1,21 @@
+using System.Collections.ObjectModel;using BusinessOS.Pharmacy.Application.Abstractions.DailyClosing;using BusinessOS.Pharmacy.Desktop.Localization;using CommunityToolkit.Mvvm.ComponentModel;using CommunityToolkit.Mvvm.Input;
+namespace BusinessOS.Pharmacy.Desktop.DailyClosing;
+public sealed partial class DailyClosingViewModel:ObservableObject
+{
+ private readonly IDailyClosingService _service;private UiLanguage _language=UiLanguageCatalog.All[0];
+ [ObservableProperty]private bool isBusy;[ObservableProperty]private string statusMessage="";[ObservableProperty]private DailyClosingLocationItem? selectedLocation;[ObservableProperty]private DailyClosingWorkspace? workspace;[ObservableProperty]private decimal openingCash;[ObservableProperty]private decimal countedCash;[ObservableProperty]private string notes="";[ObservableProperty]private string reopenReason="";
+ public DailyClosingViewModel(IDailyClosingService service){_service=service;LoadCommand=new AsyncRelayCommand(LoadAsync,()=>!IsBusy);OpenShiftCommand=new AsyncRelayCommand(OpenShift,()=>!IsBusy&&SelectedLocation is not null&&Workspace?.MyOpenShift is null);CloseShiftCommand=new AsyncRelayCommand(CloseShift,()=>!IsBusy&&Workspace?.MyOpenShift is not null);FinalizeCommand=new AsyncRelayCommand(Finalize,()=>!IsBusy&&SelectedLocation is not null&&Workspace?.MyOpenShift is null&&(Workspace?.Closing is null||Workspace.Closing.Status=="reopened"));ApproveCommand=new AsyncRelayCommand(Approve,()=>!IsBusy&&Workspace?.Closing?.Status=="finalized");ReopenCommand=new AsyncRelayCommand(Reopen,()=>!IsBusy&&(Workspace?.Closing?.Status=="finalized"||Workspace?.Closing?.Status=="approved")&&!string.IsNullOrWhiteSpace(ReopenReason));}
+ public ObservableCollection<DailyClosingLocationItem> Locations{get;}=[];public IAsyncRelayCommand LoadCommand{get;}public IAsyncRelayCommand OpenShiftCommand{get;}public IAsyncRelayCommand CloseShiftCommand{get;}public IAsyncRelayCommand FinalizeCommand{get;}public IAsyncRelayCommand ApproveCommand{get;}public IAsyncRelayCommand ReopenCommand{get;}
+ public string Title=>T("Daily Closing","بستن روزانه","ورځنی تړل");public void SetLanguage(UiLanguage l){_language=l;OnPropertyChanged(nameof(Title));}
+ partial void OnSelectedLocationChanged(DailyClosingLocationItem? value){if(value is not null)_=Reload();}partial void OnReopenReasonChanged(string value)=>Notify();
+ public async Task LoadAsync()=>await Busy(async()=>{var r=await _service.GetReferenceDataAsync();Locations.Clear();foreach(var x in r.Locations)Locations.Add(x);SelectedLocation??=Locations.FirstOrDefault(x=>x.IsDefault)??Locations.FirstOrDefault();if(SelectedLocation is not null)Workspace=await _service.GetWorkspaceAsync(SelectedLocation.Id);});
+ private async Task Reload(){if(SelectedLocation is null)return;Workspace=await _service.GetWorkspaceAsync(SelectedLocation.Id);CountedCash=Workspace.Snapshot.ExpectedCash;Notify();}
+ private async Task OpenShift()=>await Busy(async()=>{await _service.OpenShiftAsync(SelectedLocation!.Id,OpeningCash);await Reload();StatusMessage=T("Shift opened.","شیفت باز شد.","شفټ پرانیستل شو.");});
+ private async Task CloseShift()=>await Busy(async()=>{await _service.CloseShiftAsync(Workspace!.MyOpenShift!.Id,CountedCash,Notes);await Reload();StatusMessage=T("Shift closed.","شیفت بسته شد.","شفټ وتړل شو.");});
+ private async Task Finalize()=>await Busy(async()=>{await _service.FinalizeAsync(SelectedLocation!.Id,CountedCash,Notes);await Reload();StatusMessage=T("Daily Closing finalized.","بستن روزانه نهایی شد.","ورځنی تړل وروستی شو.");});
+ private async Task Approve()=>await Busy(async()=>{await _service.ApproveAsync(Workspace!.Closing!.Id);await Reload();});
+ private async Task Reopen()=>await Busy(async()=>{await _service.ReopenAsync(Workspace!.Closing!.Id,ReopenReason);ReopenReason="";await Reload();});
+ private async Task Busy(Func<Task>a){if(IsBusy)return;IsBusy=true;Notify();try{await a();}catch(Exception e){StatusMessage=e.Message;}finally{IsBusy=false;Notify();}}
+ private void Notify(){LoadCommand.NotifyCanExecuteChanged();OpenShiftCommand.NotifyCanExecuteChanged();CloseShiftCommand.NotifyCanExecuteChanged();FinalizeCommand.NotifyCanExecuteChanged();ApproveCommand.NotifyCanExecuteChanged();ReopenCommand.NotifyCanExecuteChanged();}
+ private string T(string e,string d,string p)=>_language.Code switch{"fa"=>d,"ps"=>p,_=>e};
+}

@@ -1,0 +1,48 @@
+<UserControl x:Class="BusinessOS.Pharmacy.Desktop.Backup.BackupRestoreView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button Content="Refresh" Command="{Binding RefreshCommand}" Padding="12,7" Margin="0,0,8,0"/>
+                <Button Content="Create Backup" Command="{Binding CreateBackupCommand}" Padding="12,7"/>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding Subtitle}" Style="{StaticResource MutedText}"/>
+            </StackPanel>
+        </DockPanel>
+        <Border Grid.Row="1" Background="#FFFBEB" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,16,0,12">
+            <TextBlock Text="{Binding WarningText}" TextWrapping="Wrap" Foreground="#92400E"/>
+        </Border>
+        <DataGrid Grid.Row="2" ItemsSource="{Binding Backups}" SelectedItem="{Binding SelectedBackup}"
+                  AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Created" Binding="{Binding CreatedAt}" Width="170"/>
+                <DataGridTextColumn Header="Type" Binding="{Binding Kind}" Width="110"/>
+                <DataGridTextColumn Header="File" Binding="{Binding FileName}" Width="2*"/>
+                <DataGridTextColumn Header="Bytes" Binding="{Binding Length, StringFormat=N0}" Width="110"/>
+                <DataGridTextColumn Header="Latest migration" Binding="{Binding LatestMigration}" Width="2*"/>
+                <DataGridCheckBoxColumn Header="Verified" Binding="{Binding IsVerified}" Width="80"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Grid Grid.Row="3" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="Type RESTORE to enable restoring the selected backup." Style="{StaticResource MutedText}"/>
+                <TextBox Text="{Binding RestoreConfirmation, UpdateSourceTrigger=PropertyChanged}" Width="220" HorizontalAlignment="Left" Margin="0,5,0,5"/>
+                <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                <Button Content="Verify Selected" Command="{Binding VerifyCommand}" Padding="12,7" Margin="0,0,8,0"/>
+                <Button Content="Restore Selected" Command="{Binding RestoreCommand}" Padding="12,7"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

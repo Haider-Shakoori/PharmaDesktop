@@ -1,90 +1,453 @@
 <Window x:Class="BusinessOS.Pharmacy.Desktop.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:customers="clr-namespace:BusinessOS.Pharmacy.Desktop.Customers"
+        xmlns:backup="clr-namespace:BusinessOS.Pharmacy.Desktop.Backup"
         xmlns:dashboard="clr-namespace:BusinessOS.Pharmacy.Desktop.Dashboard"
+        xmlns:closing="clr-namespace:BusinessOS.Pharmacy.Desktop.DailyClosing"
         xmlns:medicines="clr-namespace:BusinessOS.Pharmacy.Desktop.Medicines"
-        Title="Darmaltoon"
-        Width="1360" Height="820"
-        MinWidth="1080" MinHeight="680"
+        xmlns:inventory="clr-namespace:BusinessOS.Pharmacy.Desktop.Inventory"
+        xmlns:expenses="clr-namespace:BusinessOS.Pharmacy.Desktop.Expenses"
+        xmlns:purchasing="clr-namespace:BusinessOS.Pharmacy.Desktop.Purchasing"
+        xmlns:pos="clr-namespace:BusinessOS.Pharmacy.Desktop.Pos"
+        xmlns:returns="clr-namespace:BusinessOS.Pharmacy.Desktop.Returns"
+        xmlns:reports="clr-namespace:BusinessOS.Pharmacy.Desktop.Reports"
+        xmlns:networking="clr-namespace:BusinessOS.Pharmacy.Desktop.Networking"
+        xmlns:updates="clr-namespace:BusinessOS.Pharmacy.Desktop.Updates"
+        Title="BusinessOS Pharmacy - Darmaltoon Pharmacy"
+        Width="1600" Height="920"
+        MinWidth="1180" MinHeight="720"
         Background="{DynamicResource AppBackgroundBrush}"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True">
+    <Window.InputBindings>
+        <KeyBinding Key="F2" Command="{Binding NavigateCommand}" CommandParameter="pos" />
+        <KeyBinding Key="F3" Command="{Binding NavigateCommand}" CommandParameter="purchases" />
+        <KeyBinding Key="F4" Command="{Binding NavigateCommand}" CommandParameter="closing" />
+        <KeyBinding Key="F5" Command="{Binding NavigateCommand}" CommandParameter="backup" />
+        <KeyBinding Key="F6" Command="{Binding NavigateCommand}" CommandParameter="sync" />
+        <KeyBinding Key="F7" Command="{Binding NavigateCommand}" CommandParameter="medicines" />
+        <KeyBinding Key="F8" Command="{Binding NavigateCommand}" CommandParameter="inventory" />
+        <KeyBinding Key="F" Modifiers="Control" Command="{Binding GlobalSearchCommand}" />
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding GlobalSearchCommand}" />
+    </Window.InputBindings>
+
     <Window.Resources>
+        <CollectionViewSource x:Key="GroupedNavigation" Source="{Binding NavigationItems}">
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="Group" />
+            </CollectionViewSource.GroupDescriptions>
+        </CollectionViewSource>
+
         <DataTemplate DataType="{x:Type dashboard:DashboardViewModel}">
-            <dashboard:DashboardView/>
+            <dashboard:DashboardView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type pos:PosViewModel}">
+            <pos:PosView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type returns:ReturnsViewModel}">
+            <returns:ReturnsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type expenses:ExpensesViewModel}">
+            <expenses:ExpensesView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type closing:DailyClosingViewModel}">
+            <closing:DailyClosingView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type reports:ReportsViewModel}">
+            <reports:ReportsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type backup:BackupRestoreViewModel}">
+            <backup:BackupRestoreView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type networking:NetworkSettingsViewModel}">
+            <networking:NetworkSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type updates:UpdateViewModel}">
+            <updates:UpdateView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type customers:CustomersViewModel}">
+            <customers:CustomersView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type medicines:MedicinesViewModel}">
-            <medicines:MedicinesView/>
+            <medicines:MedicinesView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type inventory:InventoryViewModel}">
+            <inventory:InventoryView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type purchasing:PurchasingViewModel}">
+            <purchasing:PurchasingView />
         </DataTemplate>
     </Window.Resources>
 
-    <Grid FlowDirection="{Binding LayoutDirection}">
+    <Grid FlowDirection="{Binding LayoutDirection}" Background="{DynamicResource AppBackgroundBrush}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="230" />
+            <ColumnDefinition Width="{Binding SidebarWidth}" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0" Background="{DynamicResource SidebarBrush}">
-            <DockPanel Margin="18,20">
-                <StackPanel DockPanel.Dock="Top" Margin="4,0,4,22">
-                    <TextBlock Text="{Binding ApplicationName}" Foreground="White" FontSize="22" FontWeight="SemiBold" />
-                    <TextBlock Text="darmaltoon.com" Foreground="#93C5FD" FontSize="11" Margin="0,3,0,0" />
-                    <TextBlock Text="{Binding ParentBrand}" Foreground="#94A3B8" FontSize="10" Margin="0,2,0,0" />
+        <Border Grid.Column="0"
+                BorderBrush="#D9E5F1"
+                BorderThickness="0,0,1,0">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#FBFDFF" Offset="0" />
+                    <GradientStop Color="#F3F7FC" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <DockPanel Margin="10,12,10,10">
+                <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="48" Height="48"
+                                CornerRadius="24"
+                                Background="{DynamicResource BrandPrimaryBrush}">
+                            <Path Data="{StaticResource IconPharmacyCross}"
+                                  Width="27" Height="27"
+                                  Stretch="Uniform"
+                                  Fill="White"
+                                  StrokeThickness="0"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="10,-2,0,0" VerticalAlignment="Center">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SidebarCollapsed}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="BusinessOS" FontSize="17" FontWeight="Bold" Foreground="#102A56" />
+                            <TextBlock Text="Pharmacy" FontSize="17" FontWeight="Bold"
+                                       Foreground="{DynamicResource BrandPrimaryBrush}" Margin="0,-3,0,0" />
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Text="{Binding Dashboard.PharmacyName}"
+                               Margin="6,6,0,0"
+                               FontSize="11.5"
+                               Foreground="#52677F"
+                               TextTrimming="CharacterEllipsis">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SidebarCollapsed}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <Button Command="{Binding ToggleSidebarCommand}"
+                            Style="{StaticResource GhostButton}"
+                            Padding="8,6"
+                            Margin="0,3,0,0"
+                            HorizontalAlignment="Right"
+                            ToolTip="Collapse or expand navigation">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconPanel}"
+                                  Width="16" Height="16"
+                                  Stretch="Uniform"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  StrokeThickness="1.7"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  Fill="Transparent" />
+                            <TextBlock Text="Collapse" Margin="7,0,0,0" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource CaptionText}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SidebarCollapsed}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
-                <ItemsControl ItemsSource="{Binding NavigationItems}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Style="{StaticResource SidebarNavigationButton}"
-                                    Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                    CommandParameter="{Binding Key}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="28" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Glyph}" Foreground="#93C5FD" VerticalAlignment="Center" />
-                                    <TextBlock Grid.Column="1" Text="{Binding Label}" Foreground="#E2E8F0" FontSize="13" VerticalAlignment="Center" />
-                                </Grid>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+
+                <Border DockPanel.Dock="Bottom"
+                        Background="Transparent"
+                        Padding="8,8,6,4"
+                        Margin="0,8,0,0">
+                    <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SidebarCollapsed}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="BusinessOS Pharmacy" FontWeight="SemiBold" FontSize="11" Foreground="#1E3A5F" />
+                        <TextBlock Text="v1.0.0  |  Built for Afghanistan" FontSize="10" Foreground="#64748B" Margin="0,3,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding NavigationItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource SidebarNavigationButton}"
+                                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding Key}"
+                                        ToolTip="{Binding Label}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="36" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Width="28"
+                                                Height="28"
+                                                CornerRadius="8"
+                                                Background="{Binding AccentSoftHex}"
+                                                BorderBrush="{Binding AccentSoftHex}"
+                                                BorderThickness="1"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                            <Path Style="{StaticResource NavigationIconPath}"
+                                                  Width="14"
+                                                  Height="14"
+                                                  Stroke="{Binding AccentHex}"
+                                                  StrokeThickness="1.9"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center" />
+                                        </Border>
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Label}"
+                                                   Margin="4,0,0,0"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#314763" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="Foreground" Value="#0B5FC6" />
+                                                            <Setter Property="FontWeight" Value="Bold" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding DataContext.SidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                     Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </DockPanel>
         </Border>
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="68" />
+                <RowDefinition Height="62" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                <Grid Margin="26,0">
+            <Border Grid.Row="0"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="0,0,0,1">
+                <Grid Margin="16,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding PageTitle}" FontSize="18" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding PageSubtitle}" Style="{StaticResource MutedText}" />
-                    </StackPanel>
+
+                    <Border Grid.Column="0"
+                            MinWidth="240"
+                            MaxWidth="470"
+                            Height="38"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AppBackgroundBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="9"
+                            Margin="0,0,18,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="38" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Path Data="{StaticResource IconSearch}"
+                                  Width="17" Height="17"
+                                  Stroke="{DynamicResource TextMutedBrush}"
+                                  StrokeThickness="1.8"
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  Fill="Transparent"
+                                  Stretch="Uniform"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center" />
+                            <Grid Grid.Column="1">
+                                <TextBlock Text="Search medicines, customers, invoices…"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource CaptionText}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding GlobalSearchText}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBox Text="{Binding GlobalSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource SearchTextBox}"
+                                         VerticalContentAlignment="Center"
+                                         ToolTip="Ctrl+F" />
+                            </Grid>
+                            <Button Grid.Column="2"
+                                    Command="{Binding GlobalSearchCommand}"
+                                    Style="{StaticResource GhostButton}"
+                                    Padding="8,5"
+                                    Margin="2"
+                                    ToolTip="Search">
+                                <TextBlock Text="Ctrl+S" Style="{StaticResource CaptionText}" />
+                            </Button>
+                        </Grid>
+                    </Border>
+
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <StackPanel Margin="0,0,14,0" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding UserDisplayName}" FontWeight="SemiBold" HorizontalAlignment="Right" />
-                            <TextBlock Text="{Binding UserRoleText}" Style="{StaticResource MutedText}" HorizontalAlignment="Right" />
-                        </StackPanel>
-                        <Border Background="#ECFDF5" CornerRadius="16" Padding="10,5" Margin="0,0,12,0">
-                            <TextBlock Text="{Binding OnlineText}" Foreground="#047857" FontSize="11" FontWeight="SemiBold" />
+                        <Border Background="#F8FBFF"
+                                BorderBrush="#D9E5F1"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10,5"
+                                MinWidth="182"
+                                Margin="0,0,8,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="30" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="26" Height="26" CornerRadius="7" Background="#E7F2FF">
+                                    <Path Data="{StaticResource IconStore}" Width="14" Height="14"
+                                          Stroke="{DynamicResource BrandPrimaryBrush}" StrokeThickness="1.8"
+                                          Fill="Transparent" Stretch="Uniform"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="7,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Dashboard.PharmacyName}" FontSize="10.5" FontWeight="SemiBold"
+                                               Foreground="#102A56" MaxWidth="132" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Dashboard.PharmacyCode}" FontSize="9" Foreground="#64748B"
+                                               MaxWidth="132" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Grid>
                         </Border>
-                        <ComboBox Width="120" ItemsSource="{Binding Languages}"
-                                  SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
-                                  DisplayMemberPath="DisplayName" Margin="0,0,10,0" />
-                        <Button Content="Sign Out" Command="{Binding LogoutCommand}" Padding="10,6" />
+
+                        <Border Width="118" Height="38"
+                                Background="#F8FBFF"
+                                BorderBrush="#D9E5F1"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Margin="0,0,8,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="32" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource IconGlobe}" Width="16" Height="16"
+                                      Stroke="#24466F" StrokeThickness="1.7" Fill="Transparent"
+                                      Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <ComboBox Grid.Column="1"
+                                          ItemsSource="{Binding Languages}"
+                                          SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
+                                          DisplayMemberPath="DisplayName"
+                                          BorderThickness="0"
+                                          Background="Transparent"
+                                          Padding="2,0"
+                                          ToolTip="Language" />
+                            </Grid>
+                        </Border>
+
+                        <Button Command="{Binding NavigateCommand}"
+                                CommandParameter="inventory"
+                                Style="{StaticResource IconButton}"
+                                Margin="0,0,8,0"
+                                ToolTip="Inventory alerts">
+                            <Grid>
+                                <Path Data="{StaticResource IconBell}" Width="18" Height="18"
+                                      Stroke="#24466F" StrokeThickness="1.8" Fill="Transparent" Stretch="Uniform" />
+                                <Border Background="{DynamicResource DangerBrush}" CornerRadius="7"
+                                        MinWidth="14" Height="14" Padding="3,0"
+                                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12,-5,-7,0">
+                                    <TextBlock Text="{Binding Dashboard.Alerts.Count}" Foreground="White"
+                                               FontSize="8" FontWeight="Bold"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
+                        </Button>
+
+                        <StackPanel Margin="0,0,14,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding OnlineText}" Foreground="#0F5132" FontSize="10.5" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding Dashboard.SyncStatusText}" FontSize="8.5" Foreground="#64748B"
+                                       MaxWidth="104" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,14,0" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconBadgeCheck}" Width="15" Height="15"
+                                      Stroke="#16A34A" StrokeThickness="1.8" Fill="Transparent"
+                                      Stretch="Uniform" Margin="0,0,5,0" />
+                                <TextBlock Text="{Binding LicenseText}" Foreground="#15803D" FontSize="10.5" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding Dashboard.LicenseValidityText}" FontSize="8.5" Foreground="#64748B"
+                                       MaxWidth="125" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <Border Width="36" Height="36" CornerRadius="18" Background="#DCEEFF" Margin="0,0,8,0">
+                            <Path Data="{StaticResource IconUsers}" Width="18" Height="18"
+                                  Stroke="#2563A8" StrokeThickness="1.8" Fill="Transparent"
+                                  Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Margin="0,0,6,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding UserDisplayName}" FontWeight="SemiBold" FontSize="10.5"
+                                       MaxWidth="104" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding UserRoleText}" FontSize="8.5" Foreground="#64748B"
+                                       MaxWidth="104" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <Button Command="{Binding LogoutCommand}" Style="{StaticResource IconButton}" ToolTip="Sign out"
+                                Width="32" Height="32" MinHeight="32" Padding="7">
+                            <Path Data="{StaticResource IconLogout}" Width="15" Height="15"
+                                  Stroke="#64748B" StrokeThickness="1.8" Fill="Transparent" Stretch="Uniform" />
+                        </Button>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" />
+            <ContentControl Grid.Row="1"
+                            Content="{Binding CurrentPage}"
+                            Background="{DynamicResource AppBackgroundBrush}" />
         </Grid>
     </Grid>
 </Window>

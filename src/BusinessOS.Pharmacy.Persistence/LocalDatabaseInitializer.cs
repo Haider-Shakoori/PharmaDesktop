@@ -37,6 +37,9 @@ public sealed class LocalDatabaseInitializer : ILocalDatabaseInitializer
 
             await context.Database.MigrateAsync(cancellationToken);
             await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL;", cancellationToken);
+            await context.Database.ExecuteSqlRawAsync("PRAGMA wal_autocheckpoint=1000;", cancellationToken);
+            await context.Database.ExecuteSqlRawAsync("PRAGMA journal_size_limit=67108864;", cancellationToken);
+            await context.Database.ExecuteSqlRawAsync("PRAGMA optimize;", cancellationToken);
 
             var identity = await context.Set<LocalDatabaseIdentityEntity>()
                 .SingleOrDefaultAsync(cancellationToken);

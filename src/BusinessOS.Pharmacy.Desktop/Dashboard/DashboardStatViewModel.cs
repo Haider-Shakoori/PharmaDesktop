@@ -4,4 +4,6 @@ public sealed record DashboardStatViewModel(
     string Label,
     string Value,
     string Note,
-    string Glyph);
+    string IconKey,
+    string IconForeground,
+    string IconBackground);

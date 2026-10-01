@@ -6,7 +6,7 @@ namespace BusinessOS.Pharmacy.Licensing;
 
 public sealed class WindowsUserSessionStore : IUserSessionStore
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = ProtectedStateJson.Options;
     private readonly IApplicationPaths _paths;
 
     public WindowsUserSessionStore(IApplicationPaths paths) => _paths = paths;
@@ -75,6 +75,6 @@ public sealed class WindowsUserSessionStore : IUserSessionStore
             throw new PlatformNotSupportedException("Protected pharmacy user sessions require Windows DPAPI.");
         }
 
-        return ProtectedData.Unprotect(value, optionalEntropy: null, DataProtectionScope.LocalMachine);
+        return ProtectedData.Unprotect(value, optionalEntropy: null, DataProtectionScope.CurrentUser);
     }
 }

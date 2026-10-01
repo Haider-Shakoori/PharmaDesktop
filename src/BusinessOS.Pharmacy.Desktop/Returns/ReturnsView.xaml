@@ -1,0 +1,88 @@
+<UserControl x:Class="BusinessOS.Pharmacy.Desktop.Returns.ReturnsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             MinWidth="760">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <DockPanel Grid.Row="0">
+                <Button DockPanel.Dock="Right" Content="Refresh" Command="{Binding LoadCommand}" Padding="12,6"/>
+                <StackPanel><TextBlock Text="{Binding WorkspaceTitle}" FontSize="24" FontWeight="SemiBold"/><TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" TextWrapping="Wrap"/></StackPanel>
+            </DockPanel>
+            <Grid Grid.Row="1" Margin="0,18,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="2*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBox Text="{Binding SaleSearch, UpdateSourceTrigger=PropertyChanged}" ToolTip="Sale number or customer"/>
+                <Button Grid.Column="1" Content="Search" Command="{Binding SearchSalesCommand}" Padding="12,6" Margin="8,0,16,0"/>
+                <ComboBox Grid.Column="2" ItemsSource="{Binding Sales}" SelectedItem="{Binding SelectedSale}" DisplayMemberPath="SaleNumber" MinWidth="220"/>
+                <Button Grid.Column="3" Content="Load sale" Command="{Binding LoadSelectedSaleCommand}" Padding="12,6" Margin="8,0,0,0"/>
+            </Grid>
+            <Grid Grid.Row="2" Margin="0,18,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="1.4*"/><ColumnDefinition Width="1.4*"/><ColumnDefinition Width="1.1*"/></Grid.ColumnDefinitions>
+                <Border Grid.Column="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding SaleTitle}" FontWeight="SemiBold"/>
+                        <ListBox ItemsSource="{Binding SelectedSaleDetail.Lines}" SelectedItem="{Binding SelectedLine}" MinHeight="220" MaxHeight="350" Margin="0,8,0,0">
+                            <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="3">
+                                <TextBlock Text="{Binding Description}" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding SoldQuantity, StringFormat=Sold {0:0.####}}" Style="{StaticResource MutedText}"/>
+                                <TextBlock Text="{Binding ReturnedQuantity, StringFormat=Returned {0:0.####}}" Style="{StaticResource MutedText}"/>
+                                <TextBlock Text="{Binding RemainingQuantity, StringFormat=Remaining {0:0.####}}"/>
+                                <TextBlock Text="{Binding NetUnitAmount, StringFormat=Net/unit AFN {0:N4}}"/>
+                            </StackPanel></DataTemplate></ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBox Text="{Binding ReturnQuantity}" ToolTip="Return quantity" Margin="0,8,0,0"/>
+                        <Button Content="Add item" Command="{Binding AddReturnLineCommand}" Padding="12,6" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,12,0">
+                    <StackPanel>
+                        <DockPanel><TextBlock Text="{Binding LinesTitle}" FontWeight="SemiBold"/><TextBlock DockPanel.Dock="Right" Text="{Binding CalculatedRefundText}" FontWeight="SemiBold"/></DockPanel>
+                        <DataGrid ItemsSource="{Binding ReturnLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" MinHeight="180" Margin="0,8,0,0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Medicine" Binding="{Binding Description}" Width="*"/>
+                                <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, StringFormat=0.####}" Width="70"/>
+                                <DataGridTextColumn Header="Refund" Binding="{Binding RefundAmount, StringFormat=N4}" Width="100"/>
+                                <DataGridTemplateColumn Width="70"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                                    <Button Content="Remove" Command="{Binding DataContext.RemoveReturnLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
+                                </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBox Text="{Binding Reason}" ToolTip="Return reason" AcceptsReturn="True" Height="58" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12">
+                    <StackPanel>
+                        <TextBlock Text="{Binding RefundsTitle}" FontWeight="SemiBold"/>
+                        <ComboBox ItemsSource="{Binding RefundMethods}" SelectedItem="{Binding SelectedRefundMethod}" Margin="0,8,0,0"/>
+                        <TextBox Text="{Binding RefundAmount}" ToolTip="Refund amount" Margin="0,6,0,0"/>
+                        <TextBox Text="{Binding RefundReference}" ToolTip="Reference" Margin="0,6,0,0"/>
+                        <Button Content="Add refund" Command="{Binding AddRefundCommand}" Padding="12,6" Margin="0,8,0,0"/>
+                        <ListBox ItemsSource="{Binding Refunds}" MinHeight="100" Margin="0,8,0,0">
+                            <ListBox.ItemTemplate><DataTemplate><DockPanel Margin="2">
+                                <Button DockPanel.Dock="Right" Content="×" Command="{Binding DataContext.RemoveRefundCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}" Padding="5,1"/>
+                                <TextBlock><Run Text="{Binding Method}"/><Run Text="  "/><Run Text="{Binding Amount, StringFormat=N4}"/></TextBlock>
+                            </DockPanel></DataTemplate></ListBox.ItemTemplate>
+                        </ListBox>
+                        <Button Content="{Binding ProcessLabel}" Command="{Binding ProcessReturnCommand}" Padding="14,8" Margin="0,12,0,0" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+            <Border Grid.Row="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,18,0,0">
+                <StackPanel>
+                    <TextBlock Text="Recent returns" FontWeight="SemiBold"/>
+                    <DataGrid ItemsSource="{Binding RecentReturns}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" MaxHeight="220" Margin="0,8,0,0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Return" Binding="{Binding ReturnNumber}" Width="*"/>
+                            <DataGridTextColumn Header="Sale" Binding="{Binding SaleNumber}" Width="*"/>
+                            <DataGridTextColumn Header="Date" Binding="{Binding BusinessDate}" Width="110"/>
+                            <DataGridTextColumn Header="Refund" Binding="{Binding RefundTotal, StringFormat=N4}" Width="100"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

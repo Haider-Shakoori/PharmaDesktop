@@ -1,0 +1,58 @@
+name: export-windows-installers
+
+on:
+  push:
+    branches:
+      - feat/batch-21-windows-installer
+    paths:
+      - .github/workflows/export-windows-installers.yml
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download validated Windows release artifact
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: 36891306031
+          name: Darmaltoon-Windows-1.0.0
+          path: release
+
+      - name: Verify expected installers
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -lh release
+          test -f release/Darmaltoon-Standalone-Setup-1.0.0-win-x64.exe
+          test -f release/Darmaltoon-MainServer-Setup-1.0.0-win-x64.exe
+          test -f release/Darmaltoon-ClientTerminal-Setup-1.0.0-win-x64.exe
+
+      - name: Upload Standalone installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-Standalone-Setup-1.0.0-win-x64
+          path: release/Darmaltoon-Standalone-Setup-1.0.0-win-x64.exe
+          compression-level: 0
+          retention-days: 7
+
+      - name: Upload Main Server installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-MainServer-Setup-1.0.0-win-x64
+          path: release/Darmaltoon-MainServer-Setup-1.0.0-win-x64.exe
+          compression-level: 0
+          retention-days: 7
+
+      - name: Upload Client Terminal installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-ClientTerminal-Setup-1.0.0-win-x64
+          path: release/Darmaltoon-ClientTerminal-Setup-1.0.0-win-x64.exe
+          compression-level: 0
+          retention-days: 7

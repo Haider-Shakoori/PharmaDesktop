@@ -1,0 +1,1 @@
+using System.Windows.Controls;namespace BusinessOS.Pharmacy.Desktop.DailyClosing;public partial class DailyClosingView:UserControl{public DailyClosingView()=>InitializeComponent();}

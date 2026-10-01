@@ -17,6 +17,13 @@ public sealed class LicenseApiOptionsValidator : IValidateOptions<LicenseApiOpti
             return ValidateOptionsResult.Fail("The licensing service must use HTTPS except for loopback development endpoints.");
         }
 
+        if (!string.IsNullOrEmpty(baseUri.UserInfo) ||
+            !string.IsNullOrEmpty(baseUri.Query) ||
+            !string.IsNullOrEmpty(baseUri.Fragment))
+        {
+            return ValidateOptionsResult.Fail("BusinessOS:Licensing:BaseUrl must not contain credentials, query parameters, or fragments.");
+        }
+
         if (!IsApiPath(options.ActivationPath) ||
             !IsApiPath(options.RefreshPath) ||
             !IsApiPath(options.SessionLoginPath) ||
@@ -55,5 +62,9 @@ public sealed class LicenseApiOptionsValidator : IValidateOptions<LicenseApiOpti
 
     private static bool IsApiPath(string? value) =>
         !string.IsNullOrWhiteSpace(value) &&
-        value.StartsWith("/api/", StringComparison.Ordinal);
+        value.StartsWith("/api/", StringComparison.Ordinal) &&
+        !value.StartsWith("//", StringComparison.Ordinal) &&
+        !value.Contains('?', StringComparison.Ordinal) &&
+        !value.Contains('#', StringComparison.Ordinal) &&
+        Uri.TryCreate(value, UriKind.Relative, out _);
 }

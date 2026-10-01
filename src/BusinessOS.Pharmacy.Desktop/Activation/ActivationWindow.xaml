@@ -2,45 +2,82 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Activate Darmaltoon"
-        Width="560" Height="520"
-        ResizeMode="NoResize"
+        Width="620" Height="680"
+        MinWidth="560" MinHeight="600"
+        ResizeMode="CanResizeWithGrip"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource AppBackgroundBrush}">
-    <Grid Margin="40">
-        <Border Style="{StaticResource SurfaceCard}" Padding="30">
-            <StackPanel>
-                <TextBlock Text="Darmaltoon" FontSize="26" FontWeight="SemiBold" />
-                <TextBlock Text="darmaltoon.com · BusinessOS.af" Style="{StaticResource MutedText}" Margin="0,4,0,26" />
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="36">
+            <Border Style="{StaticResource SurfaceCard}" Padding="28">
+                <StackPanel>
+                    <TextBlock Text="Darmaltoon" FontSize="30" FontWeight="SemiBold" />
+                    <TextBlock Text="darmaltoon.com · BusinessOS.af"
+                               Style="{StaticResource MutedText}"
+                               Margin="0,4,0,24" />
 
-                <TextBlock Text="Activate Your Pharmacy" FontSize="20" FontWeight="SemiBold" />
-                <TextBlock Text="Use the license key issued for your Darmaltoon subscription."
-                           Style="{StaticResource MutedText}" Margin="0,6,0,20" TextWrapping="Wrap" />
+                    <TextBlock Text="Activate Your Pharmacy"
+                               FontSize="22"
+                               FontWeight="SemiBold" />
+                    <TextBlock Text="Activate an existing subscription, or request a new 7-day trial below."
+                               Style="{StaticResource MutedText}"
+                               Margin="0,6,0,18"
+                               TextWrapping="Wrap" />
 
-                <TextBlock Text="License Key" FontWeight="SemiBold" Margin="0,0,0,6" />
-                <TextBox Text="{Binding LicenseKey, UpdateSourceTrigger=PropertyChanged}"
-                         MinHeight="42" Padding="10,8" FontSize="14" />
+                    <Border Padding="16"
+                            Margin="0,0,0,22"
+                            CornerRadius="12"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            Background="{DynamicResource AppBackgroundBrush}">
+                        <StackPanel>
+                            <TextBlock Text="New to Darmaltoon?"
+                                       FontSize="16"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Margin="0,5,0,12"
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap"
+                                       Text="Request a 7-day trial on the Darmaltoon website. After your request is approved, copy the generated license key and return here to activate this PC." />
+                            <Button Content="Request 7-Day Free Trial"
+                                    Command="{Binding StartTrialCommand}"
+                                    Style="{StaticResource PrimaryButton}"
+                                    MinHeight="42"
+                                    Cursor="Hand" />
+                        </StackPanel>
+                    </Border>
 
-                <Button Content="Activate"
-                        Command="{Binding ActivateCommand}"
-                        Style="{StaticResource PrimaryButton}"
-                        Margin="0,14,0,0" MinHeight="42" />
+                    <TextBlock Text="Already have a license key?"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,10" />
 
-                <TextBlock Text="{Binding StatusMessage}"
-                           TextWrapping="Wrap"
-                           Margin="0,14,0,18"
-                           Foreground="{DynamicResource TextMutedBrush}" />
+                    <TextBlock Text="License Key"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,6" />
+                    <TextBox Text="{Binding LicenseKey, UpdateSourceTrigger=PropertyChanged}"
+                             MinHeight="44"
+                             Padding="10,8"
+                             FontSize="14" />
 
-                <Separator />
-                <TextBlock Text="Don't have a license?" Margin="0,18,0,8" />
-                <Button Content="Start 7-Day Free Trial"
-                        Command="{Binding StartTrialCommand}"
-                        Padding="14,9" Cursor="Hand" />
+                    <Button Content="Activate"
+                            Command="{Binding ActivateCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            Margin="0,14,0,0"
+                            MinHeight="42" />
 
-                <TextBlock Margin="0,18,0,0"
-                           Style="{StaticResource MutedText}"
-                           TextWrapping="Wrap"
-                           Text="Initial activation requires internet. After activation, Darmaltoon can continue operating offline while the signed entitlement remains valid." />
-            </StackPanel>
-        </Border>
-    </Grid>
+                    <TextBlock Text="{Binding StatusMessage}"
+                               TextWrapping="Wrap"
+                               Margin="0,14,0,0"
+                               Foreground="{DynamicResource TextMutedBrush}" />
+
+                    <Separator Margin="0,20,0,16" />
+
+                    <TextBlock Style="{StaticResource MutedText}"
+                               TextWrapping="Wrap"
+                               Text="Initial activation requires internet. After activation, Darmaltoon can continue operating offline while the signed entitlement remains valid." />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
 </Window>

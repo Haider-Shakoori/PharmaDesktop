@@ -17,6 +17,1341 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.BatchStatusEventEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ActorId")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("actor_id");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("changed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FromStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("from_status");
+
+                    b.Property<string>("ProductBatchId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("product_batch_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("to_status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedAt");
+
+                    b.HasIndex("ProductBatchId");
+
+                    b.ToTable("batch_status_events", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.BranchEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("address");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("code")
+                        .UseCollation("NOCASE");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_default");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsDefault");
+
+                    b.ToTable("branches", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.CashierShiftEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("business_date");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("closed_at");
+
+                    b.Property<string>("ClosingNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("closing_notes");
+
+                    b.Property<decimal?>("CountedCash")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("counted_cash");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal?>("ExpectedCash")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("expected_cash");
+
+                    b.Property<DateTimeOffset>("OpenedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("opened_at");
+
+                    b.Property<decimal>("OpeningCash")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("opening_cash");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StockLocationId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stock_location_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("user_id");
+
+                    b.Property<decimal?>("Variance")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("variance");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessDate");
+
+                    b.HasIndex("ClosedAt");
+
+                    b.HasIndex("OpenedAt");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StockLocationId", "BusinessDate", "Status");
+
+                    b.HasIndex("UserId", "BusinessDate", "Status");
+
+                    b.ToTable("cashier_shifts", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.CloudSyncCursorEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Cursor")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cursor");
+
+                    b.Property<string>("Stream")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stream");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Stream")
+                        .IsUnique();
+
+                    b.ToTable("cloud_sync_cursors", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.CloudSyncOutboxEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ActorUserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("event_type");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("LastErrorCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("last_error_code");
+
+                    b.Property<string>("LastErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("last_error_message");
+
+                    b.Property<DateTimeOffset?>("NextAttemptAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("next_attempt_at");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payload_json");
+
+                    b.Property<string>("ServerId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("server_id");
+
+                    b.Property<DateTimeOffset?>("ServerUpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("server_updated_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("TenantId", "IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "ActorUserId", "Status", "NextAttemptAt");
+
+                    b.ToTable("cloud_sync_outbox", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.CloudSyncRemoteRecordEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payload_json");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("received_at");
+
+                    b.Property<string>("ServerId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("server_id");
+
+                    b.Property<DateTimeOffset?>("ServerUpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("server_updated_at");
+
+                    b.Property<string>("Stream")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stream");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Stream", "ServerId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Stream", "ServerUpdatedAt");
+
+                    b.ToTable("cloud_sync_remote_records", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.CustomerEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal>("CreditLimit")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("credit_limit");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("email");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("phone");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Phone");
+
+                    b.HasIndex("Name", "IsActive");
+
+                    b.ToTable("customers", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.DailyClosingEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("approved_at");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("approved_by");
+
+                    b.Property<decimal>("BankCollected")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("bank_collected");
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("business_date");
+
+                    b.Property<decimal>("CashCollected")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cash_collected");
+
+                    b.Property<string>("ClosingNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("closing_notes");
+
+                    b.Property<decimal?>("CountedCash")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("counted_cash");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal>("CreditSales")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("credit_sales");
+
+                    b.Property<decimal>("DiscountTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("discount_total");
+
+                    b.Property<decimal>("ExpectedCash")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("expected_cash");
+
+                    b.Property<DateTimeOffset?>("FinalizedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("finalized_at");
+
+                    b.Property<string>("FinalizedBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("finalized_by");
+
+                    b.Property<decimal>("GrossSales")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("gross_sales");
+
+                    b.Property<decimal>("MobileCollected")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("mobile_collected");
+
+                    b.Property<decimal>("OpeningCash")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("opening_cash");
+
+                    b.Property<string>("ReopenReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reopen_reason");
+
+                    b.Property<DateTimeOffset?>("ReopenedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reopened_at");
+
+                    b.Property<string>("ReopenedBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reopened_by");
+
+                    b.Property<decimal>("ReturnsTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("returns_total");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StockLocationId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stock_location_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.Property<decimal?>("Variance")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("variance");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedAt");
+
+                    b.HasIndex("FinalizedAt");
+
+                    b.HasIndex("ReopenedAt");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StockLocationId", "BusinessDate")
+                        .IsUnique();
+
+                    b.ToTable("daily_closings", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.DailyClosingEventEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ActorId")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("actor_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DailyClosingId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("daily_closing_id");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("event_type");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("SnapshotJson")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("snapshot");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DailyClosingId");
+
+                    b.HasIndex("EventType");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.ToTable("daily_closing_events", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.ExpenseEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("amount");
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("business_date");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<string>("ExpenseAccountId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("expense_account_id");
+
+                    b.Property<string>("ExpenseNumber")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("expense_number");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("Payee")
+                        .HasMaxLength(180)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payee");
+
+                    b.Property<string>("PaymentAccountId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payment_account_id");
+
+                    b.Property<DateTimeOffset>("PostedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("posted_at");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reference");
+
+                    b.Property<DateTimeOffset?>("ReversedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reversed_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StockLocationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stock_location_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessDate");
+
+                    b.HasIndex("ExpenseAccountId");
+
+                    b.HasIndex("ExpenseNumber")
+                        .IsUnique();
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("PaymentAccountId");
+
+                    b.HasIndex("PostedAt");
+
+                    b.HasIndex("ReversedAt");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StockLocationId");
+
+                    b.ToTable("expenses", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.GoodsReceiptEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<DateTimeOffset?>("InventoryPostedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("inventory_posted_at");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("PurchaseOrderId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("purchase_order_id");
+
+                    b.Property<string>("ReceiptNumber")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("receipt_number");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("received_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StockLocationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stock_location_id");
+
+                    b.Property<string>("SupplierId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("InventoryPostedAt");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.HasIndex("ReceiptNumber")
+                        .IsUnique();
+
+                    b.HasIndex("ReceivedAt");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StockLocationId");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("goods_receipts", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.GoodsReceiptLineEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BatchNumber")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("batch_number");
+
+                    b.Property<decimal>("BonusQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("bonus_quantity");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly?>("ExpiresAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("GoodsReceiptId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("goods_receipt_id");
+
+                    b.Property<DateOnly?>("ManufacturedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("manufactured_at");
+
+                    b.Property<string>("MedicineId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("medicine_id");
+
+                    b.Property<string>("PurchaseOrderLineId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("purchase_order_line_id");
+
+                    b.Property<decimal>("ReceivedQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("received_quantity");
+
+                    b.Property<decimal?>("SalePrice")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_price");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("unit_cost");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchNumber");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("GoodsReceiptId");
+
+                    b.HasIndex("PurchaseOrderLineId");
+
+                    b.HasIndex("MedicineId", "ExpiresAt");
+
+                    b.ToTable("goods_receipt_lines", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.InventoryAdjustmentEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("number");
+
+                    b.Property<DateTimeOffset?>("PostedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("posted_at");
+
+                    b.Property<string>("PostedBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("posted_by");
+
+                    b.Property<string>("ReasonCode")
+                        .IsRequired()
+                        .HasMaxLength(48)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reason_code");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StockLocationId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stock_location_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("PostedAt");
+
+                    b.HasIndex("ReasonCode");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StockLocationId");
+
+                    b.ToTable("inventory_adjustments", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.InventoryAdjustmentLineEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("InventoryAdjustmentId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("inventory_adjustment_id");
+
+                    b.Property<string>("ProductBatchId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("product_batch_id");
+
+                    b.Property<decimal>("QuantityDelta")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("quantity_delta");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductBatchId");
+
+                    b.HasIndex("InventoryAdjustmentId", "ProductBatchId");
+
+                    b.ToTable("inventory_adjustment_lines", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.JournalEntryEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("business_date");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("description");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("JournalNumber")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("journal_number");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<DateTimeOffset>("PostedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("posted_at");
+
+                    b.Property<string>("PostedBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("posted_by");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reference");
+
+                    b.Property<string>("ReversalOfId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reversal_of_id");
+
+                    b.Property<string>("ReversalReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reversal_reason");
+
+                    b.Property<string>("SourceEvent")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source_event");
+
+                    b.Property<string>("SourceId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source_id");
+
+                    b.Property<string>("SourceNumber")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source_number");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source_type");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("TotalCredit")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("total_credit");
+
+                    b.Property<decimal>("TotalDebit")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("total_debit");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessDate");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("JournalNumber")
+                        .IsUnique();
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("PostedAt");
+
+                    b.HasIndex("ReversalOfId");
+
+                    b.HasIndex("SourceEvent");
+
+                    b.HasIndex("SourceId");
+
+                    b.HasIndex("SourceType");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("BusinessDate", "Status");
+
+                    b.HasIndex("SourceType", "SourceId", "SourceEvent");
+
+                    b.ToTable("journal_entries", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.JournalLineEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CounterpartyId")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("counterparty_id");
+
+                    b.Property<string>("CounterpartyType")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("counterparty_type");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal>("Credit")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("credit");
+
+                    b.Property<decimal>("Debit")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("debit");
+
+                    b.Property<string>("JournalEntryId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("journal_entry_id");
+
+                    b.Property<string>("LedgerAccountId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ledger_account_id");
+
+                    b.Property<string>("Memo")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("memo");
+
+                    b.Property<string>("StockLocationId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stock_location_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JournalEntryId");
+
+                    b.HasIndex("CounterpartyType", "CounterpartyId");
+
+                    b.HasIndex("LedgerAccountId", "JournalEntryId");
+
+                    b.HasIndex("StockLocationId", "LedgerAccountId");
+
+                    b.ToTable("journal_lines", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.LedgerAccountEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_system");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NormalBalance")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("normal_balance");
+
+                    b.Property<string>("ParentId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("parent_id");
+
+                    b.Property<string>("SystemKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("system_key");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("type");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsSystem");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("SystemKey")
+                        .IsUnique();
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("Type", "IsActive");
+
+                    b.ToTable("ledger_accounts", (string)null);
+                });
+
             modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.LocalDatabaseIdentityEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -44,6 +1379,169 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
                     b.ToTable("local_database_identity", (string)null);
                 });
 
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.LocalLanSessionEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("email");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("expires_at");
+
+                    b.Property<DateTimeOffset>("IssuedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("issued_at");
+
+                    b.Property<DateTimeOffset?>("LastSeenAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("last_seen_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("PermissionsJson")
+                        .IsRequired()
+                        .HasMaxLength(16000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("permissions_json");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("RolesJson")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("roles_json");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("TerminalId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("terminal_id");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("token_hash");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("TerminalId", "ExpiresAt");
+
+                    b.HasIndex("UserId", "ExpiresAt");
+
+                    b.ToTable("local_lan_sessions", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.LocalLanUserCredentialEntity", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("email")
+                        .UseCollation("NOCASE");
+
+                    b.Property<DateTimeOffset>("IdentityValidUntil")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("identity_valid_until");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTimeOffset>("LastOnlineVerifiedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("last_online_verified_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("PasswordHashBase64")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("password_hash_base64");
+
+                    b.Property<int>("PasswordIterations")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("password_iterations");
+
+                    b.Property<string>("PasswordSaltBase64")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("password_salt_base64");
+
+                    b.Property<string>("PermissionsJson")
+                        .IsRequired()
+                        .HasMaxLength(16000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("permissions_json");
+
+                    b.Property<string>("RolesJson")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("roles_json");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "IsActive");
+
+                    b.ToTable("local_lan_user_credentials", (string)null);
+                });
+
             modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.LocalSequenceEntity", b =>
                 {
                     b.Property<string>("Key")
@@ -59,6 +1557,46 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
                     b.HasKey("Key");
 
                     b.ToTable("local_sequences", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.LocalServerIdentityEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("ServerId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("server_id");
+
+                    b.Property<string>("ServerName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("server_name");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServerId")
+                        .IsUnique();
+
+                    b.ToTable("local_server_identity", (string)null);
                 });
 
             modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.LocalSettingEntity", b =>
@@ -281,6 +1819,1802 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
                     b.ToTable("medicines", (string)null);
                 });
 
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.NetworkAuditEntity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Detail")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("detail");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("operation");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("outcome");
+
+                    b.Property<string>("RecordUuid")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("record_uuid");
+
+                    b.Property<string>("RemoteAddress")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("remote_address");
+
+                    b.Property<string>("TerminalId")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("terminal_id");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("TerminalId");
+
+                    b.ToTable("network_audit_log", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.ProductBatchEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("AvailableQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("available_quantity");
+
+                    b.Property<string>("BatchKey")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("batch_key");
+
+                    b.Property<string>("BatchNumber")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("batch_number");
+
+                    b.Property<string>("BranchId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("branch_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly?>("ExpiresAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("GoodsReceiptId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("goods_receipt_id");
+
+                    b.Property<DateTimeOffset?>("LastMovementAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("last_movement_at");
+
+                    b.Property<DateOnly?>("ManufacturedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("manufactured_at");
+
+                    b.Property<string>("MedicineId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("medicine_id");
+
+                    b.Property<decimal>("PurchaseCost")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("purchase_cost");
+
+                    b.Property<string>("PurchaseOrderId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("purchase_order_id");
+
+                    b.Property<decimal>("ReceivedQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("received_quantity");
+
+                    b.Property<decimal?>("SalePrice")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_price");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StockLocationId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stock_location_id");
+
+                    b.Property<string>("SupplierId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchNumber");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("LastMovementAt");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("MedicineId", "Status", "ExpiresAt");
+
+                    b.HasIndex("MedicineId", "StockLocationId", "BatchKey")
+                        .IsUnique();
+
+                    b.HasIndex("StockLocationId", "Status", "ExpiresAt");
+
+                    b.ToTable("product_batches", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.PurchaseInvoiceEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("BalanceDue")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("balance_due");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<decimal>("DiscountTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("discount_total");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("due_date");
+
+                    b.Property<string>("GoodsReceiptId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("goods_receipt_id");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("grand_total");
+
+                    b.Property<DateOnly>("InvoiceDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("invoice_date");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("invoice_number");
+
+                    b.Property<decimal>("LandedCostTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("landed_cost_total");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
+
+                    b.Property<decimal>("PaidTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("paid_total");
+
+                    b.Property<string>("PurchaseOrderId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("purchase_order_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("subtotal");
+
+                    b.Property<string>("SupplierId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<string>("SupplierInvoiceNumber")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("supplier_invoice_number");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DueDate");
+
+                    b.HasIndex("GoodsReceiptId");
+
+                    b.HasIndex("InvoiceDate");
+
+                    b.HasIndex("InvoiceNumber")
+                        .IsUnique();
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SupplierId", "InvoiceDate");
+
+                    b.HasIndex("SupplierId", "SupplierInvoiceNumber")
+                        .IsUnique();
+
+                    b.ToTable("purchase_invoices", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.PurchaseOrderEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("approved_at");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("approved_by");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<decimal>("DiscountTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("discount_total");
+
+                    b.Property<DateOnly?>("ExpectedDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("expected_date");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("grand_total");
+
+                    b.Property<decimal>("LandedCostTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("landed_cost_total");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("number");
+
+                    b.Property<DateOnly>("OrderDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("order_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset?>("SubmittedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("submitted_at");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("subtotal");
+
+                    b.Property<string>("SupplierId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpectedDate");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("OrderDate");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SupplierId", "OrderDate");
+
+                    b.ToTable("purchase_orders", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.PurchaseOrderLineEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("description");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("discount_amount");
+
+                    b.Property<decimal>("LandedCostAllocated")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("landed_cost_allocated");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("line_total");
+
+                    b.Property<string>("MedicineId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("medicine_id");
+
+                    b.Property<decimal>("OrderedQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ordered_quantity");
+
+                    b.Property<string>("PurchaseOrderId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("purchase_order_id");
+
+                    b.Property<decimal>("ReceivedQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("received_quantity");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("unit_cost");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicineId");
+
+                    b.HasIndex("PurchaseOrderId", "MedicineId");
+
+                    b.ToTable("purchase_order_lines", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.RegisteredTerminalEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AllowedPermissionsJson")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("allowed_permissions_json");
+
+                    b.Property<string>("ComputerName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("computer_name");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTimeOffset?>("LastSeenAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("last_seen_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset>("RegisteredAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("registered_at");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("SecretHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("secret_hash");
+
+                    b.Property<string>("TerminalRole")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("terminal_role");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerName");
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("registered_terminals", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleBatchAllocationEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("line_total");
+
+                    b.Property<string>("ProductBatchId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("product_batch_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("SaleLineId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_line_id");
+
+                    b.Property<string>("StockMovementId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stock_movement_id");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("unit_cost");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("unit_price");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductBatchId");
+
+                    b.HasIndex("StockMovementId")
+                        .IsUnique();
+
+                    b.HasIndex("SaleLineId", "ProductBatchId");
+
+                    b.ToTable("sale_batch_allocations", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("business_date");
+
+                    b.Property<decimal>("ChangeTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("change_total");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<string>("CustomerId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("customer_id");
+
+                    b.Property<decimal>("DiscountTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("discount_total");
+
+                    b.Property<decimal>("DueTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("due_total");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("grand_total");
+
+                    b.Property<DateTimeOffset?>("HeldAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("held_at");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
+
+                    b.Property<decimal>("PaidTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("paid_total");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payment_status");
+
+                    b.Property<string>("PrescriberName")
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("prescriber_name");
+
+                    b.Property<DateOnly?>("PrescriptionDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("prescription_date");
+
+                    b.Property<string>("PrescriptionReference")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("prescription_reference");
+
+                    b.Property<string>("SaleNumber")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_number");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StockLocationId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stock_location_id");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("subtotal");
+
+                    b.Property<decimal>("TaxTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tax_total");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessDate");
+
+                    b.HasIndex("CompletedAt");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("PaymentStatus");
+
+                    b.HasIndex("PrescriptionReference");
+
+                    b.HasIndex("SaleNumber")
+                        .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StockLocationId");
+
+                    b.HasIndex("BusinessDate", "Status");
+
+                    b.HasIndex("CreatedBy", "BusinessDate");
+
+                    b.ToTable("sales", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleLineEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("CostTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cost_total");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("description");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("discount_amount");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("line_total");
+
+                    b.Property<string>("MedicineId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("medicine_id");
+
+                    b.Property<bool>("PrescriptionRequired")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("prescription_required");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("SaleId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_id");
+
+                    b.Property<string>("SaleUnit")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_unit");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tax_amount");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("unit_price");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicineId");
+
+                    b.HasIndex("SaleId", "MedicineId");
+
+                    b.ToTable("sale_lines", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SalePaymentEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("method");
+
+                    b.Property<DateTimeOffset>("PaidAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("paid_at");
+
+                    b.Property<string>("PaymentNumber")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payment_number");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reference");
+
+                    b.Property<string>("SaleId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Method");
+
+                    b.HasIndex("PaidAt");
+
+                    b.HasIndex("PaymentNumber")
+                        .IsUnique();
+
+                    b.HasIndex("SaleId", "Method");
+
+                    b.ToTable("sale_payments", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnAllocationEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("ProductBatchId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("product_batch_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("quantity");
+
+                    b.Property<bool>("Restocked")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("restocked");
+
+                    b.Property<string>("SaleBatchAllocationId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_batch_allocation_id");
+
+                    b.Property<string>("SaleReturnLineId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_return_line_id");
+
+                    b.Property<string>("StockMovementId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stock_movement_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductBatchId");
+
+                    b.HasIndex("SaleReturnLineId");
+
+                    b.HasIndex("StockMovementId");
+
+                    b.HasIndex("SaleBatchAllocationId", "SaleReturnLineId")
+                        .HasDatabaseName("sale_return_alloc_batch_line_idx");
+
+                    b.ToTable("sale_return_allocations", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("business_date");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reason");
+
+                    b.Property<decimal>("RefundTotal")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("refund_total");
+
+                    b.Property<string>("ReturnNumber")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("return_number");
+
+                    b.Property<string>("SaleId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StockLocationId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stock_location_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessDate");
+
+                    b.HasIndex("CompletedAt");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("ReturnNumber")
+                        .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SaleId", "Status");
+
+                    b.HasIndex("StockLocationId", "BusinessDate");
+
+                    b.ToTable("sale_returns", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnLineEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Disposition")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("disposition");
+
+                    b.Property<string>("MedicineId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("medicine_id");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("quantity");
+
+                    b.Property<decimal>("RefundAmount")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("refund_amount");
+
+                    b.Property<string>("SaleLineId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_line_id");
+
+                    b.Property<string>("SaleReturnId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_return_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicineId");
+
+                    b.HasIndex("SaleReturnId");
+
+                    b.HasIndex("SaleLineId", "SaleReturnId");
+
+                    b.ToTable("sale_return_lines", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnRefundEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("method");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reference");
+
+                    b.Property<string>("SaleReturnId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("sale_return_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Method");
+
+                    b.HasIndex("SaleReturnId", "Method");
+
+                    b.ToTable("sale_return_refunds", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.StockLocationEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BranchId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("code")
+                        .UseCollation("NOCASE");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_default");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsDefault");
+
+                    b.HasIndex("BranchId", "Code")
+                        .IsUnique();
+
+                    b.HasIndex("BranchId", "IsActive");
+
+                    b.ToTable("stock_locations", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.StockMovementEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ActorId")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("actor_id");
+
+                    b.Property<decimal>("BalanceAfter")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("balance_after");
+
+                    b.Property<string>("BranchId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("branch_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("MedicineId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("medicine_id");
+
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("metadata");
+
+                    b.Property<string>("MovementType")
+                        .IsRequired()
+                        .HasMaxLength(48)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("movement_type");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("ProductBatchId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("product_batch_id");
+
+                    b.Property<decimal>("QuantityDelta")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("quantity_delta");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("SourceId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source_id");
+
+                    b.Property<string>("SourceLineId")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source_line_id");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source_type");
+
+                    b.Property<string>("StockLocationId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("stock_location_id");
+
+                    b.Property<decimal?>("UnitCost")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("unit_cost");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("MovementType");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("MedicineId", "OccurredAt");
+
+                    b.HasIndex("ProductBatchId", "OccurredAt");
+
+                    b.HasIndex("SourceType", "SourceId");
+
+                    b.ToTable("stock_movements", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SupplierEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("address");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("city");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("code")
+                        .UseCollation("NOCASE");
+
+                    b.Property<string>("ContactPerson")
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("contact_person");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("email");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
+
+                    b.Property<int>("PaymentTermsDays")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("payment_terms_days");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("phone");
+
+                    b.Property<string>("Province")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("province");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("Whatsapp")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("whatsapp");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("suppliers", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SupplierPaymentEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("method");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
+
+                    b.Property<DateTimeOffset>("PaidAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("paid_at");
+
+                    b.Property<string>("PaymentNumber")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payment_number");
+
+                    b.Property<string>("PurchaseInvoiceId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("purchase_invoice_id");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reference");
+
+                    b.Property<string>("SupplierId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("PaidAt");
+
+                    b.HasIndex("PaymentNumber")
+                        .IsUnique();
+
+                    b.HasIndex("PurchaseInvoiceId");
+
+                    b.HasIndex("SupplierId", "PaidAt");
+
+                    b.ToTable("supplier_payments", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.TerminalPairingCodeEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CodeHashBase64")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("code_hash_base64");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("expires_at");
+
+                    b.Property<int>("FailedAttempts")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("failed_attempts");
+
+                    b.Property<int>("MaxAttempts")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("max_attempts");
+
+                    b.Property<string>("SaltBase64")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("salt_base64");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("used_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.ToTable("terminal_pairing_codes", (string)null);
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.BatchStatusEventEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.ProductBatchEntity", "ProductBatch")
+                        .WithMany("StatusEvents")
+                        .HasForeignKey("ProductBatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ProductBatch");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.CashierShiftEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.StockLocationEntity", "StockLocation")
+                        .WithMany()
+                        .HasForeignKey("StockLocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("StockLocation");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.DailyClosingEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.StockLocationEntity", "StockLocation")
+                        .WithMany()
+                        .HasForeignKey("StockLocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("StockLocation");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.DailyClosingEventEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.DailyClosingEntity", "Closing")
+                        .WithMany("Events")
+                        .HasForeignKey("DailyClosingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Closing");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.ExpenseEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.LedgerAccountEntity", "ExpenseAccount")
+                        .WithMany()
+                        .HasForeignKey("ExpenseAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.LedgerAccountEntity", "PaymentAccount")
+                        .WithMany()
+                        .HasForeignKey("PaymentAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.StockLocationEntity", "StockLocation")
+                        .WithMany()
+                        .HasForeignKey("StockLocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ExpenseAccount");
+
+                    b.Navigation("PaymentAccount");
+
+                    b.Navigation("StockLocation");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.GoodsReceiptEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.PurchaseOrderEntity", "PurchaseOrder")
+                        .WithMany("Receipts")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.StockLocationEntity", "StockLocation")
+                        .WithMany()
+                        .HasForeignKey("StockLocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SupplierEntity", "Supplier")
+                        .WithMany("GoodsReceipts")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PurchaseOrder");
+
+                    b.Navigation("StockLocation");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.GoodsReceiptLineEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.GoodsReceiptEntity", "GoodsReceipt")
+                        .WithMany("Lines")
+                        .HasForeignKey("GoodsReceiptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.MedicineEntity", "Medicine")
+                        .WithMany()
+                        .HasForeignKey("MedicineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.PurchaseOrderLineEntity", "PurchaseOrderLine")
+                        .WithMany("ReceiptLines")
+                        .HasForeignKey("PurchaseOrderLineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("GoodsReceipt");
+
+                    b.Navigation("Medicine");
+
+                    b.Navigation("PurchaseOrderLine");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.InventoryAdjustmentEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.StockLocationEntity", "StockLocation")
+                        .WithMany()
+                        .HasForeignKey("StockLocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("StockLocation");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.InventoryAdjustmentLineEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.InventoryAdjustmentEntity", "Adjustment")
+                        .WithMany("Lines")
+                        .HasForeignKey("InventoryAdjustmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.ProductBatchEntity", "ProductBatch")
+                        .WithMany()
+                        .HasForeignKey("ProductBatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Adjustment");
+
+                    b.Navigation("ProductBatch");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.JournalEntryEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.JournalEntryEntity", "ReversalOf")
+                        .WithMany()
+                        .HasForeignKey("ReversalOfId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ReversalOf");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.JournalLineEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.JournalEntryEntity", "JournalEntry")
+                        .WithMany("Lines")
+                        .HasForeignKey("JournalEntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.LedgerAccountEntity", "LedgerAccount")
+                        .WithMany()
+                        .HasForeignKey("LedgerAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.StockLocationEntity", null)
+                        .WithMany()
+                        .HasForeignKey("StockLocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("JournalEntry");
+
+                    b.Navigation("LedgerAccount");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.LedgerAccountEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.LedgerAccountEntity", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.MedicineEntity", b =>
                 {
                     b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.ManufacturerEntity", "Manufacturer")
@@ -298,6 +3632,320 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
                     b.Navigation("Manufacturer");
                 });
 
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.ProductBatchEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.BranchEntity", "Branch")
+                        .WithMany("ProductBatches")
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.MedicineEntity", "Medicine")
+                        .WithMany()
+                        .HasForeignKey("MedicineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.StockLocationEntity", "StockLocation")
+                        .WithMany("ProductBatches")
+                        .HasForeignKey("StockLocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("Medicine");
+
+                    b.Navigation("StockLocation");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.PurchaseInvoiceEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.GoodsReceiptEntity", "GoodsReceipt")
+                        .WithMany("Invoices")
+                        .HasForeignKey("GoodsReceiptId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.PurchaseOrderEntity", "PurchaseOrder")
+                        .WithMany("Invoices")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SupplierEntity", "Supplier")
+                        .WithMany("Invoices")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("GoodsReceipt");
+
+                    b.Navigation("PurchaseOrder");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.PurchaseOrderEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SupplierEntity", "Supplier")
+                        .WithMany("PurchaseOrders")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.PurchaseOrderLineEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.MedicineEntity", "Medicine")
+                        .WithMany()
+                        .HasForeignKey("MedicineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.PurchaseOrderEntity", "PurchaseOrder")
+                        .WithMany("Lines")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Medicine");
+
+                    b.Navigation("PurchaseOrder");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleBatchAllocationEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.ProductBatchEntity", "ProductBatch")
+                        .WithMany()
+                        .HasForeignKey("ProductBatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SaleLineEntity", "SaleLine")
+                        .WithMany("Allocations")
+                        .HasForeignKey("SaleLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.StockMovementEntity", null)
+                        .WithMany()
+                        .HasForeignKey("StockMovementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ProductBatch");
+
+                    b.Navigation("SaleLine");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.CustomerEntity", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.StockLocationEntity", "StockLocation")
+                        .WithMany()
+                        .HasForeignKey("StockLocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("StockLocation");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleLineEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.MedicineEntity", "Medicine")
+                        .WithMany()
+                        .HasForeignKey("MedicineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SaleEntity", "Sale")
+                        .WithMany("Lines")
+                        .HasForeignKey("SaleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Medicine");
+
+                    b.Navigation("Sale");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SalePaymentEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SaleEntity", "Sale")
+                        .WithMany("Payments")
+                        .HasForeignKey("SaleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Sale");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnAllocationEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.ProductBatchEntity", "ProductBatch")
+                        .WithMany()
+                        .HasForeignKey("ProductBatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SaleBatchAllocationEntity", "SaleBatchAllocation")
+                        .WithMany()
+                        .HasForeignKey("SaleBatchAllocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnLineEntity", "SaleReturnLine")
+                        .WithMany("Allocations")
+                        .HasForeignKey("SaleReturnLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.StockMovementEntity", null)
+                        .WithMany()
+                        .HasForeignKey("StockMovementId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ProductBatch");
+
+                    b.Navigation("SaleBatchAllocation");
+
+                    b.Navigation("SaleReturnLine");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SaleEntity", "Sale")
+                        .WithMany()
+                        .HasForeignKey("SaleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.StockLocationEntity", "StockLocation")
+                        .WithMany()
+                        .HasForeignKey("StockLocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Sale");
+
+                    b.Navigation("StockLocation");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnLineEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.MedicineEntity", "Medicine")
+                        .WithMany()
+                        .HasForeignKey("MedicineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SaleLineEntity", "SaleLine")
+                        .WithMany()
+                        .HasForeignKey("SaleLineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnEntity", "SaleReturn")
+                        .WithMany("Lines")
+                        .HasForeignKey("SaleReturnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Medicine");
+
+                    b.Navigation("SaleLine");
+
+                    b.Navigation("SaleReturn");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnRefundEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnEntity", "SaleReturn")
+                        .WithMany("Refunds")
+                        .HasForeignKey("SaleReturnId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SaleReturn");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.StockLocationEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.BranchEntity", "Branch")
+                        .WithMany("StockLocations")
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.StockMovementEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.ProductBatchEntity", "ProductBatch")
+                        .WithMany("Movements")
+                        .HasForeignKey("ProductBatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ProductBatch");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SupplierPaymentEntity", b =>
+                {
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.PurchaseInvoiceEntity", "PurchaseInvoice")
+                        .WithMany("Payments")
+                        .HasForeignKey("PurchaseInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BusinessOS.Pharmacy.Persistence.Entities.SupplierEntity", "Supplier")
+                        .WithMany("Payments")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PurchaseInvoice");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.BranchEntity", b =>
+                {
+                    b.Navigation("ProductBatches");
+
+                    b.Navigation("StockLocations");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.DailyClosingEntity", b =>
+                {
+                    b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.GoodsReceiptEntity", b =>
+                {
+                    b.Navigation("Invoices");
+
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.InventoryAdjustmentEntity", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.JournalEntryEntity", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
             modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.ManufacturerEntity", b =>
                 {
                     b.Navigation("Medicines");
@@ -306,6 +3954,72 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
             modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.MedicineCategoryEntity", b =>
                 {
                     b.Navigation("Medicines");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.ProductBatchEntity", b =>
+                {
+                    b.Navigation("Movements");
+
+                    b.Navigation("StatusEvents");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.PurchaseInvoiceEntity", b =>
+                {
+                    b.Navigation("Payments");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.PurchaseOrderEntity", b =>
+                {
+                    b.Navigation("Invoices");
+
+                    b.Navigation("Lines");
+
+                    b.Navigation("Receipts");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.PurchaseOrderLineEntity", b =>
+                {
+                    b.Navigation("ReceiptLines");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleEntity", b =>
+                {
+                    b.Navigation("Lines");
+
+                    b.Navigation("Payments");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleLineEntity", b =>
+                {
+                    b.Navigation("Allocations");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnEntity", b =>
+                {
+                    b.Navigation("Lines");
+
+                    b.Navigation("Refunds");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SaleReturnLineEntity", b =>
+                {
+                    b.Navigation("Allocations");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.StockLocationEntity", b =>
+                {
+                    b.Navigation("ProductBatches");
+                });
+
+            modelBuilder.Entity("BusinessOS.Pharmacy.Persistence.Entities.SupplierEntity", b =>
+                {
+                    b.Navigation("GoodsReceipts");
+
+                    b.Navigation("Invoices");
+
+                    b.Navigation("Payments");
+
+                    b.Navigation("PurchaseOrders");
                 });
 #pragma warning restore 612, 618
         }
