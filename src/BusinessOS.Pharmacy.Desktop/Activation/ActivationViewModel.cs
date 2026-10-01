@@ -16,7 +16,7 @@ public sealed partial class ActivationViewModel : ObservableObject
     private string licenseKey = string.Empty;
 
     [ObservableProperty]
-    private string statusMessage = "Enter the license key created by the Darmaltoon website.";
+    private string statusMessage = "Enter your license key, or request a 7-day trial above.";
 
     [ObservableProperty]
     private bool isBusy;
@@ -72,10 +72,21 @@ public sealed partial class ActivationViewModel : ObservableObject
 
     private void OpenTrialPage()
     {
-        Process.Start(new ProcessStartInfo
+        try
         {
-            FileName = _options.BaseUrl,
-            UseShellExecute = true,
-        });
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = _options.BaseUrl,
+                UseShellExecute = true,
+            });
+
+            StatusMessage =
+                "Trial page opened in your browser. Submit the request, then enter the license key after approval.";
+        }
+        catch
+        {
+            StatusMessage =
+                $"Open {_options.BaseUrl} in your browser to request a 7-day trial.";
+        }
     }
 }
