@@ -22,6 +22,7 @@ if ($null -ne $service) {
 }
 
 & netsh.exe advfirewall firewall delete rule name="$firewallRule" | Out-Null
+& netsh.exe advfirewall firewall delete rule name="$discoveryFirewallRule" | Out-Null
 
 Write-Host "Darmaltoon Local Server Windows Service and its firewall rule were removed."
 Write-Host "Pharmacy databases, backups, activation, certificates, network configuration and logs were intentionally left untouched."

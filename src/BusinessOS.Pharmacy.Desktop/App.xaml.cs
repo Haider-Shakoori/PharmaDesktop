@@ -21,11 +21,18 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
 
+        if (TryHandleInstallVerification(e.Args))
+        {
+            Shutdown(0);
+            return;
+        }
+
         var paths = new ApplicationPaths();
         paths.EnsureCreated();
 
         var configurationStore = new NetworkConfigurationStore(paths);
         var networkConfiguration = await configurationStore.LoadAsync();
+        var installerMode = ReadInstallerDeploymentMode();
 
         if (!networkConfiguration.IsConfigured)
         {
@@ -56,7 +63,8 @@ public partial class App : System.Windows.Application
                 var setupViewModel = new DeploymentSetupViewModel(
                     configurationStore,
                     discovery,
-                    pairingClient);
+                    pairingClient,
+                    installerMode);
                 var setupWindow = new DeploymentSetupWindow(setupViewModel);
 
                 if (setupWindow.ShowDialog() != true)
@@ -80,6 +88,45 @@ public partial class App : System.Windows.Application
         await _host.Services
             .GetRequiredService<StartupCoordinator>()
             .StartAsync();
+    }
+
+    private static bool TryHandleInstallVerification(IReadOnlyList<string> args)
+    {
+        var prefix = "--verify-install=";
+        var argument = args.FirstOrDefault(x => x.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+        if (argument is null) return false;
+
+        var output = argument[prefix.Length..].Trim().Trim('"');
+        var version = typeof(App).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+        var payload = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            product = "Darmaltoon",
+            version,
+            base_directory = AppContext.BaseDirectory,
+            process_architecture = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(),
+            framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+            deployment_hint = ReadInstallerDeploymentMode()?.ToString(),
+        });
+
+        var directory = Path.GetDirectoryName(Path.GetFullPath(output));
+        if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
+        File.WriteAllText(output, payload);
+        return true;
+    }
+
+    private static DeploymentMode? ReadInstallerDeploymentMode()
+    {
+        try
+        {
+            var path = Path.Combine(AppContext.BaseDirectory, "deployment-default.txt");
+            if (!File.Exists(path)) return null;
+            var text = File.ReadAllText(path).Trim();
+            return Enum.TryParse<DeploymentMode>(text, true, out var mode) ? mode : null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     protected override async void OnExit(ExitEventArgs e)

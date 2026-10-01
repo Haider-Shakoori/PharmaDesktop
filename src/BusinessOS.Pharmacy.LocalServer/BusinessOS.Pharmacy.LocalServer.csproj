@@ -3,6 +3,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>BusinessOS.Pharmacy.LocalServer</AssemblyName>
     <RootNamespace>BusinessOS.Pharmacy.LocalServer</RootNamespace>
+    <Product>Darmaltoon Main Pharmacy Server</Product>
+    <Company>BusinessOS.af</Company>
+    <Authors>WeSoft Technologies</Authors>
+    <Description>Darmaltoon authoritative local pharmacy LAN server</Description>
   </PropertyGroup>
 
   <ItemGroup>

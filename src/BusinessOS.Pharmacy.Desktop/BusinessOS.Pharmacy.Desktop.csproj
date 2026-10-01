@@ -7,6 +7,10 @@
     <AssemblyName>Darmaltoon</AssemblyName>
     <AssemblyTitle>Darmaltoon</AssemblyTitle>
     <Product>Darmaltoon</Product>
+    <Company>BusinessOS.af</Company>
+    <Authors>WeSoft Technologies</Authors>
+    <Description>Darmaltoon Pharmacy Management for Windows</Description>
+    <Copyright>Copyright © BusinessOS.af</Copyright>
     <RootNamespace>BusinessOS.Pharmacy.Desktop</RootNamespace>
   </PropertyGroup>
   <ItemGroup>

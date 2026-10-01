@@ -206,7 +206,10 @@ public sealed class UpdateService
     private string PrepareRunner()
     {
         var sourceDll = typeof(UpdateService).Assembly.Location;
-        var sourceDir = Path.GetDirectoryName(sourceDll)!;
+        var selfContainedUpdater = Path.Combine(AppContext.BaseDirectory, "Updater");
+        var sourceDir = Directory.Exists(selfContainedUpdater)
+            ? selfContainedUpdater
+            : Path.GetDirectoryName(sourceDll)!;
         var runnerDir = SafeChild(
             _updatesRoot,
             Path.Combine("runner", Guid.NewGuid().ToString("N")));

@@ -33,3 +33,4 @@ This matrix is based on the current Laravel routes, tenant migrations, controlle
 | Offline sync | current mobile sync APIs/services | idempotent; retry-safe; tenant-safe; late-close conflicts explicit | Sync status/queue | Hybrid | Required | active lease | Audited |
 | Printing | web receipts/reports | preserve tenant/financial data | 58/80mm + A4 native printing | Local | No | module permission | Planned |
 | Updater | platform responsibility | signed/checksummed release metadata required | Updater | Cloud | Check | min version | Implemented (Batch 20) |
+| Windows installer/release | desktop deployment responsibility | self-contained runtime; preserve ProgramData; mode-aware service/shortcuts; safe upgrade/uninstall | Setup.exe + release artifacts | Local | No | admin install | Implemented (Batch 21) |

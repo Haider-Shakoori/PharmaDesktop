@@ -28,11 +28,13 @@ public sealed partial class DeploymentSetupViewModel : ObservableObject
     public DeploymentSetupViewModel(
         INetworkConfigurationStore configurationStore,
         ILocalServerDiscovery discovery,
-        LanTerminalPairingClient pairingClient)
+        LanTerminalPairingClient pairingClient,
+        DeploymentMode? preferredMode = null)
     {
         _configurationStore = configurationStore;
         _discovery = discovery;
         _pairingClient = pairingClient;
+        SelectedMode = preferredMode ?? DeploymentMode.Standalone;
 
         DiscoverCommand = new AsyncRelayCommand(DiscoverAsync, () => !IsBusy);
         SaveCommand = new AsyncRelayCommand(SaveAsync, () => !IsBusy);

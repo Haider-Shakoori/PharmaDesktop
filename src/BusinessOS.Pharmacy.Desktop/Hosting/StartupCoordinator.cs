@@ -152,6 +152,35 @@ public sealed class StartupCoordinator
                 entitlement.TenantId,
                 _networkConfiguration.ServerName,
                 cancellationToken);
+
+            try
+            {
+                var controller = _services.GetRequiredService<ILocalServerServiceController>();
+                _ = await controller.EnsurePrivateFirewallRuleAsync(
+                    _networkConfiguration.ServerPort,
+                    cancellationToken);
+                _ = await controller.EnsurePrivateDiscoveryFirewallRuleAsync(
+                    _networkConfiguration.DiscoveryPort,
+                    cancellationToken);
+                var serviceStatus = await controller.StartAsync(cancellationToken);
+
+                if (serviceStatus.IsWindows && serviceStatus.IsInstalled && !serviceStatus.IsRunning)
+                {
+                    MessageBox.Show(
+                        serviceStatus.Message,
+                        "Darmaltoon — Main Server Service",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(
+                    $"Darmaltoon is ready, but the Main Pharmacy Server Windows Service could not be started automatically. Open Network & Terminals after login to review it.\n\n{exception.Message}",
+                    "Darmaltoon — Main Server Service",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
         }
 
         if (!ShowLogin())
