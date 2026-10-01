@@ -15,6 +15,7 @@ $desktopProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.Desktop/BusinessO
 $serverProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.LocalServer/BusinessOS.Pharmacy.LocalServer.csproj"
 $updaterProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.Updater/BusinessOS.Pharmacy.Updater.csproj"
 $installerScript = Join-Path $repoRoot "packaging/windows/Darmaltoon.iss"
+$serviceRegistrationScript = Join-Path $repoRoot "scripts/register-darmaltoon-local-server-service.ps1"
 $outputRoot = [IO.Path]::GetFullPath((Join-Path $repoRoot $OutputDirectory))
 $workRoot = Join-Path $outputRoot "_work"
 $publishRoot = Join-Path $workRoot "publish"
@@ -116,6 +117,7 @@ foreach ($item in $modes) {
         $serverTarget = Join-Path $payloadRoot "Server"
         New-Item -ItemType Directory -Path $serverTarget | Out-Null
         Copy-Item (Join-Path $serverPublish "*") $serverTarget -Recurse -Force
+        Copy-Item $serviceRegistrationScript (Join-Path $serverTarget "register-service.ps1") -Force
     }
 
     Set-ReleaseConfiguration $payloadRoot

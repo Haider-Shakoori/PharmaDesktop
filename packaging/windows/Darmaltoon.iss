@@ -70,10 +70,7 @@ Root: HKLM; Subkey: "Software\BusinessOS\Darmaltoon"; ValueType: string; ValueNa
 
 #if DeploymentMode == "Server"
 [Run]
-Filename: "{sys}\sc.exe"; Parameters: "create ""{#MyServiceName}"" binPath= """"{#MyServiceExe}"""" start= auto DisplayName= ""Darmaltoon Main Pharmacy Server"""; Flags: runhidden waituntilterminated
-Filename: "{sys}\sc.exe"; Parameters: "config ""{#MyServiceName}"" binPath= """"{#MyServiceExe}"""" start= auto DisplayName= ""Darmaltoon Main Pharmacy Server"""; Flags: runhidden waituntilterminated
-Filename: "{sys}\sc.exe"; Parameters: "description ""{#MyServiceName}"" ""Darmaltoon authoritative local pharmacy LAN server."""; Flags: runhidden waituntilterminated
-Filename: "{sys}\sc.exe"; Parameters: "failure ""{#MyServiceName}"" reset= 86400 actions= restart/5000/restart/15000/restart/30000"; Flags: runhidden waituntilterminated
+Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\Server\register-service.ps1"" -ExecutablePath ""{#MyServiceExe}"""; Flags: runhidden waituntilterminated
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Darmaltoon Local Server API (Private LAN)"""; Flags: runhidden waituntilterminated
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Darmaltoon Local Server API (Private LAN)"" dir=in action=allow protocol=TCP localport=5280 profile=private remoteip=localsubnet"; Flags: runhidden waituntilterminated
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Darmaltoon Local Server Discovery (Private LAN)"""; Flags: runhidden waituntilterminated
