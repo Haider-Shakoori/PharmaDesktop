@@ -58,8 +58,10 @@ internal static class Program
             DataContext = shell,
             Width = 1600,
             Height = 920,
-            MinWidth = 1180,
-            MinHeight = 720,
+            MinWidth = 1280,
+            MinHeight = 760,
+            WindowStyle = WindowStyle.None,
+            ResizeMode = ResizeMode.NoResize,
             ShowInTaskbar = false,
             WindowStartupLocation = WindowStartupLocation.Manual,
             Left = -20000,
@@ -68,10 +70,17 @@ internal static class Program
         window.Show();
         window.UpdateLayout();
 
-        var width = Math.Max(1, (int)Math.Ceiling(window.ActualWidth));
-        var height = Math.Max(1, (int)Math.Ceiling(window.ActualHeight));
+        const int width = 1600;
+        const int height = 920;
+        if (window.Content is FrameworkElement rootVisual)
+        {
+            rootVisual.Measure(new Size(width, height));
+            rootVisual.Arrange(new Rect(0, 0, width, height));
+            rootVisual.UpdateLayout();
+        }
+
         var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
-        bitmap.Render(window);
+        bitmap.Render((Visual)window.Content);
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
         using (var stream = File.Create(output)) encoder.Save(stream);
@@ -94,31 +103,31 @@ internal static class Program
             NavigationItems =
             [
                 new("dashboard", "Dashboard", "Operations", true),
-                new("pos", "POS", "Operations"),
-                new("customers", "Customers", "Operations"),
+                new("pos", "POS (New Sale)", "Operations"),
                 new("medicines", "Medicines", "Stock"),
                 new("inventory", "Inventory", "Stock"),
                 new("batches", "Batches", "Stock"),
                 new("purchases", "Purchases", "Purchasing"),
                 new("suppliers", "Suppliers", "Purchasing"),
-                new("returns", "Returns", "Purchasing"),
+                new("customers", "Customers", "Operations"),
                 new("expenses", "Expenses", "Finance"),
                 new("closing", "Daily Closing", "Finance"),
                 new("reports", "Reports", "Finance"),
+                new("returns", "Returns", "Purchasing"),
                 new("users", "Users", "Administration"),
                 new("roles", "Roles & Permissions", "Administration"),
                 new("backup", "Backup", "Administration"),
-                new("settings", "Settings", "Administration"),
                 new("updates", "Sync & Updates", "System"),
                 new("network", "Network & Terminals", "System"),
+                new("settings", "Settings", "Administration"),
             ];
         }
         public string ApplicationName => "BusinessOS Pharmacy";
-        public string ProductName => "Darmaltoon";
-        public string ParentBrand => "BusinessOS.af";
+        public string ProductName => "BusinessOS Pharmacy";
+        public string ParentBrand => "Darmaltoon Pharmacy";
         public FlowDirection LayoutDirection => FlowDirection.LeftToRight;
         public bool SidebarCollapsed => false;
-        public double SidebarWidth => 252d;
+        public double SidebarWidth => 240d;
         public string GlobalSearchText { get; set; } = string.Empty;
         public DashboardViewModel Dashboard { get; }
         public object CurrentPage { get; }

@@ -123,13 +123,17 @@
                                                FontWeight="SemiBold"
                                                Foreground="#2E4667"
                                                TextWrapping="Wrap" />
-                                    <TextBlock Text="{Binding Value}"
-                                               Margin="0,5,0,0"
-                                               FontSize="19"
-                                               FontWeight="Bold"
-                                               Foreground="#0B1F44"
-                                               TextWrapping="NoWrap"
-                                               TextTrimming="CharacterEllipsis" />
+                                    <Viewbox Margin="0,5,0,0"
+                                             Height="24"
+                                             Stretch="Uniform"
+                                             StretchDirection="DownOnly"
+                                             HorizontalAlignment="Left">
+                                        <TextBlock Text="{Binding Value}"
+                                                   FontSize="19"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0B1F44"
+                                                   TextWrapping="NoWrap" />
+                                    </Viewbox>
                                     <TextBlock Text="{Binding Note}"
                                                Margin="0,4,0,0"
                                                FontSize="9.5"
@@ -145,7 +149,7 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="326" />
+                    <ColumnDefinition Width="304" />
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Margin="0,0,10,0">
@@ -384,9 +388,36 @@
                                     <DataGridTemplateColumn Header="Status" Width="78">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Border Background="#DCFCE7" CornerRadius="7" Padding="7,2"
+                                                <Border CornerRadius="7" Padding="7,2"
                                                         HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Status}" FontSize="9.5" Foreground="#15803D" FontWeight="SemiBold" />
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="#DCFCE7" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Status}" Value="open">
+                                                                    <Setter Property="Background" Value="#DBEAFE" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Status}" Value="completed">
+                                                                    <Setter Property="Background" Value="#DBEAFE" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="{Binding Status}" FontSize="9.5" FontWeight="SemiBold">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#15803D" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Status}" Value="open">
+                                                                        <Setter Property="Foreground" Value="#2563EB" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Status}" Value="completed">
+                                                                        <Setter Property="Foreground" Value="#2563EB" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
                                                 </Border>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>

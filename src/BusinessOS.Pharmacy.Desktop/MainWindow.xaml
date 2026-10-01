@@ -98,22 +98,18 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Border Width="38" Height="40"
-                                CornerRadius="14"
+                        <Border Width="48" Height="48"
+                                CornerRadius="24"
                                 Background="{DynamicResource BrandPrimaryBrush}">
-                            <Path Data="{StaticResource IconMedicines}"
-                                  Width="25" Height="25"
+                            <Path Data="{StaticResource IconPharmacyCross}"
+                                  Width="27" Height="27"
                                   Stretch="Uniform"
-                                  Stroke="White"
-                                  StrokeThickness="1.8"
-                                  StrokeStartLineCap="Round"
-                                  StrokeEndLineCap="Round"
-                                  StrokeLineJoin="Round"
-                                  Fill="Transparent"
+                                  Fill="White"
+                                  StrokeThickness="0"
                                   HorizontalAlignment="Center"
                                   VerticalAlignment="Center" />
                         </Border>
-                        <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="1" Margin="10,-2,0,0" VerticalAlignment="Center">
                             <StackPanel.Style>
                                 <Style TargetType="StackPanel">
                                     <Style.Triggers>
@@ -123,10 +119,26 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBlock Text="{Binding ProductName}" FontSize="17" FontWeight="Bold" Foreground="#0F2B5B" />
-                            <TextBlock Text="{Binding ParentBrand}" FontSize="12" Foreground="#49658D" Margin="0,2,0,0" />
+                            <TextBlock Text="BusinessOS" FontSize="17" FontWeight="Bold" Foreground="#102A56" />
+                            <TextBlock Text="Pharmacy" FontSize="17" FontWeight="Bold"
+                                       Foreground="{DynamicResource BrandPrimaryBrush}" Margin="0,-3,0,0" />
                         </StackPanel>
                     </Grid>
+                    <TextBlock Text="{Binding Dashboard.PharmacyName}"
+                               Margin="6,6,0,0"
+                               FontSize="11.5"
+                               Foreground="#52677F"
+                               TextTrimming="CharacterEllipsis">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SidebarCollapsed}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
 
                     <Button Command="{Binding ToggleSidebarCommand}"
                             Style="{StaticResource GhostButton}"
@@ -267,7 +279,7 @@
                                   HorizontalAlignment="Center"
                                   VerticalAlignment="Center" />
                             <Grid Grid.Column="1">
-                                <TextBlock Text="Search medicines, customers, suppliers…"
+                                <TextBlock Text="Search medicines, customers, invoices…"
                                            VerticalAlignment="Center"
                                            IsHitTestVisible="False">
                                     <TextBlock.Style>
@@ -292,7 +304,7 @@
                                     Padding="8,5"
                                     Margin="2"
                                     ToolTip="Search">
-                                <TextBlock Text="Ctrl+F" Style="{StaticResource CaptionText}" />
+                                <TextBlock Text="Ctrl+S" Style="{StaticResource CaptionText}" />
                             </Button>
                         </Grid>
                     </Border>
@@ -311,7 +323,7 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <Border Width="26" Height="26" CornerRadius="7" Background="#E7F2FF">
-                                    <Path Data="{StaticResource IconDashboard}" Width="14" Height="14"
+                                    <Path Data="{StaticResource IconStore}" Width="14" Height="14"
                                           Stroke="{DynamicResource BrandPrimaryBrush}" StrokeThickness="1.8"
                                           Fill="Transparent" Stretch="Uniform"
                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -325,13 +337,30 @@
                             </Grid>
                         </Border>
 
-                        <ComboBox Width="112"
-                                  Height="36"
-                                  ItemsSource="{Binding Languages}"
-                                  SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
-                                  DisplayMemberPath="DisplayName"
-                                  Margin="0,0,8,0"
-                                  ToolTip="Language" />
+                        <Border Width="118" Height="38"
+                                Background="#F8FBFF"
+                                BorderBrush="#D9E5F1"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Margin="0,0,8,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="32" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource IconGlobe}" Width="16" Height="16"
+                                      Stroke="#24466F" StrokeThickness="1.7" Fill="Transparent"
+                                      Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <ComboBox Grid.Column="1"
+                                          ItemsSource="{Binding Languages}"
+                                          SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
+                                          DisplayMemberPath="DisplayName"
+                                          BorderThickness="0"
+                                          Background="Transparent"
+                                          Padding="2,0"
+                                          ToolTip="Language" />
+                            </Grid>
+                        </Border>
 
                         <Button Command="{Binding NavigateCommand}"
                                 CommandParameter="inventory"
