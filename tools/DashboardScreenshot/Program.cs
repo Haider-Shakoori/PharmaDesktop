@@ -8,12 +8,14 @@ using System.Windows.Media.Imaging;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Dashboard;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
+using BusinessOS.Pharmacy.Application.Abstractions.Sales;
 using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Desktop;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.Desktop.Navigation;
+using BusinessOS.Pharmacy.Desktop.Pos;
 using BusinessOS.Pharmacy.Domain.Authentication;
 using BusinessOS.Pharmacy.Domain.Licensing;
 using BusinessOS.Pharmacy.Licensing;
@@ -25,6 +27,7 @@ internal static class Program
     private static void Main(string[] args)
     {
         var output = args.Length > 0 ? Path.GetFullPath(args[0]) : Path.GetFullPath("dashboard-real.png");
+        var mode = args.Length > 1 ? args[1].Trim().ToLowerInvariant() : "dashboard";
         Directory.CreateDirectory(Path.GetDirectoryName(output)!);
         var now = new DateTimeOffset(2026, 10, 1, 6, 0, 0, TimeSpan.Zero);
         var clock = new FakeClock(now);
@@ -50,9 +53,45 @@ internal static class Program
             new FakeActivationStore(now));
         dashboard.LoadAsync().GetAwaiter().GetResult();
 
+        object currentPage = dashboard;
+        var selectedKey = "dashboard";
+        if (mode == "pos")
+        {
+            var pos = new PosViewModel(
+                new FakePosService(),
+                permissions,
+                clock);
+            pos.LoadAsync().GetAwaiter().GetResult();
+
+            // Exercise the real barcode flow twice. Each scan must remain an independent cart line.
+            pos.SearchText = FakePosService.PrimaryBarcode;
+            pos.SearchCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+            pos.SearchText = FakePosService.PrimaryBarcode;
+            pos.SearchCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+
+            if (pos.Cart.Count != 2 ||
+                pos.Cart.Any(line => line.Quantity != 1m) ||
+                pos.Cart.Select(line => line).Distinct().Count() != 2)
+            {
+                throw new InvalidOperationException(
+                    "Repeated barcode scans must create two independent quantity-1 cart lines.");
+            }
+
+            pos.SearchText = "Amoxicillin";
+            pos.SearchCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+            pos.SelectedProduct = pos.SearchResults.FirstOrDefault();
+            if (pos.AddToCartCommand.CanExecute(null))
+            {
+                pos.AddToCartCommand.Execute(null);
+            }
+
+            currentPage = pos;
+            selectedKey = "pos";
+        }
+
         var app = new App();
         app.InitializeComponent();
-        var shell = new ScreenshotShell(dashboard, session.Current!);
+        var shell = new ScreenshotShell(dashboard, currentPage, selectedKey, session.Current!);
         var window = new MainWindow(null!)
         {
             DataContext = shell,
@@ -87,47 +126,58 @@ internal static class Program
 
         window.Close();
         app.Shutdown();
-        Console.WriteLine($"Captured real WPF dashboard to {output}");
+        Console.WriteLine($"Captured real WPF {mode} to {output}");
         Console.WriteLine($"Size: {width}x{height}");
     }
 
     private sealed class ScreenshotShell
     {
-        public ScreenshotShell(DashboardViewModel dashboard, UserSessionSnapshot user)
+        public ScreenshotShell(
+            DashboardViewModel dashboard,
+            object currentPage,
+            string selectedKey,
+            UserSessionSnapshot user)
         {
             Dashboard = dashboard;
-            CurrentPage = dashboard;
+            CurrentPage = currentPage;
             UserDisplayName = user.Name;
             UserRoleText = "Administrator";
             SelectedLanguage = UiLanguageCatalog.All[0];
-            NavigationItems =
-            [
-                new("dashboard", "Dashboard", "Operations", true),
-                new("pos", "POS (New Sale)", "Operations"),
-                new("medicines", "Medicines", "Stock"),
-                new("inventory", "Inventory", "Stock"),
-                new("batches", "Batches", "Stock"),
-                new("purchases", "Purchases", "Purchasing"),
-                new("suppliers", "Suppliers", "Purchasing"),
-                new("customers", "Customers", "Operations"),
-                new("expenses", "Expenses", "Finance"),
-                new("closing", "Daily Closing", "Finance"),
-                new("reports", "Reports", "Finance"),
-                new("returns", "Returns", "Purchasing"),
-                new("users", "Users", "Administration"),
-                new("roles", "Roles & Permissions", "Administration"),
-                new("backup", "Backup", "Administration"),
-                new("updates", "Sync & Updates", "System"),
-                new("network", "Network & Terminals", "System"),
-                new("settings", "Settings", "Administration"),
-            ];
+            var navigation = new (string Key, string Label, string Group)[]
+            {
+                ("dashboard", "Dashboard", "Operations"),
+                ("pos", "POS (New Sale)", "Operations"),
+                ("medicines", "Medicines", "Stock"),
+                ("inventory", "Inventory", "Stock"),
+                ("batches", "Batches", "Stock"),
+                ("purchases", "Purchases", "Purchasing"),
+                ("suppliers", "Suppliers", "Purchasing"),
+                ("customers", "Customers", "Operations"),
+                ("expenses", "Expenses", "Finance"),
+                ("closing", "Daily Closing", "Finance"),
+                ("reports", "Reports", "Finance"),
+                ("returns", "Returns", "Purchasing"),
+                ("users", "Users", "Administration"),
+                ("roles", "Roles & Permissions", "Administration"),
+                ("backup", "Backup", "Administration"),
+                ("updates", "Sync & Updates", "System"),
+                ("network", "Network & Terminals", "System"),
+                ("settings", "Settings", "Administration"),
+            };
+
+            NavigationItems = new ObservableCollection<NavigationItemViewModel>(
+                navigation.Select(item => new NavigationItemViewModel(
+                    item.Key,
+                    item.Label,
+                    item.Group,
+                    string.Equals(item.Key, selectedKey, StringComparison.OrdinalIgnoreCase))));
         }
         public string ApplicationName => "BusinessOS Pharmacy";
         public string ProductName => "BusinessOS Pharmacy";
         public string ParentBrand => "Darmaltoon Pharmacy";
         public FlowDirection LayoutDirection => FlowDirection.LeftToRight;
         public bool SidebarCollapsed => false;
-        public double SidebarWidth => 240d;
+        public double SidebarWidth => 224d;
         public string GlobalSearchText { get; set; } = string.Empty;
         public DashboardViewModel Dashboard { get; }
         public object CurrentPage { get; }
@@ -225,6 +275,125 @@ internal static class Program
         public CloudSyncRunResult LastResult { get; } =
             new(CloudSyncRunState.Synced,"Synced 2 min ago",now.AddMinutes(-2),now.AddMinutes(-2));
         public Task<CloudSyncRunResult> SyncOnceAsync(CancellationToken cancellationToken = default) => Task.FromResult(LastResult);
+    }
+
+    private sealed class FakePosService : IPosService
+    {
+        public const string PrimaryBarcode = "0123456789012";
+
+        private static readonly PosStockLocationItem Location =
+            new("loc-main", "Kabul", "Main Store", true);
+
+        private static readonly PosCustomerItem[] Customers =
+        [
+            new("cust-1", "Ahmad Noori", "0700000001", 5000m),
+            new("cust-2", "Fatima Rahimi", "0700000002", 2500m),
+            new("cust-3", "Walk-in Corporate", "0700000003", 0m),
+        ];
+
+        private static readonly PosProductSearchItem[] Products =
+        [
+            new(
+                "med-para",
+                "PARA-500",
+                PrimaryBarcode,
+                "Paracetamol",
+                "Paracetamol",
+                "500 mg",
+                "tablet",
+                12m,
+                20m,
+                20m,
+                22m,
+                false,
+                [
+                    new("batch-para-1", "PA-1026", 6m, 20m, new DateOnly(2027, 2, 28)),
+                    new("batch-para-2", "PA-0627", 6m, 22m, new DateOnly(2027, 6, 30)),
+                ]),
+            new(
+                "med-amox",
+                "AMOX-250",
+                "0123456789029",
+                "Amoxicillin",
+                "Amoxicillin",
+                "250 mg",
+                "capsule",
+                8m,
+                35m,
+                35m,
+                35m,
+                true,
+                [
+                    new("batch-amox-1", "AM-0327", 8m, 35m, new DateOnly(2027, 3, 31)),
+                ]),
+            new(
+                "med-ome",
+                "OME-20",
+                "0123456789036",
+                "Omeprazole",
+                "Omeprazole",
+                "20 mg",
+                "capsule",
+                15m,
+                18m,
+                18m,
+                18m,
+                false,
+                [
+                    new("batch-ome-1", "OM-0527", 15m, 18m, new DateOnly(2027, 5, 31)),
+                ]),
+        ];
+
+        public Task<PosReferenceData> GetReferenceDataAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new PosReferenceData([Location], Customers));
+
+        public Task<IReadOnlyList<PosProductSearchItem>> SearchProductsAsync(
+            PosProductSearchFilter filter,
+            CancellationToken cancellationToken = default)
+        {
+            var query = filter.Query.Trim();
+            IReadOnlyList<PosProductSearchItem> result = Products
+                .Where(item =>
+                    string.Equals(item.Barcode, query, StringComparison.OrdinalIgnoreCase) ||
+                    item.MedicineCode.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    item.BrandName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    (item.GenericName?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (item.Strength?.Contains(query, StringComparison.OrdinalIgnoreCase) ?? false))
+                .Take(filter.Take)
+                .ToList();
+
+            return Task.FromResult(result);
+        }
+
+        public Task<SaleDetail> CheckoutAsync(
+            PosCheckoutRequest request,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException("Screenshot harness does not post sales.");
+
+        public Task<IReadOnlyList<SaleListItem>> SearchSalesAsync(
+            SaleSearchFilter filter,
+            CancellationToken cancellationToken = default)
+        {
+            IReadOnlyList<SaleListItem> sales =
+            [
+                new("sale-1", "POS-20261001-0048", new DateOnly(2026, 10, 1),
+                    new DateTimeOffset(2026, 10, 1, 10, 18, 0, TimeSpan.FromHours(4.5)),
+                    "Walk-in Customer", "Main Store", "paid", 1250m, 1250m, 0m, 0m),
+                new("sale-2", "POS-20261001-0047", new DateOnly(2026, 10, 1),
+                    new DateTimeOffset(2026, 10, 1, 9, 45, 0, TimeSpan.FromHours(4.5)),
+                    "Ahmad Noori", "Main Store", "paid", 2480m, 2480m, 0m, 0m),
+                new("sale-3", "POS-20261001-0046", new DateOnly(2026, 10, 1),
+                    new DateTimeOffset(2026, 10, 1, 8, 30, 0, TimeSpan.FromHours(4.5)),
+                    "Fatima Rahimi", "Main Store", "partial", 780m, 500m, 280m, 0m),
+            ];
+            return Task.FromResult(sales);
+        }
+
+        public Task<SaleDetail?> GetSaleAsync(
+            string id,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<SaleDetail?>(null);
     }
 
     private sealed class FakeDashboardQueryService : ILocalDashboardQueryService

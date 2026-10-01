@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Sales;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
@@ -14,8 +15,11 @@ public sealed partial class PosViewModel : ObservableObject
     private readonly IPermissionAuthorizer _permissions;
     private readonly IClock _clock;
     private UiLanguage _language = UiLanguageCatalog.All[0];
+    private bool _suppressSearchTextChanged;
 
     [ObservableProperty] private bool isBusy;
+    [ObservableProperty] private bool isSearching;
+    [ObservableProperty] private bool isSearchDropdownOpen;
     [ObservableProperty] private string statusMessage = string.Empty;
     [ObservableProperty] private string searchText = string.Empty;
     [ObservableProperty] private PosStockLocationItem? selectedLocation;
@@ -44,20 +48,42 @@ public sealed partial class PosViewModel : ObservableObject
         _clock = clock;
 
         LoadCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
-        SearchCommand = new AsyncRelayCommand(SearchAsync, () => !IsBusy && SelectedLocation is not null);
+        SearchCommand = new AsyncRelayCommand(
+            SearchAsync,
+            () => !IsBusy &&
+                  SelectedLocation is not null &&
+                  !string.IsNullOrWhiteSpace(SearchText));
+        AddSearchResultCommand = new RelayCommand<PosProductSearchItem>(
+            AddSearchResult,
+            item => !IsBusy && item is not null);
         AddToCartCommand = new RelayCommand(AddToCart, CanAddToCart);
-        RemoveFromCartCommand = new RelayCommand<PosCartLineViewModel>(RemoveFromCart, x => !IsBusy && x is not null);
+        RemoveFromCartCommand = new RelayCommand<PosCartLineViewModel>(
+            RemoveFromCart,
+            item => !IsBusy && item is not null);
+        ClearCartCommand = new RelayCommand(ClearCart, () => !IsBusy && Cart.Count > 0);
         AddPaymentCommand = new RelayCommand(AddPayment, CanAddPayment);
-        RemovePaymentCommand = new RelayCommand<PosPaymentDraftViewModel>(RemovePayment, x => !IsBusy && x is not null);
+        AddSplitPaymentCommand = new RelayCommand(AddSplitPayment, () => !IsBusy && Payments.Count < 10);
+        SetCashToTotalCommand = new RelayCommand(SetCashToTotal, () => !IsBusy && Cart.Count > 0);
+        RemovePaymentCommand = new RelayCommand<PosPaymentDraftViewModel>(
+            RemovePayment,
+            item => !IsBusy && item is not null && Payments.Count > 1);
         CheckoutCommand = new AsyncRelayCommand(CheckoutAsync, CanCheckout);
         RefreshSalesCommand = new AsyncRelayCommand(RefreshSalesAsync, () => !IsBusy);
+
+        ResetPaymentsToCash();
     }
+
+    public event EventHandler? SearchFocusRequested;
 
     public IAsyncRelayCommand LoadCommand { get; }
     public IAsyncRelayCommand SearchCommand { get; }
+    public IRelayCommand<PosProductSearchItem> AddSearchResultCommand { get; }
     public IRelayCommand AddToCartCommand { get; }
     public IRelayCommand<PosCartLineViewModel> RemoveFromCartCommand { get; }
+    public IRelayCommand ClearCartCommand { get; }
     public IRelayCommand AddPaymentCommand { get; }
+    public IRelayCommand AddSplitPaymentCommand { get; }
+    public IRelayCommand SetCashToTotalCommand { get; }
     public IRelayCommand<PosPaymentDraftViewModel> RemovePaymentCommand { get; }
     public IAsyncRelayCommand CheckoutCommand { get; }
     public IAsyncRelayCommand RefreshSalesCommand { get; }
@@ -72,25 +98,62 @@ public sealed partial class PosViewModel : ObservableObject
     public IReadOnlyList<string> PaymentMethods { get; } = ["cash", "bank", "mobile", "credit"];
 
     public string WorkspaceTitle => Translate("Point of Sale", "فروش", "خرڅلاو");
-    public string SearchLabel => Translate("Medicine / code / barcode", "دوا / کد / بارکد", "درمل / کوډ / بارکوډ");
-    public string CartTitle => Translate("Current sale", "فروش جاری", "اوسنی خرڅلاو");
-    public string PaymentTitle => Translate("Settlement", "پرداخت", "تادیه");
+    public string WorkspaceSubtitle => Translate(
+        "Full-screen Point of Sale · FEFO batch pricing",
+        "فروش تمام‌صفحه · قیمت‌گذاری FEFO",
+        "بشپړ سکرین خرڅلاو · FEFO بیه");
+    public string SearchLabel => Translate(
+        "Scan barcode or search medicine, generic, code, strength…",
+        "بارکد را اسکن کنید یا دوا، نام عمومی، کد و قوت را جستجو کنید…",
+        "بارکوډ سکین کړئ یا درمل، عام نوم، کوډ او قوت ولټوئ…");
+    public string CartTitle => Translate("Cart", "سبد فروش", "د خرڅلاو ټوکرۍ");
+    public string PaymentTitle => Translate("Payments", "پرداخت‌ها", "تادیات");
     public string RecentSalesTitle => Translate("Recent invoices", "فاکتورهای اخیر", "وروستي بلونه");
     public string LocationLabel => Translate("Stock location", "محل موجودی", "د زېرمتون ځای");
     public string CustomerLabel => Translate("Customer", "مشتری", "پېرودونکی");
     public string CheckoutLabel => Translate("Complete sale", "تکمیل فروش", "خرڅلاو بشپړ کړئ");
-    public string TotalText => $"AFN {EstimatedGrandTotal:N4}";
-    public decimal EstimatedGrandTotal => decimal.Round(
-        Cart.Sum(x => x.EstimatedLineTotal),
-        4,
-        MidpointRounding.AwayFromZero);
+    public string WalkInCustomerText => Translate("Walk-in customer", "مشتری حضوری", "عمومي پېرودونکی");
+    public string SearchResultsTitle => Translate("Search results", "نتایج جستجو", "د لټون پایلې");
+
+    public decimal Subtotal => ScaleMoney(Cart.Sum(x => x.EstimatedSubtotal));
+    public decimal DiscountTotal => ScaleMoney(Cart.Sum(x => x.DiscountAmount));
+    public decimal EstimatedGrandTotal => ScaleMoney(Math.Max(0m, Subtotal - DiscountTotal));
+    public decimal PaymentTotal => ScaleMoney(Payments.Sum(x => Math.Max(0m, x.Amount)));
+    public decimal CreditTotal => ScaleMoney(
+        Payments
+            .Where(x => string.Equals(x.Method, "credit", StringComparison.OrdinalIgnoreCase))
+            .Sum(x => Math.Max(0m, x.Amount)));
+    public decimal DueAmount => ScaleMoney(Math.Max(0m, EstimatedGrandTotal - PaymentTotal));
+    public decimal ChangeAmount => ScaleMoney(Math.Max(0m, PaymentTotal - EstimatedGrandTotal));
+    public bool RequiresPrescription => Cart.Any(x => x.Product.PrescriptionRequired);
+    public bool HasShortage => Cart.Any(x => x.HasShortage);
+    public bool HasInvalidCartLines => Cart.Any(x =>
+        x.Quantity <= 0m ||
+        x.DiscountAmount < 0m ||
+        x.DiscountAmount > x.EstimatedSubtotal ||
+        (x.OverridePrice && (!CanOverridePrice || x.UnitPrice is null or < 0m)));
     public bool CanOverridePrice => _permissions.HasPermission("pos.price_override");
     public bool CanDiscount => _permissions.HasPermission("pos.discount");
+    public string TotalText => $"AFN {EstimatedGrandTotal:N2}";
+    public string CartLineCountText => Translate(
+        $"{Cart.Count} item line{(Cart.Count == 1 ? string.Empty : "s")}",
+        $"{Cart.Count} قلم",
+        $"{Cart.Count} کرښې");
+    public string PaymentBalanceText => ChangeAmount > 0m
+        ? Translate(
+            $"Change AFN {ChangeAmount:N2}",
+            $"باقی AFN {ChangeAmount:N2}",
+            $"بېرته AFN {ChangeAmount:N2}")
+        : Translate(
+            $"Remaining AFN {DueAmount:N2}",
+            $"باقیمانده AFN {DueAmount:N2}",
+            $"پاتې AFN {DueAmount:N2}");
 
     public void SetLanguage(UiLanguage language)
     {
         _language = language;
         OnPropertyChanged(nameof(WorkspaceTitle));
+        OnPropertyChanged(nameof(WorkspaceSubtitle));
         OnPropertyChanged(nameof(SearchLabel));
         OnPropertyChanged(nameof(CartTitle));
         OnPropertyChanged(nameof(PaymentTitle));
@@ -98,6 +161,9 @@ public sealed partial class PosViewModel : ObservableObject
         OnPropertyChanged(nameof(LocationLabel));
         OnPropertyChanged(nameof(CustomerLabel));
         OnPropertyChanged(nameof(CheckoutLabel));
+        OnPropertyChanged(nameof(WalkInCustomerText));
+        OnPropertyChanged(nameof(SearchResultsTitle));
+        RaiseCartState(autoFillSingleCash: false);
     }
 
     public async Task LoadAsync()
@@ -132,9 +198,11 @@ public sealed partial class PosViewModel : ObservableObject
             await RefreshSalesCoreAsync();
 
             StatusMessage = Translate(
-                "POS ready. Search stock to begin a sale.",
-                "فروش آماده است. برای شروع دوا را جستجو کنید.",
-                "خرڅلاو چمتو دی. د پیل لپاره درمل ولټوئ.");
+                "POS ready. Scan a barcode or search a medicine.",
+                "فروش آماده است. بارکد را اسکن کنید یا دوا را جستجو کنید.",
+                "خرڅلاو چمتو دی. بارکوډ سکین کړئ یا درمل ولټوئ.");
+
+            RequestSearchFocus();
         }
         catch (Exception exception)
         {
@@ -150,8 +218,19 @@ public sealed partial class PosViewModel : ObservableObject
     partial void OnSelectedLocationChanged(PosStockLocationItem? value)
     {
         SearchResults.Clear();
+        IsSearchDropdownOpen = false;
+
+        if (Cart.Count > 0)
+        {
+            ClearCartCore(resetPayments: true);
+        }
+
+        SearchCommand.NotifyCanExecuteChanged();
         NotifyCommands();
+        RequestSearchFocus();
     }
+
+    partial void OnSelectedCustomerChanged(PosCustomerItem? value) => NotifyCommands();
 
     partial void OnSelectedProductChanged(PosProductSearchItem? value)
     {
@@ -159,26 +238,116 @@ public sealed partial class PosViewModel : ObservableObject
         NotifyCommands();
     }
 
+    partial void OnSearchTextChanged(string value)
+    {
+        SearchCommand.NotifyCanExecuteChanged();
+
+        if (_suppressSearchTextChanged)
+        {
+            return;
+        }
+
+        var query = value.Trim();
+        if (query.Length == 0)
+        {
+            SearchResults.Clear();
+            IsSearchDropdownOpen = false;
+            return;
+        }
+
+        if (query.Length >= 2 && SelectedLocation is not null)
+        {
+            _ = DebouncedSearchAsync(query);
+        }
+    }
+
     partial void OnQuantityChanged(decimal value) => NotifyCommands();
     partial void OnDiscountAmountChanged(decimal value) => NotifyCommands();
     partial void OnPaymentAmountChanged(decimal value) => NotifyCommands();
     partial void OnSelectedPaymentMethodChanged(string value) => NotifyCommands();
     partial void OnOverridePriceChanged(bool value) => NotifyCommands();
+    partial void OnPrescriptionReferenceChanged(string value) => NotifyCommands();
+
+    private async Task DebouncedSearchAsync(string query)
+    {
+        try
+        {
+            await Task.Delay(180);
+
+            if (!string.Equals(SearchText.Trim(), query, StringComparison.Ordinal) ||
+                SelectedLocation is null ||
+                IsBusy)
+            {
+                return;
+            }
+
+            await SearchProductsCoreAsync(query, autoAddExactBarcode: false);
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = exception.Message;
+        }
+    }
 
     private async Task SearchAsync()
     {
-        if (SelectedLocation is null)
+        var query = SearchText.Trim();
+        if (query.Length == 0 || SelectedLocation is null)
         {
             return;
         }
 
-        await ExecuteBusyAsync(async () =>
+        await SearchProductsCoreAsync(query, autoAddExactBarcode: true);
+    }
+
+    private async Task SearchProductsCoreAsync(
+        string query,
+        bool autoAddExactBarcode)
+    {
+        if (SelectedLocation is null || string.IsNullOrWhiteSpace(query))
+        {
+            return;
+        }
+
+        var locationId = SelectedLocation.Id;
+        IsSearching = true;
+
+        try
         {
             var results = await _pos.SearchProductsAsync(
                 new PosProductSearchFilter(
-                    SearchText,
-                    SelectedLocation.Id,
+                    query,
+                    locationId,
                     20));
+
+            if (SelectedLocation?.Id != locationId)
+            {
+                return;
+            }
+
+            if (!autoAddExactBarcode &&
+                !string.Equals(SearchText.Trim(), query, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            var exactBarcode = results.FirstOrDefault(item =>
+                !string.IsNullOrWhiteSpace(item.Barcode) &&
+                string.Equals(item.Barcode.Trim(), query, StringComparison.OrdinalIgnoreCase));
+
+            if (autoAddExactBarcode && exactBarcode is not null)
+            {
+                SearchResults.Clear();
+                IsSearchDropdownOpen = false;
+                AddProductAsIndependentLine(
+                    exactBarcode,
+                    1m,
+                    unitPrice: null,
+                    overridePrice: false,
+                    discount: 0m,
+                    scanned: true);
+                return;
+            }
 
             SearchResults.Clear();
             foreach (var item in results)
@@ -187,13 +356,44 @@ public sealed partial class PosViewModel : ObservableObject
             }
 
             SelectedProduct = SearchResults.FirstOrDefault();
+            IsSearchDropdownOpen = SearchResults.Count > 0;
+
             StatusMessage = SearchResults.Count == 0
-                ? Translate("No sellable stock found.", "موجودی قابل فروش یافت نشد.", "د خرڅلاو وړ زېرمه ونه موندل شوه.")
+                ? Translate(
+                    "No sellable stock found.",
+                    "موجودی قابل فروش یافت نشد.",
+                    "د خرڅلاو وړ زېرمه ونه موندل شوه.")
                 : Translate(
-                    $"{SearchResults.Count} medicine(s) found.",
-                    $"{SearchResults.Count} دوا یافت شد.",
-                    $"{SearchResults.Count} درمل وموندل شول.");
-        });
+                    $"{SearchResults.Count} medicine(s) found. Choose from the dropdown.",
+                    $"{SearchResults.Count} دوا یافت شد. از فهرست انتخاب کنید.",
+                    $"{SearchResults.Count} درمل وموندل شول. له لېست څخه یې وټاکئ.");
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = exception.Message;
+            SearchResults.Clear();
+            IsSearchDropdownOpen = false;
+        }
+        finally
+        {
+            IsSearching = false;
+        }
+    }
+
+    private void AddSearchResult(PosProductSearchItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        AddProductAsIndependentLine(
+            item,
+            1m,
+            unitPrice: null,
+            overridePrice: false,
+            discount: 0m,
+            scanned: false);
     }
 
     private bool CanAddToCart()
@@ -203,14 +403,10 @@ public sealed partial class PosViewModel : ObservableObject
             return false;
         }
 
-        var roundedQuantity = decimal.Round(
-            Quantity,
-            4,
-            MidpointRounding.AwayFromZero);
-
+        var roundedQuantity = ScaleQuantity(Quantity);
         if (roundedQuantity <= 0m ||
-            roundedQuantity > SelectedProduct.AvailableQuantity ||
-            DiscountAmount < 0m)
+            DiscountAmount < 0m ||
+            CurrentCartQuantity(SelectedProduct.Id) + roundedQuantity > SelectedProduct.AvailableQuantity)
         {
             return false;
         }
@@ -231,7 +427,7 @@ public sealed partial class PosViewModel : ObservableObject
             roundedQuantity,
             OverridePrice ? OverrideUnitPrice : null,
             OverridePrice,
-            decimal.Round(DiscountAmount, 4, MidpointRounding.AwayFromZero));
+            ScaleMoney(DiscountAmount));
 
         return draft.DiscountAmount <= draft.EstimatedSubtotal;
     }
@@ -243,20 +439,70 @@ public sealed partial class PosViewModel : ObservableObject
             return;
         }
 
-        Cart.Add(new PosCartLineViewModel(
+        AddProductAsIndependentLine(
             SelectedProduct,
-            decimal.Round(Quantity, 4, MidpointRounding.AwayFromZero),
+            ScaleQuantity(Quantity),
             OverridePrice ? OverrideUnitPrice : null,
             OverridePrice,
-            decimal.Round(DiscountAmount, 4, MidpointRounding.AwayFromZero)));
+            ScaleMoney(DiscountAmount),
+            scanned: false);
 
         Quantity = 1m;
         DiscountAmount = 0m;
         OverridePrice = false;
         OverrideUnitPrice = SelectedProduct.FefoPrice;
+    }
 
-        RaiseTotals();
-        NotifyCommands();
+    private void AddProductAsIndependentLine(
+        PosProductSearchItem product,
+        decimal quantityToAdd,
+        decimal? unitPrice,
+        bool overridePrice,
+        decimal discount,
+        bool scanned)
+    {
+        var roundedQuantity = ScaleQuantity(quantityToAdd);
+        if (roundedQuantity <= 0m)
+        {
+            return;
+        }
+
+        var totalAfterAdd = CurrentCartQuantity(product.Id) + roundedQuantity;
+        if (totalAfterAdd > product.AvailableQuantity)
+        {
+            StatusMessage = Translate(
+                $"Cannot add {product.BrandName}. Requested cart quantity {totalAfterAdd:0.####} exceeds sellable stock {product.AvailableQuantity:0.####}.",
+                $"امکان افزودن {product.BrandName} نیست. مقدار سبد از موجودی قابل فروش بیشتر است.",
+                $"{product.BrandName} نشي زیاتېدلی. د ټوکرۍ مقدار له شته زېرمه زیات دی.");
+            RequestSearchFocus();
+            return;
+        }
+
+        var line = new PosCartLineViewModel(
+            product,
+            roundedQuantity,
+            unitPrice,
+            overridePrice,
+            discount);
+
+        TrackCartLine(line);
+        Cart.Add(line);
+
+        ClearSearchDraft();
+        RecalculateFefoPlans();
+        RaiseCartState(autoFillSingleCash: true);
+
+        StatusMessage = scanned
+            ? Translate(
+                $"{product.BrandName} scanned and added as a new cart line.",
+                $"{product.BrandName} اسکن شد و به‌عنوان قلم جداگانه افزوده شد.",
+                $"{product.BrandName} سکین او د جلا کرښې په توګه ټوکرۍ ته زیات شو.")
+            : Translate(
+                $"{product.BrandName} added to cart.",
+                $"{product.BrandName} به سبد افزوده شد.",
+                $"{product.BrandName} ټوکرۍ ته زیات شو.");
+
+        RequestSearchFocus();
     }
 
     private void RemoveFromCart(PosCartLineViewModel? item)
@@ -266,44 +512,266 @@ public sealed partial class PosViewModel : ObservableObject
             return;
         }
 
+        UntrackCartLine(item);
         Cart.Remove(item);
-        RaiseTotals();
-        NotifyCommands();
+        RecalculateFefoPlans();
+        RaiseCartState(autoFillSingleCash: true);
+        RequestSearchFocus();
     }
+
+    private void ClearCart()
+    {
+        ClearCartCore(resetPayments: true);
+        StatusMessage = Translate(
+            "Cart cleared.",
+            "سبد فروش پاک شد.",
+            "د خرڅلاو ټوکرۍ پاکه شوه.");
+        RequestSearchFocus();
+    }
+
+    private void ClearCartCore(bool resetPayments)
+    {
+        foreach (var item in Cart)
+        {
+            UntrackCartLine(item);
+        }
+
+        Cart.Clear();
+        ClearSearchDraft();
+        SaleNotes = string.Empty;
+        PrescriptionReference = string.Empty;
+        PrescriberName = string.Empty;
+        PrescriptionDateText = string.Empty;
+
+        if (resetPayments)
+        {
+            ResetPaymentsToCash();
+        }
+
+        RaiseCartState(autoFillSingleCash: false);
+    }
+
+    private void TrackCartLine(PosCartLineViewModel item) =>
+        item.PropertyChanged += OnCartLinePropertyChanged;
+
+    private void UntrackCartLine(PosCartLineViewModel item) =>
+        item.PropertyChanged -= OnCartLinePropertyChanged;
+
+    private void OnCartLinePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(PosCartLineViewModel.Quantity) or
+            nameof(PosCartLineViewModel.UnitPrice) or
+            nameof(PosCartLineViewModel.OverridePrice) or
+            nameof(PosCartLineViewModel.DiscountAmount))
+        {
+            RecalculateFefoPlans();
+            RaiseCartState(autoFillSingleCash: true);
+        }
+    }
+
+    private void RecalculateFefoPlans()
+    {
+        var consumedByBatch = new Dictionary<string, decimal>(StringComparer.Ordinal);
+
+        foreach (var line in Cart)
+        {
+            var remaining = Math.Max(0m, line.Quantity);
+            var parts = new List<string>();
+
+            foreach (var batch in line.Product.Batches)
+            {
+                if (remaining <= 0m)
+                {
+                    break;
+                }
+
+                consumedByBatch.TryGetValue(batch.Id, out var consumed);
+                var available = Math.Max(0m, batch.AvailableQuantity - consumed);
+                if (available <= 0m)
+                {
+                    continue;
+                }
+
+                var take = Math.Min(remaining, available);
+                consumedByBatch[batch.Id] = consumed + take;
+                remaining -= take;
+
+                var expiry = batch.ExpiresAt is null
+                    ? string.Empty
+                    : $" · exp {batch.ExpiresAt:dd MMM yyyy}";
+                parts.Add(
+                    $"{batch.BatchNumber ?? "Unbatched"}: {take:0.####} × AFN {batch.SalePrice:N2}{expiry}");
+            }
+
+            line.HasShortage = remaining > 0m;
+            if (remaining > 0m)
+            {
+                parts.Add($"Short {remaining:0.####}");
+            }
+
+            line.FefoPlanText = parts.Count == 0
+                ? Translate(
+                    "No eligible batch",
+                    "بچ واجد شرایط وجود ندارد",
+                    "وړ بېچ نشته")
+                : string.Join("  |  ", parts);
+        }
+    }
+
+    private decimal CurrentCartQuantity(string medicineId) =>
+        ScaleQuantity(
+            Cart
+                .Where(x => string.Equals(
+                    x.Product.Id,
+                    medicineId,
+                    StringComparison.Ordinal))
+                .Sum(x => Math.Max(0m, x.Quantity)));
 
     private bool CanAddPayment() =>
         !IsBusy &&
-        decimal.Round(PaymentAmount, 4, MidpointRounding.AwayFromZero) > 0m &&
-        PaymentMethods.Contains(SelectedPaymentMethod);
+        ScaleMoney(PaymentAmount) > 0m &&
+        PaymentMethods.Contains(SelectedPaymentMethod, StringComparer.OrdinalIgnoreCase) &&
+        Payments.Count < 10;
 
     private void AddPayment()
     {
-        Payments.Add(new PosPaymentDraftViewModel(
+        var payment = new PosPaymentDraftViewModel(
             SelectedPaymentMethod,
-            decimal.Round(PaymentAmount, 4, MidpointRounding.AwayFromZero),
-            string.IsNullOrWhiteSpace(PaymentReference) ? null : PaymentReference.Trim()));
+            ScaleMoney(PaymentAmount),
+            string.IsNullOrWhiteSpace(PaymentReference) ? null : PaymentReference.Trim());
+
+        TrackPayment(payment);
+        Payments.Add(payment);
 
         PaymentAmount = 0m;
         PaymentReference = string.Empty;
-        NotifyCommands();
+        RaisePaymentState();
     }
 
-    private void RemovePayment(PosPaymentDraftViewModel? item)
+    private void AddSplitPayment()
     {
-        if (item is null)
+        if (Payments.Count >= 10)
         {
             return;
         }
 
-        Payments.Remove(item);
-        NotifyCommands();
+        var payment = new PosPaymentDraftViewModel("cash", 0m, null);
+        TrackPayment(payment);
+        Payments.Add(payment);
+        RaisePaymentState();
     }
 
-    private bool CanCheckout() =>
-        !IsBusy &&
-        SelectedLocation is not null &&
-        Cart.Count > 0 &&
-        Payments.Count > 0;
+    private void RemovePayment(PosPaymentDraftViewModel? item)
+    {
+        if (item is null || Payments.Count <= 1)
+        {
+            return;
+        }
+
+        UntrackPayment(item);
+        Payments.Remove(item);
+        RaisePaymentState();
+    }
+
+    private void SetCashToTotal()
+    {
+        var cash = Payments.FirstOrDefault(x =>
+            string.Equals(x.Method, "cash", StringComparison.OrdinalIgnoreCase));
+
+        if (cash is null)
+        {
+            if (Payments.Count >= 10)
+            {
+                return;
+            }
+
+            cash = new PosPaymentDraftViewModel("cash", 0m, null);
+            TrackPayment(cash);
+            Payments.Add(cash);
+        }
+
+        var other = ScaleMoney(Payments.Where(x => !ReferenceEquals(x, cash)).Sum(x => Math.Max(0m, x.Amount)));
+        cash.Amount = ScaleMoney(Math.Max(0m, EstimatedGrandTotal - other));
+        RaisePaymentState();
+    }
+
+    private void ResetPaymentsToCash()
+    {
+        foreach (var payment in Payments)
+        {
+            UntrackPayment(payment);
+        }
+
+        Payments.Clear();
+
+        var cash = new PosPaymentDraftViewModel("cash", EstimatedGrandTotal, null);
+        TrackPayment(cash);
+        Payments.Add(cash);
+        RaisePaymentState();
+    }
+
+    private void TrackPayment(PosPaymentDraftViewModel payment) =>
+        payment.PropertyChanged += OnPaymentPropertyChanged;
+
+    private void UntrackPayment(PosPaymentDraftViewModel payment) =>
+        payment.PropertyChanged -= OnPaymentPropertyChanged;
+
+    private void OnPaymentPropertyChanged(object? sender, PropertyChangedEventArgs e) =>
+        RaisePaymentState();
+
+    private void FillSingleCashToTotal()
+    {
+        if (Payments.Count != 1 ||
+            !string.Equals(Payments[0].Method, "cash", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        Payments[0].Amount = EstimatedGrandTotal;
+    }
+
+    private bool CanCheckout()
+    {
+        if (IsBusy ||
+            SelectedLocation is null ||
+            Cart.Count == 0 ||
+            Payments.Count == 0 ||
+            HasShortage ||
+            HasInvalidCartLines ||
+            Payments.Any(x => x.Amount <= 0m) ||
+            PaymentTotal < EstimatedGrandTotal)
+        {
+            return false;
+        }
+
+        if (RequiresPrescription &&
+            string.IsNullOrWhiteSpace(PrescriptionReference))
+        {
+            return false;
+        }
+
+        var hasCredit = CreditTotal > 0m;
+        if (hasCredit)
+        {
+            if (SelectedCustomer is null ||
+                CreditTotal > SelectedCustomer.CreditLimit ||
+                PaymentTotal > EstimatedGrandTotal)
+            {
+                return false;
+            }
+        }
+
+        if (ChangeAmount > 0m &&
+            !Payments.Any(x => string.Equals(
+                x.Method,
+                "cash",
+                StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     private async Task CheckoutAsync()
     {
@@ -335,24 +803,31 @@ public sealed partial class PosViewModel : ObservableObject
                         x.Reference)).ToList()));
 
             LastSale = sale;
+
+            foreach (var item in Cart)
+            {
+                UntrackCartLine(item);
+            }
+
             Cart.Clear();
-            Payments.Clear();
-            SearchResults.Clear();
-            SearchText = string.Empty;
+            ClearSearchDraft();
             SaleNotes = string.Empty;
             PrescriptionReference = string.Empty;
             PrescriberName = string.Empty;
             PrescriptionDateText = string.Empty;
             PaymentAmount = 0m;
             SelectedCustomer = null;
+            ResetPaymentsToCash();
 
             await RefreshSalesCoreAsync();
-            RaiseTotals();
+            RaiseCartState(autoFillSingleCash: false);
 
             StatusMessage = Translate(
                 $"Sale {sale.Sale.SaleNumber} completed.",
                 $"فروش {sale.Sale.SaleNumber} تکمیل شد.",
                 $"خرڅلاو {sale.Sale.SaleNumber} بشپړ شو.");
+
+            RequestSearchFocus();
         });
     }
 
@@ -402,23 +877,78 @@ public sealed partial class PosViewModel : ObservableObject
         }
     }
 
-    private void RaiseTotals()
+    private void ClearSearchDraft()
     {
+        _suppressSearchTextChanged = true;
+        try
+        {
+            SearchText = string.Empty;
+        }
+        finally
+        {
+            _suppressSearchTextChanged = false;
+        }
+
+        SearchResults.Clear();
+        IsSearchDropdownOpen = false;
+        SelectedProduct = null;
+    }
+
+    private void RaiseCartState(bool autoFillSingleCash)
+    {
+        OnPropertyChanged(nameof(Subtotal));
+        OnPropertyChanged(nameof(DiscountTotal));
         OnPropertyChanged(nameof(EstimatedGrandTotal));
         OnPropertyChanged(nameof(TotalText));
+        OnPropertyChanged(nameof(CartLineCountText));
+        OnPropertyChanged(nameof(RequiresPrescription));
+        OnPropertyChanged(nameof(HasShortage));
+        OnPropertyChanged(nameof(HasInvalidCartLines));
+
+        if (autoFillSingleCash)
+        {
+            FillSingleCashToTotal();
+        }
+
+        RaisePaymentState();
+        ClearCartCommand.NotifyCanExecuteChanged();
+        SetCashToTotalCommand.NotifyCanExecuteChanged();
+    }
+
+    private void RaisePaymentState()
+    {
+        OnPropertyChanged(nameof(PaymentTotal));
+        OnPropertyChanged(nameof(CreditTotal));
+        OnPropertyChanged(nameof(DueAmount));
+        OnPropertyChanged(nameof(ChangeAmount));
+        OnPropertyChanged(nameof(PaymentBalanceText));
+        NotifyCommands();
     }
 
     private void NotifyCommands()
     {
         LoadCommand.NotifyCanExecuteChanged();
         SearchCommand.NotifyCanExecuteChanged();
+        AddSearchResultCommand.NotifyCanExecuteChanged();
         AddToCartCommand.NotifyCanExecuteChanged();
         RemoveFromCartCommand.NotifyCanExecuteChanged();
+        ClearCartCommand.NotifyCanExecuteChanged();
         AddPaymentCommand.NotifyCanExecuteChanged();
+        AddSplitPaymentCommand.NotifyCanExecuteChanged();
+        SetCashToTotalCommand.NotifyCanExecuteChanged();
         RemovePaymentCommand.NotifyCanExecuteChanged();
         CheckoutCommand.NotifyCanExecuteChanged();
         RefreshSalesCommand.NotifyCanExecuteChanged();
     }
+
+    private void RequestSearchFocus() =>
+        SearchFocusRequested?.Invoke(this, EventArgs.Empty);
+
+    private static decimal ScaleQuantity(decimal value) =>
+        decimal.Round(value, 4, MidpointRounding.AwayFromZero);
+
+    private static decimal ScaleMoney(decimal value) =>
+        decimal.Round(value, 4, MidpointRounding.AwayFromZero);
 
     private static DateOnly? ParseOptionalDate(string? value)
     {
@@ -444,17 +974,45 @@ public sealed partial class PosViewModel : ObservableObject
         };
 }
 
-public sealed record PosCartLineViewModel(
-    PosProductSearchItem Product,
-    decimal Quantity,
-    decimal? UnitPrice,
-    bool OverridePrice,
-    decimal DiscountAmount)
+public sealed partial class PosCartLineViewModel : ObservableObject
 {
+    [ObservableProperty] private decimal quantity;
+    [ObservableProperty] private decimal? unitPrice;
+    [ObservableProperty] private bool overridePrice;
+    [ObservableProperty] private decimal discountAmount;
+    [ObservableProperty] private string fefoPlanText = string.Empty;
+    [ObservableProperty] private bool hasShortage;
+
+    public PosCartLineViewModel(
+        PosProductSearchItem product,
+        decimal quantity,
+        decimal? unitPrice,
+        bool overridePrice,
+        decimal discountAmount)
+    {
+        Product = product;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.overridePrice = overridePrice;
+        this.discountAmount = discountAmount;
+    }
+
+    public PosProductSearchItem Product { get; }
+
     public string MedicineLabel => string.Join(
         " ",
         new[] { Product.BrandName, Product.Strength }
             .Where(x => !string.IsNullOrWhiteSpace(x)));
+
+    public string SecondaryLabel => string.Join(
+        " · ",
+        new[]
+        {
+            Product.GenericName,
+            Product.MedicineCode,
+            Product.SaleUnit,
+            $"Available {Product.AvailableQuantity:0.####}",
+        }.Where(x => !string.IsNullOrWhiteSpace(x)));
 
     public decimal EstimatedSubtotal
     {
@@ -502,9 +1060,33 @@ public sealed record PosCartLineViewModel(
         Math.Max(0m, EstimatedSubtotal - DiscountAmount),
         4,
         MidpointRounding.AwayFromZero);
+
+    partial void OnQuantityChanged(decimal value) => RaiseComputedValues();
+    partial void OnUnitPriceChanged(decimal? value) => RaiseComputedValues();
+    partial void OnOverridePriceChanged(bool value) => RaiseComputedValues();
+    partial void OnDiscountAmountChanged(decimal value) => RaiseComputedValues();
+
+    private void RaiseComputedValues()
+    {
+        OnPropertyChanged(nameof(EstimatedSubtotal));
+        OnPropertyChanged(nameof(DisplayUnitPrice));
+        OnPropertyChanged(nameof(EstimatedLineTotal));
+    }
 }
 
-public sealed record PosPaymentDraftViewModel(
-    string Method,
-    decimal Amount,
-    string? Reference);
+public sealed partial class PosPaymentDraftViewModel : ObservableObject
+{
+    [ObservableProperty] private string method;
+    [ObservableProperty] private decimal amount;
+    [ObservableProperty] private string? reference;
+
+    public PosPaymentDraftViewModel(
+        string method,
+        decimal amount,
+        string? reference)
+    {
+        this.method = method;
+        this.amount = amount;
+        this.reference = reference;
+    }
+}

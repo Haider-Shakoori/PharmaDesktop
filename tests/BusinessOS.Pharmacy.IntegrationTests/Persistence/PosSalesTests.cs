@@ -75,6 +75,122 @@ public sealed class PosSalesTests
     }
 
     [Fact]
+    public async Task Product_search_matches_exact_barcode()
+    {
+        var root = CreateTemporaryRoot();
+
+        try
+        {
+            await using var provider = BuildProvider(root);
+            await InitializeAsync(provider);
+
+            const string barcode = "0123456789012";
+            var medicineId = await CreateMedicineAsync(
+                provider,
+                "POS-BARCODE-1",
+                "Barcode Medicine",
+                barcode: barcode);
+
+            var inventory = provider.GetRequiredService<IInventoryService>();
+            await inventory.EnsureDefaultsAsync();
+            var location = (await inventory.GetReferenceDataAsync()).Locations.Single();
+
+            await inventory.CreateOpeningStockAsync(new CreateOpeningStockRequest(
+                medicineId,
+                location.Id,
+                "BAR-1",
+                null,
+                new DateOnly(2027, 11, 1),
+                4m,
+                6m,
+                15m,
+                null));
+
+            var pos = provider.GetRequiredService<IPosService>();
+            var result = await pos.SearchProductsAsync(
+                new PosProductSearchFilter(barcode, location.Id));
+
+            var medicine = Assert.Single(result);
+            Assert.Equal(medicineId, medicine.Id);
+            Assert.Equal(barcode, medicine.Barcode);
+            Assert.Equal(4m, medicine.AvailableQuantity);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
+    [Fact]
+    public async Task Checkout_preserves_repeated_scans_as_independent_sale_lines()
+    {
+        var root = CreateTemporaryRoot();
+
+        try
+        {
+            await using var provider = BuildProvider(root);
+            await InitializeAsync(provider);
+
+            var medicineId = await CreateMedicineAsync(
+                provider,
+                "POS-SCAN-LINES",
+                "Repeated Scan Medicine",
+                barcode: "9876543210123");
+
+            var inventory = provider.GetRequiredService<IInventoryService>();
+            await inventory.EnsureDefaultsAsync();
+            var location = (await inventory.GetReferenceDataAsync()).Locations.Single();
+
+            await inventory.CreateOpeningStockAsync(new CreateOpeningStockRequest(
+                medicineId,
+                location.Id,
+                "SCAN-B1",
+                null,
+                new DateOnly(2027, 12, 1),
+                5m,
+                4m,
+                10m,
+                null));
+
+            var pos = provider.GetRequiredService<IPosService>();
+            var sale = await pos.CheckoutAsync(new PosCheckoutRequest(
+                location.Id,
+                null,
+                "repeated-scan-independent-lines",
+                null,
+                null,
+                null,
+                null,
+                [
+                    new PosCheckoutLineRequest(medicineId, 1m),
+                    new PosCheckoutLineRequest(medicineId, 1m),
+                ],
+                [new PosPaymentRequest("cash", 20m)]));
+
+            Assert.Equal(2, sale.Lines.Count);
+            Assert.All(sale.Lines, line =>
+            {
+                Assert.Equal(medicineId, line.MedicineId);
+                Assert.Equal(1m, line.Quantity);
+                Assert.Equal(10m, line.LineTotal);
+            });
+            Assert.Equal(20m, sale.Sale.GrandTotal);
+
+            var batches = await inventory.SearchBatchesAsync(
+                new InventoryBatchFilter(StockLocationId: location.Id));
+            Assert.Equal(
+                3m,
+                batches.Single(x => x.BatchNumber == "SCAN-B1").AvailableQuantity);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
+    [Fact]
     public async Task Checkout_consumes_fefo_calculates_weighted_price_discount_and_cash_change()
     {
         var root = CreateTemporaryRoot();
@@ -383,6 +499,7 @@ public sealed class PosSalesTests
         ServiceProvider provider,
         string code,
         string brandName,
+        string? barcode = null,
         bool prescriptionRequired = false)
     {
         var medicines = provider.GetRequiredService<IMedicineCatalogService>();
@@ -391,7 +508,7 @@ public sealed class PosSalesTests
             null,
             null,
             code,
-            null,
+            barcode,
             brandName,
             null,
             "500mg",
