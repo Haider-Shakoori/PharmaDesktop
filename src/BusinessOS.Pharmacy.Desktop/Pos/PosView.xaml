@@ -140,15 +140,17 @@
                             Command="{Binding LoadCommand}"
                             Style="{StaticResource PosOutlineButton}"
                             Margin="0,0,8,0" />
-                    <Button Content="Exit POS"
-                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                             CommandParameter="dashboard"
+                            Style="{StaticResource ProfessionalButtonBase}"
                             Background="#0F172A"
                             BorderBrush="#0F172A"
-                            Foreground="White"
-                            FontWeight="Bold"
                             Padding="13,8"
-                            MinHeight="36" />
+                            MinHeight="36">
+                        <TextBlock Text="Exit POS"
+                                   Foreground="White"
+                                   FontWeight="Bold" />
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
