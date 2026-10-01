@@ -41,19 +41,23 @@ jobs:
       - name: Integration tests
         run: dotnet test tests/BusinessOS.Pharmacy.IntegrationTests/BusinessOS.Pharmacy.IntegrationTests.csproj -c Release --no-build --verbosity minimal
 
-      - name: Capture real WPF dashboard
+      - name: Capture real WPF dashboard and POS
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path artifacts/ui-batch-01 | Out-Null
-          dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui-batch-01/dashboard-real.png
-          if (-not (Test-Path artifacts/ui-batch-01/dashboard-real.png)) {
+          New-Item -ItemType Directory -Force -Path artifacts/ui | Out-Null
+          dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/dashboard-real.png dashboard
+          dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/pos-real.png pos
+          if (-not (Test-Path artifacts/ui/dashboard-real.png)) {
             throw "Real WPF dashboard screenshot was not produced."
+          }
+          if (-not (Test-Path artifacts/ui/pos-real.png)) {
+            throw "Real WPF POS screenshot was not produced."
           }
 
       - name: Upload visual QA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Darmaltoon-UI-Batch-01-Visual-QA
-          path: artifacts/ui-batch-01/dashboard-real.png
+          name: Darmaltoon-UI-Visual-QA
+          path: artifacts/ui/*.png
           if-no-files-found: error
           retention-days: 30
