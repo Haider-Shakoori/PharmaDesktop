@@ -88,6 +88,20 @@ foreach ($file in @($standaloneSetup, $serverSetup, $clientSetup)) {
 # Clean standalone install.
 Install-Setup $standaloneSetup
 Verify-InstalledApp "Standalone"
+
+# Capture the dashboard from the installed Windows package itself.
+$installedDashboardTool = Join-Path $installDir "Diagnostics\DashboardScreenshot.exe"
+$installedDashboardPng = Join-Path $env:TEMP "darmaltoon-installed-dashboard.png"
+if (-not (Test-Path $installedDashboardTool)) { throw "Installed dashboard capture tool is missing." }
+if (Test-Path $installedDashboardPng) { Remove-Item $installedDashboardPng -Force }
+$dashboardProcess = Start-Process $installedDashboardTool -ArgumentList $installedDashboardPng -Wait -PassThru
+if ($dashboardProcess.ExitCode -ne 0 -or -not (Test-Path $installedDashboardPng)) {
+    throw "Installed dashboard capture failed."
+}
+Write-Host "INSTALLED_DASHBOARD_PNG_BASE64_BEGIN"
+Write-Host ([Convert]::ToBase64String([IO.File]::ReadAllBytes($installedDashboardPng)))
+Write-Host "INSTALLED_DASHBOARD_PNG_BASE64_END"
+
 Seed-PreservedData
 Uninstall-Darmaltoon
 Verify-ProgramDataPreserved
