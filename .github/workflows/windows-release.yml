@@ -1,0 +1,94 @@
+on:
+  push:
+    branches:
+      - feat/batch-21-windows-installer
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Darmaltoon release version
+        required: false
+        default: "1.0.0"
+
+permissions:
+  contents: read
+
+jobs:
+  windows-installer:
+    runs-on: windows-2025
+    timeout-minutes: 45
+    env:
+      RELEASE_VERSION: ${{ inputs.version || '1.0.0' }}
+      DARMALTOON_LICENSE_SIGNING_PUBLIC_KEY: ${{ secrets.DARMALTOON_LICENSE_SIGNING_PUBLIC_KEY }}
+      DARMALTOON_UPDATE_SIGNING_PUBLIC_KEY_PEM: ${{ secrets.DARMALTOON_UPDATE_SIGNING_PUBLIC_KEY_PEM }}
+      DARMALTOON_SIGNING_PFX_BASE64: ${{ secrets.DARMALTOON_SIGNING_PFX_BASE64 }}
+      DARMALTOON_SIGNING_PFX_PASSWORD: ${{ secrets.DARMALTOON_SIGNING_PFX_PASSWORD }}
+      INNO_SETUP_LICENSE_KEY: ${{ secrets.INNO_SETUP_LICENSE_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install Inno Setup compiler
+        shell: pwsh
+        run: |
+          $installed = $false
+          if (Get-Command winget.exe -ErrorAction SilentlyContinue) {
+            winget install --id JRSoftware.InnoSetup.7 -e --source winget --silent --accept-package-agreements --accept-source-agreements
+            $installed = $LASTEXITCODE -eq 0
+          }
+          if (-not $installed) {
+            choco install innosetup -y --no-progress
+            if ($LASTEXITCODE -ne 0) { throw "Could not install Inno Setup." }
+          }
+
+      - name: Restore
+        run: dotnet restore BusinessOS.Pharmacy.sln
+
+      - name: Release build
+        run: dotnet build BusinessOS.Pharmacy.sln -c Release --no-restore
+
+      - name: Unit tests
+        run: dotnet test tests/BusinessOS.Pharmacy.UnitTests/BusinessOS.Pharmacy.UnitTests.csproj -c Release --no-build --verbosity minimal
+
+      - name: Integration tests
+        run: dotnet test tests/BusinessOS.Pharmacy.IntegrationTests/BusinessOS.Pharmacy.IntegrationTests.csproj -c Release --no-build --verbosity minimal
+
+      - name: Build self-contained Windows installers
+        shell: pwsh
+        run: ./scripts/build-windows-release.ps1 -Version $env:RELEASE_VERSION
+
+      - name: Installer install-upgrade-uninstall smoke test
+        shell: pwsh
+        run: ./scripts/test-windows-installer.ps1 -Version $env:RELEASE_VERSION
+
+      - name: Verify release artifacts and checksums
+        shell: pwsh
+        run: |
+          $manifest = Get-Content artifacts/windows/release-manifest.json -Raw | ConvertFrom-Json
+          if ($manifest.self_contained -ne $true) { throw "Release must be self-contained." }
+          foreach ($artifact in $manifest.artifacts) {
+            $path = Join-Path artifacts/windows $artifact.file
+            if (-not (Test-Path $path)) { throw "Missing artifact $($artifact.file)" }
+            $actual = (Get-FileHash $path -Algorithm SHA256).Hash
+            if ($actual -ne $artifact.sha256) { throw "Checksum mismatch for $($artifact.file)" }
+          }
+          if ((Get-ChildItem artifacts/windows -Filter "*Setup*.exe").Count -ne 3) {
+            throw "Expected Standalone, Main Server and Client Terminal Setup.exe artifacts."
+          }
+
+      - name: Upload Windows release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-Windows-${{ env.RELEASE_VERSION }}
+          path: |
+            artifacts/windows/*Setup*.exe
+            artifacts/windows/*.zip
+            artifacts/windows/SHA256SUMS.txt
+            artifacts/windows/release-manifest.json
+          if-no-files-found: error
+          retention-days: 30
