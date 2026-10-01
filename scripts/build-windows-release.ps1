@@ -152,4 +152,14 @@ $manifest = [ordered]@{
     }
 }
 $manifest | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $outputRoot "release-manifest.json") -Encoding utf8
+
+# Render the real current WPF dashboard on Windows and package it as a CI artifact.
+$dashboardScreenshot = Join-Path $outputRoot "dashboard-real.png"
+$dashboardScreenshotZip = Join-Path $outputRoot "dashboard-real.zip"
+dotnet run --project (Join-Path $repoRoot "tools/DashboardScreenshot/DashboardScreenshot.csproj") -c Release -- $dashboardScreenshot
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path $dashboardScreenshot)) {
+    throw "Real dashboard screenshot capture failed."
+}
+Compress-Archive -Path $dashboardScreenshot -DestinationPath $dashboardScreenshotZip -CompressionLevel Optimal -Force
+
 Get-ChildItem $outputRoot -File | Sort-Object Name | Format-Table Name, Length -AutoSize
