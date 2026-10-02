@@ -2,6 +2,62 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:BusinessOS.Pharmacy.Desktop.Controls">
+
+    <UserControl.Resources>
+        <Style x:Key="PoCard" TargetType="Border" BasedOn="{StaticResource SurfaceCard}">
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="BorderBrush" Value="#DCE6F0" />
+        </Style>
+
+        <Style x:Key="PoSectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#102A56" />
+        </Style>
+
+        <Style x:Key="PoLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="9.8" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#52677F" />
+        </Style>
+
+        <Style x:Key="PoHint" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="9.5" />
+            <Setter Property="Foreground" Value="#64748B" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style x:Key="PoGrid" TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserResizeRows" Value="False" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="GridLinesVisibility" Value="Horizontal" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="RowBackground" Value="White" />
+            <Setter Property="AlternatingRowBackground" Value="#FBFDFF" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#E8EEF5" />
+            <Setter Property="RowHeaderWidth" Value="0" />
+            <Setter Property="RowHeight" Value="28" />
+            <Setter Property="ColumnHeaderHeight" Value="28" />
+            <Setter Property="FontSize" Value="10.2" />
+        </Style>
+
+        <Style x:Key="PoPrimaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style x:Key="PoSecondaryButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+    </UserControl.Resources>
     <Grid Margin="22">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -147,324 +203,656 @@
             <TabItem Header="Purchase orders">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" Style="{StaticResource SurfaceCard}" Margin="0,0,0,12">
+                    <!-- Simplified workflow -->
+                    <Border Grid.Row="0"
+                            Style="{StaticResource PoCard}"
+                            Background="#F8FBFF"
+                            Margin="0,0,0,10">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="170"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <TextBox Text="{Binding OrderSearchText, UpdateSourceTrigger=PropertyChanged}"
-                                     Padding="9,7" Margin="0,0,8,0" ToolTip="PO number or supplier"/>
-                            <ComboBox Grid.Column="1" ItemsSource="{Binding OrderStatuses}"
-                                      SelectedItem="{Binding SelectedOrderStatus}" Margin="0,0,8,0"/>
-                            <Button Grid.Column="2" Content="Search" Command="{Binding SearchOrdersCommand}" Padding="14,8"/>
+                            <Border Width="38"
+                                    Height="38"
+                                    CornerRadius="10"
+                                    Background="#E7F2FF"
+                                    VerticalAlignment="Center">
+                                <Path Data="{StaticResource IconPurchases}"
+                                      Width="19"
+                                      Height="19"
+                                      Stroke="#0B82F6"
+                                      StrokeThickness="1.9"
+                                      Fill="Transparent"
+                                      Stretch="Uniform"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                <TextBlock Text="Fast purchase workflow"
+                                           FontSize="13.5"
+                                           FontWeight="Bold"
+                                           Foreground="#102A56" />
+                                <TextBlock Text="Create → approve → receive to inventory → invoice → pay. Fast actions combine safe backend steps so you do less clicking without losing the audit trail."
+                                           Style="{StaticResource PoHint}"
+                                           Margin="0,2,0,7" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Background="#EAF4FF" CornerRadius="7" Padding="8,4" Margin="0,0,6,0">
+                                        <TextBlock Text="1  Create PO" Foreground="#0B5FC6" FontSize="9.5" FontWeight="SemiBold" />
+                                    </Border>
+                                    <TextBlock Text="→" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                    <Border Background="#F2ECFF" CornerRadius="7" Padding="8,4" Margin="0,0,6,0">
+                                        <TextBlock Text="2  Approve" Foreground="#7C3AED" FontSize="9.5" FontWeight="SemiBold" />
+                                    </Border>
+                                    <TextBlock Text="→" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                    <Border Background="#ECFDF5" CornerRadius="7" Padding="8,4" Margin="0,0,6,0">
+                                        <TextBlock Text="3  Receive stock" Foreground="#0F766E" FontSize="9.5" FontWeight="SemiBold" />
+                                    </Border>
+                                    <TextBlock Text="→" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                    <Border Background="#FFF7ED" CornerRadius="7" Padding="8,4" Margin="0,0,6,0">
+                                        <TextBlock Text="4  Invoice" Foreground="#C2410C" FontSize="9.5" FontWeight="SemiBold" />
+                                    </Border>
+                                    <TextBlock Text="→" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                    <Border Background="#F0FDF4" CornerRadius="7" Padding="8,4">
+                                        <TextBlock Text="5  Pay supplier" Foreground="#15803D" FontSize="9.5" FontWeight="SemiBold" />
+                                    </Border>
+                                </StackPanel>
+                            </StackPanel>
                         </Grid>
                     </Border>
 
-                    <Grid Grid.Row="1">
+                    <!-- Search / filter -->
+                    <Border Grid.Row="1"
+                            Style="{StaticResource PoCard}"
+                            Margin="0,0,0,10"
+                            Padding="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="170" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding OrderSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     Padding="10,7"
+                                     Margin="0,0,8,0"
+                                     ToolTip="PO number or supplier" />
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding OrderStatuses}"
+                                      SelectedItem="{Binding SelectedOrderStatus}"
+                                      Margin="0,0,8,0" />
+                            <Button Grid.Column="2"
+                                    Content="Search"
+                                    Command="{Binding SearchOrdersCommand}"
+                                    Style="{StaticResource PoSecondaryButton}" />
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="0.8*"/>
-                            <ColumnDefinition Width="14"/>
-                            <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition Width="0.82*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="1.45*" />
                         </Grid.ColumnDefinitions>
 
-                        <Border Grid.Column="0" Style="{StaticResource SurfaceCard}">
-                            <DataGrid ItemsSource="{Binding Orders}"
-                                      SelectedItem="{Binding SelectedOrder}"
-                                      AutoGenerateColumns="False"
-                                      IsReadOnly="True"
-                                      CanUserAddRows="False">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Number" Binding="{Binding Number}" Width="150"/>
-                                    <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="1.2*"/>
-                                    <DataGridTextColumn Header="Date" Binding="{Binding OrderDate, StringFormat=yyyy-MM-dd}" Width="95"/>
-                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="115"/>
-                                    <DataGridTextColumn Header="Total" Binding="{Binding GrandTotal, StringFormat=N4}" Width="95"/>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                        <!-- Orders list -->
+                        <Border Grid.Column="0"
+                                Style="{StaticResource PoCard}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Purchase orders"
+                                                   Style="{StaticResource PoSectionTitle}" />
+                                        <TextBlock Text="Select an order to continue its workflow."
+                                                   Style="{StaticResource PoHint}"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                    <Border Grid.Column="1"
+                                            Background="#F1F5F9"
+                                            CornerRadius="7"
+                                            Padding="8,4"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Orders.Count, StringFormat={}{0} orders}"
+                                                   FontSize="9.5"
+                                                   Foreground="#52677F"
+                                                   FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+
+                                <DataGrid Grid.Row="1"
+                                          ItemsSource="{Binding Orders}"
+                                          SelectedItem="{Binding SelectedOrder}"
+                                          Style="{StaticResource PoGrid}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="PO"
+                                                            Binding="{Binding Number}"
+                                                            Width="118" />
+                                        <DataGridTextColumn Header="Supplier"
+                                                            Binding="{Binding SupplierName}"
+                                                            Width="*" />
+                                        <DataGridTemplateColumn Header="Status" Width="96">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Border CornerRadius="7"
+                                                            Padding="7,2"
+                                                            HorizontalAlignment="Left">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Background" Value="#F1F5F9" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Status}" Value="approved">
+                                                                        <Setter Property="Background" Value="#ECFDF5" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Status}" Value="received">
+                                                                        <Setter Property="Background" Value="#EAF4FF" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Status}" Value="partially_received">
+                                                                        <Setter Property="Background" Value="#FFF7ED" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Status}" Value="cancelled">
+                                                                        <Setter Property="Background" Value="#FEF2F2" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <TextBlock Text="{Binding Status}"
+                                                                   FontSize="9.2"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#475569" />
+                                                    </Border>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="Total"
+                                                            Binding="{Binding GrandTotal, StringFormat=N2}"
+                                                            Width="78" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
                         </Border>
 
-                        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                        <!-- Right workflow -->
+                        <ScrollViewer Grid.Column="2"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
                             <StackPanel>
-                                <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,12">
+                                <!-- Quick new PO -->
+                                <Border Style="{StaticResource PoCard}"
+                                        Margin="0,0,0,10">
                                     <StackPanel>
-                                        <TextBlock Text="New purchase order" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                        <Grid>
+                                        <Grid Margin="0,0,0,10">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="1.4*"/>
-                                                <ColumnDefinition Width="10"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="10"/>
-                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <StackPanel>
-                                                <TextBlock Text="Supplier"/>
+                                                <TextBlock Text="Quick purchase order"
+                                                           Style="{StaticResource PoSectionTitle}" />
+                                                <TextBlock Text="{Binding QuickCreateHint}"
+                                                           Style="{StaticResource PoHint}"
+                                                           Margin="0,2,0,0" />
+                                            </StackPanel>
+                                            <Border Grid.Column="1"
+                                                    Background="#ECFDF5"
+                                                    CornerRadius="8"
+                                                    Padding="9,4"
+                                                    VerticalAlignment="Top">
+                                                <TextBlock Text="{Binding DraftSummary}"
+                                                           Foreground="#0F766E"
+                                                           FontSize="9.5"
+                                                           FontWeight="Bold" />
+                                            </Border>
+                                        </Grid>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="1.5*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="0.8*" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="0.8*" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="Supplier" Style="{StaticResource PoLabel}" />
                                                 <ComboBox ItemsSource="{Binding SupplierReferences}"
                                                           SelectedItem="{Binding SelectedOrderSupplier}"
-                                                          DisplayMemberPath="Name" Margin="0,4,0,8"/>
+                                                          DisplayMemberPath="Name"
+                                                          Margin="0,4,0,8" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="2">
-                                                <TextBlock Text="Order date"/>
-                                                <TextBox Text="{Binding OrderDateText}" Margin="0,4,0,8"/>
+                                                <TextBlock Text="Order date" Style="{StaticResource PoLabel}" />
+                                                <TextBox Text="{Binding OrderDateText}" Margin="0,4,0,8" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="4">
-                                                <TextBlock Text="Expected date"/>
-                                                <TextBox Text="{Binding ExpectedDateText}" Margin="0,4,0,8"/>
+                                                <TextBlock Text="Expected (optional)" Style="{StaticResource PoLabel}" />
+                                                <TextBox Text="{Binding ExpectedDateText}" Margin="0,4,0,8" />
                                             </StackPanel>
                                         </Grid>
 
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="1.5*"/>
-                                                <ColumnDefinition Width="10"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="10"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="10"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
+                                        <Border Background="#F8FAFC"
+                                                BorderBrush="#E2E8F0"
+                                                BorderThickness="1"
+                                                CornerRadius="10"
+                                                Padding="10"
+                                                Margin="0,1,0,8">
                                             <StackPanel>
-                                                <TextBlock Text="Medicine"/>
-                                                <ComboBox ItemsSource="{Binding MedicineReferences}"
-                                                          SelectedItem="{Binding SelectedDraftMedicine}"
-                                                          DisplayMemberPath="BrandName" Margin="0,4,0,8"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="1.6*" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="0.55*" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="0.7*" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="0.6*" />
+                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="0.6*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="Medicine" Style="{StaticResource PoLabel}" />
+                                                        <ComboBox ItemsSource="{Binding MedicineReferences}"
+                                                                  SelectedItem="{Binding SelectedDraftMedicine}"
+                                                                  DisplayMemberPath="BrandName"
+                                                                  Margin="0,4,0,0" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2">
+                                                        <TextBlock Text="Qty" Style="{StaticResource PoLabel}" />
+                                                        <TextBox Text="{Binding DraftQuantity}" Margin="0,4,0,0" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="4">
+                                                        <TextBlock Text="Unit cost" Style="{StaticResource PoLabel}" />
+                                                        <TextBox Text="{Binding DraftUnitCost}" Margin="0,4,0,0" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="6">
+                                                        <TextBlock Text="Discount" Style="{StaticResource PoLabel}" />
+                                                        <TextBox Text="{Binding DraftDiscount}" Margin="0,4,0,0" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="8">
+                                                        <TextBlock Text="Landed" Style="{StaticResource PoLabel}" />
+                                                        <TextBox Text="{Binding DraftLandedCost}" Margin="0,4,0,0" />
+                                                    </StackPanel>
+                                                    <Button Grid.Column="9"
+                                                            Content="+ Add"
+                                                            Command="{Binding AddDraftLineCommand}"
+                                                            Style="{StaticResource PoSecondaryButton}"
+                                                            Margin="8,19,0,0" />
+                                                </Grid>
                                             </StackPanel>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="Qty"/>
-                                                <TextBox Text="{Binding DraftQuantity}" Margin="0,4,0,8"/>
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="4">
-                                                <TextBlock Text="Unit cost"/>
-                                                <TextBox Text="{Binding DraftUnitCost}" Margin="0,4,0,8"/>
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="6">
-                                                <TextBlock Text="Discount"/>
-                                                <TextBox Text="{Binding DraftDiscount}" Margin="0,4,0,8"/>
-                                            </StackPanel>
-                                        </Grid>
+                                        </Border>
 
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="130"/>
-                                                <ColumnDefinition Width="10"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel>
-                                                <TextBlock Text="Landed cost"/>
-                                                <TextBox Text="{Binding DraftLandedCost}" Margin="0,4,0,8"/>
-                                            </StackPanel>
-                                            <TextBox Grid.Column="2" Text="{Binding OrderNotes}" Margin="0,20,8,8"
-                                                     ToolTip="Purchase order notes"/>
-                                            <Button Grid.Column="3" Content="Add line" Command="{Binding AddDraftLineCommand}"
-                                                    Margin="0,20,0,8" Padding="12,7"/>
-                                        </Grid>
-
-                                        <DataGrid ItemsSource="{Binding DraftLines}" AutoGenerateColumns="False"
-                                                  IsReadOnly="True" CanUserAddRows="False" Height="135">
+                                        <DataGrid ItemsSource="{Binding DraftLines}"
+                                                  Style="{StaticResource PoGrid}"
+                                                  Height="128">
                                             <DataGrid.Columns>
-                                                <DataGridTextColumn Header="Medicine" Binding="{Binding MedicineLabel}" Width="1.4*"/>
-                                                <DataGridTextColumn Header="Qty" Binding="{Binding OrderedQuantity, StringFormat=N4}" Width="75"/>
-                                                <DataGridTextColumn Header="Cost" Binding="{Binding UnitCost, StringFormat=N4}" Width="85"/>
-                                                <DataGridTextColumn Header="Discount" Binding="{Binding DiscountAmount, StringFormat=N4}" Width="85"/>
-                                                <DataGridTextColumn Header="Landed" Binding="{Binding LandedCostAllocated, StringFormat=N4}" Width="85"/>
-                                                <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, StringFormat=N4}" Width="90"/>
-                                                <DataGridTemplateColumn Header="" Width="70">
+                                                <DataGridTextColumn Header="Medicine" Binding="{Binding MedicineLabel}" Width="*" />
+                                                <DataGridTextColumn Header="Qty" Binding="{Binding OrderedQuantity, StringFormat=N2}" Width="58" />
+                                                <DataGridTextColumn Header="Cost" Binding="{Binding UnitCost, StringFormat=N2}" Width="66" />
+                                                <DataGridTextColumn Header="Discount" Binding="{Binding DiscountAmount, StringFormat=N2}" Width="68" />
+                                                <DataGridTextColumn Header="Landed" Binding="{Binding LandedCostAllocated, StringFormat=N2}" Width="66" />
+                                                <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, StringFormat=N2}" Width="72" />
+                                                <DataGridTemplateColumn Header="" Width="34">
                                                     <DataGridTemplateColumn.CellTemplate>
                                                         <DataTemplate>
-                                                            <Button Content="Remove"
+                                                            <Button Content="×"
                                                                     Command="{Binding DataContext.RemoveDraftLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                                    CommandParameter="{Binding}"/>
+                                                                    CommandParameter="{Binding}"
+                                                                    Background="Transparent"
+                                                                    BorderBrush="Transparent"
+                                                                    Foreground="#DC2626"
+                                                                    FontSize="16"
+                                                                    FontWeight="Bold"
+                                                                    Padding="2" />
                                                         </DataTemplate>
                                                     </DataGridTemplateColumn.CellTemplate>
                                                 </DataGridTemplateColumn>
                                             </DataGrid.Columns>
                                         </DataGrid>
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                            <Button Content="Create PO" Command="{Binding CreateOrderCommand}"
-                                                    Style="{StaticResource PrimaryButton}" Padding="14,8" Margin="0,0,8,0"/>
-                                            <Button Content="Clear lines" Command="{Binding ClearDraftLinesCommand}" Padding="14,8"/>
-                                        </StackPanel>
+                                        <Grid Margin="0,9,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Text="{Binding OrderNotes}"
+                                                     ToolTip="Purchase order notes"
+                                                     MinHeight="38"
+                                                     Margin="0,0,8,0" />
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                <Button Content="Save draft"
+                                                        Command="{Binding CreateOrderCommand}"
+                                                        Style="{StaticResource PoSecondaryButton}"
+                                                        Margin="0,0,7,0" />
+                                                <Button Content="{Binding QuickCreateLabel}"
+                                                        Command="{Binding QuickCreateOrderCommand}"
+                                                        Style="{StaticResource PoPrimaryButton}" />
+                                            </StackPanel>
+                                        </Grid>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,12">
+                                <!-- Selected PO -->
+                                <Border Style="{StaticResource PoCard}"
+                                        Margin="0,0,0,10">
                                     <StackPanel>
-                                        <TextBlock Text="Selected order" FontSize="16" FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding SelectedOrderDetail.Order.Number}" FontWeight="SemiBold" Margin="0,5,0,0"/>
-                                        <TextBlock Text="{Binding SelectedOrderDetail.Order.SupplierName}" Style="{StaticResource MutedText}"/>
-                                        <TextBlock Text="{Binding SelectedOrderDetail.Order.Status}" Margin="0,4,0,10"/>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="Selected purchase order"
+                                                           Style="{StaticResource PoSectionTitle}" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                    <TextBlock Text="{Binding SelectedOrderDetail.Order.Number}"
+                                                               FontSize="12.5"
+                                                               FontWeight="Bold"
+                                                               Foreground="#0F172A" />
+                                                    <TextBlock Text=" · " Foreground="#94A3B8" />
+                                                    <TextBlock Text="{Binding SelectedOrderDetail.Order.SupplierName}"
+                                                               FontSize="11"
+                                                               Foreground="#52677F" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <Border Grid.Column="1"
+                                                    Background="#EAF4FF"
+                                                    CornerRadius="8"
+                                                    Padding="9,4"
+                                                    VerticalAlignment="Top">
+                                                <TextBlock Text="{Binding SelectedOrderDetail.Order.Status}"
+                                                           Foreground="#0B5FC6"
+                                                           FontSize="9.5"
+                                                           FontWeight="Bold" />
+                                            </Border>
+                                        </Grid>
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                            <Button Content="Submit" Command="{Binding SubmitOrderCommand}" Padding="12,7" Margin="0,0,8,0"/>
-                                            <Button Content="Approve" Command="{Binding ApproveOrderCommand}" Padding="12,7" Margin="0,0,8,0"/>
-                                            <Button Content="Cancel" Command="{Binding CancelOrderCommand}" Padding="12,7"/>
-                                        </StackPanel>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Background="#F8FAFC" CornerRadius="8" Padding="9,6">
+                                                <TextBlock Text="{Binding SelectedOrderNextStep}"
+                                                           Foreground="#475569"
+                                                           FontSize="10"
+                                                           FontWeight="SemiBold" />
+                                            </Border>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding SelectedOrderDetail.Order.GrandTotal, StringFormat=AFN {0:N2}}"
+                                                       FontSize="15"
+                                                       FontWeight="Bold"
+                                                       Foreground="#0F766E"
+                                                       VerticalAlignment="Center"
+                                                       Margin="12,0,0,0" />
+                                        </Grid>
 
                                         <DataGrid ItemsSource="{Binding SelectedOrderDetail.Lines}"
                                                   SelectedItem="{Binding SelectedOrderLine}"
-                                                  AutoGenerateColumns="False" IsReadOnly="True"
-                                                  CanUserAddRows="False" Height="150">
+                                                  Style="{StaticResource PoGrid}"
+                                                  Height="132">
                                             <DataGrid.Columns>
-                                                <DataGridTextColumn Header="Medicine" Binding="{Binding Description}" Width="1.4*"/>
-                                                <DataGridTextColumn Header="Ordered" Binding="{Binding OrderedQuantity, StringFormat=N4}" Width="80"/>
-                                                <DataGridTextColumn Header="Received" Binding="{Binding ReceivedQuantity, StringFormat=N4}" Width="80"/>
-                                                <DataGridTextColumn Header="Cost" Binding="{Binding UnitCost, StringFormat=N4}" Width="80"/>
+                                                <DataGridTextColumn Header="Medicine" Binding="{Binding Description}" Width="*" />
+                                                <DataGridTextColumn Header="Ordered" Binding="{Binding OrderedQuantity, StringFormat=N2}" Width="66" />
+                                                <DataGridTextColumn Header="Received" Binding="{Binding ReceivedQuantity, StringFormat=N2}" Width="66" />
+                                                <DataGridTextColumn Header="Cost" Binding="{Binding UnitCost, StringFormat=N2}" Width="66" />
                                             </DataGrid.Columns>
                                         </DataGrid>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                            <Button Content="Submit"
+                                                    Command="{Binding SubmitOrderCommand}"
+                                                    Style="{StaticResource PoSecondaryButton}"
+                                                    Margin="0,0,7,0" />
+                                            <Button Content="Approve"
+                                                    Command="{Binding ApproveOrderCommand}"
+                                                    Style="{StaticResource PoSecondaryButton}"
+                                                    Margin="0,0,7,0" />
+                                            <Button Content="Cancel order"
+                                                    Command="{Binding CancelOrderCommand}"
+                                                    Background="Transparent"
+                                                    BorderBrush="#FCA5A5"
+                                                    Foreground="#B91C1C"
+                                                    Padding="11,7"
+                                                    MinHeight="36" />
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,12">
+                                <!-- One-step receiving -->
+                                <Border Style="{StaticResource PoCard}"
+                                        Margin="0,0,0,10">
                                     <StackPanel>
-                                        <TextBlock Text="Receive selected PO line" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                                        <Grid>
+                                        <Grid Margin="0,0,0,9">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="8"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="8"/>
-                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <StackPanel>
-                                                <TextBlock Text="Received qty"/>
-                                                <TextBox Text="{Binding ReceiptQuantity}" Margin="0,4,0,8"/>
+                                                <TextBlock Text="Receive stock"
+                                                           Style="{StaticResource PoSectionTitle}" />
+                                                <TextBlock Text="Select a PO line, enter batch details, then receive and post it directly to inventory."
+                                                           Style="{StaticResource PoHint}"
+                                                           Margin="0,2,0,0" />
                                             </StackPanel>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="Bonus qty"/>
-                                                <TextBox Text="{Binding ReceiptBonusQuantity}" Margin="0,4,0,8"/>
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="4">
-                                                <TextBlock Text="Batch"/>
-                                                <TextBox Text="{Binding ReceiptBatchNumber}" Margin="0,4,0,8"/>
-                                            </StackPanel>
+                                            <Border Grid.Column="1"
+                                                    Background="#ECFDF5"
+                                                    CornerRadius="8"
+                                                    Padding="8,4">
+                                                <TextBlock Text="1 click"
+                                                           Foreground="#0F766E"
+                                                           FontSize="9.5"
+                                                           FontWeight="Bold" />
+                                            </Border>
                                         </Grid>
 
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="8"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="8"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="8"/>
-                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="0.8*" />
+                                                <ColumnDefinition Width="7" />
+                                                <ColumnDefinition Width="0.6*" />
+                                                <ColumnDefinition Width="7" />
+                                                <ColumnDefinition Width="0.8*" />
+                                                <ColumnDefinition Width="7" />
+                                                <ColumnDefinition Width="0.8*" />
                                             </Grid.ColumnDefinitions>
                                             <StackPanel>
-                                                <TextBlock Text="Manufactured"/>
-                                                <TextBox Text="{Binding ManufacturedAtText}" Margin="0,4,0,8" ToolTip="yyyy-MM-dd"/>
+                                                <TextBlock Text="Receive qty" Style="{StaticResource PoLabel}" />
+                                                <TextBox Text="{Binding ReceiptQuantity}" Margin="0,4,0,8" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="2">
-                                                <TextBlock Text="Expiry"/>
-                                                <TextBox Text="{Binding ExpiresAtText}" Margin="0,4,0,8" ToolTip="yyyy-MM-dd"/>
+                                                <TextBlock Text="Bonus" Style="{StaticResource PoLabel}" />
+                                                <TextBox Text="{Binding ReceiptBonusQuantity}" Margin="0,4,0,8" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="4">
-                                                <TextBlock Text="Unit cost"/>
-                                                <TextBox Text="{Binding ReceiptUnitCost}" Margin="0,4,0,8"/>
+                                                <TextBlock Text="Batch" Style="{StaticResource PoLabel}" />
+                                                <TextBox Text="{Binding ReceiptBatchNumber}" Margin="0,4,0,8" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="6">
-                                                <TextBlock Text="Sale price"/>
-                                                <TextBox Text="{Binding ReceiptSalePrice}" Margin="0,4,0,8"/>
+                                                <TextBlock Text="Expiry" Style="{StaticResource PoLabel}" />
+                                                <TextBox Text="{Binding ExpiresAtText}" Margin="0,4,0,8" ToolTip="yyyy-MM-dd" />
                                             </StackPanel>
                                         </Grid>
 
-                                        <TextBox Text="{Binding ReceiptNotes}" ToolTip="Receipt notes" Margin="0,0,0,8"/>
-                                        <Button Content="Capture goods receipt" Command="{Binding CaptureReceiptCommand}"
-                                                Style="{StaticResource PrimaryButton}" Padding="14,8" HorizontalAlignment="Left"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="0.8*" />
+                                                <ColumnDefinition Width="7" />
+                                                <ColumnDefinition Width="0.8*" />
+                                                <ColumnDefinition Width="7" />
+                                                <ColumnDefinition Width="1.2*" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="Unit cost" Style="{StaticResource PoLabel}" />
+                                                <TextBox Text="{Binding ReceiptUnitCost}" Margin="0,4,0,8" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Sale price" Style="{StaticResource PoLabel}" />
+                                                <TextBox Text="{Binding ReceiptSalePrice}" Margin="0,4,0,8" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="4">
+                                                <TextBlock Text="Stock location" Style="{StaticResource PoLabel}" />
+                                                <ComboBox ItemsSource="{Binding StockLocations}"
+                                                          SelectedItem="{Binding SelectedStockLocation}"
+                                                          DisplayMemberPath="Name"
+                                                          Margin="0,4,0,8" />
+                                            </StackPanel>
+                                        </Grid>
 
-                                        <DataGrid ItemsSource="{Binding SelectedOrderDetail.Receipts}"
-                                                  SelectedItem="{Binding SelectedReceipt}"
-                                                  AutoGenerateColumns="False" IsReadOnly="True"
-                                                  CanUserAddRows="False" Height="125" Margin="0,12,0,8">
-                                            <DataGrid.Columns>
-                                                <DataGridTextColumn Header="Receipt" Binding="{Binding ReceiptNumber}" Width="170"/>
-                                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110"/>
-                                                <DataGridTextColumn Header="Received" Binding="{Binding ReceivedAt, StringFormat=yyyy-MM-dd HH:mm}" Width="130"/>
-                                                <DataGridTextColumn Header="Location" Binding="{Binding StockLocationName}" Width="*"/>
-                                            </DataGrid.Columns>
-                                        </DataGrid>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Text="{Binding ReceiptNotes}"
+                                                     ToolTip="Receipt notes"
+                                                     Margin="0,0,8,0" />
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                <Button Content="Capture only"
+                                                        Command="{Binding CaptureReceiptCommand}"
+                                                        Style="{StaticResource PoSecondaryButton}"
+                                                        Margin="0,0,7,0" />
+                                                <Button Content="Receive &amp; post to inventory"
+                                                        Command="{Binding ReceiveAndPostCommand}"
+                                                        Style="{StaticResource PoPrimaryButton}" />
+                                            </StackPanel>
+                                        </Grid>
 
-                                        <StackPanel Orientation="Horizontal">
-                                            <ComboBox Width="230" ItemsSource="{Binding StockLocations}"
-                                                      SelectedItem="{Binding SelectedStockLocation}"
-                                                      DisplayMemberPath="Name" Margin="0,0,8,0"/>
-                                            <Button Content="Post selected receipt to inventory"
-                                                    Command="{Binding PostReceiptCommand}" Padding="14,8"/>
-                                        </StackPanel>
+                                        <Expander Header="Advanced / previously captured receipts"
+                                                  Margin="0,9,0,0">
+                                            <StackPanel Margin="0,7,0,0">
+                                                <DataGrid ItemsSource="{Binding SelectedOrderDetail.Receipts}"
+                                                          SelectedItem="{Binding SelectedReceipt}"
+                                                          Style="{StaticResource PoGrid}"
+                                                          Height="105">
+                                                    <DataGrid.Columns>
+                                                        <DataGridTextColumn Header="GRN" Binding="{Binding ReceiptNumber}" Width="130" />
+                                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="82" />
+                                                        <DataGridTextColumn Header="Location" Binding="{Binding StockLocationName}" Width="*" />
+                                                    </DataGrid.Columns>
+                                                </DataGrid>
+                                                <Button Content="Post selected captured receipt"
+                                                        Command="{Binding PostReceiptCommand}"
+                                                        Style="{StaticResource PoSecondaryButton}"
+                                                        HorizontalAlignment="Right"
+                                                        Margin="0,7,0,0" />
+                                            </StackPanel>
+                                        </Expander>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Style="{StaticResource SurfaceCard}">
+                                <!-- Invoice and payment -->
+                                <Border Style="{StaticResource PoCard}">
                                     <StackPanel>
-                                        <TextBlock Text="Supplier invoice &amp; payment" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                                        <TextBlock Text="Supplier invoice &amp; payment"
+                                                   Style="{StaticResource PoSectionTitle}" />
+                                        <TextBlock Text="Record the supplier invoice after stock is received, then record payment when due."
+                                                   Style="{StaticResource PoHint}"
+                                                   Margin="0,2,0,9" />
+
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="8"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="8"/>
-                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="1.1*" />
+                                                <ColumnDefinition Width="7" />
+                                                <ColumnDefinition Width="0.8*" />
+                                                <ColumnDefinition Width="7" />
+                                                <ColumnDefinition Width="0.8*" />
                                             </Grid.ColumnDefinitions>
                                             <StackPanel>
-                                                <TextBlock Text="Supplier invoice #"/>
-                                                <TextBox Text="{Binding SupplierInvoiceNumber}" Margin="0,4,0,8"/>
+                                                <TextBlock Text="Supplier invoice #" Style="{StaticResource PoLabel}" />
+                                                <TextBox Text="{Binding SupplierInvoiceNumber}" Margin="0,4,0,8" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="2">
-                                                <TextBlock Text="Invoice date"/>
-                                                <TextBox Text="{Binding InvoiceDateText}" Margin="0,4,0,8"/>
+                                                <TextBlock Text="Invoice date" Style="{StaticResource PoLabel}" />
+                                                <TextBox Text="{Binding InvoiceDateText}" Margin="0,4,0,8" />
                                             </StackPanel>
                                             <StackPanel Grid.Column="4">
-                                                <TextBlock Text="Due date"/>
-                                                <TextBox Text="{Binding InvoiceDueDateText}" Margin="0,4,0,8"/>
+                                                <TextBlock Text="Due date" Style="{StaticResource PoLabel}" />
+                                                <TextBox Text="{Binding InvoiceDueDateText}" Margin="0,4,0,8" />
                                             </StackPanel>
                                         </Grid>
 
-                                        <StackPanel Orientation="Horizontal">
-                                            <ComboBox Width="250" ItemsSource="{Binding SelectedOrderDetail.Receipts}"
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="1.2*" />
+                                                <ColumnDefinition Width="7" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <ComboBox ItemsSource="{Binding SelectedOrderDetail.Receipts}"
                                                       SelectedItem="{Binding SelectedInvoiceReceipt}"
-                                                      DisplayMemberPath="ReceiptNumber" Margin="0,0,8,0"/>
-                                            <TextBox Width="250" Text="{Binding InvoiceNotes}" ToolTip="Invoice notes" Margin="0,0,8,0"/>
-                                            <Button Content="Record invoice" Command="{Binding CreateInvoiceCommand}" Padding="14,8"/>
-                                        </StackPanel>
+                                                      DisplayMemberPath="ReceiptNumber"
+                                                      ToolTip="Goods receipt"
+                                                      Margin="0,0,0,8" />
+                                            <TextBox Grid.Column="2"
+                                                     Text="{Binding InvoiceNotes}"
+                                                     ToolTip="Invoice notes"
+                                                     Margin="0,0,8,8" />
+                                            <Button Grid.Column="3"
+                                                    Content="Record invoice"
+                                                    Command="{Binding CreateInvoiceCommand}"
+                                                    Style="{StaticResource PoSecondaryButton}"
+                                                    Margin="0,0,0,8" />
+                                        </Grid>
 
                                         <DataGrid ItemsSource="{Binding SelectedOrderDetail.Invoices}"
                                                   SelectedItem="{Binding SelectedInvoice}"
-                                                  AutoGenerateColumns="False" IsReadOnly="True"
-                                                  CanUserAddRows="False" Height="125" Margin="0,12,0,8">
+                                                  Style="{StaticResource PoGrid}"
+                                                  Height="105">
                                             <DataGrid.Columns>
-                                                <DataGridTextColumn Header="Invoice" Binding="{Binding InvoiceNumber}" Width="170"/>
-                                                <DataGridTextColumn Header="Supplier #" Binding="{Binding SupplierInvoiceNumber}" Width="120"/>
-                                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="105"/>
-                                                <DataGridTextColumn Header="Total" Binding="{Binding GrandTotal, StringFormat=N4}" Width="90"/>
-                                                <DataGridTextColumn Header="Balance" Binding="{Binding BalanceDue, StringFormat=N4}" Width="90"/>
+                                                <DataGridTextColumn Header="Invoice" Binding="{Binding InvoiceNumber}" Width="120" />
+                                                <DataGridTextColumn Header="Supplier #" Binding="{Binding SupplierInvoiceNumber}" Width="100" />
+                                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="82" />
+                                                <DataGridTextColumn Header="Total" Binding="{Binding GrandTotal, StringFormat=N2}" Width="70" />
+                                                <DataGridTextColumn Header="Balance" Binding="{Binding BalanceDue, StringFormat=N2}" Width="72" />
                                             </DataGrid.Columns>
                                         </DataGrid>
 
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="120"/>
-                                                <ColumnDefinition Width="8"/>
-                                                <ColumnDefinition Width="130"/>
-                                                <ColumnDefinition Width="8"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="8"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox Text="{Binding PaymentAmount}" ToolTip="Amount"/>
-                                            <ComboBox Grid.Column="2" ItemsSource="{Binding PaymentMethods}"
-                                                      SelectedItem="{Binding SelectedPaymentMethod}"/>
-                                            <TextBox Grid.Column="4" Text="{Binding PaymentReference}" ToolTip="Reference"/>
-                                            <TextBox Grid.Column="6" Text="{Binding PaymentNotes}" ToolTip="Payment notes"/>
-                                            <Button Grid.Column="7" Content="Record payment" Command="{Binding RecordPaymentCommand}"
-                                                    Padding="14,8" Margin="8,0,0,0"/>
-                                        </Grid>
+                                        <Border Background="#F8FAFC"
+                                                BorderBrush="#E2E8F0"
+                                                BorderThickness="1"
+                                                CornerRadius="10"
+                                                Padding="9"
+                                                Margin="0,8,0,0">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="92" />
+                                                    <ColumnDefinition Width="7" />
+                                                    <ColumnDefinition Width="105" />
+                                                    <ColumnDefinition Width="7" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="7" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox Text="{Binding PaymentAmount}" ToolTip="Amount" />
+                                                <ComboBox Grid.Column="2"
+                                                          ItemsSource="{Binding PaymentMethods}"
+                                                          SelectedItem="{Binding SelectedPaymentMethod}" />
+                                                <TextBox Grid.Column="4"
+                                                         Text="{Binding PaymentReference}"
+                                                         ToolTip="Reference" />
+                                                <TextBox Grid.Column="6"
+                                                         Text="{Binding PaymentNotes}"
+                                                         ToolTip="Payment notes" />
+                                                <Button Grid.Column="7"
+                                                        Content="Record payment"
+                                                        Command="{Binding RecordPaymentCommand}"
+                                                        Style="{StaticResource PoPrimaryButton}"
+                                                        Margin="8,0,0,0" />
+                                            </Grid>
+                                        </Border>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>

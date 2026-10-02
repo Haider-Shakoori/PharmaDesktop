@@ -106,12 +106,14 @@ public sealed partial class PurchasingViewModel : ObservableObject
         AddDraftLineCommand = new RelayCommand(AddDraftLine, () => !IsBusy && SelectedDraftMedicine is not null);
         RemoveDraftLineCommand = new RelayCommand<PurchaseOrderDraftLineViewModel>(RemoveDraftLine, _ => !IsBusy);
         ClearDraftLinesCommand = new RelayCommand(ClearDraftLines, () => !IsBusy);
-        CreateOrderCommand = new AsyncRelayCommand(CreateOrderAsync, () => !IsBusy && CanManagePurchases && DraftLines.Count > 0);
+        CreateOrderCommand = new AsyncRelayCommand(CreateOrderAsync, CanCreateOrder);
+        QuickCreateOrderCommand = new AsyncRelayCommand(QuickCreateOrderAsync, CanCreateOrder);
         SubmitOrderCommand = new AsyncRelayCommand(SubmitOrderAsync, CanSubmitOrder);
         ApproveOrderCommand = new AsyncRelayCommand(ApproveOrderAsync, CanApproveOrder);
         CancelOrderCommand = new AsyncRelayCommand(CancelOrderAsync, CanCancelOrder);
 
         CaptureReceiptCommand = new AsyncRelayCommand(CaptureReceiptAsync, CanCaptureReceipt);
+        ReceiveAndPostCommand = new AsyncRelayCommand(ReceiveAndPostAsync, CanReceiveAndPost);
         PostReceiptCommand = new AsyncRelayCommand(PostReceiptAsync, CanPostReceipt);
         CreateInvoiceCommand = new AsyncRelayCommand(CreateInvoiceAsync, CanCreateInvoice);
         RecordPaymentCommand = new AsyncRelayCommand(RecordPaymentAsync, CanRecordPayment);
@@ -139,10 +141,12 @@ public sealed partial class PurchasingViewModel : ObservableObject
     public IRelayCommand<PurchaseOrderDraftLineViewModel> RemoveDraftLineCommand { get; }
     public IRelayCommand ClearDraftLinesCommand { get; }
     public IAsyncRelayCommand CreateOrderCommand { get; }
+    public IAsyncRelayCommand QuickCreateOrderCommand { get; }
     public IAsyncRelayCommand SubmitOrderCommand { get; }
     public IAsyncRelayCommand ApproveOrderCommand { get; }
     public IAsyncRelayCommand CancelOrderCommand { get; }
     public IAsyncRelayCommand CaptureReceiptCommand { get; }
+    public IAsyncRelayCommand ReceiveAndPostCommand { get; }
     public IAsyncRelayCommand PostReceiptCommand { get; }
     public IAsyncRelayCommand CreateInvoiceCommand { get; }
     public IAsyncRelayCommand RecordPaymentCommand { get; }
@@ -153,11 +157,51 @@ public sealed partial class PurchasingViewModel : ObservableObject
         "تأمین‌کنندگان، سفارش خرید، دریافت، فاکتور و پرداخت",
         "عرضه کوونکي، پېرود امرونه، ترلاسه کول، بلونه او تادیات");
 
+    public string QuickCreateLabel => CanApprovePurchases
+        ? Translate("Create & approve", "ایجاد و تأیید", "جوړ او تایید")
+        : Translate("Create & submit", "ایجاد و ارسال", "جوړ او وسپارئ");
+
+    public string QuickCreateHint => CanApprovePurchases
+        ? Translate(
+            "One click creates the PO, submits it and approves it while preserving the audit trail.",
+            "با یک کلیک سفارش ایجاد، ارسال و تأیید می‌شود و مسیر حسابرسی حفظ می‌گردد.",
+            "په یوه کلیک امر جوړېږي، سپارل کېږي او تاییدېږي؛ د پلټنې لړۍ خوندي پاتې کېږي.")
+        : Translate(
+            "One click creates the PO and submits it for approval.",
+            "با یک کلیک سفارش ایجاد و برای تأیید ارسال می‌شود.",
+            "په یوه کلیک امر جوړ او د تایید لپاره سپارل کېږي.");
+
+    public decimal DraftTotal => decimal.Round(
+        DraftLines.Sum(x => x.LineTotal),
+        4,
+        MidpointRounding.AwayFromZero);
+
+    public string DraftSummary => Translate(
+        $"{DraftLines.Count} line(s) · AFN {DraftTotal:N2}",
+        $"{DraftLines.Count} قلم · AFN {DraftTotal:N2}",
+        $"{DraftLines.Count} کرښې · AFN {DraftTotal:N2}");
+
+    public string SelectedOrderNextStep => SelectedOrder?.Status switch
+    {
+        "draft" => Translate("Next: submit for approval", "مرحله بعد: ارسال برای تأیید", "بل: د تایید لپاره وسپارئ"),
+        "submitted" => Translate("Next: approve purchase order", "مرحله بعد: تأیید سفارش", "بل: د پېرود امر تایید"),
+        "approved" => Translate("Next: receive stock", "مرحله بعد: دریافت کالا", "بل: توکي ترلاسه کړئ"),
+        "partially_received" => Translate("Next: receive remaining stock", "مرحله بعد: دریافت باقی‌مانده", "بل: پاتې توکي ترلاسه کړئ"),
+        "received" => Translate("Next: record supplier invoice", "مرحله بعد: ثبت فاکتور", "بل: د عرضه کوونکي بل ثبت"),
+        "closed" => Translate("Workflow complete", "فرآیند تکمیل است", "بهیر بشپړ دی"),
+        "cancelled" => Translate("Order cancelled", "سفارش لغو شده", "امر لغوه شوی"),
+        _ => Translate("Select an order to continue", "برای ادامه یک سفارش را انتخاب کنید", "د دوام لپاره امر وټاکئ"),
+    };
+
     public void SetLanguage(UiLanguage language)
     {
         _language = language;
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(Subtitle));
+        OnPropertyChanged(nameof(QuickCreateLabel));
+        OnPropertyChanged(nameof(QuickCreateHint));
+        OnPropertyChanged(nameof(DraftSummary));
+        OnPropertyChanged(nameof(SelectedOrderNextStep));
     }
 
     public async Task LoadAsync()
@@ -202,7 +246,14 @@ public sealed partial class PurchasingViewModel : ObservableObject
             _ = LoadOrderAsync(value.Id);
         }
 
+        OnPropertyChanged(nameof(SelectedOrderNextStep));
         NotifyCommands();
+    }
+
+    partial void OnCanApprovePurchasesChanged(bool value)
+    {
+        OnPropertyChanged(nameof(QuickCreateLabel));
+        OnPropertyChanged(nameof(QuickCreateHint));
     }
 
     partial void OnSelectedOrderLineChanged(PurchaseOrderLineItem? value)
@@ -406,7 +457,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
         DraftUnitCost = 0m;
         DraftDiscount = 0m;
         DraftLandedCost = 0m;
-        CreateOrderCommand.NotifyCanExecuteChanged();
+        RaiseDraftState();
     }
 
     private void RemoveDraftLine(PurchaseOrderDraftLineViewModel? line)
@@ -414,51 +465,100 @@ public sealed partial class PurchasingViewModel : ObservableObject
         if (line is not null)
         {
             DraftLines.Remove(line);
-            CreateOrderCommand.NotifyCanExecuteChanged();
+            RaiseDraftState();
         }
     }
 
     private void ClearDraftLines()
     {
         DraftLines.Clear();
-        CreateOrderCommand.NotifyCanExecuteChanged();
+        RaiseDraftState();
     }
+
+    private bool CanCreateOrder() =>
+        !IsBusy &&
+        CanManagePurchases &&
+        SelectedOrderSupplier is not null &&
+        DraftLines.Count > 0 &&
+        DraftLines.All(x => x.OrderedQuantity > 0m && x.UnitCost >= 0m);
 
     private async Task CreateOrderAsync()
     {
         await ExecuteBusyAsync(async () =>
         {
-            if (SelectedOrderSupplier is null)
+            var id = await CreateOrderCoreAsync();
+            await RefreshCreatedOrderAsync(id);
+
+            StatusMessage = Translate(
+                "Purchase order draft created.",
+                "پیش‌نویس سفارش خرید ایجاد شد.",
+                "د پېرود امر مسوده جوړه شوه.");
+        });
+    }
+
+    private async Task QuickCreateOrderAsync()
+    {
+        await ExecuteBusyAsync(async () =>
+        {
+            var id = await CreateOrderCoreAsync();
+            await _purchasing.SubmitOrderAsync(id);
+
+            if (CanApprovePurchases)
             {
-                throw new InvalidOperationException("Select a supplier.");
+                await _purchasing.ApproveOrderAsync(id);
             }
 
-            var orderDate = ParseRequiredDate(OrderDateText, "Order date");
-            var expectedDate = ParseOptionalDate(ExpectedDateText, "Expected date");
+            await RefreshCreatedOrderAsync(id);
 
-            var id = await _purchasing.CreateOrderAsync(
-                new CreatePurchaseOrderRequest(
-                    SelectedOrderSupplier.Id,
-                    orderDate,
-                    expectedDate,
-                    OrderCurrency,
-                    OrderNotes,
-                    DraftLines.Select(x => new CreatePurchaseOrderLineRequest(
-                        x.Medicine.Id,
-                        x.OrderedQuantity,
-                        x.UnitCost,
-                        x.DiscountAmount,
-                        x.LandedCostAllocated)).ToList()));
-
-            DraftLines.Clear();
-            OrderNotes = string.Empty;
-            ExpectedDateText = string.Empty;
-            await SearchOrdersCoreAsync();
-            SelectedOrder = Orders.FirstOrDefault(x => x.Id == id);
-            await LoadOrderAsync(id);
-
-            StatusMessage = Translate("Purchase order created.", "سفارش خرید ایجاد شد.", "د پېرود امر جوړ شو.");
+            StatusMessage = CanApprovePurchases
+                ? Translate(
+                    "Purchase order created and approved.",
+                    "سفارش خرید ایجاد و تأیید شد.",
+                    "د پېرود امر جوړ او تایید شو.")
+                : Translate(
+                    "Purchase order created and submitted for approval.",
+                    "سفارش خرید ایجاد و برای تأیید ارسال شد.",
+                    "د پېرود امر جوړ او د تایید لپاره وسپارل شو.");
         });
+    }
+
+    private async Task<string> CreateOrderCoreAsync()
+    {
+        if (SelectedOrderSupplier is null)
+        {
+            throw new InvalidOperationException("Select a supplier.");
+        }
+
+        var orderDate = ParseRequiredDate(OrderDateText, "Order date");
+        var expectedDate = ParseOptionalDate(ExpectedDateText, "Expected date");
+
+        var id = await _purchasing.CreateOrderAsync(
+            new CreatePurchaseOrderRequest(
+                SelectedOrderSupplier.Id,
+                orderDate,
+                expectedDate,
+                OrderCurrency,
+                OrderNotes,
+                DraftLines.Select(x => new CreatePurchaseOrderLineRequest(
+                    x.Medicine.Id,
+                    x.OrderedQuantity,
+                    x.UnitCost,
+                    x.DiscountAmount,
+                    x.LandedCostAllocated)).ToList()));
+
+        DraftLines.Clear();
+        OrderNotes = string.Empty;
+        ExpectedDateText = string.Empty;
+        RaiseDraftState();
+
+        return id;
+    }
+
+    private async Task RefreshCreatedOrderAsync(string id)
+    {
+        await SearchOrdersCoreAsync();
+        SelectedOrder = Orders.FirstOrDefault(x => x.Id == id);
+        await LoadOrderAsync(id);
     }
 
     private async Task SubmitOrderAsync()
@@ -544,6 +644,51 @@ public sealed partial class PurchasingViewModel : ObservableObject
                 "Goods receipt captured; post it to inventory when ready.",
                 "رسید کالا ثبت شد؛ آن را به موجودی انتقال دهید.",
                 "د توکو رسید ثبت شو؛ زېرمتون ته یې انتقال کړئ.");
+        });
+    }
+
+    private async Task ReceiveAndPostAsync()
+    {
+        if (SelectedOrder is null ||
+            SelectedOrderLine is null ||
+            SelectedStockLocation is null)
+        {
+            return;
+        }
+
+        var orderId = SelectedOrder.Id;
+        var stockLocationId = SelectedStockLocation.Id;
+
+        await ExecuteBusyAsync(async () =>
+        {
+            var receiptId = await _purchasing.CaptureGoodsReceiptAsync(
+                orderId,
+                new CaptureGoodsReceiptRequest(
+                    _clock.UtcNow,
+                    null,
+                    ReceiptNotes,
+                    [
+                        new CaptureGoodsReceiptLineRequest(
+                            SelectedOrderLine.Id,
+                            ReceiptQuantity,
+                            ReceiptBonusQuantity,
+                            ReceiptBatchNumber,
+                            ParseOptionalDate(ManufacturedAtText, "Manufactured date"),
+                            ParseOptionalDate(ExpiresAtText, "Expiry date"),
+                            ReceiptUnitCost,
+                            ReceiptSalePrice)
+                    ]));
+
+            await _purchasing.PostGoodsReceiptAsync(receiptId, stockLocationId);
+
+            ReceiptNotes = string.Empty;
+            await RefreshSelectedOrderAsync(orderId);
+            SelectedReceipt = SelectedOrderDetail?.Receipts.FirstOrDefault(x => x.Id == receiptId);
+
+            StatusMessage = Translate(
+                "Stock received and posted to inventory.",
+                "کالا دریافت و به موجودی منتقل شد.",
+                "توکي ترلاسه او زېرمتون ته داخل شول.");
         });
     }
 
@@ -670,6 +815,11 @@ public sealed partial class PurchasingViewModel : ObservableObject
         SelectedOrder is not null &&
         (SelectedOrder.Status is "approved" or "partially_received");
 
+    private bool CanReceiveAndPost() =>
+        CanCaptureReceipt() &&
+        CanPostInventory &&
+        SelectedStockLocation is not null;
+
     private bool CanPostReceipt() =>
         !IsBusy &&
         CanPostInventory &&
@@ -691,6 +841,14 @@ public sealed partial class PurchasingViewModel : ObservableObject
         SelectedInvoice is not null &&
         SelectedInvoice.Status != "cancelled" &&
         SelectedInvoice.BalanceDue > 0m;
+
+    private void RaiseDraftState()
+    {
+        OnPropertyChanged(nameof(DraftTotal));
+        OnPropertyChanged(nameof(DraftSummary));
+        CreateOrderCommand.NotifyCanExecuteChanged();
+        QuickCreateOrderCommand.NotifyCanExecuteChanged();
+    }
 
     private async Task ExecuteBusyAsync(Func<Task> action)
     {
@@ -728,10 +886,12 @@ public sealed partial class PurchasingViewModel : ObservableObject
         RemoveDraftLineCommand.NotifyCanExecuteChanged();
         ClearDraftLinesCommand.NotifyCanExecuteChanged();
         CreateOrderCommand.NotifyCanExecuteChanged();
+        QuickCreateOrderCommand.NotifyCanExecuteChanged();
         SubmitOrderCommand.NotifyCanExecuteChanged();
         ApproveOrderCommand.NotifyCanExecuteChanged();
         CancelOrderCommand.NotifyCanExecuteChanged();
         CaptureReceiptCommand.NotifyCanExecuteChanged();
+        ReceiveAndPostCommand.NotifyCanExecuteChanged();
         PostReceiptCommand.NotifyCanExecuteChanged();
         CreateInvoiceCommand.NotifyCanExecuteChanged();
         RecordPaymentCommand.NotifyCanExecuteChanged();
