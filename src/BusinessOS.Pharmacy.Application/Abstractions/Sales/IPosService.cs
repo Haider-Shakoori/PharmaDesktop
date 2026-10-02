@@ -20,7 +20,22 @@ public interface IPosService
     Task<SaleDetail?> GetSaleAsync(
         string id,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<PosTopProductItem>> GetTopProductsAsync(
+        string stockLocationId,
+        int take = 10,
+        int days = 30,
+        CancellationToken cancellationToken = default);
 }
+
+public sealed record PosTopProductItem(
+    string MedicineId,
+    string MedicineCode,
+    string BrandName,
+    string? Strength,
+    string SaleUnit,
+    decimal QuantitySold,
+    decimal LastUnitPrice);
 
 public sealed record PosReferenceData(
     IReadOnlyList<PosStockLocationItem> StockLocations,

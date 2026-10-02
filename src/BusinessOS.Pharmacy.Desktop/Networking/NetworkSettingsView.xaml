@@ -98,6 +98,61 @@
                 </StackPanel>
             </Border>
 
+            <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="{Binding PosTitle}" Style="{StaticResource SectionTitleText}" />
+                    <TextBlock Text="{Binding PosSubtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,14" TextWrapping="Wrap" />
+                    <CheckBox Content="{Binding PosShowTopSellersLabel}"
+                              IsChecked="{Binding PosShowTopSellers}"
+                              FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding PosShowTopSellersHint}" Style="{StaticResource MutedText}" Margin="24,2,0,0" />
+
+                    <UniformGrid Columns="2" Margin="0,14,0,0">
+                        <StackPanel Margin="0,0,18,0">
+                            <TextBlock Text="{Binding PosTopSellerCountLabel}" FontWeight="SemiBold" Margin="0,0,0,6" />
+                            <ComboBox ItemsSource="{Binding PosTopSellerCountOptions}"
+                                      SelectedItem="{Binding PosTopSellerCount}"
+                                      MinHeight="38" Padding="8,6" HorizontalAlignment="Left" MinWidth="160" />
+                        </StackPanel>
+                        <StackPanel Margin="18,0,0,0">
+                            <TextBlock Text="{Binding PosTopSellerDaysLabel}" FontWeight="SemiBold" Margin="0,0,0,6" />
+                            <ComboBox ItemsSource="{Binding PosTopSellerDaysOptions}"
+                                      SelectedItem="{Binding PosTopSellerDays}"
+                                      MinHeight="38" Padding="8,6" HorizontalAlignment="Left" MinWidth="160" />
+                        </StackPanel>
+                    </UniformGrid>
+
+                    <Grid Margin="0,16,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding PosPreviewTitle}" FontWeight="SemiBold" />
+                            <ItemsControl ItemsSource="{Binding PosTopSellerPreview}" Margin="0,6,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Style="{StaticResource MutedText}" Margin="0,0,0,3" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="{Binding PosPreviewEmpty}"
+                                       Style="{StaticResource MutedText}"
+                                       Margin="0,6,0,0"
+                                       Visibility="{Binding PosTopSellerPreview.Count, Converter={StaticResource GlobalCountZeroToVisibility}}" />
+                        </StackPanel>
+                        <Button Content="{Binding PosPreviewRefreshLabel}"
+                                Command="{Binding RefreshTopSellersCommand}"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Padding="14,6" />
+                    </Grid>
+
+                    <Button Content="{Binding SavePosLabel}"
+                            Command="{Binding SavePosSettingsCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            HorizontalAlignment="Left"
+                            Margin="0,16,0,0"
+                            Padding="18,8" />
+                </StackPanel>
+            </Border>
+
             <UniformGrid Columns="2" Margin="0,0,0,16">
                 <Border Style="{StaticResource SurfaceCard}" Margin="0,0,8,0">
                     <StackPanel>

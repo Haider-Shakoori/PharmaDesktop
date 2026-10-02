@@ -78,6 +78,8 @@ public sealed class LanPosService(LanApiClient api) : IPosService
     public async Task<IReadOnlyList<SaleListItem>> SearchSalesAsync(SaleSearchFilter filter, CancellationToken ct = default) =>
         await api.PostAsync<SaleSearchFilter, List<SaleListItem>>("pos/sales/search", filter, ct);
     public Task<SaleDetail?> GetSaleAsync(string id, CancellationToken ct = default) => api.GetOptionalAsync<SaleDetail>($"pos/sales/{E(id)}", ct);
+    public async Task<IReadOnlyList<PosTopProductItem>> GetTopProductsAsync(string stockLocationId, int take = 10, int days = 30, CancellationToken ct = default) =>
+        await api.GetAsync<List<PosTopProductItem>>($"pos/top-products?stockLocationId={E(stockLocationId)}&take={take}&days={days}", ct);
     private static string E(string value) => Uri.EscapeDataString(value);
 }
 

@@ -2,6 +2,8 @@
              x:Name="Root"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:BusinessOS.Pharmacy.Desktop.Converters"
+             xmlns:sales="clr-namespace:BusinessOS.Pharmacy.Application.Abstractions.Sales;assembly=BusinessOS.Pharmacy.Application"
              MinWidth="900"
              Background="#F1F5F9">
     <UserControl.InputBindings>
@@ -11,6 +13,10 @@
         <KeyBinding Key="Enter" Modifiers="Control" Command="{Binding OpenPaymentCommand}" />
     </UserControl.InputBindings>
     <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+        <converters:CountToVisibilityConverter x:Key="CountNonZeroToVisibility" Empty="False" />
+        <converters:CountToVisibilityConverter x:Key="CountZeroToVisibility" Empty="True" />
+
         <SolidColorBrush x:Key="PosPrimaryBrush" Color="#0F766E" />
         <SolidColorBrush x:Key="PosPrimaryDarkBrush" Color="#115E59" />
         <SolidColorBrush x:Key="PosPrimarySoftBrush" Color="#ECFDF5" />
@@ -267,6 +273,7 @@
                   Background="#F8FAFC">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -503,8 +510,99 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Top selling medicines: quick add strip -->
+                <Border Grid.Row="1"
+                        Background="White"
+                        BorderBrush="{StaticResource PosBorderBrush}"
+                        BorderThickness="0,0,0,1"
+                        Padding="14,10"
+                        Visibility="{Binding IsTopSellersVisible, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="{Binding TopSellersTitle}"
+                                           Style="{StaticResource PosSectionTitle}" />
+                                <TextBlock Text="{Binding TopSellersHint}"
+                                           Style="{StaticResource PosCaption}"
+                                           Margin="0,2,0,0" />
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Command="{Binding RefreshTopSellersCommand}"
+                                    Content="↻"
+                                    FontSize="13"
+                                    FontWeight="Bold"
+                                    Foreground="#0F766E"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    VerticalAlignment="Center"
+                                    Padding="6,2"
+                                    ToolTip="Refresh" />
+                        </Grid>
+
+                        <TextBlock Text="{Binding TopSellersQuickAddHint}"
+                                   Style="{StaticResource PosCaption}"
+                                   Margin="0,8,0,0"
+                                   Visibility="{Binding TopSellers.Count, Converter={StaticResource CountNonZeroToVisibility}}" />
+
+                        <TextBlock Text="{Binding TopSellersEmptyText}"
+                                   Style="{StaticResource PosCaption}"
+                                   Foreground="#64748B"
+                                   Margin="0,8,0,0"
+                                   Visibility="{Binding TopSellers.Count, Converter={StaticResource CountZeroToVisibility}}" />
+
+                        <ItemsControl ItemsSource="{Binding TopSellers}"
+                                      Margin="0,8,0,0"
+                                      Visibility="{Binding TopSellers.Count, Converter={StaticResource CountNonZeroToVisibility}}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type sales:PosTopProductItem}">
+                                    <Button Command="{Binding DataContext.QuickAddTopSellerCommand,
+                                                      RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}"
+                                            Background="#F1F5F9"
+                                            BorderBrush="#E2E8F0"
+                                            BorderThickness="1"
+                                            Padding="10,6"
+                                            Margin="0,0,8,8"
+                                            Cursor="Hand"
+                                            ToolTip="{Binding LastUnitPrice, StringFormat='Last price AFN {0:N2}'}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding BrandName}"
+                                                       FontSize="11.5"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#0F172A" />
+                                            <StackPanel Orientation="Horizontal"
+                                                        Margin="0,2,0,0">
+                                                <TextBlock Text="{Binding QuantitySold, StringFormat='{}{0:0.##}'}"
+                                                           FontSize="10"
+                                                           FontWeight="Bold"
+                                                           Foreground="#0F766E" />
+                                                <TextBlock Text="{Binding SaleUnit}"
+                                                           FontSize="10"
+                                                           Foreground="#64748B"
+                                                           Margin="3,0,0,0" />
+                                                <TextBlock Text="{Binding LastUnitPrice, StringFormat=' · AFN {0:N2}'}"
+                                                           FontSize="10"
+                                                           Foreground="#64748B" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
                 <!-- Cart -->
-                <ScrollViewer Grid.Row="1"
+                <ScrollViewer Grid.Row="2"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="14">

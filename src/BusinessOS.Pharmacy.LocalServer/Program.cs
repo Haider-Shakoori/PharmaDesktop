@@ -501,6 +501,7 @@ authorized.MapPost("/pos/products/search", async (PosProductSearchFilter filter,
 authorized.MapPost("/pos/checkout", async (PosCheckoutRequest request, IPosService service, CancellationToken ct) => Results.Ok(await service.CheckoutAsync(request, ct)));
 authorized.MapPost("/pos/sales/search", async (SaleSearchFilter filter, IPosService service, CancellationToken ct) => Results.Ok(await service.SearchSalesAsync(filter, ct)));
 authorized.MapGet("/pos/sales/{id}", async (string id, IPosService service, CancellationToken ct) => { var result = await service.GetSaleAsync(id, ct); return result is null ? Results.NotFound() : Results.Ok(result); });
+authorized.MapGet("/pos/top-products", async (string stockLocationId, int? take, int? days, IPosService service, CancellationToken ct) => Results.Ok(await service.GetTopProductsAsync(stockLocationId, take ?? 10, days ?? 30, ct)));
 
 authorized.MapPost("/returns/returnable-sales/search", async (SaleSearchFilter filter, ISaleReturnService service, CancellationToken ct) => Results.Ok(await service.SearchReturnableSalesAsync(filter, ct)));
 authorized.MapGet("/returns/returnable-sales/{id}", async (string id, ISaleReturnService service, CancellationToken ct) => { var result = await service.GetReturnableSaleAsync(id, ct); return result is null ? Results.NotFound() : Results.Ok(result); });

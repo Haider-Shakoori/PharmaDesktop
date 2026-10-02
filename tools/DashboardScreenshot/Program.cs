@@ -74,7 +74,8 @@ internal static class Program
                 new FakePosService(),
                 permissions,
                 clock,
-                new FakeReceiptPrinter());
+                new FakeReceiptPrinter(),
+                new BusinessOS.Pharmacy.Desktop.Pos.PosSettingsStore());
             posViewModel = pos;
             pos.LoadAsync().GetAwaiter().GetResult();
 
@@ -107,6 +108,63 @@ internal static class Program
             {
                 pos.AddToCartCommand.Execute(null);
             }
+
+            currentPage = pos;
+            selectedKey = "pos";
+        }
+
+        if (mode == "pos-top-sellers")
+        {
+            var pos = new PosViewModel(
+                new FakePosService(),
+                permissions,
+                clock,
+                new FakeReceiptPrinter(),
+                new PosSettingsStore());
+            posViewModel = pos;
+            pos.LoadAsync().GetAwaiter().GetResult();
+
+            if (!pos.IsTopSellersVisible || pos.TopSellers.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "Top sellers must be visible and populated from real service data.");
+            }
+
+            var before = pos.Cart.Count;
+            pos.QuickAddTopSellerCommand.Execute(pos.TopSellers[0]);
+            Thread.Sleep(600);
+
+            if (pos.Cart.Count != before + 1)
+            {
+                throw new InvalidOperationException(
+                    "Quick add on a top seller must add exactly one cart line.");
+            }
+
+            currentPage = pos;
+            selectedKey = "pos";
+        }
+
+        if (mode == "pos-top-sellers-off")
+        {
+            var settings = new PosSettingsStore();
+            settings.Save(new PosSettings(ShowTopSellers: false));
+
+            var pos = new PosViewModel(
+                new FakePosService(),
+                permissions,
+                clock,
+                new FakeReceiptPrinter(),
+                settings);
+            posViewModel = pos;
+            pos.LoadAsync().GetAwaiter().GetResult();
+
+            if (pos.IsTopSellersVisible || pos.TopSellers.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    "Disabling the setting in Settings must hide the top sellers strip.");
+            }
+
+            settings.Save(new PosSettings(ShowTopSellers: true));
 
             currentPage = pos;
             selectedKey = "pos";
@@ -437,6 +495,16 @@ internal static class Program
             new("cust-3", "Walk-in Corporate", "0700000003", 0m),
         ];
 
+        private static readonly PosTopProductItem[] TopProducts =
+        [
+            new("med-para", "PARA-500", "Paracetamol", "500 mg", "tablet", 148m, 20m),
+            new("med-amox", "AMOX-250", "Amoxicillin", "250 mg", "capsule", 96m, 35m),
+            new("med-ome", "OME-020", "Omeprazole", "20 mg", "capsule", 74m, 28m),
+            new("med-vit", "VIT-D3", "Vitamin D3", "50000 IU", "softgel", 61m, 45m),
+            new("med-para2", "PARA-500", "Paracetamol Syrup", "120 mg/5 ml", "bottle", 52m, 120m),
+            new("med-met", "MET-850", "Metformin", "850 mg", "tablet", 47m, 18m),
+        ];
+
         private static readonly PosProductSearchItem[] Products =
         [
             new(
@@ -540,6 +608,17 @@ internal static class Program
             string id,
             CancellationToken cancellationToken = default) =>
             Task.FromResult<SaleDetail?>(null);
+
+        public Task<IReadOnlyList<PosTopProductItem>> GetTopProductsAsync(
+            string stockLocationId,
+            int take = 10,
+            int days = 30,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<PosTopProductItem>>(
+                TopProducts
+                    .OrderByDescending(x => x.QuantitySold)
+                    .Take(Math.Clamp(take, 1, 50))
+                    .ToList());
     }
 
     private sealed class FakeDashboardQueryService : ILocalDashboardQueryService

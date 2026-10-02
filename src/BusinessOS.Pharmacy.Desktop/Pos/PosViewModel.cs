@@ -16,6 +16,7 @@ public sealed partial class PosViewModel : ObservableObject
     private readonly IPermissionAuthorizer _permissions;
     private readonly IClock _clock;
     private readonly ISaleReceiptPrinter _receiptPrinter;
+    private readonly PosSettingsStore _posSettings;
     private UiLanguage _language = UiLanguageCatalog.All[0];
     private bool _suppressSearchTextChanged;
 
@@ -40,17 +41,24 @@ public sealed partial class PosViewModel : ObservableObject
     [ObservableProperty] private string saleNotes = string.Empty;
     [ObservableProperty] private bool printInvoiceAfterPayment;
     [ObservableProperty] private SaleDetail? lastSale;
+    [ObservableProperty] private bool isTopSellersVisible;
+    [ObservableProperty] private int topSellerCount = 10;
+    [ObservableProperty] private int topSellerDays = 30;
+    [ObservableProperty] private string topSellersHint = string.Empty;
 
     public PosViewModel(
         IPosService pos,
         IPermissionAuthorizer permissions,
         IClock clock,
-        ISaleReceiptPrinter receiptPrinter)
+        ISaleReceiptPrinter receiptPrinter,
+        PosSettingsStore posSettings)
     {
         _pos = pos;
         _permissions = permissions;
         _clock = clock;
         _receiptPrinter = receiptPrinter;
+        _posSettings = posSettings;
+        _posSettings.SettingsChanged += ApplyPosSettings;
 
         LoadCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
         FocusSearchCommand = new RelayCommand(RequestSearchFocus);
@@ -66,6 +74,12 @@ public sealed partial class PosViewModel : ObservableObject
             AddSearchResult,
             item => !IsBusy && item is not null);
         AddToCartCommand = new RelayCommand(AddToCart, CanAddToCart);
+        QuickAddTopSellerCommand = new AsyncRelayCommand<PosTopProductItem>(
+            QuickAddTopSellerAsync,
+            item => !IsBusy && IsTopSellersVisible && item is not null);
+        RefreshTopSellersCommand = new AsyncRelayCommand(
+            () => LoadTopSellersAsync(),
+            () => !IsBusy && IsTopSellersVisible);
         RemoveFromCartCommand = new RelayCommand<PosCartLineViewModel>(
             RemoveFromCart,
             item => !IsBusy && item is not null);
@@ -94,6 +108,8 @@ public sealed partial class PosViewModel : ObservableObject
     public IAsyncRelayCommand SearchCommand { get; }
     public IRelayCommand<PosProductSearchItem> AddSearchResultCommand { get; }
     public IRelayCommand AddToCartCommand { get; }
+    public IAsyncRelayCommand<PosTopProductItem> QuickAddTopSellerCommand { get; }
+    public IAsyncRelayCommand RefreshTopSellersCommand { get; }
     public IRelayCommand<PosCartLineViewModel> RemoveFromCartCommand { get; }
     public IRelayCommand ClearCartCommand { get; }
     public IRelayCommand AddPaymentCommand { get; }
@@ -110,6 +126,7 @@ public sealed partial class PosViewModel : ObservableObject
     public ObservableCollection<PosCartLineViewModel> Cart { get; } = new();
     public ObservableCollection<PosPaymentDraftViewModel> Payments { get; } = new();
     public ObservableCollection<SaleListItem> RecentSales { get; } = new();
+    public ObservableCollection<PosTopProductItem> TopSellers { get; } = new();
 
     public IReadOnlyList<string> PaymentMethods { get; } = ["cash", "bank", "mobile", "credit"];
 
@@ -130,6 +147,30 @@ public sealed partial class PosViewModel : ObservableObject
     public string CheckoutLabel => Translate("Complete sale", "تکمیل فروش", "خرڅلاو بشپړ کړئ");
     public string WalkInCustomerText => Translate("Walk-in customer", "مشتری حضوری", "عمومي پېرودونکی");
     public string SearchResultsTitle => Translate("Search results", "نتایج جستجو", "د لټون پایلې");
+    public string TopSellersTitle => Translate(
+        "Top selling medicines",
+        "پرفروش‌ترین دواها",
+        "ډېر پلورېدونکي درمل");
+    public string TopSellersEmptyText => Translate(
+        "No completed sales in this period yet.",
+        "در این بازه هنوز فروش تکمیل‌شده‌ای نیست.",
+        "په دې موره کې لا بشپړ خرڅلاو نشته.");
+    public string TopSellersQuickAddHint => Translate(
+        "Click a medicine to add 1 to the cart",
+        "برای افزودن ۱ عدد به سبد، روی دوا کلیک کنید",
+        "په ټوکرۍ کې ۱ زیاتولو لپاره درمل ته کلیک وکړئ");
+    public string TopSellersSoldFormat => Translate(
+        "{0:0.##} sold",
+        "{0:0.##} فروش",
+        "{0:0.##} پلور شوي");
+    public string TopSellersPeriodFormat => Translate(
+        "Top sellers · last {0} days",
+        "پرفروش‌ترین‌ها · {0} روز اخیر",
+        "ډېر پلورېدونکي · وروستي {0} ورځې");
+    public string TopSellersPriceFormat => Translate(
+        "Last price AFN {0:N2}",
+        "آخرین قیمت {0:N2} افغانی",
+        "وروستی بیه {0:N2} افغانۍ");
 
     public decimal Subtotal => ScaleMoney(Cart.Sum(x => x.EstimatedSubtotal));
     public decimal DiscountTotal => ScaleMoney(Cart.Sum(x => x.DiscountAmount));
@@ -171,6 +212,7 @@ public sealed partial class PosViewModel : ObservableObject
     public void SetLanguage(UiLanguage language)
     {
         _language = language;
+        ApplyPosSettings(_posSettings.Load());
         OnPropertyChanged(nameof(WorkspaceTitle));
         OnPropertyChanged(nameof(WorkspaceSubtitle));
         OnPropertyChanged(nameof(SearchLabel));
@@ -180,6 +222,9 @@ public sealed partial class PosViewModel : ObservableObject
         OnPropertyChanged(nameof(LocationLabel));
         OnPropertyChanged(nameof(CustomerLabel));
         OnPropertyChanged(nameof(CheckoutLabel));
+        OnPropertyChanged(nameof(TopSellersTitle));
+        OnPropertyChanged(nameof(TopSellersEmptyText));
+        OnPropertyChanged(nameof(TopSellersQuickAddHint));
         OnPropertyChanged(nameof(WalkInCustomerText));
         OnPropertyChanged(nameof(PaymentCustomerText));
         OnPropertyChanged(nameof(SearchResultsTitle));
@@ -215,6 +260,9 @@ public sealed partial class PosViewModel : ObservableObject
             SelectedLocation ??= StockLocations.FirstOrDefault(x => x.IsDefault)
                 ?? StockLocations.FirstOrDefault();
 
+            ApplyPosSettings(_posSettings.Load());
+            await LoadTopSellersAsync();
+
             await RefreshSalesCoreAsync();
 
             StatusMessage = Translate(
@@ -248,6 +296,108 @@ public sealed partial class PosViewModel : ObservableObject
         SearchCommand.NotifyCanExecuteChanged();
         NotifyCommands();
         RequestSearchFocus();
+
+        if (IsTopSellersVisible)
+        {
+            _ = LoadTopSellersAsync();
+        }
+    }
+
+    private void ApplyPosSettings(PosSettings settings)
+    {
+        IsTopSellersVisible = settings.ShowTopSellers;
+        TopSellerCount = settings.TopSellerCount;
+        TopSellerDays = settings.TopSellerDays;
+        TopSellersHint = string.Format(
+            System.Globalization.CultureInfo.CurrentCulture,
+            TopSellersPeriodFormat,
+            TopSellerDays);
+
+        RefreshTopSellersCommand.NotifyCanExecuteChanged();
+        QuickAddTopSellerCommand.NotifyCanExecuteChanged();
+
+        if (IsTopSellersVisible && SelectedLocation is not null)
+        {
+            _ = LoadTopSellersAsync();
+        }
+        else if (!IsTopSellersVisible)
+        {
+            TopSellers.Clear();
+        }
+    }
+
+    private async Task LoadTopSellersAsync()
+    {
+        if (!IsTopSellersVisible || SelectedLocation is null)
+        {
+            return;
+        }
+
+        var locationId = SelectedLocation.Id;
+        var take = TopSellerCount;
+        var days = TopSellerDays;
+
+        try
+        {
+            var items = await _pos.GetTopProductsAsync(locationId, take, days);
+
+            if (SelectedLocation?.Id != locationId || !IsTopSellersVisible)
+            {
+                return;
+            }
+
+            TopSellers.Clear();
+            foreach (var item in items)
+            {
+                TopSellers.Add(item);
+            }
+        }
+        catch (Exception exception)
+        {
+            TopSellers.Clear();
+            StatusMessage = exception.Message;
+        }
+    }
+
+    private async Task QuickAddTopSellerAsync(PosTopProductItem? item)
+    {
+        if (item is null || IsBusy || !IsTopSellersVisible || SelectedLocation is null)
+        {
+            return;
+        }
+
+        var locationId = SelectedLocation.Id;
+
+        try
+        {
+            var results = await _pos.SearchProductsAsync(
+                new PosProductSearchFilter(item.MedicineCode, locationId, 5));
+
+            var product = results.FirstOrDefault(x =>
+                           string.Equals(x.MedicineCode, item.MedicineCode, StringComparison.OrdinalIgnoreCase))
+                ?? results.FirstOrDefault();
+
+            if (product is null)
+            {
+                StatusMessage = Translate(
+                    $"{item.BrandName} is no longer available to sell.",
+                    $"{item.BrandName} دیگر برای فروش موجود نیست.",
+                    $"{item.BrandName} نور د پلور لپاره شتون نلري.");
+                return;
+            }
+
+            AddProductAsIndependentLine(
+                product,
+                1m,
+                unitPrice: null,
+                overridePrice: false,
+                discount: 0m,
+                scanned: true);
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = exception.Message;
+        }
     }
 
     partial void OnSelectedCustomerChanged(PosCustomerItem? value)
@@ -939,6 +1089,7 @@ public sealed partial class PosViewModel : ObservableObject
             ResetPaymentsToCash();
 
             await RefreshSalesCoreAsync();
+            await LoadTopSellersAsync();
             RaiseCartState(autoFillSingleCash: false);
 
             StatusMessage = printError is not null

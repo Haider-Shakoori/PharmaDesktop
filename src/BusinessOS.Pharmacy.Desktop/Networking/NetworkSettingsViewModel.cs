@@ -20,6 +20,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     private readonly Profile.UserProfileStore _profileStore;
     private readonly Notifications.NotificationService _notifications;
     private readonly Printing.ReceiptSettingsStore _receiptSettings;
+    private readonly Pos.PosSettingsStore _posSettings;
 
     private UiLanguage _language = UiLanguageCatalog.All[0];
 
@@ -48,6 +49,9 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     [ObservableProperty] private bool receiptShowPayments = true;
     [ObservableProperty] private bool receiptShowFooter = true;
     [ObservableProperty] private string receiptFooterText = "Thank you for your purchase";
+    [ObservableProperty] private bool posShowTopSellers = true;
+    [ObservableProperty] private int posTopSellerCount = 10;
+    [ObservableProperty] private int posTopSellerDays = 30;
     [ObservableProperty] private RegisteredTerminal? selectedTerminal;
     [ObservableProperty] private string renameTerminalTo = string.Empty;
     [ObservableProperty] private bool isBusy;
@@ -59,7 +63,8 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         ILocalServerServiceController serviceController,
         Profile.UserProfileStore profileStore,
         Notifications.NotificationService notifications,
-        Printing.ReceiptSettingsStore receiptSettings)
+        Printing.ReceiptSettingsStore receiptSettings,
+        Pos.PosSettingsStore posSettings)
     {
         _services = services;
         _configurationStore = configurationStore;
@@ -68,10 +73,13 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         _profileStore = profileStore;
         _notifications = notifications;
         _receiptSettings = receiptSettings;
+        _posSettings = posSettings;
 
         UploadProfileImageCommand = new RelayCommand(UploadProfileImage);
         SaveProfileCommand = new RelayCommand(SaveProfile);
         SaveReceiptSettingsCommand = new RelayCommand(SaveReceiptSettings);
+        SavePosSettingsCommand = new RelayCommand(SavePosSettings);
+        RefreshTopSellersCommand = new AsyncRelayCommand(RefreshTopSellersAsync, () => PosShowTopSellers && !IsBusy);
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
         CreatePairingCodeCommand = new AsyncRelayCommand(CreatePairingCodeAsync, () => !IsBusy && CurrentMode == DeploymentMode.Server);
@@ -104,6 +112,8 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     public IRelayCommand UploadProfileImageCommand { get; }
     public IRelayCommand SaveProfileCommand { get; }
     public IRelayCommand SaveReceiptSettingsCommand { get; }
+    public IRelayCommand SavePosSettingsCommand { get; }
+    public IAsyncRelayCommand RefreshTopSellersCommand { get; }
 
     public string ReceiptTitle => T("Receipt printing", "چاپ فاکتور", "د بل چاپ");
     public string ReceiptSubtitle => T(
@@ -152,6 +162,111 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
                 $"Receipt options could not be saved: {exception.Message}",
                 $"تنظیمات فاکتور ذخیره نشد: {exception.Message}",
                 $"د بل تنظیمات خوندي نه شول: {exception.Message}"));
+        }
+    }
+
+    public string PosTitle => T("Point of sale", "فروش", "خرڅلاو");
+    public string PosSubtitle => T(
+        "Control the quick-add top sellers strip in the POS workspace",
+        "نوار پرفروش‌ترین‌ها برای افزودن سریع در صفحه فروش",
+        "په خرڅلاو کې د ژر اضافولو لپاره د ډېر پلورېدونکو درملو په ونډه کنټرول کړئ");
+    public string PosShowTopSellersLabel => T(
+        "Show top selling medicines in POS",
+        "نمایش پرفروش‌ترین دواها در فروش",
+        "د خرڅلاو په پاڼه کې ډېر پلورېدونکي درمل ښودل");
+    public string PosShowTopSellersHint => T(
+        "One click adds the medicine to the cart",
+        "با یک کلیک دوا به سبد اضافه می‌شود",
+        "په یوې کلیک سره درمل په ټوکرۍ کې زیاتېږي");
+    public string PosTopSellerCountLabel => T("How many to show", "تعداد نمایش", "څومره ښودل شي");
+    public string PosTopSellerDaysLabel => T("Sales period", "بازه فروش", "د پلور مدت");
+    public string PosTopSellerDaysText => T("days", "روز", "ورځې");
+    public string SavePosLabel => T("Save point of sale options", "ذخیره تنظیمات فروش", "د خرڅلاو تنظیمات خوندي کړئ");
+    public string PosPreviewTitle => T("Current top sellers", "پرفروش‌های فعلی", "اوسني ډېر پلورېدونکي درمل");
+    public string PosPreviewRefreshLabel => T("Refresh preview", "به‌روزرسانی پیش‌نمایش", "پیش‌نمایش نوې کړئ");
+    public string PosPreviewEmpty => T(
+        "No completed sales in the selected period.",
+        "در بازه انتخابی فروش تکمیل‌شده‌ای وجود ندارد.",
+        "په انتخاب شوې م دوره کې بشپړ خرڅلاو نشته.");
+    public string PosPreviewSoldFormat => T(
+        "sold in period",
+        "فروش در بازه",
+        "په موره کې پلور شوی");
+
+    public IReadOnlyList<int> PosTopSellerCountOptions { get; } = [5, 10, 20, 30];
+    public IReadOnlyList<int> PosTopSellerDaysOptions { get; } = [7, 15, 30, 90, 180, 365];
+
+    public ObservableCollection<string> PosTopSellerPreview { get; } = new();
+
+    partial void OnPosShowTopSellersChanged(bool value) =>
+        RefreshTopSellersCommand.NotifyCanExecuteChanged();
+
+    public void LoadPosSettings()
+    {
+        var settings = _posSettings.Load();
+        PosShowTopSellers = settings.ShowTopSellers;
+        PosTopSellerCount = settings.TopSellerCount;
+        PosTopSellerDays = settings.TopSellerDays;
+        _ = RefreshTopSellersAsync();
+    }
+
+    private void SavePosSettings()
+    {
+        try
+        {
+            _posSettings.Save(new Pos.PosSettings(PosShowTopSellers, PosTopSellerCount, PosTopSellerDays));
+
+            _notifications.ShowSuccess(T(
+                "Point of sale options saved.",
+                "تنظیمات فروش ذخیره شد.",
+                "د خرڅلاو تنظیمات خوندي شول."));
+        }
+        catch (Exception exception)
+        {
+            _notifications.ShowError(T(
+                $"Point of sale options could not be saved: {exception.Message}",
+                $"تنظیمات فروش ذخیره نشد: {exception.Message}",
+                $"د خرڅلاو تنظیمات خوندي نه شول: {exception.Message}"));
+        }
+
+        _ = RefreshTopSellersAsync();
+    }
+
+    private async Task RefreshTopSellersAsync()
+    {
+        PosTopSellerPreview.Clear();
+
+        if (!PosShowTopSellers)
+        {
+            return;
+        }
+
+        try
+        {
+            var pos = _services.GetRequiredService<Application.Abstractions.Sales.IPosService>();
+            var references = await pos.GetReferenceDataAsync();
+            var location = references.StockLocations.FirstOrDefault(x => x.IsDefault)
+                ?? references.StockLocations.FirstOrDefault();
+
+            if (location is null)
+            {
+                return;
+            }
+
+            var items = await pos.GetTopProductsAsync(location.Id, Math.Min(PosTopSellerCount, 10), PosTopSellerDays);
+            foreach (var item in items)
+            {
+                PosTopSellerPreview.Add(
+                    $"{item.BrandName}{(string.IsNullOrWhiteSpace(item.Strength) ? string.Empty : " " + item.Strength)} · " +
+                    $"{item.QuantitySold:0.##} {item.SaleUnit}");
+            }
+        }
+        catch (Exception exception)
+        {
+            PosTopSellerPreview.Add(T(
+                $"Could not load top sellers: {exception.Message}",
+                $"بارگذاری پرفروش‌ها ممکن نشد: {exception.Message}",
+                $"د ډېر پلورېدونکو درملو بارولو ممکن نه شو: {exception.Message}"));
         }
     }
 
@@ -269,6 +384,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         {
             LoadProfile();
             LoadReceiptSettings();
+            LoadPosSettings();
 
             var configuration = await _configurationStore.LoadAsync();
             ApplyConfiguration(configuration);

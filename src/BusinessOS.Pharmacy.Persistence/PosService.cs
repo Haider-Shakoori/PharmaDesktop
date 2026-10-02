@@ -218,6 +218,103 @@ public sealed class PosService : IPosService
         return result;
     }
 
+    public async Task<IReadOnlyList<PosTopProductItem>> GetTopProductsAsync(
+        string stockLocationId,
+        int take = 10,
+        int days = 30,
+        CancellationToken cancellationToken = default)
+    {
+        _permissions.Demand("pos.sell");
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(stockLocationId);
+        take = Math.Clamp(take, 1, 50);
+        days = Math.Clamp(days, 1, 365);
+        var from = StockLedger.BusinessDate(_clock.UtcNow).AddDays(-(days - 1));
+
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var locationExists = await context.Set<StockLocationEntity>()
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.Id == stockLocationId && x.IsActive && x.Branch.IsActive,
+                cancellationToken);
+
+        if (!locationExists)
+        {
+            throw new InvalidOperationException("Stock location was not found or is inactive.");
+        }
+
+        var quantities = await context.Set<SaleLineEntity>()
+            .AsNoTracking()
+            .Where(line =>
+                line.Sale.StockLocationId == stockLocationId &&
+                line.Sale.Status == "completed" &&
+                line.Sale.BusinessDate >= from)
+            .GroupBy(line => line.MedicineId)
+            .Select(group => new
+            {
+                MedicineId = group.Key,
+                Quantity = group.Sum(x => x.Quantity),
+            })
+            .OrderByDescending(x => x.Quantity)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        if (quantities.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = quantities.Select(x => x.MedicineId).ToList();
+
+        var medicines = await context.Set<MedicineEntity>()
+            .AsNoTracking()
+            .Where(x => ids.Contains(x.Id))
+            .Select(x => new
+            {
+                x.Id,
+                x.MedicineCode,
+                x.BrandName,
+                x.Strength,
+                x.SaleUnit,
+            })
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        var lastPrices = await context.Set<SaleLineEntity>()
+            .AsNoTracking()
+            .Where(line =>
+                line.Sale.StockLocationId == stockLocationId &&
+                line.Sale.Status == "completed" &&
+                line.Sale.BusinessDate >= from &&
+                ids.Contains(line.MedicineId))
+            .GroupBy(line => line.MedicineId)
+            .Select(group => new
+            {
+                MedicineId = group.Key,
+                Price = group
+                    .OrderByDescending(x => x.CreatedAt)
+                    .Select(x => x.UnitPrice)
+                    .First(),
+            })
+            .ToDictionaryAsync(x => x.MedicineId, x => x.Price, cancellationToken);
+
+        return quantities
+            .Where(x => medicines.ContainsKey(x.MedicineId))
+            .Select(x =>
+            {
+                var medicine = medicines[x.MedicineId];
+                return new PosTopProductItem(
+                    medicine.Id,
+                    medicine.MedicineCode,
+                    medicine.BrandName,
+                    medicine.Strength,
+                    medicine.SaleUnit,
+                    StockLedger.Scale(x.Quantity),
+                    lastPrices.GetValueOrDefault(x.MedicineId));
+            })
+            .ToList();
+    }
+
     public async Task<SaleDetail> CheckoutAsync(
         PosCheckoutRequest request,
         CancellationToken cancellationToken = default)
