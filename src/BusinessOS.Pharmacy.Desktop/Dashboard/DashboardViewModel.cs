@@ -178,7 +178,7 @@ public sealed partial class DashboardViewModel : ObservableObject
     public string TotalInvoicesLabel => Translate("Total Invoices", "کل فاکتورها", "ټول بلونه");
     public string AverageInvoiceLabel => Translate("Average Invoice", "میانگین فاکتور", "منځنی بل");
     public string LowStockSectionTitle => Translate("Low Stock Items", "اقلام کم‌موجود", "کم موجوده توکي");
-    public string ExpiringSoonSectionTitle => Translate("Expiring Soon", "نزدیک به انقضا", "ژر ختمېدونکي");
+    public string ExpiringSoonSectionTitle => Translate("Expiring Soon", "نزدیک به انقضا", "ژر تاریخ تېر");
     public string RecentTransactionsSectionTitle => Translate("Recent Transactions", "معاملات اخیر", "وروستي راکړې ورکړې");
     public string ViewAllLabel => Translate("View All", "مشاهده همه", "ټول وګورئ");
     public string ViewReportsLabel => Translate("View Reports", "مشاهده گزارش‌ها", "راپورونه وګورئ");
@@ -196,7 +196,7 @@ public sealed partial class DashboardViewModel : ObservableObject
     public string ColumnMinimumStock => Translate("Min. Stock", "حداقل موجودی", "لږ تر لږه زېرمه");
     public string ColumnStatus => Translate("Status", "وضعیت", "حالت");
     public string ColumnBatchNumber => Translate("Batch No.", "شماره بچ", "د بېچ شمېره");
-    public string ColumnExpiryDate => Translate("Expiry Date", "تاریخ انقضا", "د ختمېدو نېټه");
+    public string ColumnExpiryDate => Translate("Expiry Date", "تاریخ انقضا", "د تاریخ تېرېدو نېټه");
     public string ColumnDaysLeft => Translate("Days Left", "روزهای باقی‌مانده", "پاتې ورځې");
     public string ColumnDateTime => Translate("Date & Time", "تاریخ و زمان", "نېټه او وخت");
     public string ColumnType => Translate("Type", "نوع", "ډول");
@@ -337,7 +337,7 @@ public sealed partial class DashboardViewModel : ObservableObject
             "#FFF7ED"));
 
         Stats.Add(new DashboardStatViewModel(
-            Translate("Expiring Soon", "نزدیک به انقضا", "ژر ختمېدونکي"),
+            Translate("Expiring Soon", "نزدیک به انقضا", "ژر تاریخ تېر"),
             _snapshot.NearExpiryCount.ToString("N0", CultureInfo.InvariantCulture),
             Translate("Within 3 months", "در ۳ ماه آینده", "په ۳ میاشتو کې"),
             "batches",
@@ -360,7 +360,7 @@ public sealed partial class DashboardViewModel : ObservableObject
         AttentionSummary = Translate(
             $"{_snapshot.LowStockCount} low stock · {_snapshot.NearExpiryCount} near expiry · {_snapshot.ExpiredCount} expired",
             $"{_snapshot.LowStockCount} کمبود موجودی · {_snapshot.NearExpiryCount} نزدیک انقضا · {_snapshot.ExpiredCount} منقضی",
-            $"{_snapshot.LowStockCount} کم زېرمه · {_snapshot.NearExpiryCount} ژر ختمېدونکي · {_snapshot.ExpiredCount} ختم شوي");
+            $"{_snapshot.LowStockCount} کم زېرمه · {_snapshot.NearExpiryCount} ژر تاریخ تېر · {_snapshot.ExpiredCount} تاریخ تېر");
 
         Alerts.Clear();
         foreach (var alert in _snapshot.Alerts.Take(8))
@@ -443,7 +443,7 @@ public sealed partial class DashboardViewModel : ObservableObject
                 Translate(
                     $"Batch {alert.BatchNumber ?? "—"} · expired {alert.ExpiresAt:yyyy-MM-dd}",
                     $"بچ {alert.BatchNumber ?? "—"} · منقضی {alert.ExpiresAt:yyyy-MM-dd}",
-                    $"بېچ {alert.BatchNumber ?? "—"} · ختم {alert.ExpiresAt:yyyy-MM-dd}"),
+                    $"بېچ {alert.BatchNumber ?? "—"} · تاریخ تېر {alert.ExpiresAt:yyyy-MM-dd}"),
                 "danger"),
             _ => new DashboardAlertViewModel(
                 alert.Kind,
@@ -451,7 +451,7 @@ public sealed partial class DashboardViewModel : ObservableObject
                 Translate(
                     $"Batch {alert.BatchNumber ?? "—"} · expires {alert.ExpiresAt:yyyy-MM-dd}",
                     $"بچ {alert.BatchNumber ?? "—"} · انقضا {alert.ExpiresAt:yyyy-MM-dd}",
-                    $"بېچ {alert.BatchNumber ?? "—"} · ختمېږي {alert.ExpiresAt:yyyy-MM-dd}"),
+                    $"بېچ {alert.BatchNumber ?? "—"} · ژر تاریخ تېر {alert.ExpiresAt:yyyy-MM-dd}"),
                 "attention"),
         };
     }

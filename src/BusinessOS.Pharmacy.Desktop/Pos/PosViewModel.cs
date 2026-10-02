@@ -636,7 +636,10 @@ public sealed partial class PosViewModel : ObservableObject
 
                 var expiry = batch.ExpiresAt is null
                     ? string.Empty
-                    : $" · exp {batch.ExpiresAt:dd MMM yyyy}";
+                    : Translate(
+                        $" · exp {batch.ExpiresAt:dd MMM yyyy}",
+                        $" · انقضا {batch.ExpiresAt:dd MMM yyyy}",
+                        $" · تاریخ تېر {batch.ExpiresAt:dd MMM yyyy}");
                 parts.Add(
                     $"{batch.BatchNumber ?? "Unbatched"}: {take:0.####} × AFN {batch.SalePrice:N2}{expiry}");
             }

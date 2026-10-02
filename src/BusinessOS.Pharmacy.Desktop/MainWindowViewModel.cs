@@ -212,11 +212,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         "inventory" => Translate(
             "Batch-aware stock, expiry and movement control",
             "کنترل موجودی، بچ، انقضا و گردش کالا",
-            "د بېچ، ختمېدو او زېرمتون حرکتونو کنټرول"),
+            "د بېچ، تاریخ تېر او زېرمتون حرکتونو کنټرول"),
         "batches" => Translate(
             "Medicine batches, quantities and expiry control",
             "بچ‌های دوا، مقدار و کنترل انقضا",
-            "د درملو بېچونه، مقدار او د ختمېدو کنټرول"),
+            "د درملو بېچونه، مقدار او د تاریخ تېر کنټرول"),
         "purchases" => Translate(
             "Purchase orders, receiving, invoices and supplier payments",
             "سفارش خرید، دریافت، فاکتور و پرداخت تأمین‌کننده",

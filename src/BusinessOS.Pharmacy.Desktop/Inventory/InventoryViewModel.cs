@@ -96,7 +96,7 @@ public sealed partial class InventoryViewModel : ObservableObject
     public string Subtitle => Translate(
         "Batch-aware stock, expiry and movement control",
         "کنترل موجودی، بچ، انقضا و گردش کالا",
-        "د بېچ، ختمېدو او زېرمتون حرکتونو کنټرول");
+        "د بېچ، تاریخ تېر او زېرمتون حرکتونو کنټرول");
     public string OpeningStockTitle => Translate("Opening stock", "موجودی اولیه", "پیل زېرمه");
     public string AdjustmentTitle => Translate("Stock adjustment", "تعدیل موجودی", "د زېرمتون سمون");
     public string StatusTitle => Translate("Batch status", "وضعیت بچ", "د بېچ حالت");
