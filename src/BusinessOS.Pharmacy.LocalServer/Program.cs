@@ -434,6 +434,7 @@ authorized.MapGet(
         DateOnly businessDate,
         int? lowStockThreshold,
         int? nearExpiryDays,
+        string? period,
         IPermissionAuthorizer permissions,
         ILocalDashboardQueryService dashboard,
         CancellationToken cancellationToken) =>
@@ -444,7 +445,8 @@ authorized.MapGet(
             new DashboardQueryOptions(
                 businessDate,
                 lowStockThreshold ?? 10,
-                nearExpiryDays ?? 90),
+                nearExpiryDays ?? 90,
+                string.IsNullOrWhiteSpace(period) ? "today" : period),
             cancellationToken);
 
         return Results.Ok(snapshot);

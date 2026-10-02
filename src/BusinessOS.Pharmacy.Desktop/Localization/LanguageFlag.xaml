@@ -1,0 +1,63 @@
+<UserControl x:Class="BusinessOS.Pharmacy.Desktop.Localization.LanguageFlag"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root">
+    <Grid Width="22" Height="15" ClipToBounds="True">
+        <Border CornerRadius="2" BorderBrush="#E2E8F0" BorderThickness="1">
+            <Grid>
+                <!-- English (simplified Union Jack) -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding LanguageCode, ElementName=Root}" Value="en">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Rectangle Fill="#1E3A8A" />
+                    <Path Data="M0,0 L22,15 M22,0 L0,15"
+                          Stroke="White" StrokeThickness="3" Stretch="None" />
+                    <Path Data="M0,0 L22,15 M22,0 L0,15"
+                          Stroke="#DC2626" StrokeThickness="1.4" Stretch="None" />
+                    <Path Data="M11,-2 L11,17 M-2,7.5 L24,7.5"
+                          Stroke="White" StrokeThickness="5" Stretch="None" />
+                    <Path Data="M11,-2 L11,17 M-2,7.5 L24,7.5"
+                          Stroke="#DC2626" StrokeThickness="2.6" Stretch="None" />
+                </Grid>
+
+                <!-- Afghanistan -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding LanguageCode, ElementName=Root}" Value="fa">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding LanguageCode, ElementName=Root}" Value="ps">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Fill="#000000" />
+                    <Rectangle Grid.Column="1" Fill="#D32011" />
+                    <Rectangle Grid.Column="2" Fill="#007A36" />
+                    <Ellipse Grid.Column="1"
+                             Width="6" Height="6"
+                             Fill="#F8FAFC"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

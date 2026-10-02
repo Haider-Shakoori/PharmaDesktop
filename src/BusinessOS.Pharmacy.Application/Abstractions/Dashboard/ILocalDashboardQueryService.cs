@@ -10,7 +10,8 @@ public interface ILocalDashboardQueryService
 public sealed record DashboardQueryOptions(
     DateOnly BusinessDate,
     int LowStockThreshold = 10,
-    int NearExpiryDays = 90);
+    int NearExpiryDays = 90,
+    string Period = "today");
 
 public sealed record DashboardSnapshot(
     DateOnly BusinessDate,
@@ -85,4 +86,5 @@ public sealed record DashboardTransactionItem(
 public sealed record DashboardSalesPoint(
     int Hour,
     decimal Sales,
-    int Invoices);
+    int Invoices,
+    string? Label = null);

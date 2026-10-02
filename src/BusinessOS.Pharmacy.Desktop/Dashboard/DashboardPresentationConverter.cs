@@ -36,17 +36,27 @@ public sealed class DashboardPresentationConverter : IValueConverter
             return points.Select((p, index) => new InvoiceBar(
                 left + index * step - 6, bottom - Math.Max(0, p.Invoices) * 32d / maximum,
                 Math.Max(0, p.Invoices) * 32d / maximum,
-                $"{p.Hour:00}:00 — {p.Invoices:N0} invoices")).ToArray();
+                $"{PointLabel(p)} — {p.Invoices:N0} invoices")).ToArray();
         }
         if (mode == "Hours")
-            return points.Select((p, index) => new AxisLabel(left + index * step - 18,
-                    p.Hour == 0 ? "12AM" : p.Hour < 12 ? $"{p.Hour}AM" : p.Hour == 12 ? "12PM" : $"{p.Hour - 12}PM"))
+            return points.Select((p, index) => new AxisLabel(left + index * step - 18, PointLabel(p)))
                 .Where((_, index) => points.Length <= 14 || index % 2 == 0).ToArray();
 
         return DependencyProperty.UnsetValue;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => Binding.DoNothing;
+
+    private static string PointLabel(DashboardSalesPoint point) =>
+        !string.IsNullOrWhiteSpace(point.Label)
+            ? point.Label
+            : point.Hour == 0
+                ? "12AM"
+                : point.Hour < 12
+                    ? $"{point.Hour}AM"
+                    : point.Hour == 12
+                        ? "12PM"
+                        : $"{point.Hour - 12}PM";
 
     public sealed record InvoiceBar(double X, double Y, double Height, string Tooltip);
     public sealed record AxisLabel(double X, string Label);

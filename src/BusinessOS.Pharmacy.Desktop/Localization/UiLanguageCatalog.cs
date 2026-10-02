@@ -8,7 +8,7 @@ public static class UiLanguageCatalog
         new(new List<UiLanguage>
         {
             new("en", "English", "en-US", false),
-            new("fa", "دری", "fa-AF", true),
-            new("ps", "پښتو", "ps-AF", true)
+            new("fa", "دری (Dari)", "fa-AF", true),
+            new("ps", "پښتو (Pashto)", "ps-AF", true)
         });
 }

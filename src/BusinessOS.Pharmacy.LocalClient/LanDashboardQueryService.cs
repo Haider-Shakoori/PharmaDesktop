@@ -21,7 +21,8 @@ public sealed class LanDashboardQueryService(
         var uri =
             $"dashboard?businessDate={Uri.EscapeDataString(date)}" +
             $"&lowStockThreshold={options.LowStockThreshold}" +
-            $"&nearExpiryDays={options.NearExpiryDays}";
+            $"&nearExpiryDays={options.NearExpiryDays}" +
+            $"&period={Uri.EscapeDataString(options.Period)}";
 
         var (client, request) = await requests.CreateAsync(
             HttpMethod.Get,

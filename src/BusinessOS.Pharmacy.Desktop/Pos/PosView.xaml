@@ -225,6 +225,22 @@
                             Command="{Binding LoadCommand}"
                             Style="{StaticResource PosOutlineButton}"
                             Margin="0,0,8,0" />
+                    <Button Command="{Binding DataContext.ToggleFullScreenCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            Style="{StaticResource PosOutlineButton}"
+                            Margin="0,0,8,0"
+                            ToolTip="Toggle full screen (F11)">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="M3,9 L3,3 L9,3 M15,3 L21,3 L21,9 M21,15 L21,21 L15,21 M9,21 L3,21 L3,15"
+                                  Width="13" Height="13"
+                                  Stroke="#334155"
+                                  StrokeThickness="1.8"
+                                  Fill="Transparent"
+                                  Stretch="Uniform"
+                                  VerticalAlignment="Center"
+                                  Margin="0,0,6,0" />
+                            <TextBlock Text="Full screen" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                     <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                             CommandParameter="dashboard"
                             Style="{StaticResource ProfessionalButtonBase}"

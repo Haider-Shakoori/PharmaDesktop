@@ -286,7 +286,7 @@ public sealed class LocalDashboardQueryService : ILocalDashboardQueryService
             .ToList();
 
         var salesTimeline = hasSales
-            ? await ReadSalesTimelineAsync(connection, businessDate, cancellationToken)
+            ? await ReadSalesTimelineAsync(connection, businessDate, options.Period, cancellationToken)
             : Enumerable.Range(8, 12)
                 .Select(hour => new DashboardSalesPoint(hour, 0m, 0))
                 .ToList();
@@ -454,8 +454,14 @@ public sealed class LocalDashboardQueryService : ILocalDashboardQueryService
     private static async Task<IReadOnlyList<DashboardSalesPoint>> ReadSalesTimelineAsync(
         DbConnection connection,
         string businessDate,
+        string period,
         CancellationToken cancellationToken)
     {
+        if (period is "week" or "month" or "year")
+        {
+            return await ReadPeriodTimelineAsync(connection, businessDate, period, cancellationToken);
+        }
+
         var byHour = new Dictionary<int, (decimal Sales, int Invoices)>();
 
         await using var command = connection.CreateCommand();
@@ -496,6 +502,101 @@ public sealed class LocalDashboardQueryService : ILocalDashboardQueryService
                 return new DashboardSalesPoint(hour, value.Sales, value.Invoices);
             })
             .ToList();
+    }
+
+    private static async Task<IReadOnlyList<DashboardSalesPoint>> ReadPeriodTimelineAsync(
+        DbConnection connection,
+        string businessDate,
+        string period,
+        CancellationToken cancellationToken)
+    {
+        var anchor = DateOnly.ParseExact(businessDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var (start, end) = period switch
+        {
+            "week" => (anchor.AddDays(-6), anchor),
+            "month" => (new DateOnly(anchor.Year, anchor.Month, 1),
+                new DateOnly(anchor.Year, anchor.Month, 1).AddMonths(1).AddDays(-1)),
+            _ => (new DateOnly(anchor.Year, 1, 1), new DateOnly(anchor.Year, 12, 31)),
+        };
+
+        var byKey = new Dictionary<string, (decimal Sales, int Invoices)>(StringComparer.Ordinal);
+
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = period == "year"
+                ? """
+                  SELECT
+                      substr(business_date, 1, 7) AS bucket,
+                      COALESCE(SUM(CAST(grand_total AS NUMERIC)), 0) AS sales,
+                      COUNT(*) AS invoices
+                  FROM sales
+                  WHERE status = 'completed'
+                    AND date(business_date) >= date($start)
+                    AND date(business_date) <= date($end)
+                  GROUP BY bucket
+                  ORDER BY bucket;
+                  """
+                : """
+                  SELECT
+                      date(business_date) AS bucket,
+                      COALESCE(SUM(CAST(grand_total AS NUMERIC)), 0) AS sales,
+                      COUNT(*) AS invoices
+                  FROM sales
+                  WHERE status = 'completed'
+                    AND date(business_date) >= date($start)
+                    AND date(business_date) <= date($end)
+                  GROUP BY bucket
+                  ORDER BY bucket;
+                  """;
+            AddParameter(command, "$start", start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            AddParameter(command, "$end", end.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                if (reader.IsDBNull(0))
+                {
+                    continue;
+                }
+
+                byKey[reader.GetString(0)] = (ReadDecimal(reader, 1), (int)reader.GetInt64(2));
+            }
+        }
+
+        var points = new List<DashboardSalesPoint>();
+        if (period == "year")
+        {
+            for (var monthIndex = 0; monthIndex < 12; monthIndex++)
+            {
+                var month = start.AddMonths(monthIndex);
+                var key = month.ToString("yyyy-MM", CultureInfo.InvariantCulture);
+                var value = byKey.GetValueOrDefault(key);
+                points.Add(new DashboardSalesPoint(
+                    monthIndex,
+                    value.Sales,
+                    value.Invoices,
+                    CultureInfo.InvariantCulture.DateTimeFormat.GetAbbreviatedMonthName(month.Month)));
+            }
+        }
+        else
+        {
+            var days = end.DayNumber - start.DayNumber + 1;
+            for (var dayIndex = 0; dayIndex < days; dayIndex++)
+            {
+                var day = start.AddDays(dayIndex);
+                var key = day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                var value = byKey.GetValueOrDefault(key);
+                points.Add(new DashboardSalesPoint(
+                    dayIndex,
+                    value.Sales,
+                    value.Invoices,
+                    period == "week"
+                        ? day.ToString("dd MMM", CultureInfo.InvariantCulture)
+                        : day.Day.ToString(CultureInfo.InvariantCulture)));
+            }
+        }
+
+        return points;
     }
 
     private static async Task<IReadOnlyList<DashboardTransactionItem>> ReadSaleTransactionsAsync(

@@ -54,6 +54,10 @@ internal static class Program
             services,
             new FakeActivationStore(now));
         dashboard.LoadAsync().GetAwaiter().GetResult();
+        if (mode.StartsWith("dashboard-", StringComparison.OrdinalIgnoreCase))
+        {
+            dashboard.SelectPeriodCommand.ExecuteAsync(mode["dashboard-".Length..]).GetAwaiter().GetResult();
+        }
 
         object currentPage = dashboard;
         PosViewModel? posViewModel = null;
@@ -512,11 +516,36 @@ internal static class Program
                 new(new DateTimeOffset(2026,10,1,8,30,0,TimeSpan.FromHours(4.5)),"Sale","INV-2026-0046","Walk-in Customer",2,780,"Cash","paid"),
                 new(new DateTimeOffset(2026,10,1,8,10,0,TimeSpan.FromHours(4.5)),"Sale","INV-2026-0045","Fatima Rahimi",4,1960,"Cash","paid"),
             };
-            var timeline = new List<DashboardSalesPoint>
+            var timeline = options.Period switch
             {
-                new(8,500,2), new(9,2800,4), new(10,3600,5), new(11,2600,4),
-                new(12,1700,3), new(13,2200,4), new(14,2900,5), new(15,4100,6),
-                new(16,5200,7), new(17,4300,6), new(18,3900,5), new(19,7400,7),
+                "week" => Enumerable.Range(0, 7)
+                    .Select(i => new DashboardSalesPoint(
+                        i,
+                        9800m + (i * 1700m),
+                        18 + (i * 3),
+                        new DateOnly(2026, 9, 25).AddDays(i).ToString("dd MMM", System.Globalization.CultureInfo.InvariantCulture)))
+                    .ToList(),
+                "month" => Enumerable.Range(0, 30)
+                    .Select(i => new DashboardSalesPoint(
+                        i,
+                        2400m + ((i % 7) * 2600m),
+                        7 + (i % 9),
+                        (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture)))
+                    .ToList(),
+                "year" => Enumerable.Range(0, 12)
+                    .Select(i => new DashboardSalesPoint(
+                        i,
+                        385000m + (i * 42000m),
+                        820 + (i * 55),
+                        System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat
+                            .GetAbbreviatedMonthName(i + 1)))
+                    .ToList(),
+                _ => new List<DashboardSalesPoint>
+                {
+                    new(8,500,2), new(9,2800,4), new(10,3600,5), new(11,2600,4),
+                    new(12,1700,3), new(13,2200,4), new(14,2900,5), new(15,4100,6),
+                    new(16,5200,7), new(17,4300,6), new(18,3900,5), new(19,7400,7),
+                },
             };
             return Task.FromResult(new DashboardSnapshot(
                 options.BusinessDate,

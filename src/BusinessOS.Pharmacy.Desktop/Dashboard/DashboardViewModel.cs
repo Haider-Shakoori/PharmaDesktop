@@ -36,6 +36,9 @@ public sealed partial class DashboardViewModel : ObservableObject
     private bool isLoading;
 
     [ObservableProperty]
+    private string selectedPeriod = "today";
+
+    [ObservableProperty]
     private string pharmacyName = "Darmaltoon";
 
     [ObservableProperty]
@@ -95,6 +98,7 @@ public sealed partial class DashboardViewModel : ObservableObject
         _cloudSync = services.GetService<ICloudSyncService>();
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsLoading);
+        SelectPeriodCommand = new AsyncRelayCommand<string>(SelectPeriodAsync, key => !IsLoading);
         NavigateCommand = new RelayCommand<string>(key =>
         {
             if (!string.IsNullOrWhiteSpace(key))
@@ -105,6 +109,7 @@ public sealed partial class DashboardViewModel : ObservableObject
     }
 
     public IAsyncRelayCommand RefreshCommand { get; }
+    public IAsyncRelayCommand<string> SelectPeriodCommand { get; }
     public IRelayCommand<string> NavigateCommand { get; }
 
     public event Action<string>? NavigationRequested;
@@ -162,6 +167,44 @@ public sealed partial class DashboardViewModel : ObservableObject
         "No inventory alerts in the local database.",
         "هیچ هشدار موجودی در پایگاه‌داده محلی نیست.",
         "په محلي ډیټابیس کې د زېرمتون خبرتیا نشته.");
+
+    public string DashboardTitle => Translate("Dashboard", "داشبورد", "ډشبورډ");
+    public string SalesOverviewTitle => Translate("Sales Overview", "نمای فروش", "د خرڅلاو کتنه");
+    public string PeriodTodayLabel => Translate("Today", "امروز", "نن");
+    public string PeriodWeekLabel => Translate("This Week", "این هفته", "دا اونۍ");
+    public string PeriodMonthLabel => Translate("This Month", "این ماه", "دا میاشت");
+    public string PeriodYearLabel => Translate("This Year", "امسال", "سږ کال");
+    public string TotalSalesLabel => Translate("Total Sales", "کل فروش", "ټول خرڅلاو");
+    public string TotalInvoicesLabel => Translate("Total Invoices", "کل فاکتورها", "ټول بلونه");
+    public string AverageInvoiceLabel => Translate("Average Invoice", "میانگین فاکتور", "منځنی بل");
+    public string LowStockSectionTitle => Translate("Low Stock Items", "اقلام کم‌موجود", "کمې زېرمې");
+    public string ExpiringSoonSectionTitle => Translate("Expiring Soon", "نزدیک به انقضا", "ژر ختمېدونکي");
+    public string RecentTransactionsSectionTitle => Translate("Recent Transactions", "معاملات اخیر", "وروستي راکړې ورکړې");
+    public string ViewAllLabel => Translate("View All", "مشاهده همه", "ټول وګورئ");
+    public string ViewReportsLabel => Translate("View Reports", "مشاهده گزارش‌ها", "راپورونه وګورئ");
+    public string LicenseSubscriptionTitle => Translate("License & Subscription", "لایسنس و اشتراک", "جواز او ګډون");
+    public string PharmacyOverviewTitle => Translate("Pharmacy Overview", "نمای دواخانه", "د درملتون کتنه");
+    public string TotalMedicinesLabel => Translate("Total Medicines", "کل ادویه", "ټول درمل");
+    public string TotalBatchesLabel => Translate("Total Batches", "کل بچ‌ها", "ټول بېچونه");
+    public string TotalSuppliersLabel => Translate("Total Suppliers", "کل تأمین‌کنندگان", "ټول عرضه کوونکي");
+    public string TotalCustomersLabel => Translate("Total Customers", "کل مشتریان", "ټول پېرودونکي");
+    public string MonthSalesLabel => Translate("Total Sales (This Month)", "کل فروش (این ماه)", "ټول خرڅلاو (دا میاشت)");
+    public string MonthPurchasesLabel => Translate("Total Purchases (This Month)", "کل خریداری (این ماه)", "ټول پېرود (دا میاشت)");
+    public string ColumnNumber => "#";
+    public string ColumnMedicine => Translate("Medicine", "ادویه", "درمل");
+    public string ColumnCurrentStock => Translate("Current Stock", "موجودی فعلی", "اوسنۍ زېرمه");
+    public string ColumnMinimumStock => Translate("Min. Stock", "حداقل موجودی", "لږ تر لږه زېرمه");
+    public string ColumnStatus => Translate("Status", "وضعیت", "حالت");
+    public string ColumnBatchNumber => Translate("Batch No.", "شماره بچ", "د بېچ شمېره");
+    public string ColumnExpiryDate => Translate("Expiry Date", "تاریخ انقضا", "د ختمېدو نېټه");
+    public string ColumnDaysLeft => Translate("Days Left", "روزهای باقی‌مانده", "پاتې ورځې");
+    public string ColumnDateTime => Translate("Date & Time", "تاریخ و زمان", "نېټه او وخت");
+    public string ColumnType => Translate("Type", "نوع", "ډول");
+    public string ColumnDocumentNumber => Translate("Invoice/Purchase #", "شماره فاکتور/خرید", "د بل/پېرود شمېره");
+    public string ColumnParty => Translate("Customer / Supplier", "مشتری / تأمین‌کننده", "پېرودونکی / عرضه کوونکی");
+    public string ColumnItems => Translate("Items", "اقلام", "توکي");
+    public string ColumnTotal => Translate("Total (AFN)", "مجموع (افغانی)", "ټول (افغانۍ)");
+    public string ColumnPaymentMethod => Translate("Payment Method", "روش پرداخت", "د تادیې طریقه");
 
     public void SetLanguage(UiLanguage language)
     {
@@ -221,7 +264,8 @@ public sealed partial class DashboardViewModel : ObservableObject
                 new DashboardQueryOptions(
                     businessDate,
                     DefaultLowStockThreshold,
-                    DefaultNearExpiryDays));
+                    DefaultNearExpiryDays,
+                    SelectedPeriod));
 
             BusinessDateText = businessDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             RebuildPresentation();
@@ -238,6 +282,18 @@ public sealed partial class DashboardViewModel : ObservableObject
             IsLoading = false;
             RefreshCommand.NotifyCanExecuteChanged();
         }
+    }
+
+    private async Task SelectPeriodAsync(string? period)
+    {
+        if (string.IsNullOrWhiteSpace(period) ||
+            string.Equals(period, SelectedPeriod, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        SelectedPeriod = period;
+        await LoadAsync();
     }
 
     private void RebuildPresentation()
@@ -679,5 +735,43 @@ public sealed partial class DashboardViewModel : ObservableObject
         OnPropertyChanged(nameof(PharmacyCodeLabel));
         OnPropertyChanged(nameof(LocalDataLabel));
         OnPropertyChanged(nameof(NoAlertsText));
+        OnPropertyChanged(nameof(WelcomeText));
+        OnPropertyChanged(nameof(DashboardTitle));
+        OnPropertyChanged(nameof(SalesOverviewTitle));
+        OnPropertyChanged(nameof(PeriodTodayLabel));
+        OnPropertyChanged(nameof(PeriodWeekLabel));
+        OnPropertyChanged(nameof(PeriodMonthLabel));
+        OnPropertyChanged(nameof(PeriodYearLabel));
+        OnPropertyChanged(nameof(TotalSalesLabel));
+        OnPropertyChanged(nameof(TotalInvoicesLabel));
+        OnPropertyChanged(nameof(AverageInvoiceLabel));
+        OnPropertyChanged(nameof(LowStockSectionTitle));
+        OnPropertyChanged(nameof(ExpiringSoonSectionTitle));
+        OnPropertyChanged(nameof(RecentTransactionsSectionTitle));
+        OnPropertyChanged(nameof(ViewAllLabel));
+        OnPropertyChanged(nameof(ViewReportsLabel));
+        OnPropertyChanged(nameof(LicenseSubscriptionTitle));
+        OnPropertyChanged(nameof(PharmacyOverviewTitle));
+        OnPropertyChanged(nameof(TotalMedicinesLabel));
+        OnPropertyChanged(nameof(TotalBatchesLabel));
+        OnPropertyChanged(nameof(TotalSuppliersLabel));
+        OnPropertyChanged(nameof(TotalCustomersLabel));
+        OnPropertyChanged(nameof(MonthSalesLabel));
+        OnPropertyChanged(nameof(MonthPurchasesLabel));
+        OnPropertyChanged(nameof(ColumnNumber));
+        OnPropertyChanged(nameof(ColumnMedicine));
+        OnPropertyChanged(nameof(ColumnCurrentStock));
+        OnPropertyChanged(nameof(ColumnMinimumStock));
+        OnPropertyChanged(nameof(ColumnStatus));
+        OnPropertyChanged(nameof(ColumnBatchNumber));
+        OnPropertyChanged(nameof(ColumnExpiryDate));
+        OnPropertyChanged(nameof(ColumnDaysLeft));
+        OnPropertyChanged(nameof(ColumnDateTime));
+        OnPropertyChanged(nameof(ColumnType));
+        OnPropertyChanged(nameof(ColumnDocumentNumber));
+        OnPropertyChanged(nameof(ColumnParty));
+        OnPropertyChanged(nameof(ColumnItems));
+        OnPropertyChanged(nameof(ColumnTotal));
+        OnPropertyChanged(nameof(ColumnPaymentMethod));
     }
 }

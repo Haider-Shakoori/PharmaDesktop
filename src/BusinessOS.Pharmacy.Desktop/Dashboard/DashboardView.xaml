@@ -2,11 +2,13 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:BusinessOS.Pharmacy.Desktop.Dashboard"
+             xmlns:controls="clr-namespace:BusinessOS.Pharmacy.Desktop.Controls"
              FontFamily="Segoe UI"
              TextOptions.TextFormattingMode="Display"
              TextOptions.TextRenderingMode="ClearType">
     <UserControl.Resources>
         <local:DashboardPresentationConverter x:Key="Presentation" />
+        <controls:BindingProxy x:Key="ColumnsProxy" />
         <!-- Dashboard-local typography keeps shared module styles unchanged. -->
         <Style TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Segoe UI" />
@@ -172,6 +174,16 @@
             <Setter Property="Background" Value="#EAF4FF" />
             <Setter Property="BorderBrush" Value="#D6E9FB" />
         </Style>
+
+        <Style x:Key="PeriodButton" TargetType="Button" BasedOn="{StaticResource ProfessionalButtonBase}">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DDE6F0" />
+            <Setter Property="Foreground" Value="#52677F" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Padding" Value="13,5" />
+        </Style>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -179,7 +191,7 @@
                   Background="{DynamicResource AppBackgroundBrush}">
         <StackPanel Margin="22,10,22,4" MinWidth="1240">
             <StackPanel Margin="0,0,0,8">
-                <TextBlock Text="Dashboard"
+                <TextBlock Text="{Binding DashboardTitle}"
                            FontSize="27"
                            FontWeight="Bold"
                            Foreground="#0B1F44" />
@@ -270,25 +282,80 @@
                                     <Path Data="{StaticResource IconReports}"
                                           Style="{StaticResource DashboardSectionIcon}"
                                           Stroke="#0B82F6" />
-                                    <TextBlock Text="Sales Overview"
+                                    <TextBlock Text="{Binding SalesOverviewTitle}"
                                                FontSize="17"
                                                FontWeight="Bold"
                                                Foreground="#15284B"
                                                VerticalAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <Border Background="#0B82F6" CornerRadius="6,0,0,6" Padding="14,6">
-                                        <TextBlock Text="Today" Foreground="White" FontSize="11" FontWeight="SemiBold" />
-                                    </Border>
-                                    <Border Background="White" BorderBrush="#DDE6F0" BorderThickness="1" Padding="13,6">
-                                        <TextBlock Text="This Week" Foreground="#52677F" FontSize="11" />
-                                    </Border>
-                                    <Border Background="White" BorderBrush="#DDE6F0" BorderThickness="1,1,0,1" Padding="13,6">
-                                        <TextBlock Text="This Month" Foreground="#52677F" FontSize="11" />
-                                    </Border>
-                                    <Border Background="White" BorderBrush="#DDE6F0" BorderThickness="1" CornerRadius="0,6,6,0" Padding="13,6">
-                                        <TextBlock Text="This Year" Foreground="#52677F" FontSize="11" />
-                                    </Border>
+                                    <Button Content="{Binding PeriodTodayLabel}"
+                                            Command="{Binding SelectPeriodCommand}"
+                                            CommandParameter="today"
+                                            Margin="0,0,2,0">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource PeriodButton}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedPeriod}" Value="today">
+                                                        <Setter Property="Background" Value="#0B82F6" />
+                                                        <Setter Property="BorderBrush" Value="#0B82F6" />
+                                                        <Setter Property="Foreground" Value="White" />
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                    <Button Content="{Binding PeriodWeekLabel}"
+                                            Command="{Binding SelectPeriodCommand}"
+                                            CommandParameter="week"
+                                            Margin="0,0,2,0">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource PeriodButton}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedPeriod}" Value="week">
+                                                        <Setter Property="Background" Value="#0B82F6" />
+                                                        <Setter Property="BorderBrush" Value="#0B82F6" />
+                                                        <Setter Property="Foreground" Value="White" />
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                    <Button Content="{Binding PeriodMonthLabel}"
+                                            Command="{Binding SelectPeriodCommand}"
+                                            CommandParameter="month"
+                                            Margin="0,0,2,0">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource PeriodButton}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedPeriod}" Value="month">
+                                                        <Setter Property="Background" Value="#0B82F6" />
+                                                        <Setter Property="BorderBrush" Value="#0B82F6" />
+                                                        <Setter Property="Foreground" Value="White" />
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                    <Button Content="{Binding PeriodYearLabel}"
+                                            Command="{Binding SelectPeriodCommand}"
+                                            CommandParameter="year">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource PeriodButton}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedPeriod}" Value="year">
+                                                        <Setter Property="Background" Value="#0B82F6" />
+                                                        <Setter Property="BorderBrush" Value="#0B82F6" />
+                                                        <Setter Property="Foreground" Value="White" />
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
                                 </StackPanel>
                             </Grid>
 
@@ -367,11 +434,11 @@
                                         Margin="10,0,0,0">
                                     <StackPanel>
                                         <TextBlock Text="{Binding SalesTotalText}" FontSize="17" FontWeight="Bold" Foreground="#0B1F44" />
-                                        <TextBlock Text="Total Sales" Style="{StaticResource MiniLabel}" Margin="0,2,0,10" />
+                                        <TextBlock Text="{Binding TotalSalesLabel}" Style="{StaticResource MiniLabel}" Margin="0,2,0,10" />
                                         <TextBlock Text="{Binding SalesInvoiceCountText}" FontSize="17" FontWeight="Bold" Foreground="#0B1F44" />
-                                        <TextBlock Text="Total Invoices" Style="{StaticResource MiniLabel}" Margin="0,2,0,10" />
+                                        <TextBlock Text="{Binding TotalInvoicesLabel}" Style="{StaticResource MiniLabel}" Margin="0,2,0,10" />
                                         <TextBlock Text="{Binding AverageInvoiceText}" FontSize="17" FontWeight="Bold" Foreground="#0B1F44" />
-                                        <TextBlock Text="Average Invoice" Style="{StaticResource MiniLabel}" />
+                                        <TextBlock Text="{Binding AverageInvoiceLabel}" Style="{StaticResource MiniLabel}" />
                                     </StackPanel>
                                 </Border>
                             </Grid>
@@ -395,11 +462,11 @@
                                         <Path Data="{StaticResource IconInventory}"
                                               Style="{StaticResource DashboardSectionIcon}"
                                               Stroke="#F97316" />
-                                        <TextBlock Text="Low Stock Items" FontSize="17" FontWeight="Bold"
+                                        <TextBlock Text="{Binding LowStockSectionTitle}" FontSize="17" FontWeight="Bold"
                                                    Foreground="#15284B" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <Button Grid.Column="1"
-                                            Content="View All"
+                                            Content="{Binding ViewAllLabel}"
                                             Command="{Binding NavigateCommand}"
                                             CommandParameter="inventory"
                                             Style="{StaticResource DashboardLinkButton}" />
@@ -415,14 +482,14 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Medicine" Binding="{Binding Medicine}" Width="*" MinWidth="130">
+                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnMedicine, Source={StaticResource ColumnsProxy}}" Binding="{Binding Medicine}" Width="*" MinWidth="130">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock" BasedOn="{StaticResource DashboardCellText}">
                                                     <Setter Property="ToolTip" Value="{Binding Medicine}" />
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Current Stock" Binding="{Binding CurrentStock, StringFormat={}{0:0.####}}" Width="92">
+                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnCurrentStock, Source={StaticResource ColumnsProxy}}" Binding="{Binding CurrentStock, StringFormat={}{0:0.####}}" Width="92">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="#EF4444" />
@@ -432,7 +499,7 @@
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Min. Stock" Binding="{Binding MinimumStock, StringFormat={}{0:0.####}}" Width="78">
+                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnMinimumStock, Source={StaticResource ColumnsProxy}}" Binding="{Binding MinimumStock, StringFormat={}{0:0.####}}" Width="78">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="TextAlignment" Value="Right" />
@@ -441,7 +508,7 @@
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Status" Width="72">
+                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnStatus, Source={StaticResource ColumnsProxy}}" Width="72">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="#FFE7EA" CornerRadius="7" Padding="6,1"
@@ -467,11 +534,11 @@
                                         <Path Data="{StaticResource IconCalendar}"
                                               Style="{StaticResource DashboardSectionIcon}"
                                               Stroke="#F43F5E" />
-                                        <TextBlock Text="Expiring Soon" FontSize="17" FontWeight="Bold"
+                                        <TextBlock Text="{Binding ExpiringSoonSectionTitle}" FontSize="17" FontWeight="Bold"
                                                    Foreground="#15284B" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <Button Grid.Column="1"
-                                            Content="View All"
+                                            Content="{Binding ViewAllLabel}"
                                             Command="{Binding NavigateCommand}"
                                             CommandParameter="inventory"
                                             Style="{StaticResource DashboardLinkButton}" />
@@ -487,16 +554,16 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Medicine" Binding="{Binding Medicine}" Width="*" MinWidth="130">
+                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnMedicine, Source={StaticResource ColumnsProxy}}" Binding="{Binding Medicine}" Width="*" MinWidth="130">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock" BasedOn="{StaticResource DashboardCellText}">
                                                     <Setter Property="ToolTip" Value="{Binding Medicine}" />
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Batch No." Binding="{Binding BatchNumber}" Width="85" />
-                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Expiry Date" Binding="{Binding ExpiryDate, StringFormat={}{0:dd MMM yyyy}}" Width="108" />
-                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Days Left" Width="78">
+                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnBatchNumber, Source={StaticResource ColumnsProxy}}" Binding="{Binding BatchNumber}" Width="85" />
+                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnExpiryDate, Source={StaticResource ColumnsProxy}}" Binding="{Binding ExpiryDate, StringFormat={}{0:dd MMM yyyy}}" Width="108" />
+                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnDaysLeft, Source={StaticResource ColumnsProxy}}" Width="78">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{Binding DaysLeft, Converter={StaticResource Presentation}, ConverterParameter=ExpiryBackground}" CornerRadius="7" Padding="6,1"
@@ -524,11 +591,11 @@
                                     <Path Data="{StaticResource IconExpenses}"
                                           Style="{StaticResource DashboardSectionIcon}"
                                           Stroke="#0B82F6" />
-                                    <TextBlock Text="Recent Transactions" FontSize="17" FontWeight="Bold"
+                                    <TextBlock Text="{Binding RecentTransactionsSectionTitle}" FontSize="17" FontWeight="Bold"
                                                Foreground="#15284B" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <Button Grid.Column="1"
-                                        Content="View All"
+                                        Content="{Binding ViewAllLabel}"
                                         Command="{Binding NavigateCommand}"
                                         CommandParameter="reports"
                                         Style="{StaticResource DashboardLinkButton}" />
@@ -544,8 +611,8 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Date &amp; Time" Binding="{Binding OccurredAt, StringFormat={}{0:dd MMM yyyy HH:mm}}" Width="150" />
-                                    <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Type" Width="68">
+                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnDateTime, Source={StaticResource ColumnsProxy}}" Binding="{Binding OccurredAt, StringFormat={}{0:dd MMM yyyy HH:mm}}" Width="150" />
+                                    <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnType, Source={StaticResource ColumnsProxy}}" Width="68">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Border Background="#E7F2FF" CornerRadius="7" Padding="6,1"
@@ -555,9 +622,9 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Invoice/Purchase #" Binding="{Binding DocumentNumber}" Width="150" />
-                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Customer / Supplier" Binding="{Binding Party}" Width="*" MinWidth="130" />
-                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Items" Binding="{Binding Items}" Width="60">
+                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnDocumentNumber, Source={StaticResource ColumnsProxy}}" Binding="{Binding DocumentNumber}" Width="150" />
+                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnParty, Source={StaticResource ColumnsProxy}}" Binding="{Binding Party}" Width="*" MinWidth="130" />
+                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnItems, Source={StaticResource ColumnsProxy}}" Binding="{Binding Items}" Width="60">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextAlignment" Value="Right" />
@@ -566,7 +633,7 @@
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Total (AFN)" Binding="{Binding Total, StringFormat={}{0:N2}}" Width="100">
+                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnTotal, Source={StaticResource ColumnsProxy}}" Binding="{Binding Total, StringFormat={}{0:N2}}" Width="100">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextAlignment" Value="Right" />
@@ -575,8 +642,8 @@
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Payment Method" Binding="{Binding PaymentMethod}" Width="120" />
-                                    <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="Status" Width="76">
+                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnPaymentMethod, Source={StaticResource ColumnsProxy}}" Binding="{Binding PaymentMethod}" Width="120" />
+                                    <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnStatus, Source={StaticResource ColumnsProxy}}" Width="76">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Border CornerRadius="7" Padding="6,1"
@@ -631,7 +698,7 @@
                                     <Path Data="{StaticResource IconRoles}"
                                           Style="{StaticResource DashboardSectionIcon}"
                                           Stroke="#16A34A" />
-                                    <TextBlock Text="License &amp; Subscription" FontSize="15" FontWeight="Bold"
+                                    <TextBlock Text="{Binding LicenseSubscriptionTitle}" FontSize="15" FontWeight="Bold"
                                                Foreground="#15284B" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
                                 <Border Grid.Column="1" Background="#DCFCE7" CornerRadius="8" Padding="7,3">
@@ -767,11 +834,11 @@
                                     <Path Data="{StaticResource IconDashboard}"
                                           Style="{StaticResource DashboardSectionIcon}"
                                           Stroke="#0B82F6" />
-                                    <TextBlock Text="Pharmacy Overview" FontSize="15" FontWeight="Bold"
+                                    <TextBlock Text="{Binding PharmacyOverviewTitle}" FontSize="15" FontWeight="Bold"
                                                Foreground="#15284B" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <Button Grid.Column="1"
-                                        Content="View Reports"
+                                        Content="{Binding ViewReportsLabel}"
                                         Command="{Binding NavigateCommand}"
                                         CommandParameter="reports"
                                         Style="{StaticResource DashboardLinkButton}" />
@@ -779,33 +846,33 @@
 
                             <Grid Margin="0,4">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconMedicines}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="Total Medicines" Style="{StaticResource MiniLabel}" /></StackPanel>
+                                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconMedicines}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="{Binding TotalMedicinesLabel}" Style="{StaticResource MiniLabel}" /></StackPanel>
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewMedicinesText}" Style="{StaticResource OverviewValue}" />
                             </Grid>
                             <Grid Margin="0,4">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconInventory}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="Total Batches" Style="{StaticResource MiniLabel}" /></StackPanel>
+                                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconInventory}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="{Binding TotalBatchesLabel}" Style="{StaticResource MiniLabel}" /></StackPanel>
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewBatchesText}" Style="{StaticResource OverviewValue}" />
                             </Grid>
                             <Grid Margin="0,4">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconSuppliers}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="Total Suppliers" Style="{StaticResource MiniLabel}" /></StackPanel>
+                                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconSuppliers}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="{Binding TotalSuppliersLabel}" Style="{StaticResource MiniLabel}" /></StackPanel>
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewSuppliersText}" Style="{StaticResource OverviewValue}" />
                             </Grid>
                             <Grid Margin="0,4">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconCustomers}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="Total Customers" Style="{StaticResource MiniLabel}" /></StackPanel>
+                                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconCustomers}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="{Binding TotalCustomersLabel}" Style="{StaticResource MiniLabel}" /></StackPanel>
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewCustomersText}" Style="{StaticResource OverviewValue}" />
                             </Grid>
                             <Separator Margin="0,4" Background="#E8EEF5" />
                             <Grid Margin="0,4">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconReports}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="Total Sales (This Month)" Style="{StaticResource MiniLabel}" /></StackPanel>
+                                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconReports}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="{Binding MonthSalesLabel}" Style="{StaticResource MiniLabel}" /></StackPanel>
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewMonthSalesText}" Style="{StaticResource OverviewValue}" />
                             </Grid>
                             <Grid Margin="0,4">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconPos}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="Total Purchases (This Month)" Style="{StaticResource MiniLabel}" /></StackPanel>
+                                <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconPos}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="{Binding MonthPurchasesLabel}" Style="{StaticResource MiniLabel}" /></StackPanel>
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewMonthPurchasesText}" Style="{StaticResource OverviewValue}" />
                             </Grid>
                         </StackPanel>

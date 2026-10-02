@@ -70,23 +70,25 @@ public sealed partial class ActivationViewModel : ObservableObject
         }
     }
 
+    private const string TrialWebsiteUrl = "https://darmaltoon.com";
+
     private void OpenTrialPage()
     {
         try
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = _options.BaseUrl,
+                FileName = TrialWebsiteUrl,
                 UseShellExecute = true,
             });
 
             StatusMessage =
-                "Trial page opened in your browser. Submit the request, then enter the license key after approval.";
+                "darmaltoon.com opened in your browser. Request the 7-day trial, then enter the license key after approval.";
         }
         catch
         {
             StatusMessage =
-                $"Open {_options.BaseUrl} in your browser to request a 7-day trial.";
+                $"Open {TrialWebsiteUrl} in your browser to request a 7-day trial.";
         }
     }
 }

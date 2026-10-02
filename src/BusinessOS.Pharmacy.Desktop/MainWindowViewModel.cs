@@ -121,6 +121,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         NavigateCommand = new AsyncRelayCommand<string>(NavigateAsync);
         GlobalSearchCommand = new AsyncRelayCommand(GlobalSearchAsync);
         ToggleSidebarCommand = new RelayCommand(ToggleSidebar);
+        ToggleFullScreenCommand = new RelayCommand(ToggleFullScreen);
         RefreshNavigation();
     }
 
@@ -130,6 +131,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public IAsyncRelayCommand<string> NavigateCommand { get; }
     public IAsyncRelayCommand GlobalSearchCommand { get; }
     public IRelayCommand ToggleSidebarCommand { get; }
+    public IRelayCommand ToggleFullScreenCommand { get; }
     public bool IsPosMode => string.Equals(CurrentSectionKey, "pos", StringComparison.OrdinalIgnoreCase);
     public double SidebarWidth => IsPosMode ? 0d : SidebarCollapsed ? 70d : 224d;
     public DashboardViewModel Dashboard { get; }
@@ -383,6 +385,41 @@ public sealed partial class MainWindowViewModel : ObservableObject
     }
 
     private void ToggleSidebar() => SidebarCollapsed = !SidebarCollapsed;
+
+    private WindowState _windowStateBeforeFullScreen = WindowState.Maximized;
+    private WindowStyle _windowStyleBeforeFullScreen = WindowStyle.SingleBorderWindow;
+    private ResizeMode _resizeModeBeforeFullScreen = ResizeMode.CanResize;
+
+    public bool IsFullScreen { get; private set; }
+
+    private void ToggleFullScreen()
+    {
+        if (System.Windows.Application.Current?.MainWindow is not { } window)
+        {
+            return;
+        }
+
+        if (IsFullScreen)
+        {
+            window.WindowStyle = _windowStyleBeforeFullScreen;
+            window.ResizeMode = _resizeModeBeforeFullScreen;
+            window.WindowState = _windowStateBeforeFullScreen;
+            IsFullScreen = false;
+        }
+        else
+        {
+            _windowStateBeforeFullScreen = window.WindowState;
+            _windowStyleBeforeFullScreen = window.WindowStyle;
+            _resizeModeBeforeFullScreen = window.ResizeMode;
+            window.WindowState = WindowState.Normal;
+            window.WindowStyle = WindowStyle.None;
+            window.ResizeMode = ResizeMode.NoResize;
+            window.WindowState = WindowState.Maximized;
+            IsFullScreen = true;
+        }
+
+        OnPropertyChanged(nameof(IsFullScreen));
+    }
 
     private async Task NavigateAsync(string? key)
     {
