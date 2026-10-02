@@ -2,7 +2,6 @@ on:
   push:
     branches:
       - feat/batch-21-windows-installer
-      - feat/ui-batch-04-pos-web-parity
   workflow_dispatch:
     inputs:
       version:
