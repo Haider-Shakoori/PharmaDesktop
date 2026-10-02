@@ -12,6 +12,7 @@ using BusinessOS.Pharmacy.Desktop.Inventory;
 using BusinessOS.Pharmacy.Desktop.Purchasing;
 using BusinessOS.Pharmacy.Desktop.Customers;
 using BusinessOS.Pharmacy.Desktop.Pos;
+using BusinessOS.Pharmacy.Desktop.Printing;
 using BusinessOS.Pharmacy.Desktop.Returns;
 using BusinessOS.Pharmacy.Desktop.Expenses;
 using BusinessOS.Pharmacy.Desktop.DailyClosing;
@@ -142,6 +143,7 @@ public static class DesktopHost
                 services.AddSingleton<InventoryViewModel>();
                 services.AddSingleton<PurchasingViewModel>();
                 services.AddSingleton<CustomersViewModel>();
+                services.AddSingleton<ISaleReceiptPrinter, SaleReceiptPrinter>();
                 services.AddSingleton<PosViewModel>();
                 services.AddSingleton<ReturnsViewModel>();
                 services.AddSingleton<ExpensesViewModel>();

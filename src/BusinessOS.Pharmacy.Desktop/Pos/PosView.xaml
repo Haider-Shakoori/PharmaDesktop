@@ -358,11 +358,36 @@
                                     Margin="8,0,0,0" />
                         </Grid>
 
-                        <TextBlock Text="{Binding StatusMessage}"
-                                   FontSize="10.5"
-                                   Foreground="#64748B"
-                                   TextWrapping="Wrap"
-                                   Margin="2,7,0,0" />
+                        <Grid Margin="2,7,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding StatusMessage}"
+                                       FontSize="10.5"
+                                       Foreground="#64748B"
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Center">
+                                <Border Background="#F1F5F9" CornerRadius="6" Padding="6,3" Margin="5,0,0,0">
+                                    <TextBlock FontSize="9.2" Foreground="#475569">
+                                        <Run Text="F1" FontWeight="Bold" /><Run Text=" Search" />
+                                    </TextBlock>
+                                </Border>
+                                <Border Background="#F1F5F9" CornerRadius="6" Padding="6,3" Margin="5,0,0,0">
+                                    <TextBlock FontSize="9.2" Foreground="#475569">
+                                        <Run Text="F2" FontWeight="Bold" /><Run Text=" Customer" />
+                                    </TextBlock>
+                                </Border>
+                                <Border Background="#ECFDF5" CornerRadius="6" Padding="6,3" Margin="5,0,0,0">
+                                    <TextBlock FontSize="9.2" Foreground="#0F766E">
+                                        <Run Text="F4" FontWeight="Bold" /><Run Text=" Pay" />
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
                 </Border>
 
@@ -630,7 +655,8 @@
                                 <TextBlock Text="{Binding CustomerLabel}"
                                            Style="{StaticResource PosSectionTitle}" />
                                 <Grid Margin="0,9,0,0">
-                                    <ComboBox ItemsSource="{Binding Customers}"
+                                    <ComboBox x:Name="CustomerCombo"
+                                              ItemsSource="{Binding Customers}"
                                               SelectedItem="{Binding SelectedCustomer}"
                                               DisplayMemberPath="Name" />
                                     <TextBlock Text="{Binding WalkInCustomerText}"
@@ -761,78 +787,49 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Payments -->
+                        <!-- Payment launcher -->
                         <Border Style="{StaticResource PosCard}" Margin="0,0,0,10">
-                            <StackPanel>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding PaymentTitle}"
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Payment"
                                                Style="{StaticResource PosSectionTitle}" />
-                                    <Button Grid.Column="1"
-                                            Content="+ Split"
-                                            Command="{Binding AddSplitPaymentCommand}"
-                                            Background="Transparent"
-                                            BorderBrush="Transparent"
-                                            Foreground="#0F766E"
-                                            FontSize="10.5"
-                                            FontWeight="Bold"
-                                            Padding="6,2" />
-                                </Grid>
-
-                                <ItemsControl ItemsSource="{Binding Payments}"
-                                              Margin="0,5,0,0">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="0,4,0,0">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="94" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="30" />
-                                                </Grid.ColumnDefinitions>
-                                                <ComboBox ItemsSource="{Binding DataContext.PaymentMethods, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                          SelectedItem="{Binding Method, UpdateSourceTrigger=PropertyChanged}"
-                                                          MinHeight="34"
-                                                          FontSize="10.5"
-                                                          Padding="6,3"
-                                                          Margin="0,0,6,0" />
-                                                <TextBox Grid.Column="1"
-                                                         Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged}"
-                                                         Style="{StaticResource PosMiniInput}"
-                                                         TextAlignment="Right"
-                                                         Margin="0,0,5,0" />
-                                                <Button Grid.Column="2"
-                                                        Content="×"
-                                                        Command="{Binding DataContext.RemovePaymentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                        CommandParameter="{Binding}"
-                                                        Style="{StaticResource PosDangerIconButton}" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-
-                                <Grid Margin="0,8,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Button Content="Set cash to total"
-                                            Command="{Binding SetCashToTotalCommand}"
-                                            Background="Transparent"
-                                            BorderBrush="Transparent"
-                                            Foreground="#0F766E"
-                                            FontSize="9.8"
-                                            FontWeight="SemiBold"
-                                            Padding="0" />
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding PaymentBalanceText}"
-                                               FontSize="9.8"
-                                               FontWeight="SemiBold"
-                                               Foreground="#475569" />
-                                </Grid>
-                            </StackPanel>
+                                    <TextBlock Text="Open the payment window to choose cash, bank, mobile, credit or split payment."
+                                               Style="{StaticResource PosCaption}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,3,12,0" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <Border Background="#ECFDF5"
+                                                CornerRadius="6"
+                                                Padding="7,3">
+                                            <TextBlock Text="{Binding PaymentBalanceText}"
+                                                       Foreground="#0F766E"
+                                                       FontSize="9.5"
+                                                       FontWeight="SemiBold" />
+                                        </Border>
+                                        <TextBlock Text="F4 / Ctrl+Enter"
+                                                   Foreground="#94A3B8"
+                                                   FontSize="9"
+                                                   Margin="8,4,0,0" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <Button Grid.Column="1"
+                                        Command="{Binding OpenPaymentCommand}"
+                                        Style="{StaticResource PosOutlineButton}"
+                                        MinWidth="92"
+                                        VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Pay"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0F766E" />
+                                        <TextBlock Text="  →"
+                                                   Foreground="#0F766E" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
                         </Border>
 
                         <!-- Notes -->
@@ -849,7 +846,7 @@
                         </Border>
 
                         <!-- Checkout -->
-                        <Button Command="{Binding CheckoutCommand}"
+                        <Button Command="{Binding OpenPaymentCommand}"
                                 Style="{StaticResource PosPrimaryButton}"
                                 MinHeight="52"
                                 Margin="0,0,0,10"
@@ -860,16 +857,25 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding CheckoutLabel}"
+                                <TextBlock Text="Pay"
                                            Foreground="White"
                                            FontWeight="Bold"
                                            VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding EstimatedGrandTotal, StringFormat=AFN {0:N2}}"
-                                           Foreground="White"
-                                           FontWeight="Bold"
-                                           FontSize="15"
-                                           VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center">
+                                    <TextBlock Text="F4"
+                                               Foreground="#CCFBF1"
+                                               FontSize="9"
+                                               FontWeight="Bold"
+                                               Margin="0,0,10,0"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding EstimatedGrandTotal, StringFormat=AFN {0:N2}}"
+                                               Foreground="White"
+                                               FontWeight="Bold"
+                                               FontSize="15"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
                             </Grid>
                         </Button>
 

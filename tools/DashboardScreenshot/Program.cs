@@ -16,6 +16,7 @@ using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.Desktop.Navigation;
 using BusinessOS.Pharmacy.Desktop.Pos;
+using BusinessOS.Pharmacy.Desktop.Printing;
 using BusinessOS.Pharmacy.Domain.Authentication;
 using BusinessOS.Pharmacy.Domain.Licensing;
 using BusinessOS.Pharmacy.Licensing;
@@ -54,13 +55,16 @@ internal static class Program
         dashboard.LoadAsync().GetAwaiter().GetResult();
 
         object currentPage = dashboard;
+        PosViewModel? posViewModel = null;
         var selectedKey = "dashboard";
-        if (mode == "pos")
+        if (mode is "pos" or "pos-payment")
         {
             var pos = new PosViewModel(
                 new FakePosService(),
                 permissions,
-                clock);
+                clock,
+                new FakeReceiptPrinter());
+            posViewModel = pos;
             pos.LoadAsync().GetAwaiter().GetResult();
 
             // Exercise both scanner modes: no terminator and the common Enter terminator.
@@ -99,6 +103,36 @@ internal static class Program
 
         var app = new App();
         app.InitializeComponent();
+
+        if (mode == "pos-payment")
+        {
+            if (posViewModel is null)
+            {
+                throw new InvalidOperationException("POS payment screenshot requires a POS view model.");
+            }
+
+            posViewModel.PrintInvoiceAfterPayment = true;
+            var payment = new PaymentWindow(posViewModel)
+            {
+                Width = 720,
+                Height = 760,
+                WindowStyle = WindowStyle.None,
+                ResizeMode = ResizeMode.NoResize,
+                ShowInTaskbar = false,
+                WindowStartupLocation = WindowStartupLocation.Manual,
+                Left = -20000,
+                Top = -20000,
+            };
+
+            payment.Show();
+            payment.UpdateLayout();
+            CaptureVisual((FrameworkElement)payment.Content, output);
+            payment.Close();
+            app.Shutdown();
+            Console.WriteLine($"Captured real WPF {mode} to {output}");
+            return;
+        }
+
         var shell = new ScreenshotShell(dashboard, currentPage, selectedKey, session.Current!);
         var window = new MainWindow(null!)
         {
@@ -122,6 +156,18 @@ internal static class Program
             throw new InvalidOperationException("Screenshot shell content was not available.");
         }
 
+        var size = CaptureVisual(rootVisual, output);
+
+        window.Close();
+        app.Shutdown();
+        Console.WriteLine($"Captured real WPF {mode} to {output}");
+        Console.WriteLine($"Size: {size.Width}x{size.Height}");
+    }
+
+    private static (int Width, int Height) CaptureVisual(
+        FrameworkElement rootVisual,
+        string output)
+    {
         rootVisual.UpdateLayout();
         var width = Math.Max(1, (int)Math.Ceiling(rootVisual.ActualWidth));
         var height = Math.Max(1, (int)Math.Ceiling(rootVisual.ActualHeight));
@@ -129,12 +175,17 @@ internal static class Program
         bitmap.Render(rootVisual);
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
-        using (var stream = File.Create(output)) encoder.Save(stream);
+        using (var stream = File.Create(output))
+        {
+            encoder.Save(stream);
+        }
 
-        window.Close();
-        app.Shutdown();
-        Console.WriteLine($"Captured real WPF {mode} to {output}");
-        Console.WriteLine($"Size: {width}x{height}");
+        return (width, height);
+    }
+
+    private sealed class FakeReceiptPrinter : ISaleReceiptPrinter
+    {
+        public void Print(SaleDetail sale) { }
     }
 
     private sealed class ScreenshotShell

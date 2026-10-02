@@ -4,6 +4,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Sales;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Desktop.Localization;
+using BusinessOS.Pharmacy.Desktop.Printing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -14,6 +15,7 @@ public sealed partial class PosViewModel : ObservableObject
     private readonly IPosService _pos;
     private readonly IPermissionAuthorizer _permissions;
     private readonly IClock _clock;
+    private readonly ISaleReceiptPrinter _receiptPrinter;
     private UiLanguage _language = UiLanguageCatalog.All[0];
     private bool _suppressSearchTextChanged;
 
@@ -36,16 +38,19 @@ public sealed partial class PosViewModel : ObservableObject
     [ObservableProperty] private string prescriberName = string.Empty;
     [ObservableProperty] private string prescriptionDateText = string.Empty;
     [ObservableProperty] private string saleNotes = string.Empty;
+    [ObservableProperty] private bool printInvoiceAfterPayment;
     [ObservableProperty] private SaleDetail? lastSale;
 
     public PosViewModel(
         IPosService pos,
         IPermissionAuthorizer permissions,
-        IClock clock)
+        IClock clock,
+        ISaleReceiptPrinter receiptPrinter)
     {
         _pos = pos;
         _permissions = permissions;
         _clock = clock;
+        _receiptPrinter = receiptPrinter;
 
         LoadCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
         SearchCommand = new AsyncRelayCommand(
@@ -67,6 +72,7 @@ public sealed partial class PosViewModel : ObservableObject
         RemovePaymentCommand = new RelayCommand<PosPaymentDraftViewModel>(
             RemovePayment,
             item => !IsBusy && item is not null && Payments.Count > 1);
+        OpenPaymentCommand = new RelayCommand(OpenPayment, CanOpenPayment);
         CheckoutCommand = new AsyncRelayCommand(CheckoutAsync, CanCheckout);
         RefreshSalesCommand = new AsyncRelayCommand(RefreshSalesAsync, () => !IsBusy);
 
@@ -74,6 +80,8 @@ public sealed partial class PosViewModel : ObservableObject
     }
 
     public event EventHandler? SearchFocusRequested;
+    public event EventHandler? PaymentRequested;
+    public event EventHandler? PaymentCloseRequested;
 
     public IAsyncRelayCommand LoadCommand { get; }
     public IAsyncRelayCommand SearchCommand { get; }
@@ -85,6 +93,7 @@ public sealed partial class PosViewModel : ObservableObject
     public IRelayCommand AddSplitPaymentCommand { get; }
     public IRelayCommand SetCashToTotalCommand { get; }
     public IRelayCommand<PosPaymentDraftViewModel> RemovePaymentCommand { get; }
+    public IRelayCommand OpenPaymentCommand { get; }
     public IAsyncRelayCommand CheckoutCommand { get; }
     public IAsyncRelayCommand RefreshSalesCommand { get; }
 
@@ -230,7 +239,11 @@ public sealed partial class PosViewModel : ObservableObject
         RequestSearchFocus();
     }
 
-    partial void OnSelectedCustomerChanged(PosCustomerItem? value) => NotifyCommands();
+    partial void OnSelectedCustomerChanged(PosCustomerItem? value)
+    {
+        OnPropertyChanged(nameof(WalkInCustomerText));
+        NotifyCommands();
+    }
 
     partial void OnSelectedProductChanged(PosProductSearchItem? value)
     {
@@ -781,6 +794,27 @@ public sealed partial class PosViewModel : ObservableObject
         Payments[0].Amount = EstimatedGrandTotal;
     }
 
+    private bool CanOpenPayment() =>
+        !IsBusy &&
+        SelectedLocation is not null &&
+        Cart.Count > 0 &&
+        !HasShortage &&
+        !HasInvalidCartLines &&
+        (!RequiresPrescription || !string.IsNullOrWhiteSpace(PrescriptionReference));
+
+    private void OpenPayment()
+    {
+        if (!CanOpenPayment())
+        {
+            return;
+        }
+
+        PrintInvoiceAfterPayment = false;
+        FillSingleCashToTotal();
+        RaisePaymentState();
+        PaymentRequested?.Invoke(this, EventArgs.Empty);
+    }
+
     private bool CanCheckout()
     {
         if (IsBusy ||
@@ -831,6 +865,10 @@ public sealed partial class PosViewModel : ObservableObject
             return;
         }
 
+        var shouldPrint = PrintInvoiceAfterPayment;
+        string? printError = null;
+        SaleDetail? completedSale = null;
+
         await ExecuteBusyAsync(async () =>
         {
             var sale = await _pos.CheckoutAsync(
@@ -853,7 +891,20 @@ public sealed partial class PosViewModel : ObservableObject
                         x.Amount,
                         x.Reference)).ToList()));
 
+            completedSale = sale;
             LastSale = sale;
+
+            if (shouldPrint)
+            {
+                try
+                {
+                    _receiptPrinter.Print(sale);
+                }
+                catch (Exception exception)
+                {
+                    printError = exception.Message;
+                }
+            }
 
             foreach (var item in Cart)
             {
@@ -868,18 +919,35 @@ public sealed partial class PosViewModel : ObservableObject
             PrescriptionDateText = string.Empty;
             PaymentAmount = 0m;
             SelectedCustomer = null;
+            PrintInvoiceAfterPayment = false;
             ResetPaymentsToCash();
 
             await RefreshSalesCoreAsync();
             RaiseCartState(autoFillSingleCash: false);
 
-            StatusMessage = Translate(
-                $"Sale {sale.Sale.SaleNumber} completed.",
-                $"فروش {sale.Sale.SaleNumber} تکمیل شد.",
-                $"خرڅلاو {sale.Sale.SaleNumber} بشپړ شو.");
+            StatusMessage = printError is null
+                ? Translate(
+                    shouldPrint
+                        ? $"Sale {sale.Sale.SaleNumber} completed and sent to the default printer."
+                        : $"Sale {sale.Sale.SaleNumber} completed.",
+                    shouldPrint
+                        ? $"فروش {sale.Sale.SaleNumber} تکمیل و برای چاپگر پیش‌فرض ارسال شد."
+                        : $"فروش {sale.Sale.SaleNumber} تکمیل شد.",
+                    shouldPrint
+                        ? $"خرڅلاو {sale.Sale.SaleNumber} بشپړ او اصلي چاپګر ته ولېږل شو."
+                        : $"خرڅلاو {sale.Sale.SaleNumber} بشپړ شو.")
+                : Translate(
+                    $"Sale {sale.Sale.SaleNumber} completed, but printing failed: {printError}",
+                    $"فروش {sale.Sale.SaleNumber} تکمیل شد، اما چاپ ناموفق بود: {printError}",
+                    $"خرڅلاو {sale.Sale.SaleNumber} بشپړ شو، خو چاپ ناکام شو: {printError}");
 
             RequestSearchFocus();
         });
+
+        if (completedSale is not null)
+        {
+            PaymentCloseRequested?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     private async Task RefreshSalesAsync() =>
@@ -988,6 +1056,7 @@ public sealed partial class PosViewModel : ObservableObject
         AddSplitPaymentCommand.NotifyCanExecuteChanged();
         SetCashToTotalCommand.NotifyCanExecuteChanged();
         RemovePaymentCommand.NotifyCanExecuteChanged();
+        OpenPaymentCommand.NotifyCanExecuteChanged();
         CheckoutCommand.NotifyCanExecuteChanged();
         RefreshSalesCommand.NotifyCanExecuteChanged();
     }
