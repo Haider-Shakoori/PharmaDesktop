@@ -4,6 +4,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              MinWidth="900"
              Background="#F1F5F9">
+    <UserControl.InputBindings>
+        <KeyBinding Key="F1" Command="{Binding FocusSearchCommand}" />
+        <KeyBinding Key="F2" Command="{Binding FocusCustomerCommand}" />
+        <KeyBinding Key="F4" Command="{Binding OpenPaymentCommand}" />
+        <KeyBinding Key="Enter" Modifiers="Control" Command="{Binding OpenPaymentCommand}" />
+    </UserControl.InputBindings>
     <UserControl.Resources>
         <SolidColorBrush x:Key="PosPrimaryBrush" Color="#0F766E" />
         <SolidColorBrush x:Key="PosPrimaryDarkBrush" Color="#115E59" />

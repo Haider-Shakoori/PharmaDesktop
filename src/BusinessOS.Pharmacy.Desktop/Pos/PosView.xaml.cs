@@ -43,6 +43,7 @@ public partial class PosView : UserControl
         if (_viewModel is not null)
         {
             _viewModel.SearchFocusRequested -= OnSearchFocusRequested;
+            _viewModel.CustomerFocusRequested -= OnCustomerFocusRequested;
             _viewModel.PaymentRequested -= OnPaymentRequested;
         }
 
@@ -51,12 +52,20 @@ public partial class PosView : UserControl
         if (_viewModel is not null)
         {
             _viewModel.SearchFocusRequested += OnSearchFocusRequested;
+            _viewModel.CustomerFocusRequested += OnCustomerFocusRequested;
             _viewModel.PaymentRequested += OnPaymentRequested;
         }
     }
 
     private void OnSearchFocusRequested(object? sender, EventArgs e) =>
         RequestSearchFocus();
+
+    private void OnCustomerFocusRequested(object? sender, EventArgs e)
+    {
+        CustomerCombo.Focus();
+        Keyboard.Focus(CustomerCombo);
+        CustomerCombo.IsDropDownOpen = true;
+    }
 
     private void OnPaymentRequested(object? sender, EventArgs e)
     {

@@ -53,6 +53,10 @@ public sealed partial class PosViewModel : ObservableObject
         _receiptPrinter = receiptPrinter;
 
         LoadCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
+        FocusSearchCommand = new RelayCommand(RequestSearchFocus);
+        FocusCustomerCommand = new RelayCommand(
+            () => CustomerFocusRequested?.Invoke(this, EventArgs.Empty),
+            () => !IsBusy);
         SearchCommand = new AsyncRelayCommand(
             SearchAsync,
             () => !IsBusy &&
@@ -80,10 +84,13 @@ public sealed partial class PosViewModel : ObservableObject
     }
 
     public event EventHandler? SearchFocusRequested;
+    public event EventHandler? CustomerFocusRequested;
     public event EventHandler? PaymentRequested;
     public event EventHandler? PaymentCloseRequested;
 
     public IAsyncRelayCommand LoadCommand { get; }
+    public IRelayCommand FocusSearchCommand { get; }
+    public IRelayCommand FocusCustomerCommand { get; }
     public IAsyncRelayCommand SearchCommand { get; }
     public IRelayCommand<PosProductSearchItem> AddSearchResultCommand { get; }
     public IRelayCommand AddToCartCommand { get; }
@@ -1052,6 +1059,7 @@ public sealed partial class PosViewModel : ObservableObject
     private void NotifyCommands()
     {
         LoadCommand.NotifyCanExecuteChanged();
+        FocusCustomerCommand.NotifyCanExecuteChanged();
         SearchCommand.NotifyCanExecuteChanged();
         AddSearchResultCommand.NotifyCanExecuteChanged();
         AddToCartCommand.NotifyCanExecuteChanged();
