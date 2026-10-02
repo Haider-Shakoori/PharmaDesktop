@@ -68,6 +68,34 @@ internal static class Program
             selectedKey = "password";
         }
 
+        if (mode is "settings" or "settings-glass")
+        {
+            var appearanceStore = new BusinessOS.Pharmacy.Desktop.Appearance.AppearanceSettingsStore(
+                Path.Combine(Path.GetTempPath(), "businessos-shot", "appearance.json"));
+            appearanceStore.Save(new BusinessOS.Pharmacy.Desktop.Appearance.AppearanceSettings(
+                (mode == "settings-glass" ? BusinessOS.Pharmacy.Desktop.Appearance.AppearanceTheme.Glass
+                                          : BusinessOS.Pharmacy.Desktop.Appearance.AppearanceTheme.Classic).ToString()));
+
+            var settingsViewModel = new BusinessOS.Pharmacy.Desktop.Networking.NetworkSettingsViewModel(
+                services,
+                new FakeNetworkStore(network),
+                null!,
+                null!,
+                new BusinessOS.Pharmacy.Desktop.Profile.UserProfileStore(),
+                new BusinessOS.Pharmacy.Desktop.Notifications.NotificationService(),
+                new BusinessOS.Pharmacy.Desktop.Printing.ReceiptSettingsStore(),
+                new BusinessOS.Pharmacy.Desktop.Pos.PosSettingsStore(),
+                appearanceStore);
+
+            settingsViewModel.LoadProfile();
+            settingsViewModel.LoadReceiptSettings();
+            settingsViewModel.LoadPosSettings();
+            settingsViewModel.LoadAppearance();
+
+            currentPage = settingsViewModel;
+            selectedKey = "settings";
+        }
+
         if (mode is "pos" or "pos-payment" or "pos-glass")
         {
             var pos = new PosViewModel(
@@ -359,7 +387,6 @@ internal static class Program
                 ("batches", "Batches", "Stock"),
                 ("barcode", "Barcode Printing", "Stock"),
                 ("purchases", "Purchases", "Purchasing"),
-                ("suppliers", "Suppliers", "Purchasing"),
                 ("customers", "Customers", "Operations"),
                 ("expenses", "Expenses", "Finance"),
                 ("closing", "Daily Closing", "Finance"),

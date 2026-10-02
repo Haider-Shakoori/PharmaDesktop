@@ -38,7 +38,6 @@
         <KeyBinding Key="F10" Command="{Binding NavigateCommand}" CommandParameter="reports" />
         <KeyBinding Key="F11" Command="{Binding NavigateCommand}" CommandParameter="customers" />
         <KeyBinding Key="F12" Command="{Binding NavigateCommand}" CommandParameter="expenses" />
-        <KeyBinding Key="D1" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="suppliers" />
         <KeyBinding Key="D2" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="returns" />
         <KeyBinding Key="D3" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="updates" />
         <KeyBinding Key="D4" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="network" />

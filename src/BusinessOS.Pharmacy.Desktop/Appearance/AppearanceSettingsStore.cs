@@ -19,7 +19,19 @@ public sealed class AppearanceSettingsStore
     private readonly string _file;
 
     public AppearanceSettingsStore()
+        : this(null)
     {
+    }
+
+    public AppearanceSettingsStore(string? filePath)
+    {
+        if (!string.IsNullOrWhiteSpace(filePath))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(filePath))!);
+            _file = Path.GetFullPath(filePath);
+            return;
+        }
+
         var folder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "BusinessOS",

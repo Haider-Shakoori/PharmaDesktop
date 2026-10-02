@@ -412,7 +412,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), purchasing);
-        AddIfAllowed("purchases.manage", "suppliers", Translate("Suppliers", "تأمین‌کنندگان", "عرضه کوونکي"), purchasing);
         AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), operations);
         AddIfAllowed("accounting.manage", "expenses", Translate("Expenses", "مصارف", "لګښتونه"), finance);
         AddIfAllowed("daily_closing.perform", "closing", Translate("Daily Closing", "بستن حساب روزانه", "ورځنی حساب"), finance);
