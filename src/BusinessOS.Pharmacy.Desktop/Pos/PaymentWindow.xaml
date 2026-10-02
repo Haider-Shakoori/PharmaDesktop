@@ -9,19 +9,19 @@
         MinHeight="650"
         ResizeMode="CanResizeWithGrip"
         WindowStartupLocation="CenterOwner"
-        Background="#F1F5F9"
+        Background="{DynamicResource SurfaceMutedBrush}"
         PreviewKeyDown="OnPreviewKeyDown">
     <Window.Resources>
-        <SolidColorBrush x:Key="PayTeal" Color="#0F766E" />
-        <SolidColorBrush x:Key="PayTealSoft" Color="#ECFDF5" />
-        <SolidColorBrush x:Key="PaySlate" Color="#0F172A" />
-        <SolidColorBrush x:Key="PayMuted" Color="#64748B" />
+        <SolidColorBrush x:Key="PayTeal" Color="{DynamicResource PosPrimaryColor}" />
+        <SolidColorBrush x:Key="PayTealSoft" Color="{DynamicResource PosPrimarySoftColor}" />
+        <SolidColorBrush x:Key="PaySlate" Color="{DynamicResource TextPrimaryColor}" />
+        <SolidColorBrush x:Key="PayMuted" Color="{DynamicResource TextMutedColor}" />
 
         <Style x:Key="PaymentCard" TargetType="Border">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#E2E8F0" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="{DynamicResource CardCornerRadius}" />
             <Setter Property="Padding" Value="16" />
         </Style>
 
@@ -31,7 +31,7 @@
         </Style>
     </Window.Resources>
 
-    <Grid Background="#F1F5F9">
+    <Grid Background="{DynamicResource SurfaceMutedBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -39,8 +39,8 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0"
-                Background="White"
-                BorderBrush="#E2E8F0"
+                Background="{DynamicResource SurfaceStrongBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="20,15">
             <Grid>
@@ -52,19 +52,19 @@
                     <TextBlock Text="Payment"
                                FontSize="22"
                                FontWeight="Bold"
-                               Foreground="#0F172A" />
+                               Foreground="{DynamicResource TextPrimaryBrush}" />
                     <TextBlock Text="Review the amount, choose payment method, then complete the sale."
                                FontSize="10.5"
-                               Foreground="#64748B"
+                               Foreground="{DynamicResource TextMutedBrush}"
                                Margin="0,3,0,0" />
                 </StackPanel>
                 <Border Grid.Column="1"
-                        Background="#ECFDF5"
+                        Background="{DynamicResource PosPrimarySoftBrush}"
                         CornerRadius="10"
                         Padding="12,7"
                         VerticalAlignment="Center">
                     <TextBlock Text="{Binding CartLineCountText}"
-                               Foreground="#0F766E"
+                               Foreground="{DynamicResource PosPrimaryBrush}"
                                FontSize="10.5"
                                FontWeight="Bold" />
                 </Border>
@@ -87,10 +87,10 @@
                             <TextBlock Text="{Binding EstimatedGrandTotal, StringFormat=AFN {0:N2}}"
                                        FontSize="30"
                                        FontWeight="Black"
-                                       Foreground="#0F172A"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                        Margin="0,2,0,0" />
                             <TextBlock FontSize="10"
-                                       Foreground="#64748B"
+                                       Foreground="{DynamicResource TextMutedBrush}"
                                        Margin="0,4,0,0">
                                 <Run Text="Customer: " />
                                 <Run Text="{Binding PaymentCustomerText, Mode=OneWay}" />
@@ -129,7 +129,7 @@
                                 <TextBlock Grid.Column="1"
                                            Text="{Binding PaymentBalanceText}"
                                            FontWeight="Bold"
-                                           Foreground="#0F766E" />
+                                           Foreground="{DynamicResource PosPrimaryBrush}" />
                             </Grid>
                         </StackPanel>
                     </Grid>
@@ -146,7 +146,7 @@
                                 <TextBlock Text="Payment methods"
                                            FontSize="14"
                                            FontWeight="Bold"
-                                           Foreground="#0F172A" />
+                                           Foreground="{DynamicResource TextPrimaryBrush}" />
                                 <TextBlock Text="Split payment across cash, bank, mobile or credit when needed."
                                            Style="{StaticResource PaymentLabel}"
                                            Margin="0,2,0,0" />
@@ -155,7 +155,7 @@
                                     Content="+ Split payment"
                                     Command="{Binding AddSplitPaymentCommand}"
                                     Style="{StaticResource GhostButton}"
-                                    Foreground="#0F766E"
+                                    Foreground="{DynamicResource PosPrimaryBrush}"
                                     FontWeight="Bold"
                                     Padding="8,5" />
                         </Grid>
@@ -163,8 +163,8 @@
                         <ItemsControl ItemsSource="{Binding Payments}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="#F8FAFC"
-                                            BorderBrush="#E2E8F0"
+                                    <Border Background="{DynamicResource AppBackgroundBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
                                             BorderThickness="1"
                                             CornerRadius="10"
                                             Padding="10"
@@ -214,7 +214,7 @@
                                                     Margin="0,20,0,0"
                                                     Background="Transparent"
                                                     BorderBrush="Transparent"
-                                                    Foreground="#DC2626"
+                                                    Foreground="{DynamicResource DangerBrush}"
                                                     FontSize="18"
                                                     FontWeight="Bold" />
                                         </Grid>
@@ -231,21 +231,21 @@
                             <Button Content="Set cash to total"
                                     Command="{Binding SetCashToTotalCommand}"
                                     Style="{StaticResource GhostButton}"
-                                    Foreground="#0F766E"
+                                    Foreground="{DynamicResource PosPrimaryBrush}"
                                     FontWeight="Bold"
                                     Padding="6,4"
                                     HorizontalAlignment="Left" />
                             <TextBlock Grid.Column="1"
                                        Text="{Binding PaymentBalanceText}"
-                                       Foreground="#475569"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center" />
                         </Grid>
                     </StackPanel>
                 </Border>
 
-                <Border Background="#F0FDF4"
-                        BorderBrush="#BBF7D0"
+                <Border Background="{DynamicResource SuccessSoftBrush}"
+                        BorderBrush="{DynamicResource SuccessSoftBrush}"
                         BorderThickness="1"
                         CornerRadius="12"
                         Padding="13"
@@ -259,10 +259,10 @@
                         <Border Width="34"
                                 Height="34"
                                 CornerRadius="17"
-                                Background="#DCFCE7"
+                                Background="{DynamicResource SuccessSoftBrush}"
                                 VerticalAlignment="Center">
                             <TextBlock Text="✓"
-                                       Foreground="#16A34A"
+                                       Foreground="{DynamicResource SuccessBrush}"
                                        FontSize="17"
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center"
@@ -274,10 +274,10 @@
                             <TextBlock Text="Print invoice after payment"
                                        FontSize="12"
                                        FontWeight="Bold"
-                                       Foreground="#14532D" />
+                                       Foreground="{DynamicResource SuccessBrush}" />
                             <TextBlock Text="After payment, Windows Print opens so the cashier can choose the printer, paper size or PDF. Leave unchecked to finish without printing."
                                        FontSize="9.5"
-                                       Foreground="#4D7C5A"
+                                       Foreground="{DynamicResource SuccessBrush}"
                                        TextWrapping="Wrap"
                                        Margin="0,2,0,0" />
                         </StackPanel>
@@ -288,13 +288,13 @@
                     </Grid>
                 </Border>
 
-                <Border Background="#EFF6FF"
-                        BorderBrush="#BFDBFE"
+                <Border Background="{DynamicResource InfoSoftBrush}"
+                        BorderBrush="{DynamicResource BrandPrimarySoftBrush}"
                         BorderThickness="1"
                         CornerRadius="10"
                         Padding="10">
                     <TextBlock FontSize="9.5"
-                               Foreground="#1E40AF"
+                               Foreground="{DynamicResource BrandPrimaryDarkBrush}"
                                TextWrapping="Wrap">
                         <Run Text="Shortcuts: " FontWeight="Bold" />
                         <Run Text="Enter / Ctrl+Enter = complete payment · F5 = exact cash · Esc = cancel" />
@@ -304,8 +304,8 @@
         </ScrollViewer>
 
         <Border Grid.Row="2"
-                Background="White"
-                BorderBrush="#E2E8F0"
+                Background="{DynamicResource SurfaceStrongBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,1,0,0"
                 Padding="18,13">
             <Grid>
@@ -323,7 +323,7 @@
 
                 <TextBlock Grid.Column="1"
                            Text="{Binding StatusMessage}"
-                           Foreground="#64748B"
+                           Foreground="{DynamicResource TextMutedBrush}"
                            FontSize="9.5"
                            TextWrapping="Wrap"
                            VerticalAlignment="Center"

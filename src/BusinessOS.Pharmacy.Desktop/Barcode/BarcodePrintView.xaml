@@ -59,7 +59,7 @@
                                     <StackPanel>
                                         <TextBlock FontWeight="SemiBold">
                                             <Run Text="{Binding BrandName}" />
-                                            <Run Text="{Binding Strength}" Foreground="#64748B" />
+                                            <Run Text="{Binding Strength}" Foreground="{DynamicResource TextMutedBrush}" />
                                         </TextBlock>
                                         <TextBlock Text="{Binding GenericName}"
                                                    Style="{StaticResource MutedText}"
@@ -94,7 +94,7 @@
                         <TextBlock Text="{Binding OptionsLabel}" Style="{StaticResource SectionTitleText}" />
                         <TextBlock Text="{Binding PreviewLabel}" Style="{StaticResource MutedText}" Margin="0,3,0,10" />
 
-                        <Border Background="#F8FAFC"
+                        <Border Background="{DynamicResource SurfaceMutedBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="8"

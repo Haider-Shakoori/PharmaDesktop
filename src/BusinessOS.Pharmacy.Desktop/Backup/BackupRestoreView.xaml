@@ -18,8 +18,8 @@
                 <TextBlock Text="{Binding Subtitle}" Style="{StaticResource MutedText}"/>
             </StackPanel>
         </DockPanel>
-        <Border Grid.Row="1" Background="#FFFBEB" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,16,0,12">
-            <TextBlock Text="{Binding WarningText}" TextWrapping="Wrap" Foreground="#92400E"/>
+        <Border Grid.Row="1" Background="{DynamicResource WarningSoftBrush}" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,16,0,12">
+            <TextBlock Text="{Binding WarningText}" TextWrapping="Wrap" Foreground="{DynamicResource WarningBrush}"/>
         </Border>
         <DataGrid Grid.Row="2" ItemsSource="{Binding Backups}" SelectedItem="{Binding SelectedBackup}"
                   AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">

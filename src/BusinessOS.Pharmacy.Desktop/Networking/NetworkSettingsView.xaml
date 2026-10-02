@@ -28,11 +28,11 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Width="150" Margin="0,0,18,0">
-                            <Border Width="120" Height="120" CornerRadius="60" Background="#EAF4FF" HorizontalAlignment="Left">
+                            <Border Width="120" Height="120" CornerRadius="60" Background="{DynamicResource BrandPrimarySoftBrush}" HorizontalAlignment="Left">
                                 <Grid>
                                     <Path Data="{StaticResource IconUsers}"
                                           Width="52" Height="52"
-                                          Stroke="#4A7DAB" StrokeThickness="1.6"
+                                          Stroke="{DynamicResource BrandPrimaryDarkBrush}" StrokeThickness="1.6"
                                           Fill="Transparent" Stretch="Uniform"
                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     <Ellipse Width="120" Height="120">

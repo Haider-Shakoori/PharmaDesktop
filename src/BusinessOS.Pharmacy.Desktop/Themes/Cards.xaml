@@ -26,17 +26,17 @@
 
     <Style x:Key="SuccessBadge" TargetType="Border" BasedOn="{StaticResource BadgeBase}">
         <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}" />
-        <Setter Property="BorderBrush" Value="#A7F3D0" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SuccessBorderSoftBrush}" />
     </Style>
 
     <Style x:Key="WarningBadge" TargetType="Border" BasedOn="{StaticResource BadgeBase}">
         <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}" />
-        <Setter Property="BorderBrush" Value="#FDE68A" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WarningBorderSoftBrush}" />
     </Style>
 
     <Style x:Key="DangerBadge" TargetType="Border" BasedOn="{StaticResource BadgeBase}">
         <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}" />
-        <Setter Property="BorderBrush" Value="#FECACA" />
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerBorderSoftBrush}" />
     </Style>
 
     <Style x:Key="NeutralBadge" TargetType="Border" BasedOn="{StaticResource BadgeBase}">

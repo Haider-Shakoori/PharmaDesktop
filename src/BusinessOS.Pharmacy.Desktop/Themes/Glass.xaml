@@ -106,6 +106,21 @@
     <CornerRadius x:Key="InputCornerRadius">10</CornerRadius>
     <CornerRadius x:Key="SidebarItemCornerRadius">10</CornerRadius>
 
+    <!-- POS accent follows the Glass brand blue -->
+    <Color x:Key="PosPrimaryColor">#2F6BFF</Color>
+    <Color x:Key="PosPrimaryDarkColor">#1D4ED8</Color>
+    <Color x:Key="PosPrimarySoftColor">#E3EDFF</Color>
+    <SolidColorBrush x:Key="PosPrimaryBrush" Color="{StaticResource PosPrimaryColor}" />
+    <SolidColorBrush x:Key="PosPrimaryDarkBrush" Color="{StaticResource PosPrimaryDarkColor}" />
+    <SolidColorBrush x:Key="PosPrimarySoftBrush" Color="{StaticResource PosPrimarySoftColor}" />
+
+    <Color x:Key="SuccessBorderSoftColor">#B9EAD3</Color>
+    <Color x:Key="WarningBorderSoftColor">#F6DFB2</Color>
+    <Color x:Key="DangerBorderSoftColor">#F6C9C9</Color>
+    <SolidColorBrush x:Key="SuccessBorderSoftBrush" Color="{StaticResource SuccessBorderSoftColor}" />
+    <SolidColorBrush x:Key="WarningBorderSoftBrush" Color="{StaticResource WarningBorderSoftColor}" />
+    <SolidColorBrush x:Key="DangerBorderSoftBrush" Color="{StaticResource DangerBorderSoftColor}" />
+
     <!-- Single shared shadow for glass cards (classic has no key -> no effect) -->
     <DropShadowEffect x:Key="CardShadowEffect"
                       BlurRadius="20"

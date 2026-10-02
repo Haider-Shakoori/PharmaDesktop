@@ -7,24 +7,24 @@
         <Style x:Key="PoCard" TargetType="Border" BasedOn="{StaticResource SurfaceCard}">
             <Setter Property="Padding" Value="14" />
             <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="BorderBrush" Value="#DCE6F0" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         </Style>
 
         <Style x:Key="PoSectionTitle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="#102A56" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
 
         <Style x:Key="PoLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="9.8" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="#52677F" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         </Style>
 
         <Style x:Key="PoHint" TargetType="TextBlock">
             <Setter Property="FontSize" Value="9.5" />
-            <Setter Property="Foreground" Value="#64748B" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
 
@@ -36,10 +36,10 @@
             <Setter Property="HeadersVisibility" Value="Column" />
             <Setter Property="GridLinesVisibility" Value="Horizontal" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Background" Value="White" />
-            <Setter Property="RowBackground" Value="White" />
-            <Setter Property="AlternatingRowBackground" Value="#FBFDFF" />
-            <Setter Property="HorizontalGridLinesBrush" Value="#E8EEF5" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceStrongBrush}" />
+            <Setter Property="RowBackground" Value="{DynamicResource SurfaceStrongBrush}" />
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource SurfaceStrongBrush}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="RowHeaderWidth" Value="0" />
             <Setter Property="RowHeight" Value="28" />
             <Setter Property="ColumnHeaderHeight" Value="28" />
@@ -211,7 +211,7 @@
                     <!-- Simplified workflow -->
                     <Border Grid.Row="0"
                             Style="{StaticResource PoCard}"
-                            Background="#F8FBFF"
+                            Background="{DynamicResource SurfaceStrongBrush}"
                             Margin="0,0,0,10">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -221,12 +221,12 @@
                             <Border Width="38"
                                     Height="38"
                                     CornerRadius="10"
-                                    Background="#E7F2FF"
+                                    Background="{DynamicResource BrandPrimarySoftBrush}"
                                     VerticalAlignment="Center">
                                 <Path Data="{StaticResource IconPurchases}"
                                       Width="19"
                                       Height="19"
-                                      Stroke="#0B82F6"
+                                      Stroke="{DynamicResource BrandPrimaryBrush}"
                                       StrokeThickness="1.9"
                                       Fill="Transparent"
                                       Stretch="Uniform"
@@ -237,29 +237,29 @@
                                 <TextBlock Text="Fast purchase workflow"
                                            FontSize="13.5"
                                            FontWeight="Bold"
-                                           Foreground="#102A56" />
+                                           Foreground="{DynamicResource TextPrimaryBrush}" />
                                 <TextBlock Text="Create → approve → receive to inventory → invoice → pay. Fast actions combine safe backend steps so you do less clicking without losing the audit trail."
                                            Style="{StaticResource PoHint}"
                                            Margin="0,2,0,7" />
                                 <StackPanel Orientation="Horizontal">
-                                    <Border Background="#EAF4FF" CornerRadius="7" Padding="8,4" Margin="0,0,6,0">
-                                        <TextBlock Text="1  Create PO" Foreground="#0B5FC6" FontSize="9.5" FontWeight="SemiBold" />
+                                    <Border Background="{DynamicResource BrandPrimarySoftBrush}" CornerRadius="7" Padding="8,4" Margin="0,0,6,0">
+                                        <TextBlock Text="1  Create PO" Foreground="{DynamicResource BrandPrimaryDarkBrush}" FontSize="9.5" FontWeight="SemiBold" />
                                     </Border>
-                                    <TextBlock Text="→" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0" />
-                                    <Border Background="#F2ECFF" CornerRadius="7" Padding="8,4" Margin="0,0,6,0">
-                                        <TextBlock Text="2  Approve" Foreground="#7C3AED" FontSize="9.5" FontWeight="SemiBold" />
+                                    <TextBlock Text="→" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                    <Border Background="{DynamicResource PurpleSoftBrush}" CornerRadius="7" Padding="8,4" Margin="0,0,6,0">
+                                        <TextBlock Text="2  Approve" Foreground="{DynamicResource PurpleBrush}" FontSize="9.5" FontWeight="SemiBold" />
                                     </Border>
-                                    <TextBlock Text="→" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0" />
-                                    <Border Background="#ECFDF5" CornerRadius="7" Padding="8,4" Margin="0,0,6,0">
-                                        <TextBlock Text="3  Receive stock" Foreground="#0F766E" FontSize="9.5" FontWeight="SemiBold" />
+                                    <TextBlock Text="→" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                    <Border Background="{DynamicResource PosPrimarySoftBrush}" CornerRadius="7" Padding="8,4" Margin="0,0,6,0">
+                                        <TextBlock Text="3  Receive stock" Foreground="{DynamicResource PosPrimaryBrush}" FontSize="9.5" FontWeight="SemiBold" />
                                     </Border>
-                                    <TextBlock Text="→" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0" />
-                                    <Border Background="#FFF7ED" CornerRadius="7" Padding="8,4" Margin="0,0,6,0">
-                                        <TextBlock Text="4  Invoice" Foreground="#C2410C" FontSize="9.5" FontWeight="SemiBold" />
+                                    <TextBlock Text="→" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                    <Border Background="{DynamicResource WarningSoftBrush}" CornerRadius="7" Padding="8,4" Margin="0,0,6,0">
+                                        <TextBlock Text="4  Invoice" Foreground="{DynamicResource WarningBrush}" FontSize="9.5" FontWeight="SemiBold" />
                                     </Border>
-                                    <TextBlock Text="→" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0" />
-                                    <Border Background="#F0FDF4" CornerRadius="7" Padding="8,4">
-                                        <TextBlock Text="5  Pay supplier" Foreground="#15803D" FontSize="9.5" FontWeight="SemiBold" />
+                                    <TextBlock Text="→" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                    <Border Background="{DynamicResource SuccessSoftBrush}" CornerRadius="7" Padding="8,4">
+                                        <TextBlock Text="5  Pay supplier" Foreground="{DynamicResource SuccessBrush}" FontSize="9.5" FontWeight="SemiBold" />
                                     </Border>
                                 </StackPanel>
                             </StackPanel>
@@ -320,13 +320,13 @@
                                                    Margin="0,2,0,0" />
                                     </StackPanel>
                                     <Border Grid.Column="1"
-                                            Background="#F1F5F9"
+                                            Background="{DynamicResource SurfaceMutedBrush}"
                                             CornerRadius="7"
                                             Padding="8,4"
                                             VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Orders.Count, StringFormat={}{0} orders}"
                                                    FontSize="9.5"
-                                                   Foreground="#52677F"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
                                                    FontWeight="SemiBold" />
                                     </Border>
                                 </Grid>
@@ -350,19 +350,19 @@
                                                             HorizontalAlignment="Left">
                                                         <Border.Style>
                                                             <Style TargetType="Border">
-                                                                <Setter Property="Background" Value="#F1F5F9" />
+                                                                <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding Status}" Value="approved">
-                                                                        <Setter Property="Background" Value="#ECFDF5" />
+                                                                        <Setter Property="Background" Value="{DynamicResource PosPrimarySoftBrush}" />
                                                                     </DataTrigger>
                                                                     <DataTrigger Binding="{Binding Status}" Value="received">
-                                                                        <Setter Property="Background" Value="#EAF4FF" />
+                                                                        <Setter Property="Background" Value="{DynamicResource BrandPrimarySoftBrush}" />
                                                                     </DataTrigger>
                                                                     <DataTrigger Binding="{Binding Status}" Value="partially_received">
-                                                                        <Setter Property="Background" Value="#FFF7ED" />
+                                                                        <Setter Property="Background" Value="{DynamicResource WarningSoftBrush}" />
                                                                     </DataTrigger>
                                                                     <DataTrigger Binding="{Binding Status}" Value="cancelled">
-                                                                        <Setter Property="Background" Value="#FEF2F2" />
+                                                                        <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}" />
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
@@ -370,7 +370,7 @@
                                                         <TextBlock Text="{Binding Status}"
                                                                    FontSize="9.2"
                                                                    FontWeight="SemiBold"
-                                                                   Foreground="#475569" />
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
                                                     </Border>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
@@ -405,12 +405,12 @@
                                                            Margin="0,2,0,0" />
                                             </StackPanel>
                                             <Border Grid.Column="1"
-                                                    Background="#ECFDF5"
+                                                    Background="{DynamicResource PosPrimarySoftBrush}"
                                                     CornerRadius="8"
                                                     Padding="9,4"
                                                     VerticalAlignment="Top">
                                                 <TextBlock Text="{Binding DraftSummary}"
-                                                           Foreground="#0F766E"
+                                                           Foreground="{DynamicResource PosPrimaryBrush}"
                                                            FontSize="9.5"
                                                            FontWeight="Bold" />
                                             </Border>
@@ -441,8 +441,8 @@
                                             </StackPanel>
                                         </Grid>
 
-                                        <Border Background="#F8FAFC"
-                                                BorderBrush="#E2E8F0"
+                                        <Border Background="{DynamicResource AppBackgroundBrush}"
+                                                BorderBrush="{DynamicResource BorderBrush}"
                                                 BorderThickness="1"
                                                 CornerRadius="10"
                                                 Padding="10"
@@ -511,7 +511,7 @@
                                                                     CommandParameter="{Binding}"
                                                                     Background="Transparent"
                                                                     BorderBrush="Transparent"
-                                                                    Foreground="#DC2626"
+                                                                    Foreground="{DynamicResource DangerBrush}"
                                                                     FontSize="16"
                                                                     FontWeight="Bold"
                                                                     Padding="2" />
@@ -559,20 +559,20 @@
                                                     <TextBlock Text="{Binding SelectedOrderDetail.Order.Number}"
                                                                FontSize="12.5"
                                                                FontWeight="Bold"
-                                                               Foreground="#0F172A" />
-                                                    <TextBlock Text=" · " Foreground="#94A3B8" />
+                                                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                                                    <TextBlock Text=" · " Foreground="{DynamicResource TextMutedBrush}" />
                                                     <TextBlock Text="{Binding SelectedOrderDetail.Order.SupplierName}"
                                                                FontSize="11"
-                                                               Foreground="#52677F" />
+                                                               Foreground="{DynamicResource TextSecondaryBrush}" />
                                                 </StackPanel>
                                             </StackPanel>
                                             <Border Grid.Column="1"
-                                                    Background="#EAF4FF"
+                                                    Background="{DynamicResource BrandPrimarySoftBrush}"
                                                     CornerRadius="8"
                                                     Padding="9,4"
                                                     VerticalAlignment="Top">
                                                 <TextBlock Text="{Binding SelectedOrderDetail.Order.Status}"
-                                                           Foreground="#0B5FC6"
+                                                           Foreground="{DynamicResource BrandPrimaryDarkBrush}"
                                                            FontSize="9.5"
                                                            FontWeight="Bold" />
                                             </Border>
@@ -583,9 +583,9 @@
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <Border Background="#F8FAFC" CornerRadius="8" Padding="9,6">
+                                            <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="8" Padding="9,6">
                                                 <TextBlock Text="{Binding SelectedOrderNextStep}"
-                                                           Foreground="#475569"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                                            FontSize="10"
                                                            FontWeight="SemiBold" />
                                             </Border>
@@ -593,7 +593,7 @@
                                                        Text="{Binding SelectedOrderDetail.Order.GrandTotal, StringFormat=AFN {0:N2}}"
                                                        FontSize="15"
                                                        FontWeight="Bold"
-                                                       Foreground="#0F766E"
+                                                       Foreground="{DynamicResource PosPrimaryBrush}"
                                                        VerticalAlignment="Center"
                                                        Margin="12,0,0,0" />
                                         </Grid>
@@ -622,8 +622,8 @@
                                             <Button Content="Cancel order"
                                                     Command="{Binding CancelOrderCommand}"
                                                     Background="Transparent"
-                                                    BorderBrush="#FCA5A5"
-                                                    Foreground="#B91C1C"
+                                                    BorderBrush="{DynamicResource DangerSoftBrush}"
+                                                    Foreground="{DynamicResource DangerBrush}"
                                                     Padding="11,7"
                                                     MinHeight="36" />
                                         </StackPanel>
@@ -647,11 +647,11 @@
                                                            Margin="0,2,0,0" />
                                             </StackPanel>
                                             <Border Grid.Column="1"
-                                                    Background="#ECFDF5"
+                                                    Background="{DynamicResource PosPrimarySoftBrush}"
                                                     CornerRadius="8"
                                                     Padding="8,4">
                                                 <TextBlock Text="1 click"
-                                                           Foreground="#0F766E"
+                                                           Foreground="{DynamicResource PosPrimaryBrush}"
                                                            FontSize="9.5"
                                                            FontWeight="Bold" />
                                             </Border>
@@ -819,8 +819,8 @@
                                             </DataGrid.Columns>
                                         </DataGrid>
 
-                                        <Border Background="#F8FAFC"
-                                                BorderBrush="#E2E8F0"
+                                        <Border Background="{DynamicResource AppBackgroundBrush}"
+                                                BorderBrush="{DynamicResource BorderBrush}"
                                                 BorderThickness="1"
                                                 CornerRadius="10"
                                                 Padding="9"

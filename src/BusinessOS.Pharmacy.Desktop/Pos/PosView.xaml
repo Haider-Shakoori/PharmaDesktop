@@ -5,7 +5,7 @@
              xmlns:converters="clr-namespace:BusinessOS.Pharmacy.Desktop.Converters"
              xmlns:sales="clr-namespace:BusinessOS.Pharmacy.Application.Abstractions.Sales;assembly=BusinessOS.Pharmacy.Application"
              MinWidth="900"
-             Background="#F1F5F9">
+             Background="{DynamicResource SurfaceMutedBrush}">
     <UserControl.InputBindings>
         <KeyBinding Key="F1" Command="{Binding FocusSearchCommand}" />
         <KeyBinding Key="F2" Command="{Binding FocusCustomerCommand}" />
@@ -17,18 +17,18 @@
         <converters:CountToVisibilityConverter x:Key="CountNonZeroToVisibility" Empty="False" />
         <converters:CountToVisibilityConverter x:Key="CountZeroToVisibility" Empty="True" />
 
-        <SolidColorBrush x:Key="PosPrimaryBrush" Color="#0F766E" />
-        <SolidColorBrush x:Key="PosPrimaryDarkBrush" Color="#115E59" />
-        <SolidColorBrush x:Key="PosPrimarySoftBrush" Color="#ECFDF5" />
-        <SolidColorBrush x:Key="PosBorderBrush" Color="#E2E8F0" />
-        <SolidColorBrush x:Key="PosMutedBrush" Color="#64748B" />
-        <SolidColorBrush x:Key="PosHeadingBrush" Color="#0F172A" />
+        <SolidColorBrush x:Key="PosPrimaryBrush" Color="{DynamicResource PosPrimaryColor}" />
+        <SolidColorBrush x:Key="PosPrimaryDarkBrush" Color="{DynamicResource PosPrimaryDarkColor}" />
+        <SolidColorBrush x:Key="PosPrimarySoftBrush" Color="{DynamicResource PosPrimarySoftColor}" />
+        <SolidColorBrush x:Key="PosBorderBrush" Color="{DynamicResource BorderColor}" />
+        <SolidColorBrush x:Key="PosMutedBrush" Color="{DynamicResource TextMutedColor}" />
+        <SolidColorBrush x:Key="PosHeadingBrush" Color="{DynamicResource TextPrimaryColor}" />
 
         <Style x:Key="PosCard" TargetType="Border">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="{StaticResource PosBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="{DynamicResource CardCornerRadius}" />
             <Setter Property="Padding" Value="14" />
         </Style>
 
@@ -54,16 +54,16 @@
 
         <Style x:Key="PosOutlineButton" TargetType="Button" BasedOn="{StaticResource ProfessionalButtonBase}">
             <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#CBD5E1" />
-            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Padding" Value="11,7" />
             <Setter Property="MinHeight" Value="36" />
         </Style>
 
         <Style x:Key="PosSearchButton" TargetType="Button">
-            <Setter Property="Background" Value="#0B82F6" />
-            <Setter Property="BorderBrush" Value="#0B82F6" />
+            <Setter Property="Background" Value="{DynamicResource BrandPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="FontSize" Value="11.5" />
@@ -84,20 +84,20 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#0876E4" />
-                                <Setter TargetName="Border" Property="BorderBrush" Value="#0876E4" />
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource BrandPrimaryBrush}" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#075FB8" />
-                                <Setter TargetName="Border" Property="BorderBrush" Value="#075FB8" />
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource BrandPrimaryDarkBrush}" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource BrandPrimaryDarkBrush}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Border" Property="BorderBrush" Value="#93C5FD" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource BrandPrimarySoftBrush}" />
                                 <Setter TargetName="Border" Property="BorderThickness" Value="2" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Border" Property="Background" Value="#B8D8FB" />
-                                <Setter TargetName="Border" Property="BorderBrush" Value="#B8D8FB" />
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource BrandPrimarySoftBrush}" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource BrandPrimarySoftBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -107,7 +107,7 @@
 
         <Style x:Key="PosSearchResultButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="#EEF2F7" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceMutedBrush}" />
             <Setter Property="BorderThickness" Value="0,1,0,0" />
             <Setter Property="Padding" Value="12,9" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -125,14 +125,14 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ResultBorder" Property="Background" Value="#F4F8FF" />
+                                <Setter TargetName="ResultBorder" Property="Background" Value="{DynamicResource SurfaceStrongBrush}" />
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="ResultBorder" Property="Background" Value="#EAF4FF" />
-                                <Setter TargetName="ResultBorder" Property="BorderBrush" Value="#B9D7F7" />
+                                <Setter TargetName="ResultBorder" Property="Background" Value="{DynamicResource BrandPrimarySoftBrush}" />
+                                <Setter TargetName="ResultBorder" Property="BorderBrush" Value="{DynamicResource BrandPrimarySoftBrush}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ResultBorder" Property="Background" Value="#E1EEFF" />
+                                <Setter TargetName="ResultBorder" Property="Background" Value="{DynamicResource BrandPrimarySoftBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -143,7 +143,7 @@
         <Style x:Key="PosDangerIconButton" TargetType="Button" BasedOn="{StaticResource ProfessionalButtonBase}">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="Foreground" Value="#DC2626" />
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
             <Setter Property="FontSize" Value="18" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Padding" Value="4" />
@@ -168,8 +168,8 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Background" Value="White" />
             <Setter Property="RowBackground" Value="White" />
-            <Setter Property="AlternatingRowBackground" Value="#FBFDFF" />
-            <Setter Property="HorizontalGridLinesBrush" Value="#EEF2F7" />
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource SurfaceStrongBrush}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource SurfaceMutedBrush}" />
             <Setter Property="RowHeaderWidth" Value="0" />
             <Setter Property="RowHeight" Value="28" />
             <Setter Property="ColumnHeaderHeight" Value="28" />
@@ -198,7 +198,7 @@
                     <Border Width="40"
                             Height="40"
                             CornerRadius="10"
-                            Background="#0F172A">
+                            Background="{DynamicResource TextPrimaryBrush}">
                         <TextBlock Text="Rx"
                                    Foreground="White"
                                    FontWeight="Black"
@@ -210,10 +210,10 @@
                         <TextBlock Text="{Binding DataContext.Dashboard.PharmacyName, RelativeSource={RelativeSource AncestorType=Window}}"
                                    FontSize="15"
                                    FontWeight="Bold"
-                                   Foreground="#0F172A" />
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
                         <TextBlock Text="{Binding WorkspaceSubtitle}"
                                    FontSize="10.5"
-                                   Foreground="#64748B"
+                                   Foreground="{DynamicResource TextMutedBrush}"
                                    Margin="0,2,0,0" />
                     </StackPanel>
                 </StackPanel>
@@ -238,7 +238,7 @@
                         <StackPanel Orientation="Horizontal">
                             <Path Data="M3,9 L3,3 L9,3 M15,3 L21,3 L21,9 M21,15 L21,21 L15,21 M9,21 L3,21 L3,15"
                                   Width="13" Height="13"
-                                  Stroke="#334155"
+                                  Stroke="{DynamicResource TextSecondaryBrush}"
                                   StrokeThickness="1.8"
                                   Fill="Transparent"
                                   Stretch="Uniform"
@@ -250,8 +250,8 @@
                     <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                             CommandParameter="dashboard"
                             Style="{StaticResource ProfessionalButtonBase}"
-                            Background="#0F172A"
-                            BorderBrush="#0F172A"
+                            Background="{DynamicResource TextPrimaryBrush}"
+                            BorderBrush="{DynamicResource TextPrimaryBrush}"
                             Padding="13,8"
                             MinHeight="36">
                         <TextBlock Text="Exit POS"
@@ -270,7 +270,7 @@
 
             <!-- Main sale workspace -->
             <Grid Grid.Column="0"
-                  Background="#F8FAFC">
+                  Background="{DynamicResource AppBackgroundBrush}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -292,7 +292,7 @@
 
                             <Grid>
                                 <Border Background="White"
-                                        BorderBrush="#CBD5E1"
+                                        BorderBrush="{DynamicResource BorderStrongBrush}"
                                         BorderThickness="1"
                                         CornerRadius="11">
                                     <Grid>
@@ -304,7 +304,7 @@
                                         <Path Data="{StaticResource IconSearch}"
                                               Width="16"
                                               Height="16"
-                                              Stroke="#0B82F6"
+                                              Stroke="{DynamicResource BrandPrimaryBrush}"
                                               StrokeThickness="1.8"
                                               Fill="Transparent"
                                               Stretch="Uniform"
@@ -312,7 +312,7 @@
                                               VerticalAlignment="Center" />
                                         <Grid Grid.Column="1">
                                             <TextBlock Text="{Binding SearchLabel}"
-                                                       Foreground="#6B7F96"
+                                                       Foreground="{DynamicResource TextMutedBrush}"
                                                        FontSize="12.5"
                                                        VerticalAlignment="Center"
                                                        IsHitTestVisible="False">
@@ -342,13 +342,13 @@
                                             </TextBox>
                                         </Grid>
                                         <Border Grid.Column="2"
-                                                Background="#ECFDF5"
+                                                Background="{DynamicResource PosPrimarySoftBrush}"
                                                 CornerRadius="7"
                                                 Padding="8,4"
                                                 Margin="4"
                                                 VerticalAlignment="Center">
                                             <TextBlock Text="Scanner ready"
-                                                       Foreground="#0F766E"
+                                                       Foreground="{DynamicResource PosPrimaryBrush}"
                                                        FontSize="9.5"
                                                        FontWeight="SemiBold" />
                                         </Border>
@@ -364,7 +364,7 @@
                                     <Border Width="{Binding ActualWidth, ElementName=SearchBox}"
                                             MaxHeight="360"
                                             Background="White"
-                                            BorderBrush="#CBD5E1"
+                                            BorderBrush="{DynamicResource BorderStrongBrush}"
                                             BorderThickness="1"
                                             CornerRadius="0,0,12,12"
                                             Padding="0,5,0,5">
@@ -378,11 +378,11 @@
                                                 <TextBlock Text="{Binding SearchResultsTitle}"
                                                            FontSize="10"
                                                            FontWeight="Bold"
-                                                           Foreground="#64748B" />
+                                                           Foreground="{DynamicResource TextMutedBrush}" />
                                                 <TextBlock DockPanel.Dock="Right"
                                                            Text="{Binding SearchResults.Count, StringFormat={}{0} result(s)}"
                                                            FontSize="9.5"
-                                                           Foreground="#94A3B8" />
+                                                           Foreground="{DynamicResource TextMutedBrush}" />
                                             </DockPanel>
                                             <ScrollViewer MaxHeight="300"
                                                           VerticalScrollBarVisibility="Auto">
@@ -400,13 +400,13 @@
                                                                     <StackPanel>
                                                                         <TextBlock FontWeight="Bold"
                                                                                    FontSize="12"
-                                                                                   Foreground="#102A56">
+                                                                                   Foreground="{DynamicResource TextPrimaryBrush}">
                                                                             <Run Text="{Binding BrandName}" />
                                                                             <Run Text=" · " />
                                                                             <Run Text="{Binding Strength}" />
                                                                         </TextBlock>
                                                                         <TextBlock FontSize="9.8"
-                                                                                   Foreground="#52677F"
+                                                                                   Foreground="{DynamicResource TextSecondaryBrush}"
                                                                                    Margin="0,3,0,0">
                                                                             <Run Text="{Binding GenericName}" />
                                                                             <Run Text=" · " />
@@ -416,7 +416,7 @@
                                                                         </TextBlock>
                                                                         <TextBlock Text="FEFO will split quantity across batches automatically when required."
                                                                                    FontSize="9"
-                                                                                   Foreground="#6366F1"
+                                                                                   Foreground="{DynamicResource IndigoBrush}"
                                                                                    Margin="0,3,0,0">
                                                                             <TextBlock.Style>
                                                                                 <Style TargetType="TextBlock">
@@ -434,13 +434,13 @@
                                                                                 Margin="14,0,0,0"
                                                                                 HorizontalAlignment="Right">
                                                                         <TextBlock Text="{Binding FefoPrice, StringFormat=AFN {0:N2}}"
-                                                                                   Foreground="#0B82F6"
+                                                                                   Foreground="{DynamicResource BrandPrimaryBrush}"
                                                                                    FontWeight="Bold"
                                                                                    FontSize="12"
                                                                                    HorizontalAlignment="Right" />
                                                                         <TextBlock Text="per unit"
                                                                                    FontSize="9"
-                                                                                   Foreground="#94A3B8"
+                                                                                   Foreground="{DynamicResource TextMutedBrush}"
                                                                                    HorizontalAlignment="Right" />
                                                                     </StackPanel>
                                                                 </Grid>
@@ -484,24 +484,24 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding StatusMessage}"
                                        FontSize="10.5"
-                                       Foreground="#64748B"
+                                       Foreground="{DynamicResource TextMutedBrush}"
                                        TextWrapping="Wrap"
                                        VerticalAlignment="Center" />
                             <StackPanel Grid.Column="1"
                                         Orientation="Horizontal"
                                         VerticalAlignment="Center">
-                                <Border Background="#EAF4FF" BorderBrush="#C8E0FB" BorderThickness="1" CornerRadius="7" Padding="7,3" Margin="5,0,0,0">
-                                    <TextBlock FontSize="9.2" Foreground="#0B5FC6">
+                                <Border Background="{DynamicResource BrandPrimarySoftBrush}" BorderBrush="{DynamicResource BrandPrimarySoftBrush}" BorderThickness="1" CornerRadius="7" Padding="7,3" Margin="5,0,0,0">
+                                    <TextBlock FontSize="9.2" Foreground="{DynamicResource BrandPrimaryDarkBrush}">
                                         <Run Text="F1" FontWeight="Bold" /><Run Text="  Search" FontWeight="SemiBold" />
                                     </TextBlock>
                                 </Border>
-                                <Border Background="#F2ECFF" BorderBrush="#DDD1FF" BorderThickness="1" CornerRadius="7" Padding="7,3" Margin="5,0,0,0">
-                                    <TextBlock FontSize="9.2" Foreground="#6D3BD1">
+                                <Border Background="{DynamicResource PurpleSoftBrush}" BorderBrush="{DynamicResource PurpleSoftBrush}" BorderThickness="1" CornerRadius="7" Padding="7,3" Margin="5,0,0,0">
+                                    <TextBlock FontSize="9.2" Foreground="{DynamicResource PurpleBrush}">
                                         <Run Text="F2" FontWeight="Bold" /><Run Text="  Customer" FontWeight="SemiBold" />
                                     </TextBlock>
                                 </Border>
-                                <Border Background="#E8FAF7" BorderBrush="#BEEDE5" BorderThickness="1" CornerRadius="7" Padding="7,3" Margin="5,0,0,0">
-                                    <TextBlock FontSize="9.2" Foreground="#0F766E">
+                                <Border Background="{DynamicResource PosPrimarySoftBrush}" BorderBrush="{DynamicResource PosPrimarySoftBrush}" BorderThickness="1" CornerRadius="7" Padding="7,3" Margin="5,0,0,0">
+                                    <TextBlock FontSize="9.2" Foreground="{DynamicResource PosPrimaryBrush}">
                                         <Run Text="F4" FontWeight="Bold" /><Run Text="  Pay" FontWeight="SemiBold" />
                                     </TextBlock>
                                 </Border>
@@ -535,7 +535,7 @@
                                     Content="↻"
                                     FontSize="13"
                                     FontWeight="Bold"
-                                    Foreground="#0F766E"
+                                    Foreground="{DynamicResource PosPrimaryBrush}"
                                     Background="Transparent"
                                     BorderBrush="Transparent"
                                     VerticalAlignment="Center"
@@ -550,7 +550,7 @@
 
                         <TextBlock Text="{Binding TopSellersEmptyText}"
                                    Style="{StaticResource PosCaption}"
-                                   Foreground="#64748B"
+                                   Foreground="{DynamicResource TextMutedBrush}"
                                    Margin="0,8,0,0"
                                    Visibility="{Binding TopSellers.Count, Converter={StaticResource CountZeroToVisibility}}" />
 
@@ -567,8 +567,8 @@
                                     <Button Command="{Binding DataContext.QuickAddTopSellerCommand,
                                                       RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                             CommandParameter="{Binding}"
-                                            Background="#F1F5F9"
-                                            BorderBrush="#E2E8F0"
+                                            Background="{DynamicResource SurfaceMutedBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
                                             BorderThickness="1"
                                             Padding="10,6"
                                             Margin="0,0,8,8"
@@ -578,20 +578,20 @@
                                             <TextBlock Text="{Binding BrandName}"
                                                        FontSize="11.5"
                                                        FontWeight="SemiBold"
-                                                       Foreground="#0F172A" />
+                                                       Foreground="{DynamicResource TextPrimaryBrush}" />
                                             <StackPanel Orientation="Horizontal"
                                                         Margin="0,2,0,0">
                                                 <TextBlock Text="{Binding QuantitySold, StringFormat='{}{0:0.##}'}"
                                                            FontSize="10"
                                                            FontWeight="Bold"
-                                                           Foreground="#0F766E" />
+                                                           Foreground="{DynamicResource PosPrimaryBrush}" />
                                                 <TextBlock Text="{Binding SaleUnit}"
                                                            FontSize="10"
-                                                           Foreground="#64748B"
+                                                           Foreground="{DynamicResource TextMutedBrush}"
                                                            Margin="3,0,0,0" />
                                                 <TextBlock Text="{Binding LastUnitPrice, StringFormat=' · AFN {0:N2}'}"
                                                            FontSize="10"
-                                                           Foreground="#64748B" />
+                                                           Foreground="{DynamicResource TextMutedBrush}" />
                                             </StackPanel>
                                         </StackPanel>
                                     </Button>
@@ -625,13 +625,13 @@
                                             Command="{Binding ClearCartCommand}"
                                             Background="Transparent"
                                             BorderBrush="Transparent"
-                                            Foreground="#DC2626"
+                                            Foreground="{DynamicResource DangerBrush}"
                                             FontSize="10.5"
                                             FontWeight="SemiBold"
                                             Padding="8,4" />
                                 </Grid>
 
-                                <Border Background="#F8FAFC"
+                                <Border Background="{DynamicResource AppBackgroundBrush}"
                                         CornerRadius="10"
                                         Padding="18,40"
                                         Margin="0,2,0,0">
@@ -649,12 +649,12 @@
                                         <Border Width="46"
                                                 Height="46"
                                                 CornerRadius="23"
-                                                Background="#ECFDF5"
+                                                Background="{DynamicResource PosPrimarySoftBrush}"
                                                 HorizontalAlignment="Center">
                                             <Path Data="{StaticResource IconPos}"
                                                   Width="22"
                                                   Height="22"
-                                                  Stroke="#0F766E"
+                                                  Stroke="{DynamicResource PosPrimaryBrush}"
                                                   StrokeThickness="1.8"
                                                   Fill="Transparent"
                                                   Stretch="Uniform"
@@ -662,7 +662,7 @@
                                                   VerticalAlignment="Center" />
                                         </Border>
                                         <TextBlock Text="Scan or search a medicine to begin a sale."
-                                                   Foreground="#64748B"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
                                                    FontSize="11.5"
                                                    Margin="0,10,0,0"
                                                    HorizontalAlignment="Center" />
@@ -672,7 +672,7 @@
                                 <ItemsControl ItemsSource="{Binding Cart}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border BorderBrush="#EEF2F7"
+                                            <Border BorderBrush="{DynamicResource SurfaceMutedBrush}"
                                                     BorderThickness="0,1,0,0"
                                                     Padding="0,11">
                                                 <StackPanel>
@@ -689,21 +689,21 @@
                                                             <TextBlock Text="{Binding MedicineLabel}"
                                                                        FontSize="12"
                                                                        FontWeight="Bold"
-                                                                       Foreground="#0F172A"
+                                                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                                                        TextTrimming="CharacterEllipsis" />
                                                             <TextBlock Text="{Binding SecondaryLabel}"
                                                                        FontSize="9.5"
-                                                                       Foreground="#64748B"
+                                                                       Foreground="{DynamicResource TextMutedBrush}"
                                                                        TextTrimming="CharacterEllipsis"
                                                                        Margin="0,3,0,0" />
-                                                            <Border Background="#FFF7ED"
+                                                            <Border Background="{DynamicResource WarningSoftBrush}"
                                                                     CornerRadius="6"
                                                                     Padding="6,2"
                                                                     Margin="0,5,0,0"
                                                                     HorizontalAlignment="Left">
                                                                 <TextBlock Text="Prescription required"
                                                                            FontSize="8.8"
-                                                                           Foreground="#B45309"
+                                                                           Foreground="{DynamicResource WarningBrush}"
                                                                            FontWeight="SemiBold">
                                                                     <TextBlock.Style>
                                                                         <Style TargetType="TextBlock">
@@ -730,7 +730,7 @@
                                                         <StackPanel Grid.Column="2" Margin="0,0,8,0">
                                                             <TextBlock Text="Price" Style="{StaticResource PosCaption}" />
                                                             <TextBlock Text="{Binding DisplayUnitPrice, StringFormat=AFN {0:N2}}"
-                                                                       Background="#F8FAFC"
+                                                                       Background="{DynamicResource AppBackgroundBrush}"
                                                                        Padding="7,7"
                                                                        FontSize="11"
                                                                        FontWeight="Bold"
@@ -748,7 +748,7 @@
                                                                 </TextBlock.Style>
                                                             </TextBlock>
                                                             <TextBox Text="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged}"
-                                                                     Background="#FFF7ED"
+                                                                     Background="{DynamicResource WarningSoftBrush}"
                                                                      BorderBrush="#FCD34D"
                                                                      TextAlignment="Right"
                                                                      Margin="0,4,0,0">
@@ -767,7 +767,7 @@
                                                                       IsChecked="{Binding OverridePrice}"
                                                                       IsEnabled="{Binding DataContext.CanOverridePrice, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                       FontSize="8.8"
-                                                                      Foreground="#B45309"
+                                                                      Foreground="{DynamicResource WarningBrush}"
                                                                       HorizontalAlignment="Right"
                                                                       Margin="0,3,0,0" />
                                                         </StackPanel>
@@ -789,7 +789,7 @@
                                                                 VerticalAlignment="Center" />
                                                     </Grid>
 
-                                                    <Border Background="#F8FAFC"
+                                                    <Border Background="{DynamicResource AppBackgroundBrush}"
                                                             CornerRadius="9"
                                                             Padding="9,6"
                                                             Margin="0,8,0,0">
@@ -801,11 +801,11 @@
                                                             <StackPanel>
                                                                 <TextBlock Text="FEFO batches"
                                                                            FontSize="8.8"
-                                                                           Foreground="#475569"
+                                                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                                                            FontWeight="Bold" />
                                                                 <TextBlock Text="{Binding FefoPlanText}"
                                                                            FontSize="9.2"
-                                                                           Foreground="#64748B"
+                                                                           Foreground="{DynamicResource TextMutedBrush}"
                                                                            TextWrapping="Wrap"
                                                                            Margin="0,2,0,0" />
                                                             </StackPanel>
@@ -813,7 +813,7 @@
                                                                        Text="{Binding EstimatedLineTotal, StringFormat=AFN {0:N2}}"
                                                                        FontSize="12"
                                                                        FontWeight="Bold"
-                                                                       Foreground="#0F172A"
+                                                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                                                        Margin="12,0,0,0"
                                                                        VerticalAlignment="Center" />
                                                         </Grid>
@@ -824,8 +824,8 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
 
-                                <Border Background="#FEF2F2"
-                                        BorderBrush="#FECACA"
+                                <Border Background="{DynamicResource DangerSoftBrush}"
+                                        BorderBrush="{DynamicResource DangerSoftBrush}"
                                         BorderThickness="1"
                                         CornerRadius="9"
                                         Padding="9"
@@ -841,7 +841,7 @@
                                         </Style>
                                     </Border.Style>
                                     <TextBlock Text="One or more item lines exceed the remaining sellable stock."
-                                               Foreground="#B91C1C"
+                                               Foreground="{DynamicResource DangerBrush}"
                                                FontSize="10"
                                                FontWeight="SemiBold" />
                                 </Border>
@@ -853,7 +853,7 @@
 
             <!-- Web POS right checkout rail -->
             <Border Grid.Column="1"
-                    Background="#F1F5F9"
+                    Background="{DynamicResource SurfaceMutedBrush}"
                     BorderBrush="{StaticResource PosBorderBrush}"
                     BorderThickness="1,0,0,0">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -872,7 +872,7 @@
                                     <TextBlock Text="{Binding WalkInCustomerText}"
                                                Margin="12,0,28,0"
                                                VerticalAlignment="Center"
-                                               Foreground="#475569"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
                                                FontSize="11.5"
                                                IsHitTestVisible="False">
                                         <TextBlock.Style>
@@ -899,7 +899,7 @@
                         <!-- Prescription -->
                         <Border BorderBrush="#FCD34D"
                                 BorderThickness="1"
-                                Background="#FFFBEB"
+                                Background="{DynamicResource WarningSoftBrush}"
                                 CornerRadius="14"
                                 Padding="14"
                                 Margin="0,0,0,10">
@@ -920,13 +920,13 @@
                                            Foreground="#78350F" />
                                 <TextBlock Text="Required because the cart contains a prescription-only medicine."
                                            FontSize="9.5"
-                                           Foreground="#92400E"
+                                           Foreground="{DynamicResource WarningBrush}"
                                            TextWrapping="Wrap"
                                            Margin="0,3,0,0" />
                                 <TextBlock Text="Prescription / Rx reference"
                                            FontSize="9.2"
                                            FontWeight="SemiBold"
-                                           Foreground="#92400E"
+                                           Foreground="{DynamicResource WarningBrush}"
                                            Margin="1,9,0,3" />
                                 <TextBox Text="{Binding PrescriptionReference, UpdateSourceTrigger=PropertyChanged}"
                                          ToolTip="Prescription / Rx reference"
@@ -935,7 +935,7 @@
                                 <TextBlock Text="Prescriber / doctor"
                                            FontSize="9.2"
                                            FontWeight="SemiBold"
-                                           Foreground="#92400E"
+                                           Foreground="{DynamicResource WarningBrush}"
                                            Margin="1,6,0,3" />
                                 <TextBox Text="{Binding PrescriberName}"
                                          ToolTip="Prescriber / doctor name"
@@ -944,7 +944,7 @@
                                 <TextBlock Text="Prescription date"
                                            FontSize="9.2"
                                            FontWeight="SemiBold"
-                                           Foreground="#92400E"
+                                           Foreground="{DynamicResource WarningBrush}"
                                            Margin="1,6,0,3" />
                                 <TextBox Text="{Binding PrescriptionDateText}"
                                          ToolTip="Prescription date"
@@ -961,10 +961,10 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Subtotal" Foreground="#64748B" FontSize="11" />
+                                    <TextBlock Text="Subtotal" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" />
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding Subtotal, StringFormat=AFN {0:N2}}"
-                                               Foreground="#0F172A"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                FontWeight="SemiBold" />
                                 </Grid>
                                 <Grid Margin="0,0,0,9">
@@ -972,13 +972,13 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Discount" Foreground="#64748B" FontSize="11" />
+                                    <TextBlock Text="Discount" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" />
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding DiscountTotal, StringFormat=AFN {0:N2}}"
-                                               Foreground="#0F172A"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                FontWeight="SemiBold" />
                                 </Grid>
-                                <Separator Background="#E2E8F0" />
+                                <Separator Background="{DynamicResource BorderBrush}" />
                                 <Grid Margin="0,10,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -987,12 +987,12 @@
                                     <TextBlock Text="Total"
                                                FontSize="17"
                                                FontWeight="Bold"
-                                               Foreground="#0F172A" />
+                                               Foreground="{DynamicResource TextPrimaryBrush}" />
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding EstimatedGrandTotal, StringFormat=AFN {0:N2}}"
                                                FontSize="18"
                                                FontWeight="Bold"
-                                               Foreground="#0F766E" />
+                                               Foreground="{DynamicResource PosPrimaryBrush}" />
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -1012,16 +1012,16 @@
                                                TextWrapping="Wrap"
                                                Margin="0,3,12,0" />
                                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                        <Border Background="#ECFDF5"
+                                        <Border Background="{DynamicResource PosPrimarySoftBrush}"
                                                 CornerRadius="6"
                                                 Padding="7,3">
                                             <TextBlock Text="{Binding PaymentBalanceText}"
-                                                       Foreground="#0F766E"
+                                                       Foreground="{DynamicResource PosPrimaryBrush}"
                                                        FontSize="9.5"
                                                        FontWeight="SemiBold" />
                                         </Border>
                                         <TextBlock Text="F4 / Ctrl+Enter"
-                                                   Foreground="#94A3B8"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
                                                    FontSize="9"
                                                    Margin="8,4,0,0" />
                                     </StackPanel>
@@ -1034,9 +1034,9 @@
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Pay"
                                                    FontWeight="Bold"
-                                                   Foreground="#0F766E" />
+                                                   Foreground="{DynamicResource PosPrimaryBrush}" />
                                         <TextBlock Text="  →"
-                                                   Foreground="#0F766E" />
+                                                   Foreground="{DynamicResource PosPrimaryBrush}" />
                                     </StackPanel>
                                 </Button>
                             </Grid>
@@ -1075,7 +1075,7 @@
                                             Orientation="Horizontal"
                                             VerticalAlignment="Center">
                                     <TextBlock Text="F4"
-                                               Foreground="#CCFBF1"
+                                               Foreground="{DynamicResource PosPrimarySoftBrush}"
                                                FontSize="9"
                                                FontWeight="Bold"
                                                Margin="0,0,10,0"
@@ -1104,7 +1104,7 @@
                                             Command="{Binding RefreshSalesCommand}"
                                             Background="Transparent"
                                             BorderBrush="Transparent"
-                                            Foreground="#0F766E"
+                                            Foreground="{DynamicResource PosPrimaryBrush}"
                                             FontSize="9.5"
                                             FontWeight="SemiBold"
                                             Padding="4,1" />

@@ -80,6 +80,22 @@
     <SolidColorBrush x:Key="SidebarItemSelectedBorderBrush" Color="#BFDBFE" />
     <SolidColorBrush x:Key="SidebarItemSelectedForegroundBrush" Color="#0B5FC6" />
 
+    <!-- POS accent (teal in Classic, brand blue in Glass) -->
+    <Color x:Key="PosPrimaryColor">#0F766E</Color>
+    <Color x:Key="PosPrimaryDarkColor">#115E59</Color>
+    <Color x:Key="PosPrimarySoftColor">#ECFDF5</Color>
+    <SolidColorBrush x:Key="PosPrimaryBrush" Color="{StaticResource PosPrimaryColor}" />
+    <SolidColorBrush x:Key="PosPrimaryDarkBrush" Color="{StaticResource PosPrimaryDarkColor}" />
+    <SolidColorBrush x:Key="PosPrimarySoftBrush" Color="{StaticResource PosPrimarySoftColor}" />
+
+    <!-- Soft badge borders -->
+    <Color x:Key="SuccessBorderSoftColor">#A7F3D0</Color>
+    <Color x:Key="WarningBorderSoftColor">#FDE68A</Color>
+    <Color x:Key="DangerBorderSoftColor">#FECACA</Color>
+    <SolidColorBrush x:Key="SuccessBorderSoftBrush" Color="{StaticResource SuccessBorderSoftColor}" />
+    <SolidColorBrush x:Key="WarningBorderSoftBrush" Color="{StaticResource WarningBorderSoftColor}" />
+    <SolidColorBrush x:Key="DangerBorderSoftBrush" Color="{StaticResource DangerBorderSoftColor}" />
+
     <!-- Corner radii -->
     <CornerRadius x:Key="CardCornerRadius">12</CornerRadius>
     <CornerRadius x:Key="PanelCornerRadius">14</CornerRadius>

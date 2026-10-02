@@ -68,7 +68,7 @@ internal static class Program
             selectedKey = "password";
         }
 
-        if (mode is "pos" or "pos-payment")
+        if (mode is "pos" or "pos-payment" or "pos-glass")
         {
             var pos = new PosViewModel(
                 new FakePosService(),
