@@ -16,6 +16,9 @@
 #ifndef OutputBaseFilename
   #define OutputBaseFilename "Darmaltoon-Setup"
 #endif
+#ifndef AppIconFile
+  #define AppIconFile ""
+#endif
 
 #define MyAppName "Darmaltoon"
 #define MyPublisher "BusinessOS.af"
@@ -56,6 +59,9 @@ VersionInfoCompany={#MyPublisher}
 VersionInfoDescription=Darmaltoon Pharmacy Management Setup
 VersionInfoProductName=Darmaltoon
 VersionInfoProductVersion={#MyAppVersion}
+#if AppIconFile != ""
+SetupIconFile={#AppIconFile}
+#endif
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs

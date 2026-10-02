@@ -12,6 +12,7 @@
     <Description>Darmaltoon Pharmacy Management for Windows</Description>
     <Copyright>Copyright © BusinessOS.af</Copyright>
     <RootNamespace>BusinessOS.Pharmacy.Desktop</RootNamespace>
+    <ApplicationIcon>Assets\Darmaltoon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\BusinessOS.Pharmacy.Application\BusinessOS.Pharmacy.Application.csproj" />
@@ -28,6 +29,9 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Darmaltoon.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">

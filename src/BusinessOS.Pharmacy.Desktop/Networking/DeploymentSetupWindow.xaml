@@ -1,6 +1,7 @@
 <Window x:Class="BusinessOS.Pharmacy.Desktop.Networking.DeploymentSetupWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Icon="/Assets/Darmaltoon.ico"
         Title="Darmaltoon Setup"
         Width="760" Height="720"
         MinWidth="680" MinHeight="620"

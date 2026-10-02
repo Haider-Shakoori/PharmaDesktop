@@ -1,6 +1,7 @@
 <Window x:Class="BusinessOS.Pharmacy.Desktop.Activation.ActivationWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Icon="/Assets/Darmaltoon.ico"
         Title="Activate Darmaltoon"
         Width="620" Height="680"
         MinWidth="560" MinHeight="600"

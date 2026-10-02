@@ -15,6 +15,7 @@ $desktopProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.Desktop/BusinessO
 $serverProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.LocalServer/BusinessOS.Pharmacy.LocalServer.csproj"
 $updaterProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.Updater/BusinessOS.Pharmacy.Updater.csproj"
 $installerScript = Join-Path $repoRoot "packaging/windows/Darmaltoon.iss"
+$appIcon = Join-Path $repoRoot "src/BusinessOS.Pharmacy.Desktop/Assets/Darmaltoon.ico"
 $serviceRegistrationScript = Join-Path $repoRoot "scripts/register-darmaltoon-local-server-service.ps1"
 $outputRoot = [IO.Path]::GetFullPath((Join-Path $repoRoot $OutputDirectory))
 $workRoot = Join-Path $outputRoot "_work"
@@ -156,7 +157,7 @@ foreach ($item in $modes) {
     Get-ChildItem $payloadRoot -Filter *.exe -Recurse | ForEach-Object { Sign-File $_.FullName }
 
     $setupBase = "Darmaltoon-$fileLabel-Setup-$Version-$RuntimeIdentifier"
-    & $iscc "/DMyAppVersion=$Version" "/DSourceDir=$payloadRoot" "/DDeploymentMode=$mode" "/DModeLabel=$label" "/DOutputDir=$outputRoot" "/DOutputBaseFilename=$setupBase" $installerScript
+    & $iscc "/DMyAppVersion=$Version" "/DSourceDir=$payloadRoot" "/DDeploymentMode=$mode" "/DModeLabel=$label" "/DOutputDir=$outputRoot" "/DOutputBaseFilename=$setupBase" "/DAppIconFile=$appIcon" $installerScript
     if ($LASTEXITCODE -ne 0) { throw "Installer compilation failed for $mode." }
 
     $setup = Join-Path $outputRoot "$setupBase.exe"
