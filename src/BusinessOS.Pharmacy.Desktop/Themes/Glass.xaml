@@ -33,8 +33,8 @@
 
     <!-- Backgrounds -->
     <Color x:Key="AppBackgroundColor">#EEF4FF</Color>
-    <Color x:Key="SurfaceColor">#E8FFFFFF</Color>
-    <Color x:Key="SidebarColor">#BFFFFFFF</Color>
+    <Color x:Key="SurfaceColor">#EBFFFFFF</Color>
+    <Color x:Key="SidebarColor">#AFFFFFFF</Color>
     <Color x:Key="SurfaceMutedColor">#D6EDF4FF</Color>
     <Color x:Key="BorderColor">#E3EBF7</Color>
     <Color x:Key="BorderStrongColor">#C9D8EC</Color>
@@ -43,10 +43,10 @@
 
     <!-- Ambient application background: soft blue/white/violet gradient -->
     <LinearGradientBrush x:Key="AppBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#E9F2FF" Offset="0" />
-        <GradientStop Color="#F7FBFF" Offset="0.42" />
-        <GradientStop Color="#F1F4FF" Offset="0.72" />
-        <GradientStop Color="#EAF0FF" Offset="1" />
+        <GradientStop Color="#D6E6FF" Offset="0" />
+        <GradientStop Color="#EEF5FF" Offset="0.4" />
+        <GradientStop Color="#E7EDFF" Offset="0.72" />
+        <GradientStop Color="#DCE7FF" Offset="1" />
     </LinearGradientBrush>
 
     <SolidColorBrush x:Key="BrandPrimaryBrush" Color="{StaticResource BrandPrimaryColor}" />
@@ -80,27 +80,28 @@
     <SolidColorBrush x:Key="SelectedBrush" Color="{StaticResource SelectedColor}" />
 
     <!-- Opaque surfaces for dense panels (tables, POS cart) so text stays crisp -->
-    <SolidColorBrush x:Key="SurfaceStrongBrush" Color="#F7FAFF" />
-    <SolidColorBrush x:Key="TopBarBrush" Color="#C9FFFFFF" />
+    <SolidColorBrush x:Key="SurfaceStrongBrush" Color="#F5FFFFFF" />
+    <SolidColorBrush x:Key="TopBarBrush" Color="#BFFFFFFF" />
+    <SolidColorBrush x:Key="PageBackgroundBrush" Color="#00FFFFFF" />
 
     <!-- Frosted card surface with a soft vertical sheen -->
     <LinearGradientBrush x:Key="CardBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Color="#F0FFFFFF" Offset="0" />
-        <GradientStop Color="#D8FFFFFF" Offset="1" />
+        <GradientStop Color="#F7FFFFFF" Offset="0" />
+        <GradientStop Color="#E7FFFFFF" Offset="1" />
     </LinearGradientBrush>
-    <SolidColorBrush x:Key="CardBorderBrush" Color="#EAF1FC" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="GlassHighlightBrush" Color="#99FFFFFF" />
     <SolidColorBrush x:Key="GlassBorderSoftBrush" Color="#E7EFFB" />
 
     <!-- Sidebar interaction states -->
-    <SolidColorBrush x:Key="SidebarItemHoverBrush" Color="#8FF1F6FF" />
-    <SolidColorBrush x:Key="SidebarItemPressedBrush" Color="#A8E3EDFF" />
-    <SolidColorBrush x:Key="SidebarItemSelectedBrush" Color="#B8DCE9FF" />
-    <SolidColorBrush x:Key="SidebarItemSelectedBorderBrush" Color="#BBD4EEFF" />
-    <SolidColorBrush x:Key="SidebarItemSelectedForegroundBrush" Color="#1D4ED8" />
+    <SolidColorBrush x:Key="SidebarItemHoverBrush" Color="#73FFFFFF" />
+    <SolidColorBrush x:Key="SidebarItemPressedBrush" Color="#8CE3EDFF" />
+    <SolidColorBrush x:Key="SidebarItemSelectedBrush" Color="#2F6BFF" />
+    <SolidColorBrush x:Key="SidebarItemSelectedBorderBrush" Color="#2F6BFF" />
+    <SolidColorBrush x:Key="SidebarItemSelectedForegroundBrush" Color="#FFFFFF" />
 
     <!-- Geometry -->
-    <CornerRadius x:Key="CardCornerRadius">16</CornerRadius>
+    <CornerRadius x:Key="CardCornerRadius">18</CornerRadius>
     <CornerRadius x:Key="PanelCornerRadius">18</CornerRadius>
     <CornerRadius x:Key="ControlCornerRadius">10</CornerRadius>
     <CornerRadius x:Key="InputCornerRadius">10</CornerRadius>
@@ -123,9 +124,9 @@
 
     <!-- Single shared shadow for glass cards (classic has no key -> no effect) -->
     <DropShadowEffect x:Key="CardShadowEffect"
-                      BlurRadius="20"
-                      ShadowDepth="4"
+                      BlurRadius="28"
+                      ShadowDepth="6"
                       Direction="270"
-                      Opacity="0.10"
+                      Opacity="0.16"
                       Color="#1E3A8A" />
 </ResourceDictionary>

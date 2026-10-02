@@ -153,6 +153,70 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
+        <!-- Glass ambient backdrop: window paints the gradient, these are decorative shapes -->
+        <Grid Grid.ColumnSpan="2" IsHitTestVisible="False">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsGlassTheme}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <Canvas ClipToBounds="True">
+                <Ellipse Width="980" Height="980" Canvas.Left="1120" Canvas.Top="-420">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#66A9C6FF" Offset="0" />
+                            <GradientStop Color="#00A9C6FF" Offset="1" />
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
+                <Ellipse Width="1150" Height="1150" Canvas.Left="-460" Canvas.Top="430">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#55A5E4FF" Offset="0" />
+                            <GradientStop Color="#00A5E4FF" Offset="1" />
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
+                <Ellipse Width="760" Height="760" Canvas.Left="640" Canvas.Top="120">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#40C7BBFF" Offset="0" />
+                            <GradientStop Color="#00C7BBFF" Offset="1" />
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
+
+                <Path Data="M0,500 C360,398 640,640 1010,540 C1330,452 1580,616 1920,498 L1920,0 L0,0 Z"
+                      Fill="#14FFFFFF" />
+                <Path Data="M0,820 C420,700 780,920 1200,780 C1520,676 1740,820 1920,740 L1920,420 C1620,560 1300,440 960,548 C600,662 320,452 0,570 Z"
+                      Fill="#1FBED4FF" />
+
+                <Path Data="{StaticResource IconPharmacyCross}"
+                      Width="860" Height="860"
+                      Stretch="Uniform"
+                      Fill="#122F6BFF"
+                      Canvas.Left="1230" Canvas.Top="120">
+                    <Path.RenderTransform>
+                        <RotateTransform Angle="-8" />
+                    </Path.RenderTransform>
+                </Path>
+                <Path Data="{StaticResource IconPharmacyCross}"
+                      Width="520" Height="520"
+                      Stretch="Uniform"
+                      Fill="#0FF2F6FF"
+                      Canvas.Left="150" Canvas.Top="760">
+                    <Path.RenderTransform>
+                        <RotateTransform Angle="10" />
+                    </Path.RenderTransform>
+                </Path>
+            </Canvas>
+        </Grid>
+
         <Border Grid.Column="0"
                 Background="{DynamicResource SidebarBrush}"
                 BorderBrush="{DynamicResource GlassBorderSoftBrush}"
@@ -566,7 +630,7 @@
 
             <ContentControl Grid.Row="1"
                             Content="{Binding CurrentPage}"
-                            Background="{DynamicResource AppBackgroundBrush}" />
+                            Background="{DynamicResource PageBackgroundBrush}" />
         </Grid>
 
         <ItemsControl Grid.ColumnSpan="2"

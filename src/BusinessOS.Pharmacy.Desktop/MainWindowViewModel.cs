@@ -59,6 +59,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private bool sidebarCollapsed;
 
+    [ObservableProperty]
+    private bool isGlassTheme;
+
+    public bool IsClassicTheme => !IsGlassTheme;
+
+    partial void OnIsGlassThemeChanged(bool value) =>
+        OnPropertyChanged(nameof(IsClassicTheme));
+
     public MainWindowViewModel(
         IClock clock,
         IUserSessionService sessions,
@@ -92,6 +100,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _connectionMonitor = services.GetService<ILocalServerConnectionMonitor>();
         _notifications.NotificationRaised += OnNotificationRaised;
         _profileStore.ProfileChanged += OnProfileChanged;
+
+        IsGlassTheme = Appearance.ThemeManager.Current == Appearance.AppearanceTheme.Glass;
+        Appearance.ThemeManager.ThemeChanged += OnThemeChanged;
         _profile = _profileStore.Load();
         Dashboard = dashboard;
         Customers = customers;
@@ -266,6 +277,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _profile?.HasImage == true ? _profile.ImagePath! : string.Empty;
 
     public bool HasProfileImage => _profile?.HasImage == true;
+
+    private void OnThemeChanged(Appearance.AppearanceTheme theme) =>
+        IsGlassTheme = theme == Appearance.AppearanceTheme.Glass;
 
     private void OnProfileChanged(Profile.UserProfile profile)
     {

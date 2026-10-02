@@ -163,7 +163,7 @@
                         <ItemsControl ItemsSource="{Binding Payments}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{DynamicResource AppBackgroundBrush}"
+                                    <Border Background="{DynamicResource SurfaceMutedBrush}"
                                             BorderBrush="{DynamicResource BorderBrush}"
                                             BorderThickness="1"
                                             CornerRadius="10"

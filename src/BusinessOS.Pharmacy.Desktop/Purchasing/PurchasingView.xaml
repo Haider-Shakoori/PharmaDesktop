@@ -441,7 +441,7 @@
                                             </StackPanel>
                                         </Grid>
 
-                                        <Border Background="{DynamicResource AppBackgroundBrush}"
+                                        <Border Background="{DynamicResource SurfaceMutedBrush}"
                                                 BorderBrush="{DynamicResource BorderBrush}"
                                                 BorderThickness="1"
                                                 CornerRadius="10"
@@ -583,7 +583,7 @@
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="8" Padding="9,6">
+                                            <Border Background="{DynamicResource SurfaceMutedBrush}" CornerRadius="8" Padding="9,6">
                                                 <TextBlock Text="{Binding SelectedOrderNextStep}"
                                                            Foreground="{DynamicResource TextSecondaryBrush}"
                                                            FontSize="10"
@@ -819,7 +819,7 @@
                                             </DataGrid.Columns>
                                         </DataGrid>
 
-                                        <Border Background="{DynamicResource AppBackgroundBrush}"
+                                        <Border Background="{DynamicResource SurfaceMutedBrush}"
                                                 BorderBrush="{DynamicResource BorderBrush}"
                                                 BorderThickness="1"
                                                 CornerRadius="10"

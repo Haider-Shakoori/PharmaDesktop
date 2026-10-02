@@ -188,7 +188,7 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Auto"
-                  Background="{DynamicResource AppBackgroundBrush}">
+                  Background="{DynamicResource PageBackgroundBrush}">
         <StackPanel Margin="22,10,22,4" MinWidth="1240">
             <StackPanel Margin="0,0,0,8">
                 <TextBlock Text="{Binding DashboardTitle}"

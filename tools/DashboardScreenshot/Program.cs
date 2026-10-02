@@ -386,6 +386,10 @@ internal static class Program
         public FlowDirection LayoutDirection => FlowDirection.LeftToRight;
         public bool SidebarCollapsed => false;
         public bool IsPosMode { get; }
+        public bool IsGlassTheme =>
+            BusinessOS.Pharmacy.Desktop.Appearance.ThemeManager.Current ==
+            BusinessOS.Pharmacy.Desktop.Appearance.AppearanceTheme.Glass;
+        public bool IsClassicTheme => !IsGlassTheme;
         public double SidebarWidth => IsPosMode ? 0d : 224d;
         public string GlobalSearchText { get; set; } = string.Empty;
         public DashboardViewModel Dashboard { get; }

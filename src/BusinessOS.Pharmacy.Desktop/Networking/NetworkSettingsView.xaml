@@ -272,7 +272,7 @@
                                 Style="{StaticResource PrimaryButton}"
                                 HorizontalAlignment="Left"
                                 Padding="14,9"/>
-                        <Border Background="{DynamicResource AppBackgroundBrush}"
+                        <Border Background="{DynamicResource SurfaceMutedBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
@@ -319,7 +319,7 @@
                                     Padding="12,8"/>
                         </Grid>
 
-                        <Border Background="{DynamicResource AppBackgroundBrush}"
+                        <Border Background="{DynamicResource SurfaceMutedBrush}"
                                 CornerRadius="8"
                                 Padding="12"
                                 Margin="0,0,0,10">

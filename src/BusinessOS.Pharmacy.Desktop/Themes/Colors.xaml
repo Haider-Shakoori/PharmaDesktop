@@ -68,6 +68,7 @@
     <!-- Chrome & surface extras (overridden by the Glass theme) -->
     <SolidColorBrush x:Key="SurfaceStrongBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="TopBarBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="PageBackgroundBrush" Color="#F5F8FC" />
     <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="CardBorderBrush" Color="#E2E8F0" />
     <SolidColorBrush x:Key="GlassHighlightBrush" Color="#00FFFFFF" />

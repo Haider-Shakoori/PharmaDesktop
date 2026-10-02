@@ -270,7 +270,7 @@
 
             <!-- Main sale workspace -->
             <Grid Grid.Column="0"
-                  Background="{DynamicResource AppBackgroundBrush}">
+                  Background="{DynamicResource PageBackgroundBrush}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -631,7 +631,7 @@
                                             Padding="8,4" />
                                 </Grid>
 
-                                <Border Background="{DynamicResource AppBackgroundBrush}"
+                                <Border Background="{DynamicResource SurfaceMutedBrush}"
                                         CornerRadius="10"
                                         Padding="18,40"
                                         Margin="0,2,0,0">
@@ -730,7 +730,7 @@
                                                         <StackPanel Grid.Column="2" Margin="0,0,8,0">
                                                             <TextBlock Text="Price" Style="{StaticResource PosCaption}" />
                                                             <TextBlock Text="{Binding DisplayUnitPrice, StringFormat=AFN {0:N2}}"
-                                                                       Background="{DynamicResource AppBackgroundBrush}"
+                                                                       Background="{DynamicResource SurfaceMutedBrush}"
                                                                        Padding="7,7"
                                                                        FontSize="11"
                                                                        FontWeight="Bold"
@@ -789,7 +789,7 @@
                                                                 VerticalAlignment="Center" />
                                                     </Grid>
 
-                                                    <Border Background="{DynamicResource AppBackgroundBrush}"
+                                                    <Border Background="{DynamicResource SurfaceMutedBrush}"
                                                             CornerRadius="9"
                                                             Padding="9,6"
                                                             Margin="0,8,0,0">
