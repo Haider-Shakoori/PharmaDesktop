@@ -357,6 +357,7 @@ internal static class Program
                 ("medicines", "Medicines", "Stock"),
                 ("inventory", "Inventory", "Stock"),
                 ("batches", "Batches", "Stock"),
+                ("barcode", "Barcode Printing", "Stock"),
                 ("purchases", "Purchases", "Purchasing"),
                 ("suppliers", "Suppliers", "Purchasing"),
                 ("customers", "Customers", "Operations"),
