@@ -19,6 +19,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     private readonly ILocalServerServiceController _serviceController;
     private readonly Profile.UserProfileStore _profileStore;
     private readonly Notifications.NotificationService _notifications;
+    private readonly Printing.ReceiptSettingsStore _receiptSettings;
 
     private UiLanguage _language = UiLanguageCatalog.All[0];
 
@@ -41,6 +42,12 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     [ObservableProperty] private string profileFirstName = string.Empty;
     [ObservableProperty] private string profileLastName = string.Empty;
     [ObservableProperty] private string profileImagePath = string.Empty;
+    [ObservableProperty] private bool receiptShowBatchDetails = true;
+    [ObservableProperty] private bool receiptShowCashier = true;
+    [ObservableProperty] private bool receiptShowCustomer = true;
+    [ObservableProperty] private bool receiptShowPayments = true;
+    [ObservableProperty] private bool receiptShowFooter = true;
+    [ObservableProperty] private string receiptFooterText = "Thank you for your purchase";
     [ObservableProperty] private RegisteredTerminal? selectedTerminal;
     [ObservableProperty] private string renameTerminalTo = string.Empty;
     [ObservableProperty] private bool isBusy;
@@ -51,7 +58,8 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         ILocalServerDiscovery discovery,
         ILocalServerServiceController serviceController,
         Profile.UserProfileStore profileStore,
-        Notifications.NotificationService notifications)
+        Notifications.NotificationService notifications,
+        Printing.ReceiptSettingsStore receiptSettings)
     {
         _services = services;
         _configurationStore = configurationStore;
@@ -59,9 +67,11 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         _serviceController = serviceController;
         _profileStore = profileStore;
         _notifications = notifications;
+        _receiptSettings = receiptSettings;
 
         UploadProfileImageCommand = new RelayCommand(UploadProfileImage);
         SaveProfileCommand = new RelayCommand(SaveProfile);
+        SaveReceiptSettingsCommand = new RelayCommand(SaveReceiptSettings);
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
         CreatePairingCodeCommand = new AsyncRelayCommand(CreatePairingCodeAsync, () => !IsBusy && CurrentMode == DeploymentMode.Server);
@@ -93,6 +103,57 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     public IAsyncRelayCommand RunDiagnosticsCommand { get; }
     public IRelayCommand UploadProfileImageCommand { get; }
     public IRelayCommand SaveProfileCommand { get; }
+    public IRelayCommand SaveReceiptSettingsCommand { get; }
+
+    public string ReceiptTitle => T("Receipt printing", "چاپ فاکتور", "د بل چاپ");
+    public string ReceiptSubtitle => T(
+        "Choose what appears on the printed customer receipt",
+        "انتخاب مواردی که روی فاکتور چاپی مشتری نمایش داده می‌شود",
+        "هغه څه وټاکئ چې د پېرودونکي په چاپي بل کې ښکاري");
+    public string ReceiptShowBatchLabel => T("Show batch and expiry details", "نمایش جزئیات بچ و انقضا", "د بېچ او تاریخ تېر جزئیات ښودل");
+    public string ReceiptShowCashierLabel => T("Show cashier name", "نمایش نام صندوقدار", "د کاشر نوم ښودل");
+    public string ReceiptShowCustomerLabel => T("Show customer name", "نمایش نام مشتری", "د پېرودونکي نوم ښودل");
+    public string ReceiptShowPaymentsLabel => T("Show payment details", "نمایش جزئیات پرداخت", "د تادیې جزئیات ښودل");
+    public string ReceiptShowFooterLabel => T("Show footer message", "نمایش پیام پایانی", "د پای پیغام ښودل");
+    public string ReceiptFooterTextLabel => T("Footer message", "پیام پایانی", "د پای پیغام");
+    public string SaveReceiptLabel => T("Save receipt options", "ذخیره تنظیمات فاکتور", "د بل تنظیمات خوندي کړئ");
+
+    public void LoadReceiptSettings()
+    {
+        var settings = _receiptSettings.Load();
+        ReceiptShowBatchDetails = settings.ShowBatchDetails;
+        ReceiptShowCashier = settings.ShowCashier;
+        ReceiptShowCustomer = settings.ShowCustomer;
+        ReceiptShowPayments = settings.ShowPayments;
+        ReceiptShowFooter = settings.ShowFooter;
+        ReceiptFooterText = settings.FooterText;
+    }
+
+    private void SaveReceiptSettings()
+    {
+        try
+        {
+            _receiptSettings.Save(new Printing.ReceiptSettings(
+                ReceiptShowBatchDetails,
+                ReceiptShowCashier,
+                ReceiptShowCustomer,
+                ReceiptShowPayments,
+                ReceiptShowFooter,
+                ReceiptFooterText));
+
+            _notifications.ShowSuccess(T(
+                "Receipt options saved. New prints use these settings.",
+                "تنظیمات فاکتور ذخیره شد. چاپ‌های بعدی از این تنظیمات استفاده می‌کنند.",
+                "د بل تنظیمات خوندي شول. راتلونکي چاپونه دا تنظیمات کاروي."));
+        }
+        catch (Exception exception)
+        {
+            _notifications.ShowError(T(
+                $"Receipt options could not be saved: {exception.Message}",
+                $"تنظیمات فاکتور ذخیره نشد: {exception.Message}",
+                $"د بل تنظیمات خوندي نه شول: {exception.Message}"));
+        }
+    }
 
     public bool HasProfileImage =>
         !string.IsNullOrWhiteSpace(ProfileImagePath) && File.Exists(ProfileImagePath);
@@ -207,6 +268,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         await BusyAsync(async () =>
         {
             LoadProfile();
+            LoadReceiptSettings();
 
             var configuration = await _configurationStore.LoadAsync();
             ApplyConfiguration(configuration);
@@ -755,5 +817,20 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(RunDiagnosticsLabel));
         OnPropertyChanged(nameof(NetworkProfileLabel));
         OnPropertyChanged(nameof(FirewallStatusLabel));
+        OnPropertyChanged(nameof(ProfileTitle));
+        OnPropertyChanged(nameof(ProfileSubtitle));
+        OnPropertyChanged(nameof(FirstNameLabel));
+        OnPropertyChanged(nameof(LastNameLabel));
+        OnPropertyChanged(nameof(UploadPhotoLabel));
+        OnPropertyChanged(nameof(SaveProfileLabel));
+        OnPropertyChanged(nameof(ReceiptTitle));
+        OnPropertyChanged(nameof(ReceiptSubtitle));
+        OnPropertyChanged(nameof(ReceiptShowBatchLabel));
+        OnPropertyChanged(nameof(ReceiptShowCashierLabel));
+        OnPropertyChanged(nameof(ReceiptShowCustomerLabel));
+        OnPropertyChanged(nameof(ReceiptShowPaymentsLabel));
+        OnPropertyChanged(nameof(ReceiptShowFooterLabel));
+        OnPropertyChanged(nameof(ReceiptFooterTextLabel));
+        OnPropertyChanged(nameof(SaveReceiptLabel));
     }
 }

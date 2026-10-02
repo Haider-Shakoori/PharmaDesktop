@@ -155,6 +155,7 @@ public static class DesktopHost
                 services.AddSingleton<PasswordChangeViewModel>();
                 services.AddSingleton<Notifications.NotificationService>();
                 services.AddSingleton<Profile.UserProfileStore>();
+                services.AddSingleton<Printing.ReceiptSettingsStore>();
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<StartupCoordinator>();

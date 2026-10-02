@@ -14,6 +14,19 @@ public interface ISaleReceiptPrinter
 
 public sealed class SaleReceiptPrinter : ISaleReceiptPrinter
 {
+    private readonly ReceiptSettingsStore? _settingsStore;
+
+    public SaleReceiptPrinter()
+    {
+    }
+
+    public SaleReceiptPrinter(ReceiptSettingsStore settingsStore)
+    {
+        _settingsStore = settingsStore;
+    }
+
+    private ReceiptSettings CurrentSettings => _settingsStore?.Load() ?? new ReceiptSettings();
+
     public bool Print(SaleDetail sale)
     {
         ArgumentNullException.ThrowIfNull(sale);
@@ -108,8 +121,9 @@ public sealed class SaleReceiptPrinter : ISaleReceiptPrinter
         const double qtyWidth = 48d;
         const double totalWidth = 72d;
         var itemWidth = Math.Max(80d, contentWidth - qtyWidth - totalWidth);
+        var settings = CurrentSettings;
 
-        document.Blocks.Add(BuildInfoTable(sale, contentWidth));
+        document.Blocks.Add(BuildInfoTable(sale, contentWidth, settings));
 
         var lines = new Table
         {
@@ -140,6 +154,11 @@ public sealed class SaleReceiptPrinter : ISaleReceiptPrinter
             row.Cells.Add(Cell($"{line.Quantity:0.####}", false, TextAlignment.Right));
             row.Cells.Add(Cell($"{line.LineTotal:N2}", false, TextAlignment.Right));
             body.Rows.Add(row);
+
+            if (!settings.ShowBatchDetails)
+            {
+                continue;
+            }
 
             foreach (var allocation in line.Allocations)
             {
@@ -186,7 +205,7 @@ public sealed class SaleReceiptPrinter : ISaleReceiptPrinter
         totals.RowGroups.Add(totalsRows);
         document.Blocks.Add(totals);
 
-        if (sale.Payments.Count > 0)
+        if (settings.ShowPayments && sale.Payments.Count > 0)
         {
             document.Blocks.Add(new Paragraph(new Run("Payments"))
             {
@@ -220,32 +239,45 @@ public sealed class SaleReceiptPrinter : ISaleReceiptPrinter
             });
         }
 
-        document.Blocks.Add(new Paragraph(new Run("Thank you"))
+        if (settings.ShowFooter && !string.IsNullOrWhiteSpace(settings.FooterText))
         {
-            FontWeight = FontWeights.SemiBold,
-            TextAlignment = TextAlignment.Center,
-            Margin = new Thickness(0, 12, 0, 0),
-        });
+            document.Blocks.Add(new Paragraph(new Run(settings.FooterText.Trim()))
+            {
+                FontWeight = FontWeights.SemiBold,
+                TextAlignment = TextAlignment.Center,
+                Margin = new Thickness(0, 12, 0, 0),
+            });
+        }
 
         return document;
     }
 
-    private static Table BuildInfoTable(SaleDetail sale, double contentWidth)
+    private static Table BuildInfoTable(SaleDetail sale, double contentWidth, ReceiptSettings settings)
     {
         var half = Math.Max(80d, contentWidth / 2d);
         var table = new Table { CellSpacing = 0 };
         table.Columns.Add(new TableColumn { Width = new GridLength(half) });
         table.Columns.Add(new TableColumn { Width = new GridLength(half) });
 
+        var time = sale.Sale.CompletedAt is null
+            ? string.Empty
+            : sale.Sale.CompletedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+
         var rows = new TableRowGroup();
         rows.Rows.Add(InfoRow(
             $"Date: {sale.Sale.BusinessDate:yyyy-MM-dd}",
-            $"Cashier: {sale.CashierName}"));
-        rows.Rows.Add(InfoRow(
-            $"Customer: {sale.Sale.CustomerName ?? "Walk-in"}",
-            sale.Sale.CompletedAt is null
-                ? string.Empty
-                : sale.Sale.CompletedAt.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")));
+            settings.ShowCashier ? $"Cashier: {sale.CashierName}" : time));
+
+        if (settings.ShowCustomer)
+        {
+            rows.Rows.Add(InfoRow(
+                $"Customer: {sale.Sale.CustomerName ?? "Walk-in"}",
+                settings.ShowCashier ? time : string.Empty));
+        }
+        else if (settings.ShowCashier && !string.IsNullOrWhiteSpace(time))
+        {
+            rows.Rows.Add(InfoRow(string.Empty, time));
+        }
 
         table.RowGroups.Add(rows);
         return table;

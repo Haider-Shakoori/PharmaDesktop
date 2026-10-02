@@ -75,6 +75,29 @@
                 </StackPanel>
             </Border>
 
+            <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="{Binding ReceiptTitle}" Style="{StaticResource SectionTitleText}" />
+                    <TextBlock Text="{Binding ReceiptSubtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,14" TextWrapping="Wrap" />
+                    <UniformGrid Columns="2">
+                        <CheckBox Content="{Binding ReceiptShowBatchLabel}" IsChecked="{Binding ReceiptShowBatchDetails}" Margin="0,4,18,4" />
+                        <CheckBox Content="{Binding ReceiptShowCashierLabel}" IsChecked="{Binding ReceiptShowCashier}" Margin="0,4,18,4" />
+                        <CheckBox Content="{Binding ReceiptShowCustomerLabel}" IsChecked="{Binding ReceiptShowCustomer}" Margin="0,4,18,4" />
+                        <CheckBox Content="{Binding ReceiptShowPaymentsLabel}" IsChecked="{Binding ReceiptShowPayments}" Margin="0,4,18,4" />
+                        <CheckBox Content="{Binding ReceiptShowFooterLabel}" IsChecked="{Binding ReceiptShowFooter}" Margin="0,4,18,4" />
+                    </UniformGrid>
+                    <TextBlock Text="{Binding ReceiptFooterTextLabel}" FontWeight="SemiBold" Margin="0,14,0,6" />
+                    <TextBox Text="{Binding ReceiptFooterText, UpdateSourceTrigger=PropertyChanged}"
+                             MinHeight="40" Padding="9,7" MaxWidth="420" HorizontalAlignment="Left" />
+                    <Button Content="{Binding SaveReceiptLabel}"
+                            Command="{Binding SaveReceiptSettingsCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            HorizontalAlignment="Left"
+                            Margin="0,16,0,0"
+                            Padding="18,8" />
+                </StackPanel>
+            </Border>
+
             <UniformGrid Columns="2" Margin="0,0,0,16">
                 <Border Style="{StaticResource SurfaceCard}" Margin="0,0,8,0">
                     <StackPanel>
