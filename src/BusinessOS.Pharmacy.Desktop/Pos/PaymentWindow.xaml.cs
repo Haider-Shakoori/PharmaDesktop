@@ -16,19 +16,25 @@ public partial class PaymentWindow : Window
         Closed += OnClosed;
     }
 
-    private void OnPaymentCloseRequested(object? sender, EventArgs e)
-    {
-        DialogResult = true;
-        Close();
-    }
+    private void OnPaymentCloseRequested(object? sender, EventArgs e) =>
+        CloseDialog(true);
 
     private void OnClosed(object? sender, EventArgs e) =>
         _viewModel.PaymentCloseRequested -= OnPaymentCloseRequested;
 
-    private void OnCancelClick(object sender, RoutedEventArgs e)
+    private void OnCancelClick(object sender, RoutedEventArgs e) =>
+        CloseDialog(false);
+
+    private void CloseDialog(bool result)
     {
-        DialogResult = false;
-        Close();
+        try
+        {
+            DialogResult = result;
+        }
+        catch (InvalidOperationException)
+        {
+            Close();
+        }
     }
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -36,8 +42,7 @@ public partial class PaymentWindow : Window
         if (e.Key == Key.Escape)
         {
             e.Handled = true;
-            DialogResult = false;
-            Close();
+            CloseDialog(false);
             return;
         }
 
