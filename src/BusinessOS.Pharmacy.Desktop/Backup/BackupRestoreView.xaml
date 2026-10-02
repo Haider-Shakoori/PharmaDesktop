@@ -14,7 +14,7 @@
                 <Button Content="Create Backup" Command="{Binding CreateBackupCommand}" Padding="12,7"/>
             </StackPanel>
             <StackPanel>
-                <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding Title}" FontSize="27" FontWeight="Bold"/>
                 <TextBlock Text="{Binding Subtitle}" Style="{StaticResource MutedText}"/>
             </StackPanel>
         </DockPanel>

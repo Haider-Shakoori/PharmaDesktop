@@ -9,7 +9,7 @@
             </Grid.RowDefinitions>
             <DockPanel Grid.Row="0">
                 <Button DockPanel.Dock="Right" Content="Refresh" Command="{Binding LoadCommand}" Padding="12,6"/>
-                <StackPanel><TextBlock Text="{Binding WorkspaceTitle}" FontSize="24" FontWeight="SemiBold"/><TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" TextWrapping="Wrap"/></StackPanel>
+                <StackPanel><TextBlock Text="{Binding WorkspaceTitle}" FontSize="27" FontWeight="Bold"/><TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" TextWrapping="Wrap"/></StackPanel>
             </DockPanel>
             <Grid Grid.Row="1" Margin="0,18,0,0">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="2*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -61,7 +61,7 @@
                         <Button Content="Add refund" Command="{Binding AddRefundCommand}" Padding="12,6" Margin="0,8,0,0"/>
                         <ListBox ItemsSource="{Binding Refunds}" MinHeight="100" Margin="0,8,0,0">
                             <ListBox.ItemTemplate><DataTemplate><DockPanel Margin="2">
-                                <Button DockPanel.Dock="Right" Content="×" Command="{Binding DataContext.RemoveRefundCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}" Padding="5,1"/>
+                                <Button DockPanel.Dock="Right" Content="Ã—" Command="{Binding DataContext.RemoveRefundCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}" Padding="5,1"/>
                                 <TextBlock><Run Text="{Binding Method}"/><Run Text="  "/><Run Text="{Binding Amount, StringFormat=N4}"/></TextBlock>
                             </DockPanel></DataTemplate></ListBox.ItemTemplate>
                         </ListBox>

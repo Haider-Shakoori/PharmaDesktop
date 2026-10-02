@@ -122,7 +122,7 @@
                     <Border Grid.Column="2" Style="{StaticResource SurfaceCard}">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel>
-                                <TextBlock Text="Supplier editor" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                <TextBlock Text="Supplier editor" Style="{StaticResource SectionTitleText}" Margin="0,0,0,12"/>
 
                                 <TextBlock Text="Code"/>
                                 <TextBox Text="{Binding SupplierCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,8"/>

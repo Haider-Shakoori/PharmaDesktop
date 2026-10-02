@@ -18,7 +18,7 @@
                     <Button Content="{Binding ExportLabel}" Command="{Binding ExportCommand}" Padding="12,6"/>
                 </StackPanel>
                 <StackPanel>
-                    <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Title}" FontSize="27" FontWeight="Bold"/>
                     <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" TextWrapping="Wrap"/>
                 </StackPanel>
             </DockPanel>

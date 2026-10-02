@@ -26,7 +26,8 @@
             <TextBlock Text="{Binding Description, ElementName=Root}"
                        Style="{StaticResource PageSubtitleText}"
                        Margin="0,4,0,0"
-                       MaxWidth="720" />
+                       MaxWidth="720"
+                       HorizontalAlignment="Left" />
         </StackPanel>
 
         <ContentPresenter Grid.Column="1"
