@@ -153,6 +153,7 @@ public static class DesktopHost
                 services.AddSingleton<UpdateViewModel>();
                 services.AddSingleton<NetworkSettingsViewModel>();
                 services.AddSingleton<PasswordChangeViewModel>();
+                services.AddSingleton<Notifications.NotificationService>();
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<StartupCoordinator>();

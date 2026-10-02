@@ -44,8 +44,6 @@
         <KeyBinding Key="D5" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="settings" />
         <KeyBinding Key="D6" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="password" />
         <KeyBinding Key="F11" Command="{Binding ToggleFullScreenCommand}" />
-        <KeyBinding Key="F" Modifiers="Control" Command="{Binding GlobalSearchCommand}" />
-        <KeyBinding Key="S" Modifiers="Control" Command="{Binding GlobalSearchCommand}" />
     </Window.InputBindings>
 
     <Window.Resources>
@@ -391,10 +389,11 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-                                <TextBox Text="{Binding GlobalSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                <TextBox x:Name="GlobalSearchBox"
+                                         Text="{Binding GlobalSearchText, UpdateSourceTrigger=PropertyChanged}"
                                          Style="{StaticResource SearchTextBox}"
                                          VerticalContentAlignment="Center"
-                                         ToolTip="Ctrl+F" />
+                                         ToolTip="Ctrl+S or Ctrl+F" />
                             </Grid>
                             <Button Grid.Column="2"
                                     Command="{Binding GlobalSearchCommand}"
@@ -492,6 +491,14 @@
                         </Button>
 
                         <StackPanel Margin="0,0,14,0" VerticalAlignment="Center">
+                            <StackPanel.ToolTip>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding OnlineText, StringFormat='Connection: {0}'}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Dashboard.SyncStatusText}" Margin="0,3,0,0" />
+                                    <TextBlock Text="{Binding LanStatusText, StringFormat='Server: {0}'}" Margin="0,3,0,0" />
+                                    <TextBlock Text="{Binding Dashboard.LicenseValidityText}" Margin="0,3,0,0" />
+                                </StackPanel>
+                            </StackPanel.ToolTip>
                             <StackPanel Orientation="Horizontal">
                                 <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,6,0" VerticalAlignment="Center" />
                                 <TextBlock Text="{Binding OnlineText}" Foreground="#0F5132" FontSize="12.5" FontWeight="SemiBold" />
@@ -535,5 +542,85 @@
                             Content="{Binding CurrentPage}"
                             Background="{DynamicResource AppBackgroundBrush}" />
         </Grid>
+
+        <ItemsControl Grid.ColumnSpan="2"
+                      ItemsSource="{Binding Notifications}"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Bottom"
+                      Margin="0,0,22,18"
+                      Panel.ZIndex="99">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Width="380" Margin="0,8,0,0" Padding="14,11" CornerRadius="10" BorderThickness="1">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="#EFF6FF" />
+                                <Setter Property="BorderBrush" Value="#BFDBFE" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Success">
+                                        <Setter Property="Background" Value="#ECFDF5" />
+                                        <Setter Property="BorderBrush" Value="#A7F3D0" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Warning">
+                                        <Setter Property="Background" Value="#FFFBEB" />
+                                        <Setter Property="BorderBrush" Value="#FDE68A" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Error">
+                                        <Setter Property="Background" Value="#FEF2F2" />
+                                        <Setter Property="BorderBrush" Value="#FECACA" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="12.5">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#1D4ED8" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Success">
+                                                    <Setter Property="Foreground" Value="#15803D" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Warning">
+                                                    <Setter Property="Foreground" Value="#B45309" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Error">
+                                                    <Setter Property="Foreground" Value="#B91C1C" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="{Binding Message}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,3,0,0"
+                                           FontSize="12"
+                                           Foreground="#334155" />
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Style="{StaticResource GhostButton}"
+                                    Width="26" Height="26" MinHeight="26"
+                                    Padding="4"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Top"
+                                    Command="{Binding DismissCommand}"
+                                    ToolTip="Dismiss">
+                                <Path Data="M4,4 L12,12 M12,4 L4,12"
+                                      Width="10" Height="10"
+                                      Stroke="#64748B"
+                                      StrokeThickness="1.8"
+                                      Fill="Transparent"
+                                      Stretch="Uniform" />
+                            </Button>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
 </Window>

@@ -13,6 +13,7 @@ using BusinessOS.Pharmacy.Desktop.Inventory;
 using BusinessOS.Pharmacy.Desktop.Expenses;
 using BusinessOS.Pharmacy.Desktop.Medicines;
 using BusinessOS.Pharmacy.Desktop.Navigation;
+using BusinessOS.Pharmacy.Desktop.Notifications;
 using BusinessOS.Pharmacy.Desktop.Purchasing;
 using BusinessOS.Pharmacy.Desktop.Pos;
 using BusinessOS.Pharmacy.Desktop.Returns;
@@ -32,6 +33,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly NetworkConfiguration _networkConfiguration;
     private readonly IPermissionAuthorizer _permissions;
     private readonly ILocalServerConnectionMonitor? _connectionMonitor;
+    private readonly NotificationService _notifications;
 
     [ObservableProperty]
     private UiLanguage selectedLanguage = UiLanguageCatalog.All[0];
@@ -73,13 +75,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
         NetworkSettingsViewModel networkSettings,
         PasswordChangeViewModel passwordChange,
         NetworkConfiguration networkConfiguration,
+        NotificationService notifications,
         IServiceProvider services)
     {
         _clock = clock;
         _sessions = sessions;
         _permissions = permissions;
         _networkConfiguration = networkConfiguration;
+        _notifications = notifications;
         _connectionMonitor = services.GetService<ILocalServerConnectionMonitor>();
+        _notifications.NotificationRaised += OnNotificationRaised;
         Dashboard = dashboard;
         Customers = customers;
         Medicines = medicines;
@@ -248,6 +253,38 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public int PermissionCount => _sessions.Current?.Permissions.Count ?? 0;
     public ReadOnlyCollection<UiLanguage> Languages => UiLanguageCatalog.All;
     public ObservableCollection<NavigationItemViewModel> NavigationItems { get; } = new();
+    public ObservableCollection<NotificationViewModel> Notifications { get; } = new();
+
+    private void OnNotificationRaised(AppNotification notification)
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is null)
+        {
+            return;
+        }
+
+        _ = dispatcher.InvokeAsync(async () =>
+        {
+            var item = new NotificationViewModel(notification, RemoveNotification);
+            Notifications.Add(item);
+
+            while (Notifications.Count > 4)
+            {
+                Notifications.RemoveAt(0);
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(9));
+            RemoveNotification(item);
+        });
+    }
+
+    private void RemoveNotification(NotificationViewModel item)
+    {
+        if (Notifications.Contains(item))
+        {
+            Notifications.Remove(item);
+        }
+    }
 
     public void ApplyCurrentUser()
     {

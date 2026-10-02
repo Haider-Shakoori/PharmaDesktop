@@ -27,6 +27,7 @@ public sealed partial class DashboardViewModel : ObservableObject
     private readonly IPermissionAuthorizer _permissions;
     private readonly IClock _clock;
     private readonly ICloudSyncService? _cloudSync;
+    private readonly IServiceProvider _services;
 
     private DashboardSnapshot? _snapshot;
     private UiLanguage _language = UiLanguageCatalog.All[0];
@@ -95,6 +96,7 @@ public sealed partial class DashboardViewModel : ObservableObject
         _sessions = sessions;
         _permissions = permissions;
         _clock = clock;
+        _services = services;
         _cloudSync = services.GetService<ICloudSyncService>();
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsLoading);
@@ -178,7 +180,7 @@ public sealed partial class DashboardViewModel : ObservableObject
     public string TotalInvoicesLabel => Translate("Total Invoices", "کل فاکتورها", "ټول بلونه");
     public string AverageInvoiceLabel => Translate("Average Invoice", "میانگین فاکتور", "منځنی بل");
     public string LowStockSectionTitle => Translate("Low Stock Items", "اقلام کم‌موجود", "کم موجوده توکي");
-    public string ExpiringSoonSectionTitle => Translate("Expiring Soon", "نزدیک به انقضا", "ژر تاریخ تېر");
+    public string ExpiringSoonSectionTitle => Translate("Expiring Soon", "نزدیک به انقضا", "ژر تاریخ تېریدونکی");
     public string RecentTransactionsSectionTitle => Translate("Recent Transactions", "معاملات اخیر", "وروستي راکړې ورکړې");
     public string ViewAllLabel => Translate("View All", "مشاهده همه", "ټول وګورئ");
     public string ViewReportsLabel => Translate("View Reports", "مشاهده گزارش‌ها", "راپورونه وګورئ");
@@ -337,7 +339,7 @@ public sealed partial class DashboardViewModel : ObservableObject
             "#FFF7ED"));
 
         Stats.Add(new DashboardStatViewModel(
-            Translate("Expiring Soon", "نزدیک به انقضا", "ژر تاریخ تېر"),
+            Translate("Expiring Soon", "نزدیک به انقضا", "ژر تاریخ تېریدونکی"),
             _snapshot.NearExpiryCount.ToString("N0", CultureInfo.InvariantCulture),
             Translate("Within 3 months", "در ۳ ماه آینده", "په ۳ میاشتو کې"),
             "batches",
@@ -360,7 +362,7 @@ public sealed partial class DashboardViewModel : ObservableObject
         AttentionSummary = Translate(
             $"{_snapshot.LowStockCount} low stock · {_snapshot.NearExpiryCount} near expiry · {_snapshot.ExpiredCount} expired",
             $"{_snapshot.LowStockCount} کمبود موجودی · {_snapshot.NearExpiryCount} نزدیک انقضا · {_snapshot.ExpiredCount} منقضی",
-            $"{_snapshot.LowStockCount} کم زېرمه · {_snapshot.NearExpiryCount} ژر تاریخ تېر · {_snapshot.ExpiredCount} تاریخ تېر");
+            $"{_snapshot.LowStockCount} کم زېرمه · {_snapshot.NearExpiryCount} ژر تاریخ تېریدونکی · {_snapshot.ExpiredCount} تاریخ تېر");
 
         Alerts.Clear();
         foreach (var alert in _snapshot.Alerts.Take(8))
@@ -467,19 +469,34 @@ public sealed partial class DashboardViewModel : ObservableObject
             return;
         }
 
+        var notifications = _services.GetService<BusinessOS.Pharmacy.Desktop.Notifications.NotificationService>();
+
         try
         {
             SyncStatusText = Translate("Synchronizing…", "در حال همگام‌سازی…", "همغږي روانه ده…");
             var result = await _cloudSync.SyncOnceAsync();
             SyncStatusText = result.Message;
             StatusText = result.Message;
+
+            var kind = result.State switch
+            {
+                BusinessOS.Pharmacy.Application.Abstractions.Sync.CloudSyncRunState.Synced => BusinessOS.Pharmacy.Desktop.Notifications.NotificationKind.Success,
+                BusinessOS.Pharmacy.Application.Abstractions.Sync.CloudSyncRunState.Conflicts => BusinessOS.Pharmacy.Desktop.Notifications.NotificationKind.Warning,
+                BusinessOS.Pharmacy.Application.Abstractions.Sync.CloudSyncRunState.Offline => BusinessOS.Pharmacy.Desktop.Notifications.NotificationKind.Warning,
+                BusinessOS.Pharmacy.Application.Abstractions.Sync.CloudSyncRunState.LicenseRejected => BusinessOS.Pharmacy.Desktop.Notifications.NotificationKind.Error,
+                BusinessOS.Pharmacy.Application.Abstractions.Sync.CloudSyncRunState.Failed => BusinessOS.Pharmacy.Desktop.Notifications.NotificationKind.Error,
+                _ => BusinessOS.Pharmacy.Desktop.Notifications.NotificationKind.Info,
+            };
+            notifications?.Show(result.Message, kind);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
             SyncStatusText = Translate(
-                "Sync could not complete. Local pharmacy work remains available.",
-                "همگام‌سازی کامل نشد. کار محلی دواخانه همچنان در دسترس است.",
-                "همغږي بشپړه نه شوه. محلي درملتون کار لا هم شته.");
+                $"Sync failed: {exception.Message}",
+                $"همگام‌سازی ناموفق: {exception.Message}",
+                $"همغږي ناکامه: {exception.Message}");
+            StatusText = SyncStatusText;
+            notifications?.ShowError(SyncStatusText);
         }
     }
 
