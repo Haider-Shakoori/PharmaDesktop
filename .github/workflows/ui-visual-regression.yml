@@ -41,17 +41,21 @@ jobs:
       - name: Integration tests
         run: dotnet test tests/BusinessOS.Pharmacy.IntegrationTests/BusinessOS.Pharmacy.IntegrationTests.csproj -c Release --no-build --verbosity minimal
 
-      - name: Capture real WPF dashboard and POS
+      - name: Capture real WPF dashboard, POS and payment dialog
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path artifacts/ui | Out-Null
           dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/dashboard-real.png dashboard
           dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/pos-real.png pos
+          dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/pos-payment-real.png pos-payment
           if (-not (Test-Path artifacts/ui/dashboard-real.png)) {
             throw "Real WPF dashboard screenshot was not produced."
           }
           if (-not (Test-Path artifacts/ui/pos-real.png)) {
             throw "Real WPF POS screenshot was not produced."
+          }
+          if (-not (Test-Path artifacts/ui/pos-payment-real.png)) {
+            throw "Real WPF POS payment dialog screenshot was not produced."
           }
 
       - name: Upload visual QA artifact
