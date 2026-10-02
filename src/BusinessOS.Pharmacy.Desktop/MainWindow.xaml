@@ -38,8 +38,8 @@
         <Style x:Key="SidebarNavIconPath"
                TargetType="Path"
                BasedOn="{StaticResource NavigationIconPath}">
-            <Setter Property="Width" Value="19" />
-            <Setter Property="Height" Value="19" />
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
             <Setter Property="Stroke" Value="#496B91" />
             <Setter Property="StrokeThickness" Value="2" />
             <Style.Triggers>
@@ -60,6 +60,7 @@
                 <DataTrigger Binding="{Binding Key}" Value="backup"><Setter Property="Stroke" Value="#6564B5" /></DataTrigger>
                 <DataTrigger Binding="{Binding Key}" Value="sync"><Setter Property="Stroke" Value="#159D98" /></DataTrigger>
                 <DataTrigger Binding="{Binding Key}" Value="updates"><Setter Property="Stroke" Value="#159D98" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="network"><Setter Property="Stroke" Value="#2297B7" /></DataTrigger>
                 <DataTrigger Binding="{Binding Key}" Value="settings"><Setter Property="Stroke" Value="#60758D" /></DataTrigger>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
                     <Setter Property="Stroke" Value="#0B82F6" />
@@ -120,7 +121,7 @@
             <ColumnDefinition>
                 <ColumnDefinition.Style>
                     <Style TargetType="ColumnDefinition">
-                        <Setter Property="Width" Value="260" />
+                        <Setter Property="Width" Value="322" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding SidebarCollapsed}" Value="True">
                                 <Setter Property="Width" Value="{Binding SidebarWidth}" />
@@ -141,25 +142,25 @@
                     <GradientStop Color="#F3F7FC" Offset="1" />
                 </LinearGradientBrush>
             </Border.Background>
-            <DockPanel Margin="10,12,10,10">
+            <DockPanel Margin="12,16,12,10">
                 <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Border Width="48" Height="48"
-                                CornerRadius="16"
+                        <Border Width="70" Height="70"
+                                CornerRadius="19"
                                 Background="{DynamicResource BrandPrimaryBrush}">
                             <Path Data="{StaticResource IconPharmacyCross}"
-                                  Width="27" Height="27"
+                                  Width="40" Height="40"
                                   Stretch="Uniform"
                                   Fill="White"
                                   StrokeThickness="0"
                                   HorizontalAlignment="Center"
                                   VerticalAlignment="Center" />
                         </Border>
-                        <StackPanel Grid.Column="1" Margin="10,-2,0,0" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="1" Margin="12,-2,0,0" VerticalAlignment="Center">
                             <StackPanel.Style>
                                 <Style TargetType="StackPanel">
                                     <Style.Triggers>
@@ -169,14 +170,14 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBlock Text="BusinessOS" FontSize="17" FontWeight="Bold" Foreground="#102A56" />
-                            <TextBlock Text="Pharmacy" FontSize="17" FontWeight="Bold"
-                                       Foreground="{DynamicResource BrandPrimaryBrush}" Margin="0,-3,0,0" />
+                            <TextBlock Text="BusinessOS" FontSize="26" FontWeight="Bold" Foreground="#102A56" />
+                            <TextBlock Text="Pharmacy" FontSize="26" FontWeight="Bold"
+                                       Foreground="{DynamicResource BrandPrimaryBrush}" Margin="0,-4,0,0" />
                         </StackPanel>
                     </Grid>
                     <TextBlock Text="Manage Today  ·  Healthier Tomorrow"
-                               Margin="5,7,0,0"
-                               FontSize="9.8"
+                               Margin="6,9,0,0"
+                               FontSize="13.5"
                                FontWeight="SemiBold"
                                Foreground="#60758D"
                                TextTrimming="CharacterEllipsis">
@@ -237,8 +238,8 @@
                                 </Style.Triggers>
                             </Style>
                         </StackPanel.Style>
-                        <TextBlock Text="BusinessOS Pharmacy" FontWeight="SemiBold" FontSize="11" Foreground="#1E3A5F" />
-                        <TextBlock Text="v1.0.0  |  Built for Afghanistan" FontSize="10" Foreground="#64748B" Margin="0,3,0,0" />
+                        <TextBlock Text="BusinessOS Pharmacy" FontWeight="SemiBold" FontSize="13.5" Foreground="#1E3A5F" />
+                        <TextBlock Text="v1.0.0  |  Built for Afghanistan" FontSize="11.5" Foreground="#64748B" Margin="0,3,0,0" />
                     </StackPanel>
                 </Border>
 
@@ -253,7 +254,7 @@
                                         ToolTip="{Binding Label}">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="36" />
+                                            <ColumnDefinition Width="42" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
 
@@ -270,8 +271,8 @@
 
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Label}"
-                                                   Margin="4,0,0,0"
-                                                   FontSize="13.5"
+                                                   Margin="6,0,0,0"
+                                                   FontSize="15"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis">
                                             <TextBlock.Style>
@@ -305,7 +306,7 @@
                 <RowDefinition>
                     <RowDefinition.Style>
                         <Style TargetType="RowDefinition">
-                            <Setter Property="Height" Value="62" />
+                            <Setter Property="Height" Value="92" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsPosMode}" Value="True">
                                     <Setter Property="Height" Value="0" />
@@ -327,25 +328,27 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0"
-                            MinWidth="160"
-                            MaxWidth="470"
-                            Height="38"
-                            HorizontalAlignment="Stretch"
+                    <Grid Grid.Column="0" Margin="0,0,22,0">
+                    <Border
+                            MinWidth="220"
+                            MaxWidth="780"
+                            Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}}"
+                            Height="54"
+                            HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Background="{DynamicResource AppBackgroundBrush}"
                             BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="9"
-                            Margin="0,0,18,0">
+                            CornerRadius="11"
+                            Margin="0">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="38" />
+                                <ColumnDefinition Width="46" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Path Data="{StaticResource IconSearch}"
-                                  Width="17" Height="17"
+                                  Width="21" Height="21"
                                   Stroke="{DynamicResource TextMutedBrush}"
                                   StrokeThickness="1.8"
                                   StrokeStartLineCap="Round"
@@ -358,6 +361,7 @@
                             <Grid Grid.Column="1">
                                 <TextBlock Text="Search medicines, customers, invoices…"
                                            VerticalAlignment="Center"
+                                           FontSize="14"
                                            IsHitTestVisible="False">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock" BasedOn="{StaticResource CaptionText}">
@@ -381,57 +385,59 @@
                                     Padding="8,5"
                                     Margin="2"
                                     ToolTip="Search">
-                                <TextBlock Text="Ctrl+S" Style="{StaticResource CaptionText}" />
+                                <TextBlock Text="Ctrl+S" Style="{StaticResource CaptionText}" FontSize="12.5" />
                             </Button>
                         </Grid>
                     </Border>
+                    </Grid>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Background="#F8FBFF"
                                 BorderBrush="#D9E5F1"
                                 BorderThickness="1"
-                                CornerRadius="8"
-                                Padding="10,5"
-                                MinWidth="144"
-                                Margin="0,0,8,0">
+                                CornerRadius="10"
+                                Padding="12,7"
+                                MinWidth="188"
+                                Margin="0,0,10,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="30" />
+                                    <ColumnDefinition Width="38" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Border Width="26" Height="26" CornerRadius="7" Background="#E7F2FF">
-                                    <Path Data="{StaticResource IconStore}" Width="14" Height="14"
+                                <Border Width="34" Height="34" CornerRadius="9" Background="#E7F2FF">
+                                    <Path Data="{StaticResource IconStore}" Width="18" Height="18"
                                           Stroke="{DynamicResource BrandPrimaryBrush}" StrokeThickness="1.8"
                                           Fill="Transparent" Stretch="Uniform"
                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Border>
-                                <StackPanel Grid.Column="1" Margin="7,0,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Dashboard.PharmacyName}" FontSize="11" FontWeight="SemiBold"
-                                               Foreground="#102A56" MaxWidth="132" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding Dashboard.PharmacyCode}" FontSize="9" Foreground="#64748B"
-                                               MaxWidth="132" TextTrimming="CharacterEllipsis" />
+                                <StackPanel Grid.Column="1" Margin="9,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Dashboard.PharmacyName}" FontSize="14" FontWeight="SemiBold"
+                                               Foreground="#102A56" MaxWidth="150" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Dashboard.PharmacyCode}" FontSize="11.5" Foreground="#64748B"
+                                               MaxWidth="150" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
                             </Grid>
                         </Border>
 
-                        <Border Width="104" Height="34"
+                        <Border Width="132" Height="46"
                                 Background="#F8FBFF"
                                 BorderBrush="#D9E5F1"
                                 BorderThickness="1"
-                                CornerRadius="8"
-                                Margin="0,0,8,0">
+                                CornerRadius="10"
+                                Margin="0,0,10,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="32" />
+                                    <ColumnDefinition Width="40" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Path Data="{StaticResource IconGlobe}" Width="16" Height="16"
+                                <Path Data="{StaticResource IconGlobe}" Width="20" Height="20"
                                       Stroke="#24466F" StrokeThickness="1.7" Fill="Transparent"
                                       Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 <ComboBox Grid.Column="1"
                                           ItemsSource="{Binding Languages}"
                                           SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
                                           DisplayMemberPath="DisplayName"
+                                          FontSize="13"
                                           BorderThickness="0"
                                           Background="Transparent"
                                           Padding="2,0"
@@ -442,55 +448,55 @@
                         <Button Command="{Binding NavigateCommand}"
                                 CommandParameter="inventory"
                                 Style="{StaticResource IconButton}"
-                                Margin="0,0,8,0"
+                                Margin="0,0,10,0"
                                 ToolTip="Inventory alerts">
                             <Grid>
-                                <Path Data="{StaticResource IconBell}" Width="18" Height="18"
+                                <Path Data="{StaticResource IconBell}" Width="23" Height="23"
                                       Stroke="#24466F" StrokeThickness="1.8" Fill="Transparent" Stretch="Uniform" />
-                                <Border Background="{DynamicResource DangerBrush}" CornerRadius="7"
-                                        MinWidth="14" Height="14" Padding="3,0"
-                                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12,-5,-7,0">
+                                <Border Background="{DynamicResource DangerBrush}" CornerRadius="8"
+                                        MinWidth="17" Height="17" Padding="4,0"
+                                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="15,-6,-8,0">
                                     <TextBlock Text="{Binding Dashboard.Alerts.Count}" Foreground="White"
-                                               FontSize="8" FontWeight="Bold"
+                                               FontSize="9.5" FontWeight="Bold"
                                                HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Border>
                             </Grid>
                         </Button>
 
-                        <StackPanel Margin="0,0,14,0" VerticalAlignment="Center">
+                        <StackPanel Margin="0,0,18,0" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding OnlineText}" Foreground="#0F5132" FontSize="11" FontWeight="SemiBold" />
+                                <Ellipse Width="10" Height="10" Fill="#10B981" Margin="0,0,7,0" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding OnlineText}" Foreground="#0F5132" FontSize="14" FontWeight="SemiBold" />
                             </StackPanel>
-                            <TextBlock Text="{Binding Dashboard.SyncStatusText}" FontSize="8.5" Foreground="#64748B"
-                                       MaxWidth="104" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Dashboard.SyncStatusText}" FontSize="11.5" Foreground="#64748B"
+                                       MaxWidth="130" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
 
-                        <StackPanel Margin="0,0,14,0" VerticalAlignment="Center">
+                        <StackPanel Margin="0,0,18,0" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource IconBadgeCheck}" Width="15" Height="15"
+                                <Path Data="{StaticResource IconBadgeCheck}" Width="18" Height="18"
                                       Stroke="#16A34A" StrokeThickness="1.8" Fill="Transparent"
-                                      Stretch="Uniform" Margin="0,0,5,0" />
-                                <TextBlock Text="{Binding LicenseText}" Foreground="#15803D" FontSize="11" FontWeight="SemiBold" />
+                                      Stretch="Uniform" Margin="0,0,6,0" />
+                                <TextBlock Text="{Binding LicenseText}" Foreground="#15803D" FontSize="14" FontWeight="SemiBold" />
                             </StackPanel>
-                            <TextBlock Text="{Binding Dashboard.LicenseValidityText}" FontSize="8.5" Foreground="#64748B"
-                                       MaxWidth="125" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Dashboard.LicenseValidityText}" FontSize="11.5" Foreground="#64748B"
+                                       MaxWidth="190" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
 
-                        <Border Width="36" Height="36" CornerRadius="18" Background="#DCEEFF" Margin="0,0,8,0">
-                            <Path Data="{StaticResource IconUsers}" Width="18" Height="18"
+                        <Border Width="45" Height="45" CornerRadius="22.5" Background="#DCEEFF" Margin="0,0,10,0">
+                            <Path Data="{StaticResource IconUsers}" Width="23" Height="23"
                                   Stroke="#2563A8" StrokeThickness="1.8" Fill="Transparent"
                                   Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
-                        <StackPanel Margin="0,0,6,0" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding UserDisplayName}" FontWeight="SemiBold" FontSize="11"
-                                       MaxWidth="104" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Text="{Binding UserRoleText}" FontSize="8.5" Foreground="#64748B"
-                                       MaxWidth="104" TextTrimming="CharacterEllipsis" />
+                        <StackPanel Margin="0,0,8,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding UserDisplayName}" FontWeight="SemiBold" FontSize="14"
+                                       MaxWidth="124" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding UserRoleText}" FontSize="11.5" Foreground="#64748B"
+                                       MaxWidth="124" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                         <Button Command="{Binding LogoutCommand}" Style="{StaticResource IconButton}" ToolTip="Sign out"
-                                Width="32" Height="32" MinHeight="32" Padding="7">
-                            <Path Data="{StaticResource IconLogout}" Width="15" Height="15"
+                                Width="40" Height="40" MinHeight="40" Padding="9">
+                            <Path Data="{StaticResource IconLogout}" Width="19" Height="19"
                                   Stroke="#64748B" StrokeThickness="1.8" Fill="Transparent" Stretch="Uniform" />
                         </Button>
                     </StackPanel>

@@ -133,14 +133,16 @@ internal static class Program
             return;
         }
 
+        var captureWidth = args.Length > 2 ? int.Parse(args[2], System.Globalization.CultureInfo.InvariantCulture) : 1920;
+        var captureHeight = args.Length > 3 ? int.Parse(args[3], System.Globalization.CultureInfo.InvariantCulture) : 1080;
         var shell = new ScreenshotShell(dashboard, currentPage, selectedKey, session.Current!);
         var window = new MainWindow(null!)
         {
             DataContext = shell,
-            Width = 1600,
-            Height = 920,
-            MinWidth = 1280,
-            MinHeight = 760,
+            Width = captureWidth,
+            Height = captureHeight,
+            MinWidth = captureWidth,
+            MinHeight = captureHeight,
             WindowStyle = WindowStyle.None,
             ResizeMode = ResizeMode.NoResize,
             ShowInTaskbar = false,
@@ -148,15 +150,22 @@ internal static class Program
             Left = -20000,
             Top = -20000,
         };
-        window.Show();
-        window.UpdateLayout();
-
         if (window.Content is not FrameworkElement rootVisual)
         {
             throw new InvalidOperationException("Screenshot shell content was not available.");
         }
 
-        var size = CaptureVisual(rootVisual, output);
+        // Lay out the actual shell visual independently of the monitor's HWND size limit.
+        // Preserve the window resource scope and data context for all real templates.
+        rootVisual.Resources.MergedDictionaries.Add(window.Resources);
+        rootVisual.DataContext = shell;
+        window.Content = null;
+        rootVisual.Width = captureWidth;
+        rootVisual.Height = captureHeight;
+        rootVisual.Measure(new Size(captureWidth, captureHeight));
+        rootVisual.Arrange(new Rect(0, 0, captureWidth, captureHeight));
+        rootVisual.UpdateLayout();
+        var size = CaptureVisual(rootVisual, output, captureWidth, captureHeight);
 
         window.Close();
         app.Shutdown();
@@ -166,11 +175,11 @@ internal static class Program
 
     private static (int Width, int Height) CaptureVisual(
         FrameworkElement rootVisual,
-        string output)
+        string output, int? captureWidth = null, int? captureHeight = null)
     {
         rootVisual.UpdateLayout();
-        var width = Math.Max(1, (int)Math.Ceiling(rootVisual.ActualWidth));
-        var height = Math.Max(1, (int)Math.Ceiling(rootVisual.ActualHeight));
+        var width = captureWidth ?? Math.Max(1, (int)Math.Ceiling(rootVisual.ActualWidth));
+        var height = captureHeight ?? Math.Max(1, (int)Math.Ceiling(rootVisual.ActualHeight));
         var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
         bitmap.Render(rootVisual);
         var encoder = new PngBitmapEncoder();
@@ -185,7 +194,7 @@ internal static class Program
 
     private sealed class FakeReceiptPrinter : ISaleReceiptPrinter
     {
-        public void Print(SaleDetail sale) { }
+        public bool Print(SaleDetail sale) => true;
     }
 
     private sealed class ScreenshotShell
