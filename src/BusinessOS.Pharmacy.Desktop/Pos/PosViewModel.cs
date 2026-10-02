@@ -148,6 +148,9 @@ public sealed partial class PosViewModel : ObservableObject
         $"{Cart.Count} item line{(Cart.Count == 1 ? string.Empty : "s")}",
         $"{Cart.Count} قلم",
         $"{Cart.Count} کرښې");
+    public string PaymentCustomerText =>
+        SelectedCustomer?.Name ?? WalkInCustomerText;
+
     public string PaymentBalanceText => ChangeAmount > 0m
         ? Translate(
             $"Change AFN {ChangeAmount:N2}",
@@ -171,6 +174,7 @@ public sealed partial class PosViewModel : ObservableObject
         OnPropertyChanged(nameof(CustomerLabel));
         OnPropertyChanged(nameof(CheckoutLabel));
         OnPropertyChanged(nameof(WalkInCustomerText));
+        OnPropertyChanged(nameof(PaymentCustomerText));
         OnPropertyChanged(nameof(SearchResultsTitle));
         RaiseCartState(autoFillSingleCash: false);
     }
@@ -242,6 +246,7 @@ public sealed partial class PosViewModel : ObservableObject
     partial void OnSelectedCustomerChanged(PosCustomerItem? value)
     {
         OnPropertyChanged(nameof(WalkInCustomerText));
+        OnPropertyChanged(nameof(PaymentCustomerText));
         NotifyCommands();
     }
 
