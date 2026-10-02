@@ -4,6 +4,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Desktop.Authentication;
+using BusinessOS.Pharmacy.Desktop.Barcode;
 using BusinessOS.Pharmacy.Desktop.Customers;
 using BusinessOS.Pharmacy.Desktop.Backup;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
@@ -76,6 +77,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         UpdateViewModel updates,
         NetworkSettingsViewModel networkSettings,
         PasswordChangeViewModel passwordChange,
+        BarcodePrintViewModel barcodePrint,
         NetworkConfiguration networkConfiguration,
         NotificationService notifications,
         Profile.UserProfileStore profileStore,
@@ -105,6 +107,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Updates = updates;
         NetworkSettings = networkSettings;
         PasswordChange = passwordChange;
+        BarcodePrint = barcodePrint;
         currentPage = Dashboard;
 
         Dashboard.SetLanguage(SelectedLanguage);
@@ -119,6 +122,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Reports.SetLanguage(SelectedLanguage);
         NetworkSettings.SetLanguage(SelectedLanguage);
         PasswordChange.SetLanguage(SelectedLanguage);
+        BarcodePrint.SetLanguage(SelectedLanguage);
         Dashboard.NavigationRequested += OnDashboardNavigationRequested;
 
         if (_connectionMonitor is not null)
@@ -159,6 +163,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public UpdateViewModel Updates { get; }
     public NetworkSettingsViewModel NetworkSettings { get; }
     public PasswordChangeViewModel PasswordChange { get; }
+    public BarcodePrintViewModel BarcodePrint { get; }
 
     public string ApplicationName => "BusinessOS Pharmacy";
     public string ProductName => "BusinessOS Pharmacy";
@@ -328,6 +333,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Updates.SetLanguage(SelectedLanguage);
         NetworkSettings.SetLanguage(SelectedLanguage);
         PasswordChange.SetLanguage(SelectedLanguage);
+        BarcodePrint.SetLanguage(SelectedLanguage);
         CurrentSectionKey = "dashboard";
         CurrentPage = Dashboard;
         RefreshNavigation();
@@ -350,6 +356,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Updates.SetLanguage(value);
         NetworkSettings.SetLanguage(value);
         PasswordChange.SetLanguage(value);
+        BarcodePrint.SetLanguage(value);
         RefreshLanStatusText();
         RefreshNavigation();
         RaisePageText();
@@ -387,6 +394,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         {
             AddNavigationItem("inventory", Translate("Inventory", "موجودی", "زېرمه"), stock);
             AddNavigationItem("batches", Translate("Batches", "بچ‌ها", "بېچونه"), stock);
+            AddNavigationItem("barcode", Translate("Barcode Printing", "چاپ بارکد", "بارکوډ چاپ"), stock);
         }
 
         AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), purchasing);
@@ -566,6 +574,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentSectionKey = "batches";
                 CurrentPage = Inventory;
                 await Inventory.LoadAsync();
+                break;
+
+            case "barcode" when _permissions.HasPermission("medicines.manage"):
+                CurrentSectionKey = "barcode";
+                CurrentPage = BarcodePrint;
+                await BarcodePrint.LoadAsync();
+                await BarcodePrint.LoadPharmacyNameAsync();
                 break;
 
             case "purchases" when _permissions.HasPermission("purchases.manage"):

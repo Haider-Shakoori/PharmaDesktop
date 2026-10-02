@@ -50,6 +50,7 @@ public sealed record NavigationItemViewModel(
         "network" => "Alt+4",
         "settings" => "Alt+5",
         "password" => "Alt+6",
+        "barcode" => "Alt+7",
         _ => null,
     };
 

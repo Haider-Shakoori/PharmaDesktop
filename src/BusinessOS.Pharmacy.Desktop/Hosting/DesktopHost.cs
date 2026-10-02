@@ -153,6 +153,7 @@ public static class DesktopHost
                 services.AddSingleton<UpdateViewModel>();
                 services.AddSingleton<NetworkSettingsViewModel>();
                 services.AddSingleton<PasswordChangeViewModel>();
+                services.AddSingleton<Barcode.BarcodePrintViewModel>();
                 services.AddSingleton<Notifications.NotificationService>();
                 services.AddSingleton<Profile.UserProfileStore>();
                 services.AddSingleton<Printing.ReceiptSettingsStore>();

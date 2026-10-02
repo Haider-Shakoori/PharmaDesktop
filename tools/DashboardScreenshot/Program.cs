@@ -115,6 +115,27 @@ internal static class Program
         var app = new App();
         app.InitializeComponent();
 
+        if (mode == "barcode-label")
+        {
+            var label = BarcodeLabelPrinter.BuildLabel(
+                new BarcodeLabelModel(
+                    "Darmaltoon Pharmacy",
+                    "Paracetamol 500 mg",
+                    "MED-0001",
+                    "AFN 20.00",
+                    true, true, true, true),
+                BarcodeLabelPrinter.MillimetersToDips(50),
+                BarcodeLabelPrinter.MillimetersToDips(30));
+
+            label.Measure(new Size(label.Width, label.Height));
+            label.Arrange(new Rect(0, 0, label.Width, label.Height));
+            label.UpdateLayout();
+            CaptureVisual(label, output, (int)label.Width, (int)label.Height);
+            app.Shutdown();
+            Console.WriteLine($"Captured real WPF {mode} to {output}");
+            return;
+        }
+
         if (mode == "receipt")
         {
             var receiptSale = new SaleDetail(
