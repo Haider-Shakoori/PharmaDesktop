@@ -55,6 +55,85 @@
             <Setter Property="MinHeight" Value="36" />
         </Style>
 
+        <Style x:Key="PosSearchButton" TargetType="Button">
+            <Setter Property="Background" Value="#0B82F6" />
+            <Setter Property="BorderBrush" Value="#0B82F6" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#0876E4" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#0876E4" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#075FB8" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#075FB8" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#93C5FD" />
+                                <Setter TargetName="Border" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Border" Property="Background" Value="#B8D8FB" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#B8D8FB" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PosSearchResultButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="#EEF2F7" />
+            <Setter Property="BorderThickness" Value="0,1,0,0" />
+            <Setter Property="Padding" Value="12,9" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ResultBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ResultBorder" Property="Background" Value="#F4F8FF" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="ResultBorder" Property="Background" Value="#EAF4FF" />
+                                <Setter TargetName="ResultBorder" Property="BorderBrush" Value="#B9D7F7" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ResultBorder" Property="Background" Value="#E1EEFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="PosDangerIconButton" TargetType="Button" BasedOn="{StaticResource ProfessionalButtonBase}">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -202,7 +281,7 @@
                                         <Path Data="{StaticResource IconSearch}"
                                               Width="16"
                                               Height="16"
-                                              Stroke="#64748B"
+                                              Stroke="#0B82F6"
                                               StrokeThickness="1.8"
                                               Fill="Transparent"
                                               Stretch="Uniform"
@@ -210,7 +289,7 @@
                                               VerticalAlignment="Center" />
                                         <Grid Grid.Column="1">
                                             <TextBlock Text="{Binding SearchLabel}"
-                                                       Foreground="#94A3B8"
+                                                       Foreground="#6B7F96"
                                                        FontSize="12.5"
                                                        VerticalAlignment="Center"
                                                        IsHitTestVisible="False">
@@ -289,11 +368,7 @@
                                                         <DataTemplate>
                                                             <Button Command="{Binding DataContext.AddSearchResultCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                     CommandParameter="{Binding}"
-                                                                    Background="Transparent"
-                                                                    BorderBrush="#F1F5F9"
-                                                                    BorderThickness="0,1,0,0"
-                                                                    Padding="12,9"
-                                                                    HorizontalContentAlignment="Stretch">
+                                                                    Style="{StaticResource PosSearchResultButton}">
                                                                 <Grid>
                                                                     <Grid.ColumnDefinitions>
                                                                         <ColumnDefinition Width="*" />
@@ -302,13 +377,13 @@
                                                                     <StackPanel>
                                                                         <TextBlock FontWeight="Bold"
                                                                                    FontSize="12"
-                                                                                   Foreground="#0F172A">
+                                                                                   Foreground="#102A56">
                                                                             <Run Text="{Binding BrandName}" />
                                                                             <Run Text=" · " />
                                                                             <Run Text="{Binding Strength}" />
                                                                         </TextBlock>
                                                                         <TextBlock FontSize="9.8"
-                                                                                   Foreground="#64748B"
+                                                                                   Foreground="#52677F"
                                                                                    Margin="0,3,0,0">
                                                                             <Run Text="{Binding GenericName}" />
                                                                             <Run Text=" · " />
@@ -318,7 +393,7 @@
                                                                         </TextBlock>
                                                                         <TextBlock Text="FEFO will split quantity across batches automatically when required."
                                                                                    FontSize="9"
-                                                                                   Foreground="#4F46E5"
+                                                                                   Foreground="#6366F1"
                                                                                    Margin="0,3,0,0">
                                                                             <TextBlock.Style>
                                                                                 <Style TargetType="TextBlock">
@@ -336,7 +411,7 @@
                                                                                 Margin="14,0,0,0"
                                                                                 HorizontalAlignment="Right">
                                                                         <TextBlock Text="{Binding FefoPrice, StringFormat=AFN {0:N2}}"
-                                                                                   Foreground="#0F766E"
+                                                                                   Foreground="#0B82F6"
                                                                                    FontWeight="Bold"
                                                                                    FontSize="12"
                                                                                    HorizontalAlignment="Right" />
@@ -357,11 +432,26 @@
                             </Grid>
 
                             <Button Grid.Column="1"
-                                    Content="Search"
                                     Command="{Binding SearchCommand}"
-                                    Style="{StaticResource PosPrimaryButton}"
-                                    MinWidth="92"
-                                    Margin="8,0,0,0" />
+                                    Style="{StaticResource PosSearchButton}"
+                                    MinWidth="104"
+                                    Margin="8,0,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconSearch}"
+                                          Width="13"
+                                          Height="13"
+                                          Stroke="White"
+                                          StrokeThickness="2"
+                                          Fill="Transparent"
+                                          Stretch="Uniform"
+                                          Margin="0,0,7,0"
+                                          VerticalAlignment="Center" />
+                                    <TextBlock Text="Search"
+                                               Foreground="White"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
                         </Grid>
 
                         <Grid Margin="2,7,0,0">
@@ -377,19 +467,19 @@
                             <StackPanel Grid.Column="1"
                                         Orientation="Horizontal"
                                         VerticalAlignment="Center">
-                                <Border Background="#F1F5F9" CornerRadius="6" Padding="6,3" Margin="5,0,0,0">
-                                    <TextBlock FontSize="9.2" Foreground="#475569">
-                                        <Run Text="F1" FontWeight="Bold" /><Run Text=" Search" />
+                                <Border Background="#EAF4FF" BorderBrush="#C8E0FB" BorderThickness="1" CornerRadius="7" Padding="7,3" Margin="5,0,0,0">
+                                    <TextBlock FontSize="9.2" Foreground="#0B5FC6">
+                                        <Run Text="F1" FontWeight="Bold" /><Run Text="  Search" FontWeight="SemiBold" />
                                     </TextBlock>
                                 </Border>
-                                <Border Background="#F1F5F9" CornerRadius="6" Padding="6,3" Margin="5,0,0,0">
-                                    <TextBlock FontSize="9.2" Foreground="#475569">
-                                        <Run Text="F2" FontWeight="Bold" /><Run Text=" Customer" />
+                                <Border Background="#F2ECFF" BorderBrush="#DDD1FF" BorderThickness="1" CornerRadius="7" Padding="7,3" Margin="5,0,0,0">
+                                    <TextBlock FontSize="9.2" Foreground="#6D3BD1">
+                                        <Run Text="F2" FontWeight="Bold" /><Run Text="  Customer" FontWeight="SemiBold" />
                                     </TextBlock>
                                 </Border>
-                                <Border Background="#ECFDF5" CornerRadius="6" Padding="6,3" Margin="5,0,0,0">
+                                <Border Background="#E8FAF7" BorderBrush="#BEEDE5" BorderThickness="1" CornerRadius="7" Padding="7,3" Margin="5,0,0,0">
                                     <TextBlock FontSize="9.2" Foreground="#0F766E">
-                                        <Run Text="F4" FontWeight="Bold" /><Run Text=" Pay" />
+                                        <Run Text="F4" FontWeight="Bold" /><Run Text="  Pay" FontWeight="SemiBold" />
                                     </TextBlock>
                                 </Border>
                             </StackPanel>

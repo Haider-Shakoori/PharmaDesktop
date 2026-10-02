@@ -879,6 +879,7 @@ public sealed partial class PosViewModel : ObservableObject
 
         var shouldPrint = PrintInvoiceAfterPayment;
         string? printError = null;
+        bool? printed = null;
         SaleDetail? completedSale = null;
 
         await ExecuteBusyAsync(async () =>
@@ -910,7 +911,7 @@ public sealed partial class PosViewModel : ObservableObject
             {
                 try
                 {
-                    _receiptPrinter.Print(sale);
+                    printed = _receiptPrinter.Print(sale);
                 }
                 catch (Exception exception)
                 {
@@ -937,21 +938,26 @@ public sealed partial class PosViewModel : ObservableObject
             await RefreshSalesCoreAsync();
             RaiseCartState(autoFillSingleCash: false);
 
-            StatusMessage = printError is null
+            StatusMessage = printError is not null
                 ? Translate(
-                    shouldPrint
-                        ? $"Sale {sale.Sale.SaleNumber} completed and sent to the default printer."
-                        : $"Sale {sale.Sale.SaleNumber} completed.",
-                    shouldPrint
-                        ? $"فروش {sale.Sale.SaleNumber} تکمیل و برای چاپگر پیش‌فرض ارسال شد."
-                        : $"فروش {sale.Sale.SaleNumber} تکمیل شد.",
-                    shouldPrint
-                        ? $"خرڅلاو {sale.Sale.SaleNumber} بشپړ او اصلي چاپګر ته ولېږل شو."
-                        : $"خرڅلاو {sale.Sale.SaleNumber} بشپړ شو.")
-                : Translate(
                     $"Sale {sale.Sale.SaleNumber} completed, but printing failed: {printError}",
                     $"فروش {sale.Sale.SaleNumber} تکمیل شد، اما چاپ ناموفق بود: {printError}",
-                    $"خرڅلاو {sale.Sale.SaleNumber} بشپړ شو، خو چاپ ناکام شو: {printError}");
+                    $"خرڅلاو {sale.Sale.SaleNumber} بشپړ شو، خو چاپ ناکام شو: {printError}")
+                : shouldPrint && printed == false
+                    ? Translate(
+                        $"Sale {sale.Sale.SaleNumber} completed; printing was cancelled.",
+                        $"فروش {sale.Sale.SaleNumber} تکمیل شد؛ چاپ لغو شد.",
+                        $"خرڅلاو {sale.Sale.SaleNumber} بشپړ شو؛ چاپ لغوه شو.")
+                    : Translate(
+                        shouldPrint
+                            ? $"Sale {sale.Sale.SaleNumber} completed and printed."
+                            : $"Sale {sale.Sale.SaleNumber} completed.",
+                        shouldPrint
+                            ? $"فروش {sale.Sale.SaleNumber} تکمیل و چاپ شد."
+                            : $"فروش {sale.Sale.SaleNumber} تکمیل شد.",
+                        shouldPrint
+                            ? $"خرڅلاو {sale.Sale.SaleNumber} بشپړ او چاپ شو."
+                            : $"خرڅلاو {sale.Sale.SaleNumber} بشپړ شو.");
 
             RequestSearchFocus();
         });

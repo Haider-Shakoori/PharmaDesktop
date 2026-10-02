@@ -1,5 +1,5 @@
-using System.Printing;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using BusinessOS.Pharmacy.Application.Abstractions.Sales;
@@ -8,31 +8,44 @@ namespace BusinessOS.Pharmacy.Desktop.Printing;
 
 public interface ISaleReceiptPrinter
 {
-    void Print(SaleDetail sale);
+    bool Print(SaleDetail sale);
 }
 
 public sealed class SaleReceiptPrinter : ISaleReceiptPrinter
 {
-    public void Print(SaleDetail sale)
+    public bool Print(SaleDetail sale)
     {
         ArgumentNullException.ThrowIfNull(sale);
 
-        using var server = new LocalPrintServer();
-        var queue = server.DefaultPrintQueue
-            ?? throw new InvalidOperationException("No default Windows printer is configured.");
+        var dialog = new PrintDialog
+        {
+            UserPageRangeEnabled = false,
+        };
 
-        var ticket = queue.DefaultPrintTicket;
-        var capabilities = queue.GetPrintCapabilities(ticket);
-        var pageWidth = capabilities.OrientedPageMediaWidth ?? 302d;
-        var pageHeight = capabilities.OrientedPageMediaHeight ?? 1122d;
-        var imageableWidth = capabilities.PageImageableArea?.ExtentWidth ?? pageWidth;
+        if (dialog.ShowDialog() != true)
+        {
+            return false;
+        }
 
-        var document = BuildDocument(sale, Math.Clamp(imageableWidth, 240d, 760d));
+        var pageWidth = dialog.PrintableAreaWidth > 0d
+            ? dialog.PrintableAreaWidth
+            : 302d;
+        var pageHeight = dialog.PrintableAreaHeight > 0d
+            ? dialog.PrintableAreaHeight
+            : 1122d;
+
+        var document = BuildDocument(
+            sale,
+            Math.Clamp(pageWidth, 240d, 760d));
+
         var paginator = ((IDocumentPaginatorSource)document).DocumentPaginator;
         paginator.PageSize = new Size(pageWidth, pageHeight);
 
-        var writer = PrintQueue.CreateXpsDocumentWriter(queue);
-        writer.Write(paginator, ticket);
+        dialog.PrintDocument(
+            paginator,
+            $"Darmaltoon receipt {sale.Sale.SaleNumber}");
+
+        return true;
     }
 
     private static FlowDocument BuildDocument(SaleDetail sale, double pageWidth)

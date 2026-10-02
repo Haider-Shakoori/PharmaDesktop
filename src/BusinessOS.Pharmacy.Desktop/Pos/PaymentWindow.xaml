@@ -275,7 +275,7 @@
                                        FontSize="12"
                                        FontWeight="Bold"
                                        Foreground="#14532D" />
-                            <TextBlock Text="Uses the default Windows printer. Leave unchecked to finish the sale without printing."
+                            <TextBlock Text="After payment, Windows Print opens so the cashier can choose the printer, paper size or PDF. Leave unchecked to finish without printing."
                                        FontSize="9.5"
                                        Foreground="#4D7C5A"
                                        TextWrapping="Wrap"
@@ -284,7 +284,7 @@
                         <CheckBox Grid.Column="2"
                                   IsChecked="{Binding PrintInvoiceAfterPayment}"
                                   VerticalAlignment="Center"
-                                  ToolTip="Print invoice automatically after the sale completes" />
+                                  ToolTip="Open the Windows Print dialog after the sale completes" />
                     </Grid>
                 </Border>
 
