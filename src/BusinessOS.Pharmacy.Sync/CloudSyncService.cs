@@ -45,6 +45,8 @@ public sealed class CloudSyncService : ICloudSyncService
     public CloudSyncRunResult LastResult { get; private set; } =
         CloudSyncRunResult.Initial;
 
+    public event Action<CloudSyncRunResult>? ResultUpdated;
+
     public async Task<CloudSyncRunResult> SyncOnceAsync(
         CancellationToken cancellationToken = default)
     {
@@ -52,6 +54,7 @@ public sealed class CloudSyncService : ICloudSyncService
         try
         {
             LastResult = await RunCoreAsync(cancellationToken);
+            ResultUpdated?.Invoke(LastResult);
             return LastResult;
         }
         finally

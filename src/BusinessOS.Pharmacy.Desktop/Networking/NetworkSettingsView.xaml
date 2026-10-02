@@ -18,6 +18,63 @@
                         Padding="14,8"/>
             </Grid>
 
+            <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="{Binding ProfileTitle}" Style="{StaticResource SectionTitleText}" />
+                    <TextBlock Text="{Binding ProfileSubtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,14" TextWrapping="Wrap" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Width="150" Margin="0,0,18,0">
+                            <Border Width="120" Height="120" CornerRadius="60" Background="#EAF4FF" HorizontalAlignment="Left">
+                                <Grid>
+                                    <Path Data="{StaticResource IconUsers}"
+                                          Width="52" Height="52"
+                                          Stroke="#4A7DAB" StrokeThickness="1.6"
+                                          Fill="Transparent" Stretch="Uniform"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <Ellipse Width="120" Height="120">
+                                        <Ellipse.Fill>
+                                            <ImageBrush ImageSource="{Binding ProfileImagePath}" Stretch="UniformToFill" />
+                                        </Ellipse.Fill>
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasProfileImage}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                </Grid>
+                            </Border>
+                            <Button Content="{Binding UploadPhotoLabel}"
+                                    Command="{Binding UploadProfileImageCommand}"
+                                    Margin="0,10,0,0"
+                                    Padding="12,7" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding FirstNameLabel}" FontWeight="SemiBold" />
+                            <TextBox Text="{Binding ProfileFirstName, UpdateSourceTrigger=PropertyChanged}"
+                                     MinHeight="40" Padding="9,7" Margin="0,6,0,0" />
+                            <TextBlock Text="{Binding LastNameLabel}" FontWeight="SemiBold" Margin="0,12,0,0" />
+                            <TextBox Text="{Binding ProfileLastName, UpdateSourceTrigger=PropertyChanged}"
+                                     MinHeight="40" Padding="9,7" Margin="0,6,0,0" />
+                            <Button Content="{Binding SaveProfileLabel}"
+                                    Command="{Binding SaveProfileCommand}"
+                                    Style="{StaticResource PrimaryButton}"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,16,0,0"
+                                    Padding="18,8" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
             <UniformGrid Columns="2" Margin="0,0,0,16">
                 <Border Style="{StaticResource SurfaceCard}" Margin="0,0,8,0">
                     <StackPanel>

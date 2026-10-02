@@ -17,6 +17,8 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     private readonly INetworkConfigurationStore _configurationStore;
     private readonly ILocalServerDiscovery _discovery;
     private readonly ILocalServerServiceController _serviceController;
+    private readonly Profile.UserProfileStore _profileStore;
+    private readonly Notifications.NotificationService _notifications;
 
     private UiLanguage _language = UiLanguageCatalog.All[0];
 
@@ -36,6 +38,9 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     [ObservableProperty] private string diagnosticsReport = string.Empty;
     [ObservableProperty] private string pairingCode = string.Empty;
     [ObservableProperty] private string pairingExpiry = string.Empty;
+    [ObservableProperty] private string profileFirstName = string.Empty;
+    [ObservableProperty] private string profileLastName = string.Empty;
+    [ObservableProperty] private string profileImagePath = string.Empty;
     [ObservableProperty] private RegisteredTerminal? selectedTerminal;
     [ObservableProperty] private string renameTerminalTo = string.Empty;
     [ObservableProperty] private bool isBusy;
@@ -44,12 +49,19 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         IServiceProvider services,
         INetworkConfigurationStore configurationStore,
         ILocalServerDiscovery discovery,
-        ILocalServerServiceController serviceController)
+        ILocalServerServiceController serviceController,
+        Profile.UserProfileStore profileStore,
+        Notifications.NotificationService notifications)
     {
         _services = services;
         _configurationStore = configurationStore;
         _discovery = discovery;
         _serviceController = serviceController;
+        _profileStore = profileStore;
+        _notifications = notifications;
+
+        UploadProfileImageCommand = new RelayCommand(UploadProfileImage);
+        SaveProfileCommand = new RelayCommand(SaveProfile);
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
         CreatePairingCodeCommand = new AsyncRelayCommand(CreatePairingCodeAsync, () => !IsBusy && CurrentMode == DeploymentMode.Server);
@@ -79,6 +91,84 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     public IAsyncRelayCommand ApplyModeCommand { get; }
     public IAsyncRelayCommand SaveConnectionCommand { get; }
     public IAsyncRelayCommand RunDiagnosticsCommand { get; }
+    public IRelayCommand UploadProfileImageCommand { get; }
+    public IRelayCommand SaveProfileCommand { get; }
+
+    public bool HasProfileImage =>
+        !string.IsNullOrWhiteSpace(ProfileImagePath) && File.Exists(ProfileImagePath);
+
+    public string ProfileTitle => T("User profile", "پروفایل کاربر", "د کارن پروفایل");
+    public string ProfileSubtitle => T(
+        "Name and photo shown in the application header on this PC",
+        "نام و عکس نمایش‌داده‌شده در سربرگ برنامه روی این رایانه",
+        "هغه نوم او عکس چې په دې کمپیوټر کې د اپلیکیشن په سر کې ښودل کیږي");
+    public string FirstNameLabel => T("First name", "نام", "نوم");
+    public string LastNameLabel => T("Last name", "تخلص", "تخلص");
+    public string UploadPhotoLabel => T("Upload photo", "بارگذاری عکس", "عکس پورته کړئ");
+    public string SaveProfileLabel => T("Save profile", "ذخیره پروفایل", "پروفایل خوندي کړئ");
+
+    partial void OnProfileImagePathChanged(string value) =>
+        OnPropertyChanged(nameof(HasProfileImage));
+
+    public void LoadProfile()
+    {
+        var profile = _profileStore.Load();
+        ProfileFirstName = profile.FirstName;
+        ProfileLastName = profile.LastName;
+        ProfileImagePath = profile.ImagePath ?? string.Empty;
+    }
+
+    private void UploadProfileImage()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = T("Choose a profile photo", "انتخاب عکس پروفایل", "د پروفایل عکس وټاکئ"),
+            Filter = "Images (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp",
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            ProfileImagePath = _profileStore.CopyImage(dialog.FileName);
+            _notifications.ShowSuccess(T(
+                "Profile photo updated. Save the profile to apply it.",
+                "عکس پروفایل به‌روزرسانی شد. برای اعمال، پروفایل را ذخیره کنید.",
+                "د پروفایل عکس تازه شو. د پلي کولو لپاره پروفایل خوندي کړئ."));
+        }
+        catch (Exception exception)
+        {
+            _notifications.ShowError(T(
+                $"Profile photo could not be saved: {exception.Message}",
+                $"عکس پروفایل ذخیره نشد: {exception.Message}",
+                $"د پروفایل عکس خوندي نه شو: {exception.Message}"));
+        }
+    }
+
+    private void SaveProfile()
+    {
+        try
+        {
+            _profileStore.Save(new Profile.UserProfile(
+                ProfileFirstName.Trim(),
+                ProfileLastName.Trim(),
+                string.IsNullOrWhiteSpace(ProfileImagePath) ? null : ProfileImagePath));
+            _notifications.ShowSuccess(T(
+                "User profile saved.",
+                "پروفایل کاربر ذخیره شد.",
+                "د کارن پروفایل خوندي شو."));
+        }
+        catch (Exception exception)
+        {
+            _notifications.ShowError(T(
+                $"Profile could not be saved: {exception.Message}",
+                $"پروفایل ذخیره نشد: {exception.Message}",
+                $"پروفایل خوندي نه شو: {exception.Message}"));
+        }
+    }
 
     public string Title => T("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه");
     public string Subtitle => T("Local pharmacy server, terminals and diagnostics", "سرور محلی دواخانه، ترمینال‌ها و عیب‌یابی", "د درملتون محلي سرور، ترمینلونه او تشخیص");
@@ -116,6 +206,8 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     {
         await BusyAsync(async () =>
         {
+            LoadProfile();
+
             var configuration = await _configurationStore.LoadAsync();
             ApplyConfiguration(configuration);
 

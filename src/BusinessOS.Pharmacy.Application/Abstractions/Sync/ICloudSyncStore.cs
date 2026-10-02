@@ -55,6 +55,8 @@ public interface ICloudSyncService
         CancellationToken cancellationToken = default);
 
     CloudSyncRunResult LastResult { get; }
+
+    event Action<CloudSyncRunResult>? ResultUpdated;
 }
 
 public sealed record CloudSyncOutboxItem(

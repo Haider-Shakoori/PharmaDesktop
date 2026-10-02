@@ -98,6 +98,10 @@ public sealed partial class DashboardViewModel : ObservableObject
         _clock = clock;
         _services = services;
         _cloudSync = services.GetService<ICloudSyncService>();
+        if (_cloudSync is not null)
+        {
+            _cloudSync.ResultUpdated += OnSyncResultUpdated;
+        }
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsLoading);
         SelectPeriodCommand = new AsyncRelayCommand<string>(SelectPeriodAsync, key => !IsLoading);
@@ -456,6 +460,19 @@ public sealed partial class DashboardViewModel : ObservableObject
                     $"بېچ {alert.BatchNumber ?? "—"} · ژر تاریخ تېر {alert.ExpiresAt:yyyy-MM-dd}"),
                 "attention"),
         };
+    }
+
+    private void OnSyncResultUpdated(
+        BusinessOS.Pharmacy.Application.Abstractions.Sync.CloudSyncRunResult result)
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess())
+        {
+            SyncStatusText = result.Message;
+            return;
+        }
+
+        dispatcher.Invoke(() => SyncStatusText = result.Message);
     }
 
     public async Task SyncNowAsync()

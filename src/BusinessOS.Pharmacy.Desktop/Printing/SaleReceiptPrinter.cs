@@ -71,8 +71,11 @@ public sealed class SaleReceiptPrinter : ISaleReceiptPrinter
             FontSize = 10,
             Foreground = Brushes.Black,
             PagePadding = new Thickness(14),
-            ColumnWidth = double.PositiveInfinity,
+            // A finite, page-sized column keeps star-sized table columns measurable;
+            // double.PositiveInfinity collapses them in WPF FlowDocument tables.
+            ColumnWidth = pageWidth,
             PageWidth = pageWidth,
+            PageHeight = double.NaN,
         };
 
         document.Blocks.Add(new Paragraph(new Run("Darmaltoon Pharmacy"))
@@ -99,16 +102,23 @@ public sealed class SaleReceiptPrinter : ISaleReceiptPrinter
             Margin = new Thickness(0, 0, 0, 10),
         });
 
-        document.Blocks.Add(BuildInfoTable(sale));
+        // Receipt tables use absolute widths: star-sized FlowDocument columns can
+        // collapse or overflow depending on the viewer, which mangles narrow receipts.
+        var contentWidth = Math.Max(180d, pageWidth - document.PagePadding.Left - document.PagePadding.Right);
+        const double qtyWidth = 48d;
+        const double totalWidth = 72d;
+        var itemWidth = Math.Max(80d, contentWidth - qtyWidth - totalWidth);
+
+        document.Blocks.Add(BuildInfoTable(sale, contentWidth));
 
         var lines = new Table
         {
             CellSpacing = 0,
             Margin = new Thickness(0, 8, 0, 8),
         };
-        lines.Columns.Add(new TableColumn { Width = new GridLength(1, GridUnitType.Star) });
-        lines.Columns.Add(new TableColumn { Width = new GridLength(48) });
-        lines.Columns.Add(new TableColumn { Width = new GridLength(72) });
+        lines.Columns.Add(new TableColumn { Width = new GridLength(itemWidth) });
+        lines.Columns.Add(new TableColumn { Width = new GridLength(qtyWidth) });
+        lines.Columns.Add(new TableColumn { Width = new GridLength(totalWidth) });
 
         var header = new TableRowGroup();
         var headerRow = new TableRow();
@@ -158,8 +168,8 @@ public sealed class SaleReceiptPrinter : ISaleReceiptPrinter
             CellSpacing = 0,
             Margin = new Thickness(0, 4, 0, 8),
         };
-        totals.Columns.Add(new TableColumn { Width = new GridLength(1, GridUnitType.Star) });
-        totals.Columns.Add(new TableColumn { Width = new GridLength(110) });
+        totals.Columns.Add(new TableColumn { Width = new GridLength(Math.Max(80d, contentWidth - 110d)) });
+        totals.Columns.Add(new TableColumn { Width = new GridLength(110d) });
         var totalsRows = new TableRowGroup();
         totalsRows.Rows.Add(TotalRow("Subtotal", sale.Subtotal, false));
         totalsRows.Rows.Add(TotalRow("Discount", sale.DiscountTotal, false));
@@ -220,11 +230,12 @@ public sealed class SaleReceiptPrinter : ISaleReceiptPrinter
         return document;
     }
 
-    private static Table BuildInfoTable(SaleDetail sale)
+    private static Table BuildInfoTable(SaleDetail sale, double contentWidth)
     {
+        var half = Math.Max(80d, contentWidth / 2d);
         var table = new Table { CellSpacing = 0 };
-        table.Columns.Add(new TableColumn { Width = new GridLength(1, GridUnitType.Star) });
-        table.Columns.Add(new TableColumn { Width = new GridLength(1, GridUnitType.Star) });
+        table.Columns.Add(new TableColumn { Width = new GridLength(half) });
+        table.Columns.Add(new TableColumn { Width = new GridLength(half) });
 
         var rows = new TableRowGroup();
         rows.Rows.Add(InfoRow(

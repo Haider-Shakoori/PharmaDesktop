@@ -518,11 +518,37 @@
                                        MaxWidth="170" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
 
-                        <Border Width="38" Height="38" CornerRadius="19" Background="#DCEEFF" Margin="0,0,8,0">
-                            <Path Data="{StaticResource IconUsers}" Width="19" Height="19"
-                                  Stroke="#2563A8" StrokeThickness="1.8" Fill="Transparent"
-                                  Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
+                        <Grid Width="38" Height="38" Margin="0,0,8,0">
+                            <Border CornerRadius="19" Background="#DCEEFF">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasProfileImage}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Path Data="{StaticResource IconUsers}" Width="19" Height="19"
+                                      Stroke="#2563A8" StrokeThickness="1.8" Fill="Transparent"
+                                      Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <Ellipse Width="38" Height="38">
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="{Binding ProfileImageSource}" Stretch="UniformToFill" />
+                                </Ellipse.Fill>
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasProfileImage}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                        </Grid>
                         <StackPanel Margin="0,0,6,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding UserDisplayName}" FontWeight="SemiBold" FontSize="12.5"
                                        MaxWidth="110" TextTrimming="CharacterEllipsis" />

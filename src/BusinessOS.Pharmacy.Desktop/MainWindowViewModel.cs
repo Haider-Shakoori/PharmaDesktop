@@ -34,6 +34,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IPermissionAuthorizer _permissions;
     private readonly ILocalServerConnectionMonitor? _connectionMonitor;
     private readonly NotificationService _notifications;
+    private readonly Profile.UserProfileStore _profileStore;
+    private Profile.UserProfile? _profile;
 
     [ObservableProperty]
     private UiLanguage selectedLanguage = UiLanguageCatalog.All[0];
@@ -76,6 +78,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         PasswordChangeViewModel passwordChange,
         NetworkConfiguration networkConfiguration,
         NotificationService notifications,
+        Profile.UserProfileStore profileStore,
         IServiceProvider services)
     {
         _clock = clock;
@@ -83,8 +86,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _permissions = permissions;
         _networkConfiguration = networkConfiguration;
         _notifications = notifications;
+        _profileStore = profileStore;
         _connectionMonitor = services.GetService<ILocalServerConnectionMonitor>();
         _notifications.NotificationRaised += OnNotificationRaised;
+        _profileStore.ProfileChanged += OnProfileChanged;
+        _profile = _profileStore.Load();
         Dashboard = dashboard;
         Customers = customers;
         Medicines = medicines;
@@ -246,7 +252,23 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public string OnlineText => Translate("Online", "آنلاین", "آنلاین");
     public string LicenseText => Translate("Licensed", "مجوز فعال", "جواز فعال");
     public string LastVerifiedText => $"{Translate("Ready", "آماده", "چمتو")} • {_clock.UtcNow:yyyy-MM-dd HH:mm} UTC";
-    public string UserDisplayName => _sessions.Current?.Name ?? Translate("No user", "بدون کاربر", "کارن نشته");
+    public string UserDisplayName =>
+        !string.IsNullOrWhiteSpace(_profile?.DisplayName)
+            ? _profile!.DisplayName
+            : _sessions.Current?.Name ?? Translate("No user", "بدون کاربر", "کارن نشته");
+
+    public string ProfileImageSource =>
+        _profile?.HasImage == true ? _profile.ImagePath! : string.Empty;
+
+    public bool HasProfileImage => _profile?.HasImage == true;
+
+    private void OnProfileChanged(Profile.UserProfile profile)
+    {
+        _profile = profile;
+        OnPropertyChanged(nameof(UserDisplayName));
+        OnPropertyChanged(nameof(ProfileImageSource));
+        OnPropertyChanged(nameof(HasProfileImage));
+    }
     public string UserRoleText => _sessions.Current is null
         ? string.Empty
         : string.Join(", ", _sessions.Current.Roles);

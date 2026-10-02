@@ -115,6 +115,49 @@ internal static class Program
         var app = new App();
         app.InitializeComponent();
 
+        if (mode == "receipt")
+        {
+            var receiptSale = new SaleDetail(
+                new SaleListItem(
+                    "sale-1", "POS-20261002-E1F9BBBFB0", new DateOnly(2026, 10, 2),
+                    new DateTimeOffset(2026, 10, 2, 10, 18, 0, TimeSpan.FromHours(4.5)),
+                    "Walk-in Customer", "Main Stock", "paid", 75m, 75m, 0m, 0m),
+                "AFN", 75m, 0m, 0m, "Haider Shakoori", null, null, null, null, null,
+                [
+                    new SaleLineItem(
+                        "l1", "med-para", "Paracetamol 500 mg", "tablet", 1m, 20m, 0m, 0m, 20m, 12m, false,
+                        [new SaleBatchAllocationItem("b1", "batch-para-1", "PA-1026", new DateOnly(2027, 2, 28), 1m, 12m, 20m, 20m)]),
+                    new SaleLineItem(
+                        "l2", "med-amox", "Amoxicillin 250 mg", "capsule", 1m, 35m, 0m, 0m, 35m, 8m, true,
+                        [new SaleBatchAllocationItem("b2", "batch-amox-1", "AM-0327", new DateOnly(2027, 3, 31), 1m, 8m, 35m, 35m)]),
+                ],
+                [
+                    new SalePaymentItem(
+                        "p1", "PAY-1", "cash", 75m, "AFN", null,
+                        new DateTimeOffset(2026, 10, 2, 10, 18, 0, TimeSpan.FromHours(4.5))),
+                ]);
+
+            var receipt = new ReceiptPreviewWindow(receiptSale, new SaleReceiptPrinter())
+            {
+                Width = 920,
+                Height = 780,
+                WindowStyle = WindowStyle.None,
+                ResizeMode = ResizeMode.NoResize,
+                ShowInTaskbar = false,
+                WindowStartupLocation = WindowStartupLocation.Manual,
+                Left = -20000,
+                Top = -20000,
+            };
+
+            receipt.Show();
+            receipt.UpdateLayout();
+            CaptureVisual((FrameworkElement)receipt.Content, output);
+            receipt.Close();
+            app.Shutdown();
+            Console.WriteLine($"Captured real WPF {mode} to {output}");
+            return;
+        }
+
         if (mode == "pos-payment")
         {
             if (posViewModel is null)
@@ -355,6 +398,7 @@ internal static class Program
     {
         public CloudSyncRunResult LastResult { get; } =
             new(CloudSyncRunState.Synced,"Synced 2 min ago",now.AddMinutes(-2),now.AddMinutes(-2));
+        public event Action<CloudSyncRunResult>? ResultUpdated { add { } remove { } }
         public Task<CloudSyncRunResult> SyncOnceAsync(CancellationToken cancellationToken = default) => Task.FromResult(LastResult);
     }
 
