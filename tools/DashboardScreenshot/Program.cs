@@ -207,6 +207,13 @@ internal static class Program
                 BusinessOS.Pharmacy.Desktop.Appearance.AppearanceTheme.Glass);
         }
 
+        if (mode == "theme-probe")
+        {
+            RunThemeProbe();
+            app.Shutdown();
+            return;
+        }
+
         if (mode == "barcode-label")
         {
             var label = BarcodeLabelPrinter.BuildLabel(
@@ -338,6 +345,70 @@ internal static class Program
         app.Shutdown();
         Console.WriteLine($"Captured real WPF {mode} to {output}");
         Console.WriteLine($"Size: {size.Width}x{size.Height}");
+    }
+
+    private static void RunThemeProbe()
+    {
+        var app = System.Windows.Application.Current;
+
+        void Assert(bool condition, string label)
+        {
+            Console.WriteLine($"{(condition ? "PASS" : "FAIL")}  {label}");
+            if (!condition)
+            {
+                throw new InvalidOperationException($"Theme probe failed: {label}");
+            }
+        }
+
+        BusinessOS.Pharmacy.Desktop.Appearance.ThemeManager.Apply(
+            BusinessOS.Pharmacy.Desktop.Appearance.AppearanceTheme.Classic);
+
+        Assert(BusinessOS.Pharmacy.Desktop.Appearance.ThemeManager.Current ==
+               BusinessOS.Pharmacy.Desktop.Appearance.AppearanceTheme.Classic,
+            "classic: ThemeManager.Current == Classic");
+        Assert(app.TryFindResource("AppBackgroundBrush") is System.Windows.Media.SolidColorBrush,
+            "classic: AppBackgroundBrush is solid");
+        Assert(app.TryFindResource("CardShadowEffect") is null,
+            "classic: no CardShadowEffect");
+
+        BusinessOS.Pharmacy.Desktop.Appearance.ThemeManager.Apply(
+            BusinessOS.Pharmacy.Desktop.Appearance.AppearanceTheme.Glass);
+
+        Assert(BusinessOS.Pharmacy.Desktop.Appearance.ThemeManager.Current ==
+               BusinessOS.Pharmacy.Desktop.Appearance.AppearanceTheme.Glass,
+            "glass: ThemeManager.Current == Glass");
+        Assert(app.TryFindResource("AppBackgroundBrush") is System.Windows.Media.LinearGradientBrush,
+            "glass: AppBackgroundBrush is gradient");
+        Assert(app.TryFindResource("CardShadowEffect") is System.Windows.Media.Effects.DropShadowEffect,
+            "glass: CardShadowEffect present");
+        Assert(app.TryFindResource("CardCornerRadius") is System.Windows.CornerRadius { TopLeft: 18 },
+            "glass: CardCornerRadius == 18");
+        Assert(app.TryFindResource("SidebarItemSelectedBrush") is System.Windows.Media.SolidColorBrush,
+            "glass: sidebar selection brush present");
+
+        BusinessOS.Pharmacy.Desktop.Appearance.ThemeManager.Apply(
+            BusinessOS.Pharmacy.Desktop.Appearance.AppearanceTheme.Classic);
+
+        Assert(app.TryFindResource("AppBackgroundBrush") is System.Windows.Media.SolidColorBrush,
+            "classic(return): AppBackgroundBrush is solid again");
+        Assert(app.TryFindResource("CardShadowEffect") is null,
+            "classic(return): CardShadowEffect removed again");
+
+        var probeFile = Path.Combine(Path.GetTempPath(), "businessos-theme-probe", "appearance.json");
+        if (File.Exists(probeFile))
+        {
+            File.Delete(probeFile);
+        }
+
+        var store = new BusinessOS.Pharmacy.Desktop.Appearance.AppearanceSettingsStore(probeFile);
+        store.Save(new BusinessOS.Pharmacy.Desktop.Appearance.AppearanceSettings("Glass"));
+        var reloaded = new BusinessOS.Pharmacy.Desktop.Appearance.AppearanceSettingsStore(probeFile).Load();
+        Assert(reloaded.Theme == "Glass", "persistence: Glass roundtrip");
+        store.Save(new BusinessOS.Pharmacy.Desktop.Appearance.AppearanceSettings("Classic"));
+        reloaded = new BusinessOS.Pharmacy.Desktop.Appearance.AppearanceSettingsStore(probeFile).Load();
+        Assert(reloaded.Theme == "Classic", "persistence: Classic roundtrip");
+
+        Console.WriteLine("Theme probe finished successfully.");
     }
 
     private static (int Width, int Height) CaptureVisual(
