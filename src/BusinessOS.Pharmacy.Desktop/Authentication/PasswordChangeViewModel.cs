@@ -108,6 +108,81 @@ public sealed partial class PasswordChangeViewModel : ObservableObject
                 return;
             }
 
+            var verifier = _services.GetService<IOfflinePasswordVerifier>();
+            if (verifier is null)
+            {
+                Fail(Translate(
+                    "Password verification is unavailable on this terminal. Open this page on the Main Pharmacy Server.",
+                    "تأیید رمز عبور در این ترمینال در دسترس نیست. این صفحه را روی سرور اصلی دواخانه باز کنید.",
+                    "په دې ټرمینل کې د پټنوم تایید نشته. دا پاڼه د درملتون اصلي سرور کې پرانیزئ."));
+                return;
+            }
+
+            // 1) This PC's own signed-in user session (Main Pharmacy Server desktop).
+            var sessionStore = _services.GetService<IUserSessionStore>();
+            if (sessionStore is not null)
+            {
+                var state = await sessionStore.LoadAsync();
+                if (state?.OfflinePassword is not null)
+                {
+                    if (!verifier.Verify(CurrentPassword, state.OfflinePassword))
+                    {
+                        Fail(Translate("The current password is incorrect.", "رمز عبور فعلی نادرست است.", "اوسنی پټنوم سم نه دی."));
+                        return;
+                    }
+
+                    await sessionStore.SaveAsync(state with { OfflinePassword = verifier.Create(NewPassword) });
+                    CurrentPassword = string.Empty;
+                    NewPassword = string.Empty;
+                    ConfirmPassword = string.Empty;
+                    StatusMessage = Translate(
+                        "Password updated. Use the new password for the next offline sign-in on this PC. The online password is managed at darmaltoon.com.",
+                        "رمز عبور به‌روزرسانی شد. برای ورود آفلاین بعدی روی این رایانه از رمز جدید استفاده کنید. رمز آنلاین از طریق darmaltoon.com مدیریت می‌شود.",
+                        "پټنوم تازه شو. په دې کمپیوټر کې د راتلونکي آفلاین ننوتلو لپاره نوی پټنوم وکاروئ. آنلاین پټنوم د darmaltoon.com له لارې مدیریت کیږي.");
+                    return;
+                }
+
+                if (state is not null)
+                {
+                    // Offline sign-in was not enabled at the last sign-in. Verify the
+                    // current password against the cloud once, then enable the local
+                    // credential with the new password.
+                    try
+                    {
+                        await _sessions.LoginAsync(session.Email, CurrentPassword, allowOfflineSignIn: true);
+                    }
+                    catch (Exception exception)
+                    {
+                        Fail(Translate(
+                            $"The current password could not be verified online: {exception.Message}",
+                            $"رمز عبور فعلی به‌صورت آنلاین تأیید نشد: {exception.Message}",
+                            $"اوسنی پټنوم آنلاین تایید نه شو: {exception.Message}"));
+                        return;
+                    }
+
+                    var refreshed = await sessionStore.LoadAsync();
+                    if (refreshed?.OfflinePassword is not null)
+                    {
+                        await sessionStore.SaveAsync(refreshed with { OfflinePassword = verifier.Create(NewPassword) });
+                        CurrentPassword = string.Empty;
+                        NewPassword = string.Empty;
+                        ConfirmPassword = string.Empty;
+                        StatusMessage = Translate(
+                            "Offline sign-in is now enabled and the password was updated. Use the new password for the next offline sign-in on this PC. The online password is managed at darmaltoon.com.",
+                            "ورود آفلاین فعال شد و رمز عبور به‌روزرسانی شد. برای ورود آفلاین بعدی روی این رایانه از رمز جدید استفاده کنید. رمز آنلاین از طریق darmaltoon.com مدیریت می‌شود.",
+                            "آفلاین ننوتل فعال شو او پټنوم تازه شو. په دې کمپیوټر کې د راتلونکي آفلاین ننوتلو لپاره نوی پټنوم وکاروئ. آنلاین پټنوم د darmaltoon.com له لارې مدیریت کیږي.");
+                        return;
+                    }
+
+                    Fail(Translate(
+                        "Offline sign-in could not be enabled on this PC. The online password is managed at darmaltoon.com.",
+                        "ورود آفلاین روی این رایانه فعال نشد. رمز آنلاین از طریق darmaltoon.com مدیریت می‌شود.",
+                        "په دې کمپیوټر کې آفلاین ننوتل فعال نه شو. آنلاین پټنوم د darmaltoon.com له لارې مدیریت کیږي."));
+                    return;
+                }
+            }
+
+            // 2) Cached LAN user credential (client terminals connected to the Main Pharmacy Server).
             var store = _services.GetService<ILocalLanCredentialStore>();
             if (store is null)
             {
@@ -122,19 +197,9 @@ public sealed partial class PasswordChangeViewModel : ObservableObject
             if (cached is null)
             {
                 Fail(Translate(
-                    "No cached offline credentials were found for this user. Connect to the internet, sign in again and retry.",
-                    "هیچ اعتبارنامه آفلاین برای این کاربر یافت نشد. به اینترنت وصل شوید، دوباره وارد شوید و تلاش کنید.",
-                    "د دې کارن لپاره هیڅ آفلاین اعتبار ونه موندل شو. انټرنیټ سره وصل شئ، بیا ننوځئ او هڅه وکړئ."));
-                return;
-            }
-
-            var verifier = _services.GetService<IOfflinePasswordVerifier>();
-            if (verifier is null)
-            {
-                Fail(Translate(
-                    "Password verification is unavailable on this terminal. Open this page on the Main Pharmacy Server.",
-                    "تأیید رمز عبور در این ترمینال در دسترس نیست. این صفحه را روی سرور اصلی دواخانه باز کنید.",
-                    "په دې ټرمینل کې د پټنوم تایید نشته. دا پاڼه د درملتون اصلي سرور کې پرانیزئ."));
+                    "No cached offline credentials were found for this user. Sign out, sign in again with 'Allow secure offline sign-in on this PC' selected, then retry.",
+                    "هیچ اعتبارنامه آفلاین برای این کاربر یافت نشد. خارج شوید، دوباره با گزینه «اجازه ورود آفلاین امن روی این رایانه» وارد شوید و تلاش کنید.",
+                    "د دې کارن لپاره هیڅ آفلاین اعتبار ونه موندل شو. ووځئ، بیا د «په دې کمپیوټر کې خوندي آفلاین ننوتل اجازه ورکړئ» سره ننوځئ او هڅه وکړئ."));
                 return;
             }
 
