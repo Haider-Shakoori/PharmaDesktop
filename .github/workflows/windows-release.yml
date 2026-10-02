@@ -2,13 +2,12 @@ on:
   push:
     branches:
       - feat/batch-21-windows-installer
-      - feat/ui-batch-04-pos-web-parity
   workflow_dispatch:
     inputs:
       version:
         description: Darmaltoon release version
         required: false
-        default: "1.0.1"
+        default: "1.0.0"
 
 permissions:
   contents: read
@@ -18,7 +17,7 @@ jobs:
     runs-on: windows-2025
     timeout-minutes: 45
     env:
-      RELEASE_VERSION: ${{ inputs.version || '1.0.1' }}
+      RELEASE_VERSION: ${{ inputs.version || '1.0.0' }}
       DARMALTOON_LICENSE_SIGNING_PUBLIC_KEY: ${{ secrets.DARMALTOON_LICENSE_SIGNING_PUBLIC_KEY }}
       DARMALTOON_UPDATE_SIGNING_PUBLIC_KEY_PEM: ${{ secrets.DARMALTOON_UPDATE_SIGNING_PUBLIC_KEY_PEM }}
       DARMALTOON_SIGNING_PFX_BASE64: ${{ secrets.DARMALTOON_SIGNING_PFX_BASE64 }}
