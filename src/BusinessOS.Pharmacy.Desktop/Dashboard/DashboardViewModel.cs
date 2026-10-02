@@ -169,7 +169,7 @@ public sealed partial class DashboardViewModel : ObservableObject
         "په محلي ډیټابیس کې د زېرمتون خبرتیا نشته.");
 
     public string DashboardTitle => Translate("Dashboard", "داشبورد", "ډشبورډ");
-    public string SalesOverviewTitle => Translate("Sales Overview", "نمای فروش", "د خرڅلاو کتنه");
+    public string SalesOverviewTitle => Translate("Sales Overview", "نمای کلی فروش", "د خرڅلاو کتنه");
     public string PeriodTodayLabel => Translate("Today", "امروز", "نن");
     public string PeriodWeekLabel => Translate("This Week", "این هفته", "دا اونۍ");
     public string PeriodMonthLabel => Translate("This Month", "این ماه", "دا میاشت");
@@ -177,12 +177,12 @@ public sealed partial class DashboardViewModel : ObservableObject
     public string TotalSalesLabel => Translate("Total Sales", "کل فروش", "ټول خرڅلاو");
     public string TotalInvoicesLabel => Translate("Total Invoices", "کل فاکتورها", "ټول بلونه");
     public string AverageInvoiceLabel => Translate("Average Invoice", "میانگین فاکتور", "منځنی بل");
-    public string LowStockSectionTitle => Translate("Low Stock Items", "اقلام کم‌موجود", "کمې زېرمې");
+    public string LowStockSectionTitle => Translate("Low Stock Items", "اقلام کم‌موجود", "کم موجوده توکي");
     public string ExpiringSoonSectionTitle => Translate("Expiring Soon", "نزدیک به انقضا", "ژر ختمېدونکي");
     public string RecentTransactionsSectionTitle => Translate("Recent Transactions", "معاملات اخیر", "وروستي راکړې ورکړې");
     public string ViewAllLabel => Translate("View All", "مشاهده همه", "ټول وګورئ");
     public string ViewReportsLabel => Translate("View Reports", "مشاهده گزارش‌ها", "راپورونه وګورئ");
-    public string LicenseSubscriptionTitle => Translate("License & Subscription", "لایسنس و اشتراک", "جواز او ګډون");
+    public string LicenseSubscriptionTitle => Translate("License & Subscription", "جواز و اشتراک", "جواز او ګډون");
     public string PharmacyOverviewTitle => Translate("Pharmacy Overview", "نمای دواخانه", "د درملتون کتنه");
     public string TotalMedicinesLabel => Translate("Total Medicines", "کل ادویه", "ټول درمل");
     public string TotalBatchesLabel => Translate("Total Batches", "کل بچ‌ها", "ټول بېچونه");
@@ -400,7 +400,7 @@ public sealed partial class DashboardViewModel : ObservableObject
 
         AddAction("pos", Translate("New Sale (POS)", "فروش جدید", "نوی خرڅلاو"), "pos.sell", true, "#0B82F6", "F2");
         AddAction("purchases", Translate("New Purchase", "خرید جدید", "نوی پېرود"), "purchases.manage", true, "#059669", "F3");
-        AddAction("closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "daily_closing.perform", true, "#F97316", "F4");
+        AddAction("closing", Translate("Daily Closing", "بستن روزانه", "ورځنی حساب"), "daily_closing.perform", true, "#F97316", "F4");
         AddAction("backup", Translate("Backup Now", "پشتیبان‌گیری", "اوس بیک اپ"), "settings.manage", true, "#7C3AED", "F5");
         AddAction("sync", Translate("Sync Now", "همگام‌سازی", "اوس همغږي"), "dashboard.view", _cloudSync is not null, "#0EA5E9", "F6");
     }

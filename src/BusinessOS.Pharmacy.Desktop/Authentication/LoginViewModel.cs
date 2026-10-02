@@ -1,11 +1,15 @@
+using System.Diagnostics;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Licensing;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace BusinessOS.Pharmacy.Desktop.Authentication;
 
 public sealed partial class LoginViewModel : ObservableObject
 {
+    private const string AccountWebsiteUrl = "https://darmaltoon.com";
+
     private readonly IUserSessionService _sessions;
 
     [ObservableProperty]
@@ -18,11 +22,29 @@ public sealed partial class LoginViewModel : ObservableObject
     private bool isBusy;
 
     [ObservableProperty]
+    private bool isError;
+
+    [ObservableProperty]
     private string statusMessage = "Sign in with your pharmacy staff account.";
 
-    public LoginViewModel(IUserSessionService sessions) => _sessions = sessions;
+    public LoginViewModel(IUserSessionService sessions)
+    {
+        _sessions = sessions;
+        ForgotPasswordCommand = new RelayCommand(OpenForgotPasswordPage);
+    }
 
     public event EventHandler? LoginSucceeded;
+
+    public IRelayCommand ForgotPasswordCommand { get; }
+
+    public bool IsNotBusy => !IsBusy;
+    public string SignInButtonText => IsBusy ? "Signing in…" : "Sign In";
+
+    partial void OnIsBusyChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsNotBusy));
+        OnPropertyChanged(nameof(SignInButtonText));
+    }
 
     public async Task SignInAsync(string password)
     {
@@ -33,12 +55,12 @@ public sealed partial class LoginViewModel : ObservableObject
 
         if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(password))
         {
-            StatusMessage = "Email and password are required.";
+            SetStatus("Email and password are required.", isError: true);
             return;
         }
 
         IsBusy = true;
-        StatusMessage = "Signing in…";
+        SetStatus("Signing in…");
 
         try
         {
@@ -47,24 +69,55 @@ public sealed partial class LoginViewModel : ObservableObject
                 password,
                 AllowOfflineSignIn);
 
-            StatusMessage = $"Welcome, {user.Name}.";
+            SetStatus($"Welcome, {user.Name}.");
             LoginSucceeded?.Invoke(this, EventArgs.Empty);
         }
         catch (ClockRollbackDetectedException)
         {
-            StatusMessage = "Windows clock rollback was detected. Connect to the internet and verify the license first.";
+            SetStatus(
+                "Windows clock rollback was detected. Connect to the internet and verify the license first.",
+                isError: true);
         }
         catch (LicenseApiException exception)
         {
-            StatusMessage = exception.Message;
+            SetStatus(exception.Message, isError: true);
         }
         catch
         {
-            StatusMessage = "Sign-in could not be completed. Check the credentials, license, and connection.";
+            SetStatus(
+                "Sign-in could not be completed. Check the credentials, license, and connection.",
+                isError: true);
         }
         finally
         {
             IsBusy = false;
         }
+    }
+
+    private void OpenForgotPasswordPage()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = AccountWebsiteUrl,
+                UseShellExecute = true,
+            });
+
+            SetStatus(
+                "darmaltoon.com opened in your browser. Reset your password there, then sign in with the new password.");
+        }
+        catch
+        {
+            SetStatus(
+                $"Open {AccountWebsiteUrl} in your browser to reset your password. Contact your pharmacy administrator if you need help.",
+                isError: true);
+        }
+    }
+
+    private void SetStatus(string message, bool isError = false)
+    {
+        IsError = isError;
+        StatusMessage = message;
     }
 }

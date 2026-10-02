@@ -3,45 +3,200 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Icon="pack://application:,,,/Darmaltoon;component/Assets/Darmaltoon.ico"
         Title="Sign in — Darmaltoon"
-        Width="560" Height="570"
+        Width="620" Height="780"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource AppBackgroundBrush}">
-    <Grid Margin="40">
-        <Border Style="{StaticResource SurfaceCard}" Padding="30">
+    <Window.Resources>
+        <Style x:Key="LoginFieldBorder" TargetType="Border">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Height" Value="44" />
+        </Style>
+        <Style x:Key="LoginFieldIcon" TargetType="Path">
+            <Setter Property="Width" Value="17" />
+            <Setter Property="Height" Value="17" />
+            <Setter Property="Stretch" Value="Uniform" />
+            <Setter Property="Fill" Value="Transparent" />
+            <Setter Property="Stroke" Value="#64809F" />
+            <Setter Property="StrokeThickness" Value="1.7" />
+            <Setter Property="StrokeStartLineCap" Value="Round" />
+            <Setter Property="StrokeEndLineCap" Value="Round" />
+            <Setter Property="StrokeLineJoin" Value="Round" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="LoginFieldInput" TargetType="Control">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="36">
+        <Border Style="{StaticResource SurfaceCard}" Padding="34">
             <StackPanel>
-                <TextBlock Text="Darmaltoon" FontSize="26" FontWeight="SemiBold" />
-                <TextBlock Text="darmaltoon.com · BusinessOS.af" Style="{StaticResource MutedText}" Margin="0,4,0,26" />
+                <!-- Brand -->
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="56" Height="56"
+                            CornerRadius="16"
+                            Background="{DynamicResource BrandPrimaryBrush}">
+                        <Path Data="{StaticResource IconPharmacyCross}"
+                              Width="32" Height="32"
+                              Stretch="Uniform"
+                              Fill="White"
+                              StrokeThickness="0"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="BusinessOS Pharmacy" FontSize="21" FontWeight="Bold" Foreground="#102A56" />
+                        <TextBlock Text="Darmaltoon · darmaltoon.com"
+                                   Style="{StaticResource MutedText}"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
 
-                <TextBlock Text="Pharmacy Staff Sign In" FontSize="20" FontWeight="SemiBold" />
+                <!-- Heading -->
+                <TextBlock Text="Pharmacy Staff Sign In"
+                           FontSize="25"
+                           FontWeight="Bold"
+                           Margin="0,28,0,0" />
                 <TextBlock Text="Your license identifies the pharmacy. Sign in with your tenant-level employee account."
-                           Style="{StaticResource MutedText}" Margin="0,6,0,20" TextWrapping="Wrap" />
+                           Style="{StaticResource MutedText}"
+                           Margin="0,6,0,0"
+                           TextWrapping="Wrap" />
 
-                <TextBlock Text="Email" FontWeight="SemiBold" Margin="0,0,0,6" />
-                <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
-                         MinHeight="42" Padding="10,8" FontSize="14" />
+                <!-- Email -->
+                <TextBlock Text="Email" FontWeight="SemiBold" Margin="0,22,0,6" />
+                <Border Style="{StaticResource LoginFieldBorder}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="42" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Path Style="{StaticResource LoginFieldIcon}"
+                              Data="M3,5 L21,5 L21,19 L3,19 Z M3,6 L12,13 L21,6" />
+                        <TextBox x:Name="EmailInput"
+                                 Grid.Column="1"
+                                 Margin="0,0,10,0"
+                                 Style="{StaticResource LoginFieldInput}"
+                                 Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                                 IsEnabled="{Binding IsNotBusy}" />
+                    </Grid>
+                </Border>
 
-                <TextBlock Text="Password" FontWeight="SemiBold" Margin="0,14,0,6" />
-                <PasswordBox x:Name="PasswordInput"
-                             MinHeight="42" Padding="10,8" FontSize="14" />
+                <!-- Password -->
+                <TextBlock Text="Password" FontWeight="SemiBold" Margin="0,16,0,6" />
+                <Border Style="{StaticResource LoginFieldBorder}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="42" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="44" />
+                        </Grid.ColumnDefinitions>
+                        <Path Style="{StaticResource LoginFieldIcon}"
+                              Data="M6,10 L6,7.5 C6,4.5 8.7,2 12,2 C15.3,2 18,4.5 18,7.5 L18,10 M5,10 L19,10 L19,20 L5,20 Z" />
+                        <PasswordBox x:Name="PasswordInput"
+                                     Grid.Column="1"
+                                     Margin="0,0,4,0"
+                                     Style="{StaticResource LoginFieldInput}"
+                                     IsEnabled="{Binding IsNotBusy}"
+                                     PasswordChanged="OnPasswordChanged" />
+                        <TextBox x:Name="PasswordText"
+                                 Grid.Column="1"
+                                 Margin="0,0,4,0"
+                                 Style="{StaticResource LoginFieldInput}"
+                                 Visibility="Collapsed"
+                                 IsEnabled="{Binding IsNotBusy}"
+                                 TextChanged="OnPasswordTextChanged" />
+                        <Button Grid.Column="2"
+                                Style="{StaticResource GhostButton}"
+                                Width="40" Height="40" MinHeight="40"
+                                Padding="10"
+                                Click="OnTogglePasswordVisibility"
+                                ToolTip="Show or hide password"
+                                IsEnabled="{Binding IsNotBusy}">
+                            <Path x:Name="EyeIcon"
+                                  Data="M2,12 C6,5.5 18,5.5 22,12 C18,18.5 6,18.5 2,12 Z M12,9.2 A2.8,2.8 0 1 0 12,14.8 A2.8,2.8 0 1 0 12,9.2 Z"
+                                  Width="18" Height="18"
+                                  Stroke="#64809F"
+                                  StrokeThickness="1.6"
+                                  Fill="Transparent"
+                                  Stretch="Uniform" />
+                        </Button>
+                    </Grid>
+                </Border>
 
-                <CheckBox Content="Allow secure offline sign-in on this PC"
-                          IsChecked="{Binding AllowOfflineSignIn}"
-                          Margin="0,14,0,0" />
+                <!-- Options row -->
+                <Grid Margin="0,14,0,0">
+                    <CheckBox Content="Allow secure offline sign-in on this PC"
+                              IsChecked="{Binding AllowOfflineSignIn}"
+                              IsEnabled="{Binding IsNotBusy}"
+                              VerticalAlignment="Center" />
+                    <Button HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource GhostButton}"
+                            Padding="6,2"
+                            MinHeight="24"
+                            Command="{Binding ForgotPasswordCommand}"
+                            ToolTip="Reset your password on darmaltoon.com">
+                        <TextBlock Text="Forgot password?"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource BrandPrimaryBrush}" />
+                    </Button>
+                </Grid>
 
-                <Button Content="Sign In"
+                <!-- Sign in -->
+                <Button Content="{Binding SignInButtonText}"
                         Click="OnSignInClick"
                         Style="{StaticResource PrimaryButton}"
                         Margin="0,18,0,0"
-                        MinHeight="42"
-                        IsDefault="True" />
+                        MinHeight="46"
+                        FontSize="14"
+                        IsDefault="True"
+                        IsEnabled="{Binding IsNotBusy}" />
 
-                <TextBlock Text="{Binding StatusMessage}"
-                           TextWrapping="Wrap"
-                           Margin="0,14,0,0"
-                           Foreground="{DynamicResource TextMutedBrush}" />
+                <!-- Status -->
+                <Border Margin="0,14,0,0"
+                        Padding="12,9"
+                        CornerRadius="8"
+                        x:Name="StatusPanel">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="#EFF6FF" />
+                            <Setter Property="BorderBrush" Value="#BFDBFE" />
+                            <Setter Property="BorderThickness" Value="1" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsError}" Value="True">
+                                    <Setter Property="Background" Value="#FEF2F2" />
+                                    <Setter Property="BorderBrush" Value="#FECACA" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding StatusMessage}"
+                               TextWrapping="Wrap"
+                               FontSize="12.5">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#1D4ED8" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsError}" Value="True">
+                                        <Setter Property="Foreground" Value="#B91C1C" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
 
-                <TextBlock Margin="0,18,0,0"
+                <!-- Footer note -->
+                <TextBlock Margin="0,16,0,0"
                            Style="{StaticResource MutedText}"
                            TextWrapping="Wrap"
                            Text="Offline sign-in stores no plaintext password. A PBKDF2 verifier and the signed user session are protected by Windows DPAPI and remain bounded by the license offline period." />

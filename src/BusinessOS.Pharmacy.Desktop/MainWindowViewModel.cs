@@ -157,11 +157,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         "pos" => Translate("Point of Sale", "فروش", "خرڅلاو"),
         "returns" => Translate("Sale Returns", "برگشت فروش", "د خرڅلاو بېرته ستنول"),
         "expenses" => Translate("Expenses & Accounting", "مصارف و حسابداری", "لګښتونه او حسابداري"),
-        "closing" => Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"),
+        "closing" => Translate("Daily Closing", "بستن حساب روزانه", "ورځنی حساب"),
         "reports" => Translate("Reports", "گزارش‌ها", "راپورونه"),
         "backup" => Translate("Backup & Restore", "پشتیبان‌گیری و بازیابی", "بیک اپ او بېرته راګرځول"),
-        "updates" => Translate("Application Updates", "به‌روزرسانی برنامه", "د اپلېکېشن تازه کول"),
-        "network" => Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
+        "updates" => Translate("Application Updates", "به‌روزرسانی برنامه", "د اپلیکیشن تازه کول"),
+        "network" => Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ټرمینلونه"),
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
         "batches" => Translate("Batches", "بچ‌ها", "بېچونه"),
@@ -334,9 +334,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
         AddIfAllowed("purchases.manage", "suppliers", Translate("Suppliers", "تأمین‌کنندگان", "عرضه کوونکي"), purchasing);
         AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), operations);
         AddIfAllowed("accounting.manage", "expenses", Translate("Expenses", "مصارف", "لګښتونه"), finance);
-        AddIfAllowed("daily_closing.perform", "closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), finance);
+        AddIfAllowed("daily_closing.perform", "closing", Translate("Daily Closing", "بستن حساب روزانه", "ورځنی حساب"), finance);
         AddIfAllowed("reports.view", "reports", Translate("Reports", "گزارش‌ها", "راپورونه"), finance);
-        AddIfAllowed("returns.manage", "returns", Translate("Returns", "برگشت", "ستنېدل"), purchasing);
+        AddIfAllowed("returns.manage", "returns", Translate("Returns", "برگشت", "بېرته ستنول"), purchasing);
         AddIfAllowed("users.manage", "users", Translate("Users", "کاربران", "کارنان"), administration);
         AddIfAllowed("roles.manage", "roles", Translate("Roles & Permissions", "نقش‌ها و مجوزها", "رولونه او اجازې"), administration);
 
@@ -354,7 +354,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         {
             AddNavigationItem(
                 "network",
-                Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه"),
+                Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ټرمینلونه"),
                 system);
         }
 
