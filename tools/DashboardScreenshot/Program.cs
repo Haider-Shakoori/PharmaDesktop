@@ -96,6 +96,17 @@ internal static class Program
             selectedKey = "settings";
         }
 
+        if (mode is "medicines" or "medicines-glass")
+        {
+            var medicines = new BusinessOS.Pharmacy.Desktop.Medicines.MedicinesViewModel(
+                new FakeMedicineCatalogService(),
+                new FakeMedicineCsvService());
+            medicines.RefreshCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+
+            currentPage = medicines;
+            selectedKey = "medicines";
+        }
+
         if (mode is "pos" or "pos-payment" or "pos-glass")
         {
             var pos = new PosViewModel(
@@ -211,6 +222,36 @@ internal static class Program
         {
             RunThemeProbe();
             app.Shutdown();
+            return;
+        }
+
+        if (mode is "login" or "login-glass")
+        {
+            var login = new BusinessOS.Pharmacy.Desktop.Authentication.LoginWindow(
+                new BusinessOS.Pharmacy.Desktop.Authentication.LoginViewModel(session))
+            {
+                Width = 760,
+                Height = 860,
+                WindowStyle = WindowStyle.None,
+                ResizeMode = ResizeMode.NoResize,
+                ShowInTaskbar = false,
+                WindowStartupLocation = WindowStartupLocation.Manual,
+                Left = -20000,
+                Top = -20000,
+            };
+
+            login.Show();
+            login.UpdateLayout();
+
+            var loginContent = (FrameworkElement)login.Content;
+            loginContent.Measure(new Size(760, 900));
+            loginContent.Arrange(new Rect(0, 0, 760, 900));
+            loginContent.UpdateLayout();
+
+            CaptureVisual(loginContent, output, 760, 900);
+            login.Close();
+            app.Shutdown();
+            Console.WriteLine($"Captured real WPF {mode} to {output}");
             return;
         }
 
@@ -588,6 +629,95 @@ internal static class Program
             new(CloudSyncRunState.Synced,"Synced 2 min ago",now.AddMinutes(-2),now.AddMinutes(-2));
         public event Action<CloudSyncRunResult>? ResultUpdated { add { } remove { } }
         public Task<CloudSyncRunResult> SyncOnceAsync(CancellationToken cancellationToken = default) => Task.FromResult(LastResult);
+    }
+
+    private sealed class FakeMedicineCatalogService : BusinessOS.Pharmacy.Application.Abstractions.Medicines.IMedicineCatalogService
+    {
+        private static readonly BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineListItem[] Items =
+        [
+            new("med-para", "PARA-500", "Paracetamol", "Paracetamol", "500 mg", "Tablet", "Analgesics", "Pharma Co", "box", "tablet", 100m, 30m, true, true, true),
+            new("med-amox", "AMOX-250", "Amoxicillin", "Amoxicillin", "250 mg", "Capsule", "Antibiotics", "Pharma Co", "box", "capsule", 100m, 15m, true, true, true),
+            new("med-ome", "OME-020", "Omeprazole", "Omeprazole", "20 mg", "Capsule", "Gastro", "Medico", "box", "capsule", 60m, 12m, true, true, true),
+            new("med-vitd", "VIT-D3", "Vitamin D3", "Cholecalciferol", "50000 IU", "Softgel", "Vitamins", "Medico", "box", "softgel", 50m, 20m, true, true, true),
+            new("med-ctz", "CTZ-010", "Cetirizine", "Cetirizine", "10 mg", "Tablet", "Antihistamines", "Global Labs", "box", "tablet", 100m, 20m, false, true, true),
+            new("med-met", "MET-850", "Metformin", "Metformin", "850 mg", "Tablet", "Diabetes", "Global Labs", "box", "tablet", 100m, 25m, false, true, true),
+        ];
+
+        public Task<IReadOnlyList<BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineListItem>> SearchAsync(
+            BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineSearchFilter filter,
+            CancellationToken cancellationToken = default)
+        {
+            IEnumerable<BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineListItem> query = Items;
+
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+            {
+                var search = filter.Search.Trim();
+                query = query.Where(x =>
+                    x.BrandName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    x.MedicineCode.Contains(search, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (filter.IsActive is bool active)
+            {
+                query = query.Where(x => x.IsActive == active);
+            }
+
+            return Task.FromResult<IReadOnlyList<BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineListItem>>(
+                query.Take(filter.Take).ToList());
+        }
+
+        public Task<BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineEditorModel?> GetAsync(
+            string id,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineEditorModel?>(null);
+
+        public Task<BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineReferenceData> GetReferenceDataAsync(
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineReferenceData(
+                [
+                    new("cat-1", "Analgesics", true),
+                    new("cat-2", "Antibiotics", true),
+                    new("cat-3", "Vitamins", true),
+                ],
+                [
+                    new("man-1", "Pharma Co", "Afghanistan", true),
+                    new("man-2", "Medico", "Pakistan", true),
+                ]));
+
+        public Task<string> CreateAsync(
+            BusinessOS.Pharmacy.Application.Abstractions.Medicines.SaveMedicineRequest request,
+            CancellationToken cancellationToken = default) => Task.FromResult("med-new");
+
+        public Task UpdateAsync(
+            string id,
+            BusinessOS.Pharmacy.Application.Abstractions.Medicines.SaveMedicineRequest request,
+            CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task<string> CreateCategoryAsync(string name, CancellationToken cancellationToken = default) =>
+            Task.FromResult("cat-new");
+
+        public Task<string> CreateManufacturerAsync(
+            string name,
+            string? country,
+            CancellationToken cancellationToken = default) => Task.FromResult("man-new");
+    }
+
+    private sealed class FakeMedicineCsvService : BusinessOS.Pharmacy.Application.Abstractions.Medicines.IMedicineCsvService
+    {
+        public IReadOnlyList<string> Columns => ["MedicineCode", "BrandName", "SaleUnit"];
+
+        public Task WriteTemplateAsync(string path, CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task<BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineCsvPreview> PreviewAsync(
+            string path,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineCsvPreview(0, 0, 0, []));
+
+        public Task<BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineCsvImportResult> ImportAsync(
+            string path,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new BusinessOS.Pharmacy.Application.Abstractions.Medicines.MedicineCsvImportResult(0, 0, []));
     }
 
     private sealed class FakePosService : IPosService
