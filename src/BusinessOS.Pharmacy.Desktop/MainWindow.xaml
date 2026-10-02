@@ -15,6 +15,7 @@
         xmlns:reports="clr-namespace:BusinessOS.Pharmacy.Desktop.Reports"
         xmlns:networking="clr-namespace:BusinessOS.Pharmacy.Desktop.Networking"
         xmlns:updates="clr-namespace:BusinessOS.Pharmacy.Desktop.Updates"
+        xmlns:auth="clr-namespace:BusinessOS.Pharmacy.Desktop.Authentication"
         Title="BusinessOS Pharmacy - Darmaltoon Pharmacy"
         Width="1600" Height="920"
         MinWidth="1180" MinHeight="720"
@@ -23,6 +24,7 @@
         SnapsToDevicePixels="True"
         UseLayoutRounding="True">
     <Window.InputBindings>
+        <KeyBinding Key="F1" Command="{Binding NavigateCommand}" CommandParameter="dashboard" />
         <KeyBinding Key="F2" Command="{Binding NavigateCommand}" CommandParameter="pos" />
         <KeyBinding Key="F3" Command="{Binding NavigateCommand}" CommandParameter="purchases" />
         <KeyBinding Key="F4" Command="{Binding NavigateCommand}" CommandParameter="closing" />
@@ -30,6 +32,16 @@
         <KeyBinding Key="F6" Command="{Binding NavigateCommand}" CommandParameter="sync" />
         <KeyBinding Key="F7" Command="{Binding NavigateCommand}" CommandParameter="medicines" />
         <KeyBinding Key="F8" Command="{Binding NavigateCommand}" CommandParameter="inventory" />
+        <KeyBinding Key="F9" Command="{Binding NavigateCommand}" CommandParameter="batches" />
+        <KeyBinding Key="F10" Command="{Binding NavigateCommand}" CommandParameter="reports" />
+        <KeyBinding Key="F11" Command="{Binding NavigateCommand}" CommandParameter="customers" />
+        <KeyBinding Key="F12" Command="{Binding NavigateCommand}" CommandParameter="expenses" />
+        <KeyBinding Key="D1" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="suppliers" />
+        <KeyBinding Key="D2" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="returns" />
+        <KeyBinding Key="D3" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="updates" />
+        <KeyBinding Key="D4" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="network" />
+        <KeyBinding Key="D5" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="settings" />
+        <KeyBinding Key="D6" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="password" />
         <KeyBinding Key="F" Modifiers="Control" Command="{Binding GlobalSearchCommand}" />
         <KeyBinding Key="S" Modifiers="Control" Command="{Binding GlobalSearchCommand}" />
     </Window.InputBindings>
@@ -101,6 +113,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type updates:UpdateViewModel}">
             <updates:UpdateView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type auth:PasswordChangeViewModel}">
+            <auth:PasswordChangeView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type customers:CustomersViewModel}">
             <customers:CustomersView />
@@ -251,7 +266,7 @@
                                 <Button Style="{StaticResource SidebarNavigationButton}"
                                         Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                         CommandParameter="{Binding Key}"
-                                        ToolTip="{Binding Label}">
+                                        ToolTip="{Binding Tooltip}">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="42" />

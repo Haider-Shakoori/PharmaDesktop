@@ -12,6 +12,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Sales;
 using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Desktop;
+using BusinessOS.Pharmacy.Desktop.Authentication;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.Desktop.Navigation;
@@ -57,6 +58,12 @@ internal static class Program
         object currentPage = dashboard;
         PosViewModel? posViewModel = null;
         var selectedKey = "dashboard";
+        if (mode == "password")
+        {
+            currentPage = new PasswordChangeViewModel(session, services);
+            selectedKey = "password";
+        }
+
         if (mode is "pos" or "pos-payment")
         {
             var pos = new PosViewModel(
@@ -231,6 +238,7 @@ internal static class Program
                 ("updates", "Sync & Updates", "System"),
                 ("network", "Network & Terminals", "System"),
                 ("settings", "Settings", "Administration"),
+                ("password", "Change Password", "Administration"),
             };
 
             NavigationItems = new ObservableCollection<NavigationItemViewModel>(

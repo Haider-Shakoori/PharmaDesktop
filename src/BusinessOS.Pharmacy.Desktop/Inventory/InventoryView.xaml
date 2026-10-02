@@ -14,9 +14,21 @@
                              Title="{Binding Title}"
                              Description="{Binding Subtitle}">
             <controls:PageHeader.Actions>
-                <Button Content="Refresh"
-                        Command="{Binding RefreshCommand}"
-                        Style="{StaticResource PrimaryButton}"/>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="CSV Template"
+                            Command="{Binding DownloadCsvTemplateCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            Margin="0,0,8,0"
+                            ToolTip="Download a CSV template for bulk opening stock entry"/>
+                    <Button Content="Import CSV"
+                            Command="{Binding ImportCsvCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            Margin="0,0,8,0"
+                            ToolTip="Bulk-load opening stock from a filled CSV template"/>
+                    <Button Content="Refresh"
+                            Command="{Binding RefreshCommand}"
+                            Style="{StaticResource PrimaryButton}"/>
+                </StackPanel>
             </controls:PageHeader.Actions>
         </controls:PageHeader>
 

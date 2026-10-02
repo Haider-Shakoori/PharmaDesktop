@@ -1,11 +1,14 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
+using System.Text;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Inventory;
 using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 
 namespace BusinessOS.Pharmacy.Desktop.Inventory;
 
@@ -61,6 +64,8 @@ public sealed partial class InventoryViewModel : ObservableObject
         AdjustCommand = new AsyncRelayCommand(AdjustAsync, () => !IsBusy && CanAdjustInventory && SelectedBatch is not null);
         ChangeStatusCommand = new AsyncRelayCommand(ChangeStatusAsync, () => !IsBusy && CanChangeBatchStatus && SelectedBatch is not null);
         LoadDetailCommand = new AsyncRelayCommand(LoadSelectedDetailAsync, () => !IsBusy && SelectedBatch is not null);
+        DownloadCsvTemplateCommand = new AsyncRelayCommand(DownloadCsvTemplateAsync, () => !IsBusy);
+        ImportCsvCommand = new AsyncRelayCommand(ImportCsvAsync, () => !IsBusy && CanManageInventory);
     }
 
     public ObservableCollection<InventoryBatchListItem> Batches { get; } = new();
@@ -84,6 +89,8 @@ public sealed partial class InventoryViewModel : ObservableObject
     public IAsyncRelayCommand AdjustCommand { get; }
     public IAsyncRelayCommand ChangeStatusCommand { get; }
     public IAsyncRelayCommand LoadDetailCommand { get; }
+    public IAsyncRelayCommand DownloadCsvTemplateCommand { get; }
+    public IAsyncRelayCommand ImportCsvCommand { get; }
 
     public string Title => Translate("Inventory", "موجودی", "زېرمه");
     public string Subtitle => Translate(
@@ -194,6 +201,11 @@ public sealed partial class InventoryViewModel : ObservableObject
             return;
         }
 
+        await LoadMedicinesCoreAsync();
+    }
+
+    private async Task LoadMedicinesCoreAsync()
+    {
         var result = await _medicines.SearchAsync(
             new MedicineSearchFilter(IsActive: true, Take: 1000));
 
@@ -312,6 +324,81 @@ public sealed partial class InventoryViewModel : ObservableObject
         });
     }
 
+    private async Task DownloadCsvTemplateAsync()
+    {
+        var dialog = new SaveFileDialog
+        {
+            FileName = InventoryCsvImporter.TemplateFileName,
+            DefaultExt = ".csv",
+            Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
+            Title = "Save inventory CSV template",
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        await Task.Yield();
+        File.WriteAllText(dialog.FileName, InventoryCsvImporter.CreateTemplate(), new UTF8Encoding(true));
+        StatusMessage = Translate(
+            $"CSV template saved to {dialog.FileName}",
+            $"قالب CSV در {dialog.FileName} ذخیره شد.",
+            $"CSV کالب په {dialog.FileName} کې خوندي شو.");
+    }
+
+    private async Task ImportCsvAsync()
+    {
+        var location = SelectedOpeningLocation ?? SelectedFilterLocation ?? Locations.FirstOrDefault(x => x.IsDefault) ?? Locations.FirstOrDefault();
+        if (location is null)
+        {
+            StatusMessage = Translate("Select a stock location.", "یک محل موجودی را انتخاب کنید.", "د زېرمتون ځای وټاکئ.");
+            return;
+        }
+
+        var dialog = new OpenFileDialog
+        {
+            DefaultExt = ".csv",
+            Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
+            Title = "Import inventory from CSV",
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        await ExecuteBusyAsync(async () =>
+        {
+            if (Medicines.Count == 0)
+            {
+                await LoadMedicinesCoreAsync();
+            }
+
+            var csv = await File.ReadAllTextAsync(dialog.FileName);
+            var result = await InventoryCsvImporter.ImportAsync(
+                csv,
+                Medicines.ToList(),
+                _inventory,
+                location.Id);
+
+            await SearchCoreAsync();
+
+            StatusMessage = result.FailedCount == 0
+                ? Translate(
+                    $"Imported {result.ImportedCount} rows from CSV.",
+                    $"{result.ImportedCount} سطر از CSV وارد شد.",
+                    $"{result.ImportedCount} کرښې د CSV څخه وارد شوې.")
+                : Translate(
+                    $"Imported {result.ImportedCount} rows. {result.FailedCount} failed: " +
+                    string.Join(" | ", result.Errors.Take(3)) + (result.Errors.Count > 3 ? " …" : string.Empty),
+                    $"{result.ImportedCount} سطر وارد شد. {result.FailedCount} ناموفق: " +
+                    string.Join(" | ", result.Errors.Take(3)) + (result.Errors.Count > 3 ? " …" : string.Empty),
+                    $"{result.ImportedCount} کرښې وارد شوې. {result.FailedCount} ناکامې: " +
+                    string.Join(" | ", result.Errors.Take(3)) + (result.Errors.Count > 3 ? " …" : string.Empty));
+        });
+    }
+
     private async Task LoadSelectedDetailAsync()
     {
         if (SelectedBatch is null)
@@ -393,6 +480,8 @@ public sealed partial class InventoryViewModel : ObservableObject
         AdjustCommand.NotifyCanExecuteChanged();
         ChangeStatusCommand.NotifyCanExecuteChanged();
         LoadDetailCommand.NotifyCanExecuteChanged();
+        DownloadCsvTemplateCommand.NotifyCanExecuteChanged();
+        ImportCsvCommand.NotifyCanExecuteChanged();
     }
 
     private string Translate(string english, string dari, string pashto) =>

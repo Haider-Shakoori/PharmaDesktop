@@ -30,6 +30,31 @@ public sealed record NavigationItemViewModel(
         _ => "#64748B",
     };
 
+    public string? Hotkey => Key switch
+    {
+        "dashboard" => "F1",
+        "pos" => "F2",
+        "purchases" => "F3",
+        "closing" => "F4",
+        "backup" => "F5",
+        "sync" => "F6",
+        "medicines" => "F7",
+        "inventory" => "F8",
+        "batches" => "F9",
+        "reports" => "F10",
+        "customers" => "F11",
+        "expenses" => "F12",
+        "suppliers" => "Alt+1",
+        "returns" => "Alt+2",
+        "updates" => "Alt+3",
+        "network" => "Alt+4",
+        "settings" => "Alt+5",
+        "password" => "Alt+6",
+        _ => null,
+    };
+
+    public string Tooltip => Hotkey is null ? Label : $"{Label}  ({Hotkey})";
+
     public string AccentSoftHex => Key switch
     {
         "dashboard" => "#E8F2FF",

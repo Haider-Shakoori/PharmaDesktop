@@ -3,6 +3,7 @@ using System.Windows;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
+using BusinessOS.Pharmacy.Desktop.Authentication;
 using BusinessOS.Pharmacy.Desktop.Customers;
 using BusinessOS.Pharmacy.Desktop.Backup;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
@@ -70,6 +71,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         BackupRestoreViewModel backupRestore,
         UpdateViewModel updates,
         NetworkSettingsViewModel networkSettings,
+        PasswordChangeViewModel passwordChange,
         NetworkConfiguration networkConfiguration,
         IServiceProvider services)
     {
@@ -91,6 +93,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         BackupRestore = backupRestore;
         Updates = updates;
         NetworkSettings = networkSettings;
+        PasswordChange = passwordChange;
         currentPage = Dashboard;
 
         Dashboard.SetLanguage(SelectedLanguage);
@@ -104,6 +107,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         DailyClosing.SetLanguage(SelectedLanguage);
         Reports.SetLanguage(SelectedLanguage);
         NetworkSettings.SetLanguage(SelectedLanguage);
+        PasswordChange.SetLanguage(SelectedLanguage);
         Dashboard.NavigationRequested += OnDashboardNavigationRequested;
 
         if (_connectionMonitor is not null)
@@ -141,6 +145,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public BackupRestoreViewModel BackupRestore { get; }
     public UpdateViewModel Updates { get; }
     public NetworkSettingsViewModel NetworkSettings { get; }
+    public PasswordChangeViewModel PasswordChange { get; }
 
     public string ApplicationName => "BusinessOS Pharmacy";
     public string ProductName => "BusinessOS Pharmacy";
@@ -261,6 +266,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         BackupRestore.SetLanguage(SelectedLanguage);
         Updates.SetLanguage(SelectedLanguage);
         NetworkSettings.SetLanguage(SelectedLanguage);
+        PasswordChange.SetLanguage(SelectedLanguage);
         CurrentSectionKey = "dashboard";
         CurrentPage = Dashboard;
         RefreshNavigation();
@@ -282,6 +288,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         BackupRestore.SetLanguage(value);
         Updates.SetLanguage(value);
         NetworkSettings.SetLanguage(value);
+        PasswordChange.SetLanguage(value);
         RefreshLanStatusText();
         RefreshNavigation();
         RaisePageText();
@@ -350,6 +357,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         AddIfAllowed("settings.manage", "settings", Translate("Settings", "تنظیمات", "امستنې"), administration);
+        AddNavigationItem("password", Translate("Change Password", "تغییر رمز عبور", "پټنوم بدلول"), administration);
     }
 
     private void AddIfAllowed(string permission, string key, string label, string group)
@@ -487,6 +495,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentSectionKey = "customers";
                 CurrentPage = Customers;
                 await Customers.LoadAsync();
+                break;
+
+            case "password":
+                CurrentSectionKey = "password";
+                CurrentPage = PasswordChange;
                 break;
         }
     }
