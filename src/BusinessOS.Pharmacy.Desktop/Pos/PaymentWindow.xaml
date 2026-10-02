@@ -93,7 +93,7 @@
                                        Foreground="#64748B"
                                        Margin="0,4,0,0">
                                 <Run Text="Customer: " />
-                                <Run Text="{Binding PaymentCustomerText}" />
+                                <Run Text="{Binding PaymentCustomerText, Mode=OneWay}" />
                             </TextBlock>
                         </StackPanel>
 
