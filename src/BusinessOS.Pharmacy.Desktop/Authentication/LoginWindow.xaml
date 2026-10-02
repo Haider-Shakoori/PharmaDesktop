@@ -1,7 +1,7 @@
 <Window x:Class="BusinessOS.Pharmacy.Desktop.Authentication.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Icon="/Assets/Darmaltoon.ico"
+        Icon="pack://application:,,,/Darmaltoon;component/Assets/Darmaltoon.ico"
         Title="Sign in — Darmaltoon"
         Width="560" Height="570"
         ResizeMode="NoResize"
