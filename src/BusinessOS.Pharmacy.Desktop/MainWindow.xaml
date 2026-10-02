@@ -99,7 +99,18 @@
 
     <Grid FlowDirection="{Binding LayoutDirection}" Background="{DynamicResource AppBackgroundBrush}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="{Binding SidebarWidth}" />
+            <ColumnDefinition>
+                <ColumnDefinition.Style>
+                    <Style TargetType="ColumnDefinition">
+                        <Setter Property="Width" Value="260" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SidebarCollapsed}" Value="True">
+                                <Setter Property="Width" Value="{Binding SidebarWidth}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ColumnDefinition.Style>
+            </ColumnDefinition>
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -120,7 +131,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <Border Width="48" Height="48"
-                                CornerRadius="24"
+                                CornerRadius="16"
                                 Background="{DynamicResource BrandPrimaryBrush}">
                             <Path Data="{StaticResource IconPharmacyCross}"
                                   Width="27" Height="27"
@@ -164,8 +175,9 @@
 
                     <Button Command="{Binding ToggleSidebarCommand}"
                             Style="{StaticResource GhostButton}"
-                            Padding="8,6"
-                            Margin="0,3,0,0"
+                            Padding="3,0"
+                            MinHeight="20" Height="20"
+                            Margin="0,0,0,0"
                             HorizontalAlignment="Right"
                             ToolTip="Collapse or expand navigation">
                         <StackPanel Orientation="Horizontal">
@@ -241,8 +253,8 @@
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Label}"
                                                    Margin="4,0,0,0"
-                                                   FontSize="12.5"
-                                                   FontWeight="SemiBold"
+                                                   FontSize="13"
+                                                   FontWeight="Normal"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis">
                                             <TextBlock.Style>
@@ -298,7 +310,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Border Grid.Column="0"
-                            MinWidth="240"
+                            MinWidth="160"
                             MaxWidth="470"
                             Height="38"
                             HorizontalAlignment="Stretch"
@@ -362,7 +374,7 @@
                                 BorderThickness="1"
                                 CornerRadius="8"
                                 Padding="10,5"
-                                MinWidth="182"
+                                MinWidth="144"
                                 Margin="0,0,8,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -384,7 +396,7 @@
                             </Grid>
                         </Border>
 
-                        <Border Width="118" Height="38"
+                        <Border Width="104" Height="34"
                                 Background="#F8FBFF"
                                 BorderBrush="#D9E5F1"
                                 BorderThickness="1"

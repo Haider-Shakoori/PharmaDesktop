@@ -6,8 +6,8 @@
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="Padding" Value="7,3" />
-        <Setter Property="Margin" Value="0,2" />
-        <Setter Property="MinHeight" Value="36" />
+        <Setter Property="Margin" Value="0,1" />
+        <Setter Property="MinHeight" Value="34" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
@@ -16,7 +16,7 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="1"
-                                CornerRadius="8"
+                                CornerRadius="6"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="Center" />
@@ -42,8 +42,8 @@
                             <Setter TargetName="Chrome" Property="Background" Value="#E5F1FF" />
                         </Trigger>
                         <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#EAF4FF" />
-                            <Setter TargetName="Chrome" Property="BorderBrush" Value="#C7DDF4" />
+                            <Setter TargetName="Chrome" Property="Background" Value="#DDEEFF" />
+                            <Setter TargetName="Chrome" Property="BorderBrush" Value="Transparent" />
                             <Setter TargetName="SelectionRail" Property="Opacity" Value="1" />
                             <Setter Property="Foreground" Value="#0B5FC6" />
                         </DataTrigger>

@@ -5,10 +5,16 @@
              TextOptions.TextFormattingMode="Display"
              TextOptions.TextRenderingMode="ClearType">
     <UserControl.Resources>
+        <!-- Dashboard-local typography keeps shared module styles unchanged. -->
+        <Style TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="#24334F" />
+        </Style>
         <Style x:Key="DashboardCard" TargetType="Border" BasedOn="{StaticResource SurfaceCard}">
             <Setter Property="Padding" Value="11" />
-            <Setter Property="CornerRadius" Value="11" />
-            <Setter Property="BorderBrush" Value="#DDE6F0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BorderBrush" Value="#E7EDF4" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="BorderBrush" Value="#C9D9EA" />
@@ -18,20 +24,40 @@
 
         <Style x:Key="DashboardGridCell" TargetType="DataGridCell">
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="6,0" />
+            <Setter Property="Padding" Value="5,0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         </Style>
 
         <Style x:Key="DashboardGridHeader" TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="#F4F7FB" />
             <Setter Property="Foreground" Value="#314763" />
-            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontSize" Value="10" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Padding" Value="7,0" />
+            <Setter Property="Padding" Value="5,0" />
             <Setter Property="BorderBrush" Value="#E5ECF4" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <TextBlock Text="{TemplateBinding Content}" FontSize="{TemplateBinding FontSize}"
+                                       FontWeight="{TemplateBinding FontWeight}" Foreground="{TemplateBinding Foreground}"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="DashboardGrid" TargetType="DataGrid">
@@ -48,15 +74,17 @@
             <Setter Property="HorizontalGridLinesBrush" Value="#E8EEF5" />
             <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
             <Setter Property="RowHeaderWidth" Value="0" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden" />
             <Setter Property="RowHeight" Value="24" />
-            <Setter Property="ColumnHeaderHeight" Value="26" />
+            <Setter Property="ColumnHeaderHeight" Value="24" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="CellStyle" Value="{StaticResource DashboardGridCell}" />
             <Setter Property="ColumnHeaderStyle" Value="{StaticResource DashboardGridHeader}" />
         </Style>
 
         <Style x:Key="MiniLabel" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10.2" />
+            <Setter Property="FontSize" Value="11" />
             <Setter Property="Foreground" Value="#64748B" />
         </Style>
 
@@ -67,8 +95,8 @@
         </Style>
 
         <Style x:Key="DashboardSectionIcon" TargetType="Path">
-            <Setter Property="Width" Value="20" />
-            <Setter Property="Height" Value="20" />
+            <Setter Property="Width" Value="19" />
+            <Setter Property="Height" Value="19" />
             <Setter Property="Margin" Value="0,0,8,0" />
             <Setter Property="Stretch" Value="Uniform" />
             <Setter Property="Fill" Value="Transparent" />
@@ -90,10 +118,10 @@
             <Setter Property="StrokeLineJoin" Value="Round" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IconKey}" Value="reports"><Setter Property="Data" Value="{StaticResource IconReports}" /></DataTrigger>
-                <DataTrigger Binding="{Binding IconKey}" Value="purchases"><Setter Property="Data" Value="{StaticResource IconPurchases}" /></DataTrigger>
+                <DataTrigger Binding="{Binding IconKey}" Value="purchases"><Setter Property="Data" Value="{StaticResource IconPos}" /></DataTrigger>
                 <DataTrigger Binding="{Binding IconKey}" Value="inventory"><Setter Property="Data" Value="{StaticResource IconInventory}" /></DataTrigger>
-                <DataTrigger Binding="{Binding IconKey}" Value="batches"><Setter Property="Data" Value="{StaticResource IconBatches}" /></DataTrigger>
-                <DataTrigger Binding="{Binding IconKey}" Value="expenses"><Setter Property="Data" Value="{StaticResource IconExpenses}" /></DataTrigger>
+                <DataTrigger Binding="{Binding IconKey}" Value="batches"><Setter Property="Data" Value="{StaticResource IconCalendar}" /></DataTrigger>
+                <DataTrigger Binding="{Binding IconKey}" Value="expenses"><Setter Property="Data" Value="{StaticResource IconWallet}" /></DataTrigger>
             </Style.Triggers>
         </Style>
 
@@ -126,8 +154,14 @@
         </Style>
 
         <Style x:Key="DashboardLinkButton" TargetType="Button" BasedOn="{StaticResource ProfessionalButtonBase}">
-            <Setter Property="MinHeight" Value="26" />
-            <Setter Property="Padding" Value="9,3" />
+            <Style.Resources>
+                <Style TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="10" />
+                    <Setter Property="Foreground" Value="#31547C" />
+                </Style>
+            </Style.Resources>
+            <Setter Property="MinHeight" Value="23" />
+            <Setter Property="Padding" Value="7,2" />
             <Setter Property="FontSize" Value="10" />
             <Setter Property="Foreground" Value="#0B6FD3" />
             <Setter Property="Background" Value="#EAF4FF" />
@@ -161,32 +195,41 @@
                         <Border Style="{StaticResource DashboardCard}" Margin="0,0,8,0" MinHeight="94">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="54" />
+                                    <ColumnDefinition Width="62" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Border Width="46"
-                                        Height="46"
-                                        CornerRadius="10"
-                                        Background="{Binding IconForeground}"
-                                        VerticalAlignment="Top"
-                                        HorizontalAlignment="Left">
+                                <Border Width="54"
+                                        Height="54"
+                                        CornerRadius="9">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{Binding IconForeground}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IconKey}" Value="reports"><Setter Property="Background" Value="#3FC365" /></DataTrigger>
+                                                <DataTrigger Binding="{Binding IconKey}" Value="purchases"><Setter Property="Background" Value="#159CF4" /></DataTrigger>
+                                                <DataTrigger Binding="{Binding IconKey}" Value="inventory"><Setter Property="Background" Value="#FFB51B" /></DataTrigger>
+                                                <DataTrigger Binding="{Binding IconKey}" Value="batches"><Setter Property="Background" Value="#FA3D70" /></DataTrigger>
+                                                <DataTrigger Binding="{Binding IconKey}" Value="expenses"><Setter Property="Background" Value="#6035EF" /></DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
                                     <Path Style="{StaticResource DashboardMetricIconPath}"
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center" />
                                 </Border>
                                 <StackPanel Grid.Column="1" Margin="6,0,0,0">
                                     <TextBlock Text="{Binding Label}"
-                                               FontSize="11.2"
+                                               FontSize="12"
                                                FontWeight="SemiBold"
                                                Foreground="#2E4667"
                                                TextWrapping="Wrap" />
                                     <Viewbox Margin="0,3,0,0"
-                                             Height="21"
+                                             Height="25"
                                              Stretch="Uniform"
                                              StretchDirection="DownOnly"
                                              HorizontalAlignment="Left">
                                         <TextBlock Text="{Binding Value}"
-                                                   FontSize="19.5"
+                                                   FontSize="21"
                                                    FontWeight="Bold"
                                                    Foreground="#0B1F44"
                                                    TextWrapping="NoWrap" />
@@ -206,7 +249,7 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="276" />
+                    <ColumnDefinition Width="0.33*" MinWidth="300" />
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Margin="0,0,7,0">
@@ -249,7 +292,7 @@
                                     <ColumnDefinition Width="146" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
-                                    <Viewbox Height="126" Stretch="Fill">
+                                    <Viewbox Height="138" Stretch="Fill">
                                         <Canvas Width="760" Height="178" Background="White">
                                             <Line X1="28" Y1="24" X2="736" Y2="24" Stroke="#E8EEF5" StrokeThickness="1" />
                                             <Line X1="28" Y1="54" X2="736" Y2="54" Stroke="#E8EEF5" StrokeThickness="1" />
@@ -259,7 +302,7 @@
                                             <Polygon Points="{Binding SalesAreaPoints}" Fill="#24168CF8" />
                                             <Polyline Points="{Binding SalesChartPoints}"
                                                       Stroke="#0B82F6"
-                                                      StrokeThickness="3"
+                                                      StrokeThickness="1.8"
                                                       StrokeLineJoin="Round" />
                                             <ItemsControl ItemsSource="{Binding SalesChartPoints}">
                                                 <ItemsControl.ItemsPanel>
@@ -342,7 +385,7 @@
                                         <Path Data="{StaticResource IconInventory}"
                                               Style="{StaticResource DashboardSectionIcon}"
                                               Stroke="#F97316" />
-                                        <TextBlock Text="Low Stock Items" FontSize="13" FontWeight="Bold"
+                                        <TextBlock Text="Low Stock Items" FontSize="14" FontWeight="SemiBold"
                                                    Foreground="#102A56" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <Button Grid.Column="1"
@@ -353,16 +396,16 @@
                                 </Grid>
                                 <DataGrid ItemsSource="{Binding LowStockItems}"
                                           Style="{StaticResource DashboardGrid}"
-                                          Height="150">
+                                          Height="144">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Medicine" Binding="{Binding Medicine}" Width="*">
+                                        <DataGridTextColumn Header="Medicine" Binding="{Binding Medicine}" Width="*" MinWidth="145">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock" BasedOn="{StaticResource DashboardCellText}">
                                                     <Setter Property="ToolTip" Value="{Binding Medicine}" />
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="Current Stock" Binding="{Binding CurrentStock, StringFormat={}{0:0.####}}" Width="82">
+                                        <DataGridTextColumn Header="Current Stock" Binding="{Binding CurrentStock, StringFormat={}{0:0.####}}" Width="108">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="#EF4444" />
@@ -371,11 +414,11 @@
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="Min. Stock" Binding="{Binding MinimumStock, StringFormat={}{0:0.####}}" Width="65" />
+                                        <DataGridTextColumn Header="Min. Stock" Binding="{Binding MinimumStock, StringFormat={}{0:0.####}}" Width="85" />
                                         <DataGridTemplateColumn Header="Status" Width="74">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Border Background="#FFE7EA" CornerRadius="7" Padding="7,2"
+                                                    <Border Background="#FFE7EA" CornerRadius="7" Padding="5,1"
                                                             HorizontalAlignment="Center" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Status}" FontSize="9.5" Foreground="#E11D48" FontWeight="SemiBold" />
                                                     </Border>
@@ -395,10 +438,10 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Orientation="Horizontal">
-                                        <Path Data="{StaticResource IconBatches}"
+                                        <Path Data="{StaticResource IconCalendar}"
                                               Style="{StaticResource DashboardSectionIcon}"
                                               Stroke="#F43F5E" />
-                                        <TextBlock Text="Expiring Soon" FontSize="13" FontWeight="Bold"
+                                        <TextBlock Text="Expiring Soon" FontSize="14" FontWeight="SemiBold"
                                                    Foreground="#102A56" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <Button Grid.Column="1"
@@ -409,21 +452,21 @@
                                 </Grid>
                                 <DataGrid ItemsSource="{Binding ExpiryItems}"
                                           Style="{StaticResource DashboardGrid}"
-                                          Height="150">
+                                          Height="144">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Medicine" Binding="{Binding Medicine}" Width="*">
+                                        <DataGridTextColumn Header="Medicine" Binding="{Binding Medicine}" Width="*" MinWidth="145">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock" BasedOn="{StaticResource DashboardCellText}">
                                                     <Setter Property="ToolTip" Value="{Binding Medicine}" />
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="Batch No." Binding="{Binding BatchNumber}" Width="70" />
-                                        <DataGridTextColumn Header="Expiry Date" Binding="{Binding ExpiryDate, StringFormat={}{0:dd MMM yyyy}}" Width="86" />
-                                        <DataGridTemplateColumn Header="Days Left" Width="66">
+                                        <DataGridTextColumn Header="Batch No." Binding="{Binding BatchNumber}" Width="80" />
+                                        <DataGridTextColumn Header="Expiry Date" Binding="{Binding ExpiryDate, StringFormat={}{0:dd MMM yyyy}}" Width="100" />
+                                        <DataGridTemplateColumn Header="Days Left" Width="84">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Border Background="#FFF1D6" CornerRadius="7" Padding="7,2"
+                                                    <Border Background="#FFF1D6" CornerRadius="7" Padding="5,1"
                                                             HorizontalAlignment="Center" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding DaysLeft, StringFormat={}{0} days}" FontSize="9.5"
                                                                    Foreground="#D97706" FontWeight="SemiBold" />
@@ -445,10 +488,10 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Orientation="Horizontal">
-                                    <Path Data="{StaticResource IconReports}"
+                                    <Path Data="{StaticResource IconExpenses}"
                                           Style="{StaticResource DashboardSectionIcon}"
                                           Stroke="#0B82F6" />
-                                    <TextBlock Text="Recent Transactions" FontSize="13" FontWeight="Bold"
+                                    <TextBlock Text="Recent Transactions" FontSize="14" FontWeight="SemiBold"
                                                Foreground="#102A56" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <Button Grid.Column="1"
@@ -459,13 +502,13 @@
                             </Grid>
                             <DataGrid ItemsSource="{Binding RecentTransactions}"
                                       Style="{StaticResource DashboardGrid}"
-                                      Height="126">
+                                      Height="144">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Date / Time" Binding="{Binding OccurredAt, StringFormat={}{0:dd MMM yyyy HH:mm}}" Width="116" />
                                     <DataGridTemplateColumn Header="Type" Width="58">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Border Background="#E7F2FF" CornerRadius="7" Padding="7,2"
+                                                <Border Background="#E7F2FF" CornerRadius="7" Padding="5,1"
                                                         HorizontalAlignment="Left" VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding Type}" FontSize="9.5" Foreground="#0B6FD3" FontWeight="SemiBold" />
                                                 </Border>
@@ -473,14 +516,14 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTextColumn Header="Invoice/Purchase #" Binding="{Binding DocumentNumber}" Width="132" />
-                                    <DataGridTextColumn Header="Customer / Supplier" Binding="{Binding Party}" Width="*" />
-                                    <DataGridTextColumn Header="Items" Binding="{Binding Items}" Width="44" />
-                                    <DataGridTextColumn Header="Total (AFN)" Binding="{Binding Total, StringFormat={}{0:N2}}" Width="78" />
-                                    <DataGridTextColumn Header="Payment Method" Binding="{Binding PaymentMethod}" Width="88" />
+                                    <DataGridTextColumn Header="Customer / Supplier" Binding="{Binding Party}" Width="*" MinWidth="160" />
+                                    <DataGridTextColumn Header="Items" Binding="{Binding Items}" Width="54" />
+                                    <DataGridTextColumn Header="Total (AFN)" Binding="{Binding Total, StringFormat={}{0:N2}}" Width="92" />
+                                    <DataGridTextColumn Header="Payment Method" Binding="{Binding PaymentMethod}" Width="125" />
                                     <DataGridTemplateColumn Header="Status" Width="66">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Border CornerRadius="7" Padding="7,2"
+                                                <Border CornerRadius="7" Padding="5,1"
                                                         HorizontalAlignment="Center" VerticalAlignment="Center">
                                                     <Border.Style>
                                                         <Style TargetType="Border">
@@ -529,10 +572,10 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Orientation="Horizontal">
-                                    <Path Data="{StaticResource IconBadgeCheck}"
+                                    <Path Data="{StaticResource IconRoles}"
                                           Style="{StaticResource DashboardSectionIcon}"
                                           Stroke="#16A34A" />
-                                    <TextBlock Text="License &amp; Subscription" FontSize="13.5" FontWeight="Bold"
+                                    <TextBlock Text="License &amp; Subscription" FontSize="14" FontWeight="SemiBold"
                                                Foreground="#102A56" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <Border Grid.Column="1" Background="#DCFCE7" CornerRadius="8" Padding="8,3">
@@ -540,7 +583,7 @@
                                 </Border>
                             </Grid>
                             <TextBlock Text="{Binding LicenseValidityText}" Margin="0,6,0,5"
-                                       FontSize="10.5" Foreground="#52677F" />
+                                       FontSize="11.5" Foreground="#52677F" />
                             <ProgressBar Value="{Binding LicenseProgressValue}" Maximum="100"
                                          Style="{StaticResource PremiumProgressBar}" />
                             <Grid Margin="0,4,0,5">
@@ -563,11 +606,11 @@
                                         <StackPanel Orientation="Horizontal" Margin="0,2,4,2">
                                             <Border Width="15" Height="15" CornerRadius="8" Background="#DCFCE7"
                                                     VerticalAlignment="Center" Margin="0,0,6,0">
-                                                <Path Data="{StaticResource IconBadgeCheck}" Width="9" Height="9"
+                                                <Path Data="{StaticResource IconRoles}" Width="9" Height="9"
                                                       Stroke="#16A34A" StrokeThickness="2" Fill="Transparent"
                                                       Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
-                                            <TextBlock Text="{Binding}" FontSize="9.4" Foreground="#405875"
+                                            <TextBlock Text="{Binding}" FontSize="10.5" Foreground="#405875"
                                                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
                                     </DataTemplate>
@@ -579,10 +622,10 @@
                     <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,10">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,9">
-                                <Path Data="{StaticResource IconPos}"
+                                <Path Data="{StaticResource IconLightning}"
                                       Style="{StaticResource DashboardSectionIcon}"
                                       Stroke="#F59E0B" />
-                                <TextBlock Text="{Binding QuickActionsTitle}" FontSize="13.5" FontWeight="Bold"
+                                <TextBlock Text="{Binding QuickActionsTitle}" FontSize="14" FontWeight="SemiBold"
                                            Foreground="#102A56" VerticalAlignment="Center" />
                             </StackPanel>
                             <ItemsControl ItemsSource="{Binding QuickActions}">
@@ -591,15 +634,32 @@
                                         <Button Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                 CommandParameter="{Binding Key}"
                                                 IsEnabled="{Binding IsAvailable}"
-                                                Style="{StaticResource ProfessionalButtonBase}"
-                                                Background="{Binding Accent}"
-                                                BorderBrush="{Binding Accent}"
                                                 Foreground="White"
-                                                MinHeight="30"
+                                                MinHeight="35"
                                                 Padding="7,3"
                                                 Margin="0,0,0,4"
                                                 HorizontalContentAlignment="Stretch">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource ProfessionalButtonBase}">
+                                                    <Setter Property="Background" Value="{Binding Accent}" />
+                                                    <Setter Property="BorderBrush" Value="{Binding Accent}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Key}" Value="sync">
+                                                            <Setter Property="Background" Value="#DCEBFF" />
+                                                            <Setter Property="BorderBrush" Value="#DCEBFF" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
                                             <Grid>
+                                                <Grid.Resources>
+                                                    <Style x:Key="ActionText" TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="White" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Key}" Value="sync"><Setter Property="Foreground" Value="#1559C6" /></DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Grid.Resources>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="30" />
                                                     <ColumnDefinition Width="*" />
@@ -615,10 +675,10 @@
                                                           VerticalAlignment="Center" />
                                                 </Border>
                                                 <TextBlock Grid.Column="1" Text="{Binding Label}"
-                                                           Foreground="White" FontWeight="SemiBold"
-                                                           FontSize="10.5" VerticalAlignment="Center" />
+                                                           Style="{StaticResource ActionText}" FontWeight="SemiBold"
+                                                           FontSize="11.5" VerticalAlignment="Center" />
                                                 <TextBlock Grid.Column="2" Text="{Binding Shortcut}"
-                                                           Foreground="White" FontSize="9.5"
+                                                           Style="{StaticResource ActionText}" FontSize="10"
                                                            VerticalAlignment="Center" />
                                             </Grid>
                                         </Button>
@@ -639,7 +699,7 @@
                                     <Path Data="{StaticResource IconDashboard}"
                                           Style="{StaticResource DashboardSectionIcon}"
                                           Stroke="#0B82F6" />
-                                    <TextBlock Text="Pharmacy Overview" FontSize="13.5" FontWeight="Bold"
+                                    <TextBlock Text="Pharmacy Overview" FontSize="14" FontWeight="SemiBold"
                                                Foreground="#102A56" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <Button Grid.Column="1"
@@ -649,33 +709,33 @@
                                         Style="{StaticResource DashboardLinkButton}" />
                             </Grid>
 
-                            <Grid Margin="0,3">
+                            <Grid Margin="0,2">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                 <TextBlock Text="Total Medicines" Style="{StaticResource MiniLabel}" />
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewMedicinesText}" Style="{StaticResource OverviewValue}" />
                             </Grid>
-                            <Grid Margin="0,3">
+                            <Grid Margin="0,2">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                 <TextBlock Text="Total Batches" Style="{StaticResource MiniLabel}" />
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewBatchesText}" Style="{StaticResource OverviewValue}" />
                             </Grid>
-                            <Grid Margin="0,3">
+                            <Grid Margin="0,2">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                 <TextBlock Text="Total Suppliers" Style="{StaticResource MiniLabel}" />
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewSuppliersText}" Style="{StaticResource OverviewValue}" />
                             </Grid>
-                            <Grid Margin="0,3">
+                            <Grid Margin="0,2">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                 <TextBlock Text="Total Customers" Style="{StaticResource MiniLabel}" />
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewCustomersText}" Style="{StaticResource OverviewValue}" />
                             </Grid>
                             <Separator Margin="0,4" Background="#E8EEF5" />
-                            <Grid Margin="0,3">
+                            <Grid Margin="0,2">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                 <TextBlock Text="Total Sales (This Month)" Style="{StaticResource MiniLabel}" />
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewMonthSalesText}" Style="{StaticResource OverviewValue}" FontSize="10.5" />
                             </Grid>
-                            <Grid Margin="0,3">
+                            <Grid Margin="0,2">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                 <TextBlock Text="Total Purchases (This Month)" Style="{StaticResource MiniLabel}" />
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewMonthPurchasesText}" Style="{StaticResource OverviewValue}" FontSize="10.5" />
