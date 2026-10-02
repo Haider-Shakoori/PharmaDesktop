@@ -104,11 +104,11 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Border Width="48" Height="48"
-                                CornerRadius="24"
+                        <Border Width="52" Height="52"
+                                CornerRadius="26"
                                 Background="{DynamicResource BrandPrimaryBrush}">
                             <Path Data="{StaticResource IconPharmacyCross}"
-                                  Width="27" Height="27"
+                                  Width="29" Height="29"
                                   Stretch="Uniform"
                                   Fill="White"
                                   StrokeThickness="0"
@@ -125,15 +125,16 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBlock Text="BusinessOS" FontSize="17" FontWeight="Bold" Foreground="#102A56" />
-                            <TextBlock Text="Pharmacy" FontSize="17" FontWeight="Bold"
+                            <TextBlock Text="BusinessOS" FontSize="18.5" FontWeight="Bold" Foreground="#102A56" />
+                            <TextBlock Text="Pharmacy" FontSize="18.5" FontWeight="Bold"
                                        Foreground="{DynamicResource BrandPrimaryBrush}" Margin="0,-3,0,0" />
                         </StackPanel>
                     </Grid>
-                    <TextBlock Text="{Binding Dashboard.PharmacyName}"
-                               Margin="6,6,0,0"
-                               FontSize="11.5"
-                               Foreground="#52677F"
+                    <TextBlock Text="Manage Today  ·  Healthier Tomorrow"
+                               Margin="5,7,0,0"
+                               FontSize="10.5"
+                               FontWeight="SemiBold"
+                               Foreground="#60758D"
                                TextTrimming="CharacterEllipsis">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
@@ -231,7 +232,7 @@
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Label}"
                                                    Margin="4,0,0,0"
-                                                   FontSize="12.5"
+                                                   FontSize="13"
                                                    FontWeight="SemiBold"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis">

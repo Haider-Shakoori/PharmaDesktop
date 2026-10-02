@@ -100,6 +100,22 @@ public sealed class StartupCoordinator
                 "The saved activation could not be verified. Please activate or verify the subscription online.";
         }
 
+        if (entitlement is not null)
+        {
+            try
+            {
+                using var refreshTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                refreshTimeout.CancelAfter(TimeSpan.FromSeconds(6));
+                entitlement = await licenseService.RefreshAsync(refreshTimeout.Token);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+            }
+            catch
+            {
+            }
+        }
+
         if (entitlement is null)
         {
             // Preserve an already assigned activation across upgrades and source/debug runs.

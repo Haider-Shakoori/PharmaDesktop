@@ -455,14 +455,14 @@ public sealed partial class DashboardViewModel : ObservableObject
             var entitlement = activation.Entitlement;
             var now = _clock.UtcNow;
 
-            var displayExpires = entitlement.SubscriptionState == Domain.Licensing.SubscriptionState.Trial
-                ? entitlement.TrialExpiresAt
-                  ?? entitlement.SubscriptionExpiresAt
-                  ?? entitlement.ExpiresAt
-                : entitlement.SubscriptionExpiresAt
-                  ?? entitlement.ExpiresAt;
+            var displayExpires = entitlement.SubscriptionExpiresAt
+                ?? (entitlement.SubscriptionState == Domain.Licensing.SubscriptionState.Trial
+                    ? entitlement.TrialExpiresAt
+                    : null)
+                ?? entitlement.ExpiresAt;
 
-            var displayStarts = entitlement.SubscriptionState == Domain.Licensing.SubscriptionState.Trial
+            var displayStarts = entitlement.SubscriptionState == Domain.Licensing.SubscriptionState.Trial &&
+                                entitlement.SubscriptionExpiresAt is null
                 ? entitlement.TrialStartedAt ?? entitlement.IssuedAt
                 : entitlement.IssuedAt;
 
