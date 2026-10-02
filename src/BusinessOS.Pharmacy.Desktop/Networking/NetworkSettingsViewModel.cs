@@ -21,6 +21,8 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     private readonly Notifications.NotificationService _notifications;
     private readonly Printing.ReceiptSettingsStore _receiptSettings;
     private readonly Pos.PosSettingsStore _posSettings;
+    private readonly Appearance.AppearanceSettingsStore _appearanceSettings;
+    private bool _applyingAppearance;
 
     private UiLanguage _language = UiLanguageCatalog.All[0];
 
@@ -52,6 +54,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     [ObservableProperty] private bool posShowTopSellers = true;
     [ObservableProperty] private int posTopSellerCount = 10;
     [ObservableProperty] private int posTopSellerDays = 30;
+    [ObservableProperty] private bool useGlassTheme;
     [ObservableProperty] private RegisteredTerminal? selectedTerminal;
     [ObservableProperty] private string renameTerminalTo = string.Empty;
     [ObservableProperty] private bool isBusy;
@@ -64,7 +67,8 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         Profile.UserProfileStore profileStore,
         Notifications.NotificationService notifications,
         Printing.ReceiptSettingsStore receiptSettings,
-        Pos.PosSettingsStore posSettings)
+        Pos.PosSettingsStore posSettings,
+        Appearance.AppearanceSettingsStore appearanceSettings)
     {
         _services = services;
         _configurationStore = configurationStore;
@@ -74,6 +78,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         _notifications = notifications;
         _receiptSettings = receiptSettings;
         _posSettings = posSettings;
+        _appearanceSettings = appearanceSettings;
 
         UploadProfileImageCommand = new RelayCommand(UploadProfileImage);
         SaveProfileCommand = new RelayCommand(SaveProfile);
@@ -195,6 +200,85 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
 
     public IReadOnlyList<int> PosTopSellerCountOptions { get; } = [5, 10, 20, 30];
     public IReadOnlyList<int> PosTopSellerDaysOptions { get; } = [7, 15, 30, 90, 180, 365];
+
+    public string AppearanceTitle => T("Appearance", "ظاهر", "ښکاره");
+    public string AppearanceSubtitle => T(
+        "Application theme for this workstation. Changes apply immediately.",
+        "تم برنامه برای این ایستگاه کاری. تغییرات فوراً اعمال می‌شوند.",
+        "د دې ورک سټیشن لپاره د اپلیکیشن بڼه. بدلونونه سمدلاسه پلي کیږي.");
+    public string GlassThemeLabel => T("Glass", "شیشه‌ای", "شیشې");
+    public string GlassThemeDescription => T(
+        "Modern translucent BusinessOS interface",
+        "رابطه مدرن و نیمه‌شفاف BusinessOS",
+        "عصري نیمه روڼ BusinessOS انټرفیس");
+    public string ClassicThemeLabel => T("Classic", "کلاسیک", "کلاسیک");
+    public string ClassicThemeDescription => T(
+        "Original BusinessOS desktop interface",
+        "رابطه اصلی دسکتاپ BusinessOS",
+        "اصلي BusinessOS ډیسکټاپ انټرفیس");
+    public string AppearanceUpdatedMessage => T(
+        "Appearance updated",
+        "ظاهر به‌روزرسانی شد",
+        "ښکاره نوی شو");
+
+    partial void OnUseGlassThemeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(UseClassicTheme));
+
+        if (_applyingAppearance)
+        {
+            return;
+        }
+
+        ApplyAppearance(value ? Appearance.AppearanceTheme.Glass : Appearance.AppearanceTheme.Classic);
+    }
+
+    public bool UseClassicTheme
+    {
+        get => !UseGlassTheme;
+        set
+        {
+            if (value)
+            {
+                UseGlassTheme = false;
+            }
+        }
+    }
+
+    public void LoadAppearance()
+    {
+        _applyingAppearance = true;
+        try
+        {
+            var settings = _appearanceSettings.Load();
+            var theme = Enum.TryParse<Appearance.AppearanceTheme>(settings.Theme, true, out var parsed)
+                ? parsed
+                : Appearance.AppearanceTheme.Classic;
+            UseGlassTheme = theme == Appearance.AppearanceTheme.Glass;
+        }
+        finally
+        {
+            _applyingAppearance = false;
+        }
+    }
+
+    private void ApplyAppearance(Appearance.AppearanceTheme theme)
+    {
+        try
+        {
+            Appearance.ThemeManager.Apply(theme);
+            _appearanceSettings.Save(new Appearance.AppearanceSettings(theme.ToString()));
+
+            _notifications.ShowSuccess(AppearanceUpdatedMessage);
+        }
+        catch (Exception exception)
+        {
+            _notifications.ShowError(T(
+                $"Appearance could not be updated: {exception.Message}",
+                $"به‌روزرسانی ظاهر ممکن نشد: {exception.Message}",
+                $"ښکاره نوی نشو: {exception.Message}"));
+        }
+    }
 
     public ObservableCollection<string> PosTopSellerPreview { get; } = new();
 
@@ -385,6 +469,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
             LoadProfile();
             LoadReceiptSettings();
             LoadPosSettings();
+            LoadAppearance();
 
             var configuration = await _configurationStore.LoadAsync();
             ApplyConfiguration(configuration);

@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
+using BusinessOS.Pharmacy.Desktop.Appearance;
 using BusinessOS.Pharmacy.Desktop.Diagnostics;
 using BusinessOS.Pharmacy.Desktop.Hosting;
 using BusinessOS.Pharmacy.Desktop.Networking;
@@ -20,6 +21,8 @@ public partial class App : System.Windows.Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        ApplyStoredAppearance();
 
         if (TryHandleInstallVerification(e.Args))
         {
@@ -88,6 +91,15 @@ public partial class App : System.Windows.Application
         await _host.Services
             .GetRequiredService<StartupCoordinator>()
             .StartAsync();
+    }
+
+    private static void ApplyStoredAppearance()
+    {
+        var stored = new AppearanceSettingsStore().Load();
+        var theme = Enum.TryParse<AppearanceTheme>(stored.Theme, true, out var parsed)
+            ? parsed
+            : AppearanceTheme.Classic;
+        ThemeManager.Apply(theme);
     }
 
     private static bool TryHandleInstallVerification(IReadOnlyList<string> args)

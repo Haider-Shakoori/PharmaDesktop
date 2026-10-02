@@ -158,6 +158,7 @@ public static class DesktopHost
                 services.AddSingleton<Profile.UserProfileStore>();
                 services.AddSingleton<Printing.ReceiptSettingsStore>();
                 services.AddSingleton<Pos.PosSettingsStore>();
+                services.AddSingleton<Appearance.AppearanceSettingsStore>();
                 services.AddSingleton<MainWindowViewModel>();
                 services.AddSingleton<MainWindow>();
                 services.AddSingleton<StartupCoordinator>();

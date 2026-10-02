@@ -16,7 +16,7 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="1"
-                                CornerRadius="6"
+                                CornerRadius="{DynamicResource SidebarItemCornerRadius}"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="Center" />
@@ -32,20 +32,20 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#F1F7FF" />
+                            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource SidebarItemHoverBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryDarkBrush}" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#E5F1FF" />
+                            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource SidebarItemPressedBrush}" />
                         </Trigger>
                         <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="#DDEEFF" />
+                            <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource SidebarItemSelectedBrush}" />
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="Transparent" />
                             <Setter TargetName="SelectionRail" Property="Opacity" Value="1" />
-                            <Setter Property="Foreground" Value="#0B5FC6" />
+                            <Setter Property="Foreground" Value="{DynamicResource SidebarItemSelectedForegroundBrush}" />
                         </DataTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -54,7 +54,7 @@
         <Style.Triggers>
             <DataTrigger Binding="{Binding IsSelected}" Value="True">
                 <Setter Property="Background" Value="{DynamicResource SelectedBrush}" />
-                <Setter Property="BorderBrush" Value="#BFDBFE" />
+                <Setter Property="BorderBrush" Value="{DynamicResource SidebarItemSelectedBorderBrush}" />
                 <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryDarkBrush}" />
             </DataTrigger>
         </Style.Triggers>
@@ -97,6 +97,6 @@
         <Setter Property="Margin" Value="11,15,8,5" />
         <Setter Property="FontSize" Value="10" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="#94A3B8" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
     </Style>
 </ResourceDictionary>

@@ -13,15 +13,15 @@
         <Style TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Segoe UI" />
             <Setter Property="FontSize" Value="12.5" />
-            <Setter Property="Foreground" Value="#24334F" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
         <Style x:Key="DashboardCard" TargetType="Border" BasedOn="{StaticResource SurfaceCard}">
             <Setter Property="Padding" Value="14" />
-            <Setter Property="CornerRadius" Value="9" />
-            <Setter Property="BorderBrush" Value="#E7EDF4" />
+            <Setter Property="CornerRadius" Value="{DynamicResource CardCornerRadius}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" Value="#C9D9EA" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -43,12 +43,12 @@
         </Style>
 
         <Style x:Key="DashboardGridHeader" TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="#F4F7FB" />
-            <Setter Property="Foreground" Value="#314763" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceMutedBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
             <Setter Property="FontSize" Value="10.5" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Padding" Value="6,0" />
-            <Setter Property="BorderBrush" Value="#E5ECF4" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="Template">
@@ -74,8 +74,8 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="RowBackground" Value="White" />
-            <Setter Property="AlternatingRowBackground" Value="#FBFDFF" />
-            <Setter Property="HorizontalGridLinesBrush" Value="#E8EEF5" />
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource SurfaceStrongBrush}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
             <Setter Property="RowHeaderWidth" Value="0" />
             <Setter Property="AlternationCount" Value="2147483647" />
@@ -90,13 +90,13 @@
 
         <Style x:Key="MiniLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="#64748B" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
         </Style>
 
         <Style x:Key="OverviewValue" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="FontSize" Value="12.5" />
-            <Setter Property="Foreground" Value="#102A56" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="HorizontalAlignment" Value="Right" />
         </Style>
 
@@ -135,13 +135,13 @@
             <Setter Property="FontSize" Value="12.5" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-            <Setter Property="Foreground" Value="#314763" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         </Style>
 
         <Style x:Key="PremiumProgressBar" TargetType="ProgressBar">
             <Setter Property="Height" Value="8" />
-            <Setter Property="Background" Value="#E7EDF5" />
-            <Setter Property="Foreground" Value="#22C55E" />
+            <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -164,21 +164,21 @@
             <Style.Resources>
                 <Style TargetType="TextBlock">
                     <Setter Property="FontSize" Value="11" />
-                    <Setter Property="Foreground" Value="#31547C" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
                 </Style>
             </Style.Resources>
             <Setter Property="MinHeight" Value="26" />
             <Setter Property="Padding" Value="9,3" />
             <Setter Property="FontSize" Value="11" />
-            <Setter Property="Foreground" Value="#0B6FD3" />
-            <Setter Property="Background" Value="#EAF4FF" />
-            <Setter Property="BorderBrush" Value="#D6E9FB" />
+            <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryDarkBrush}" />
+            <Setter Property="Background" Value="{DynamicResource BrandPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimarySoftBrush}" />
         </Style>
 
         <Style x:Key="PeriodButton" TargetType="Button" BasedOn="{StaticResource ProfessionalButtonBase}">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#DDE6F0" />
-            <Setter Property="Foreground" Value="#52677F" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceStrongBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="Normal" />
             <Setter Property="MinHeight" Value="28" />
@@ -194,11 +194,11 @@
                 <TextBlock Text="{Binding DashboardTitle}"
                            FontSize="27"
                            FontWeight="Bold"
-                           Foreground="#0B1F44" />
+                           Foreground="{DynamicResource TextPrimaryBrush}" />
                 <TextBlock Text="{Binding WelcomeText}"
                            Margin="0,2,0,0"
                            FontSize="13"
-                           Foreground="#52677F" />
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
             </StackPanel>
 
             <ItemsControl ItemsSource="{Binding Stats}" Margin="0,0,0,8">
@@ -238,7 +238,7 @@
                                     <TextBlock Text="{Binding Label}"
                                                FontSize="13.5"
                                                FontWeight="SemiBold"
-                                               Foreground="#2E4667"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
                                                TextWrapping="Wrap" />
                                     <Viewbox Margin="0,4,0,0"
                                              Height="32"
@@ -249,13 +249,13 @@
                                         <TextBlock Text="{Binding Value}"
                                                    FontSize="24"
                                                    FontWeight="Bold"
-                                                   Foreground="#0B1F44"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                                    TextWrapping="NoWrap" />
                                     </Viewbox>
                                     <TextBlock Text="{Binding Note}"
                                                Margin="0,4,0,0"
                                                FontSize="11.5"
-                                               Foreground="#64748B"
+                                               Foreground="{DynamicResource TextMutedBrush}"
                                                TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
@@ -281,11 +281,11 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Path Data="{StaticResource IconReports}"
                                           Style="{StaticResource DashboardSectionIcon}"
-                                          Stroke="#0B82F6" />
+                                          Stroke="{DynamicResource BrandPrimaryBrush}" />
                                     <TextBlock Text="{Binding SalesOverviewTitle}"
                                                FontSize="17"
                                                FontWeight="Bold"
-                                               Foreground="#15284B"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                VerticalAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
@@ -297,8 +297,8 @@
                                             <Style TargetType="Button" BasedOn="{StaticResource PeriodButton}">
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding SelectedPeriod}" Value="today">
-                                                        <Setter Property="Background" Value="#0B82F6" />
-                                                        <Setter Property="BorderBrush" Value="#0B82F6" />
+                                                        <Setter Property="Background" Value="{DynamicResource BrandPrimaryBrush}" />
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}" />
                                                         <Setter Property="Foreground" Value="White" />
                                                         <Setter Property="FontWeight" Value="SemiBold" />
                                                     </DataTrigger>
@@ -314,8 +314,8 @@
                                             <Style TargetType="Button" BasedOn="{StaticResource PeriodButton}">
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding SelectedPeriod}" Value="week">
-                                                        <Setter Property="Background" Value="#0B82F6" />
-                                                        <Setter Property="BorderBrush" Value="#0B82F6" />
+                                                        <Setter Property="Background" Value="{DynamicResource BrandPrimaryBrush}" />
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}" />
                                                         <Setter Property="Foreground" Value="White" />
                                                         <Setter Property="FontWeight" Value="SemiBold" />
                                                     </DataTrigger>
@@ -331,8 +331,8 @@
                                             <Style TargetType="Button" BasedOn="{StaticResource PeriodButton}">
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding SelectedPeriod}" Value="month">
-                                                        <Setter Property="Background" Value="#0B82F6" />
-                                                        <Setter Property="BorderBrush" Value="#0B82F6" />
+                                                        <Setter Property="Background" Value="{DynamicResource BrandPrimaryBrush}" />
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}" />
                                                         <Setter Property="Foreground" Value="White" />
                                                         <Setter Property="FontWeight" Value="SemiBold" />
                                                     </DataTrigger>
@@ -347,8 +347,8 @@
                                             <Style TargetType="Button" BasedOn="{StaticResource PeriodButton}">
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding SelectedPeriod}" Value="year">
-                                                        <Setter Property="Background" Value="#0B82F6" />
-                                                        <Setter Property="BorderBrush" Value="#0B82F6" />
+                                                        <Setter Property="Background" Value="{DynamicResource BrandPrimaryBrush}" />
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}" />
                                                         <Setter Property="Foreground" Value="White" />
                                                         <Setter Property="FontWeight" Value="SemiBold" />
                                                     </DataTrigger>
@@ -367,11 +367,11 @@
                                 <StackPanel>
                                     <Viewbox Height="118" Stretch="Fill">
                                         <Canvas Width="760" Height="178" Background="White">
-                                            <Line X1="24" Y1="24" X2="696" Y2="24" Stroke="#E8EEF5" StrokeThickness="1" />
-                                            <Line X1="24" Y1="54" X2="696" Y2="54" Stroke="#E8EEF5" StrokeThickness="1" />
-                                            <Line X1="24" Y1="84" X2="696" Y2="84" Stroke="#E8EEF5" StrokeThickness="1" />
-                                            <Line X1="24" Y1="114" X2="696" Y2="114" Stroke="#E8EEF5" StrokeThickness="1" />
-                                            <Line X1="24" Y1="148" X2="696" Y2="148" Stroke="#CAD8E7" StrokeThickness="1" />
+                                            <Line X1="24" Y1="24" X2="696" Y2="24" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" />
+                                            <Line X1="24" Y1="54" X2="696" Y2="54" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" />
+                                            <Line X1="24" Y1="84" X2="696" Y2="84" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" />
+                                            <Line X1="24" Y1="114" X2="696" Y2="114" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" />
+                                            <Line X1="24" Y1="148" X2="696" Y2="148" Stroke="{DynamicResource BorderStrongBrush}" StrokeThickness="1" />
                                             <Polygon Points="{Binding SalesAreaPoints}" Fill="#24168CF8" />
                                             <ItemsControl ItemsSource="{Binding SalesTimeline, Converter={StaticResource Presentation}, ConverterParameter=Invoices}">
                                                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas Width="760" Height="178" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
@@ -381,10 +381,10 @@
                                                         <Setter Property="Canvas.Top" Value="{Binding Y}" />
                                                     </Style>
                                                 </ItemsControl.ItemContainerStyle>
-                                                <ItemsControl.ItemTemplate><DataTemplate><Rectangle Width="12" Height="{Binding Height}" Fill="#A9D9FC" ToolTip="{Binding Tooltip}" /></DataTemplate></ItemsControl.ItemTemplate>
+                                                <ItemsControl.ItemTemplate><DataTemplate><Rectangle Width="12" Height="{Binding Height}" Fill="{DynamicResource BrandPrimarySoftBrush}" ToolTip="{Binding Tooltip}" /></DataTemplate></ItemsControl.ItemTemplate>
                                             </ItemsControl>
                                             <Polyline Points="{Binding SalesChartPoints}"
-                                                      Stroke="#0B82F6"
+                                                      Stroke="{DynamicResource BrandPrimaryBrush}"
                                                       StrokeThickness="1.8"
                                                       StrokeLineJoin="Round" />
                                             <ItemsControl ItemsSource="{Binding SalesChartPoints}">
@@ -403,7 +403,7 @@
                                                     <DataTemplate>
                                                         <Ellipse Width="7"
                                                                  Height="7"
-                                                                 Fill="#0B82F6"
+                                                                 Fill="{DynamicResource BrandPrimaryBrush}"
                                                                  Stroke="White"
                                                                  StrokeThickness="1.5"
                                                                  Margin="-3.5,-3.5,0,0" />
@@ -416,28 +416,28 @@
                                         <ItemsControl Width="760" Height="16" ItemsSource="{Binding SalesTimeline, Converter={StaticResource Presentation}, ConverterParameter=Hours}">
                                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas Width="760" Height="16" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemContainerStyle><Style TargetType="ContentPresenter"><Setter Property="Canvas.Left" Value="{Binding X}" /></Style></ItemsControl.ItemContainerStyle>
-                                            <ItemsControl.ItemTemplate><DataTemplate><TextBlock Width="36" TextAlignment="Center" Text="{Binding Label}" FontSize="11" Foreground="#64748B" /></DataTemplate></ItemsControl.ItemTemplate>
+                                            <ItemsControl.ItemTemplate><DataTemplate><TextBlock Width="36" TextAlignment="Center" Text="{Binding Label}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" /></DataTemplate></ItemsControl.ItemTemplate>
                                         </ItemsControl>
                                     </Viewbox>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,3,0,0">
-                                        <Ellipse Width="8" Height="8" Fill="#0B82F6" Margin="0,0,5,0" />
-                                        <TextBlock Text="Sales (AFN)" FontSize="11.5" Foreground="#52677F" />
-                                        <Rectangle Width="9" Height="9" Fill="#A9D9FC" Margin="18,0,6,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="Invoices" FontSize="11.5" Foreground="#52677F" />
+                                        <Ellipse Width="8" Height="8" Fill="{DynamicResource BrandPrimaryBrush}" Margin="0,0,5,0" />
+                                        <TextBlock Text="Sales (AFN)" FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                        <Rectangle Width="9" Height="9" Fill="{DynamicResource BrandPrimarySoftBrush}" Margin="18,0,6,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="Invoices" FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" />
                                     </StackPanel>
                                 </StackPanel>
 
                                 <Border Grid.Column="1"
-                                        BorderBrush="#DFE8F2"
+                                        BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1,0,0,0"
                                         Padding="12,4,0,0"
                                         Margin="10,0,0,0">
                                     <StackPanel>
-                                        <TextBlock Text="{Binding SalesTotalText}" FontSize="17" FontWeight="Bold" Foreground="#0B1F44" />
+                                        <TextBlock Text="{Binding SalesTotalText}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
                                         <TextBlock Text="{Binding TotalSalesLabel}" Style="{StaticResource MiniLabel}" Margin="0,2,0,10" />
-                                        <TextBlock Text="{Binding SalesInvoiceCountText}" FontSize="17" FontWeight="Bold" Foreground="#0B1F44" />
+                                        <TextBlock Text="{Binding SalesInvoiceCountText}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
                                         <TextBlock Text="{Binding TotalInvoicesLabel}" Style="{StaticResource MiniLabel}" Margin="0,2,0,10" />
-                                        <TextBlock Text="{Binding AverageInvoiceText}" FontSize="17" FontWeight="Bold" Foreground="#0B1F44" />
+                                        <TextBlock Text="{Binding AverageInvoiceText}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
                                         <TextBlock Text="{Binding AverageInvoiceLabel}" Style="{StaticResource MiniLabel}" />
                                     </StackPanel>
                                 </Border>
@@ -463,7 +463,7 @@
                                               Style="{StaticResource DashboardSectionIcon}"
                                               Stroke="#F97316" />
                                         <TextBlock Text="{Binding LowStockSectionTitle}" FontSize="17" FontWeight="Bold"
-                                                   Foreground="#15284B" VerticalAlignment="Center" />
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <Button Grid.Column="1"
                                             Content="{Binding ViewAllLabel}"
@@ -478,7 +478,7 @@
                                         <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="#" Width="30" CanUserSort="False">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource Presentation}, ConverterParameter=RowNumber}" FontSize="11.5" Foreground="#64748B" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource Presentation}, ConverterParameter=RowNumber}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -492,7 +492,7 @@
                                         <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnCurrentStock, Source={StaticResource ColumnsProxy}}" Binding="{Binding CurrentStock, StringFormat={}{0:0.####}}" Width="92">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="#EF4444" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
                                                     <Setter Property="FontWeight" Value="SemiBold" />
                                                     <Setter Property="TextAlignment" Value="Right" />
                                                     <Setter Property="VerticalAlignment" Value="Center" />
@@ -504,14 +504,14 @@
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="TextAlignment" Value="Right" />
                                                     <Setter Property="VerticalAlignment" Value="Center" />
-                                                    <Setter Property="Foreground" Value="#314763" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
                                         <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnStatus, Source={StaticResource ColumnsProxy}}" Width="72">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Border Background="#FFE7EA" CornerRadius="7" Padding="6,1"
+                                                    <Border Background="{DynamicResource DangerSoftBrush}" CornerRadius="7" Padding="6,1"
                                                             HorizontalAlignment="Left" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Status}" FontSize="10.5" Foreground="#E11D48" FontWeight="SemiBold" />
                                                     </Border>
@@ -535,7 +535,7 @@
                                               Style="{StaticResource DashboardSectionIcon}"
                                               Stroke="#F43F5E" />
                                         <TextBlock Text="{Binding ExpiringSoonSectionTitle}" FontSize="17" FontWeight="Bold"
-                                                   Foreground="#15284B" VerticalAlignment="Center" />
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <Button Grid.Column="1"
                                             Content="{Binding ViewAllLabel}"
@@ -550,7 +550,7 @@
                                         <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="#" Width="30" CanUserSort="False">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource Presentation}, ConverterParameter=RowNumber}" FontSize="11.5" Foreground="#64748B" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource Presentation}, ConverterParameter=RowNumber}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -590,9 +590,9 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Path Data="{StaticResource IconExpenses}"
                                           Style="{StaticResource DashboardSectionIcon}"
-                                          Stroke="#0B82F6" />
+                                          Stroke="{DynamicResource BrandPrimaryBrush}" />
                                     <TextBlock Text="{Binding RecentTransactionsSectionTitle}" FontSize="17" FontWeight="Bold"
-                                               Foreground="#15284B" VerticalAlignment="Center" />
+                                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <Button Grid.Column="1"
                                         Content="{Binding ViewAllLabel}"
@@ -607,7 +607,7 @@
                                         <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="#" Width="34" CanUserSort="False">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource Presentation}, ConverterParameter=RowNumber}" FontSize="11.5" Foreground="#64748B" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource Presentation}, ConverterParameter=RowNumber}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -615,9 +615,9 @@
                                     <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnType, Source={StaticResource ColumnsProxy}}" Width="68">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Border Background="#E7F2FF" CornerRadius="7" Padding="6,1"
+                                                <Border Background="{DynamicResource InfoSoftBrush}" CornerRadius="7" Padding="6,1"
                                                         HorizontalAlignment="Left" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Type}" FontSize="10.5" Foreground="#0B6FD3" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Type}" FontSize="10.5" Foreground="{DynamicResource BrandPrimaryDarkBrush}" FontWeight="SemiBold" />
                                                 </Border>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
@@ -629,7 +629,7 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextAlignment" Value="Right" />
                                                 <Setter Property="VerticalAlignment" Value="Center" />
-                                                <Setter Property="Foreground" Value="#314763" />
+                                                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -638,7 +638,7 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextAlignment" Value="Right" />
                                                 <Setter Property="VerticalAlignment" Value="Center" />
-                                                <Setter Property="Foreground" Value="#314763" />
+                                                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -650,7 +650,7 @@
                                                         HorizontalAlignment="Left" VerticalAlignment="Center">
                                                     <Border.Style>
                                                         <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="#DCFCE7" />
+                                                            <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}" />
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Status}" Value="open">
                                                                     <Setter Property="Background" Value="#DBEAFE" />
@@ -664,7 +664,7 @@
                                                     <TextBlock Text="{Binding Status}" FontSize="10.5" FontWeight="SemiBold">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">
-                                                                <Setter Property="Foreground" Value="#15803D" />
+                                                                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding Status}" Value="open">
                                                                         <Setter Property="Foreground" Value="#2563EB" />
@@ -699,14 +699,14 @@
                                           Style="{StaticResource DashboardSectionIcon}"
                                           Stroke="#16A34A" />
                                     <TextBlock Text="{Binding LicenseSubscriptionTitle}" FontSize="15" FontWeight="Bold"
-                                               Foreground="#15284B" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
-                                <Border Grid.Column="1" Background="#DCFCE7" CornerRadius="8" Padding="7,3">
-                                    <TextBlock Text="{Binding PlanLabel}" Foreground="#15803D" FontSize="10.5" FontWeight="SemiBold" />
+                                <Border Grid.Column="1" Background="{DynamicResource SuccessSoftBrush}" CornerRadius="8" Padding="7,3">
+                                    <TextBlock Text="{Binding PlanLabel}" Foreground="{DynamicResource SuccessBrush}" FontSize="10.5" FontWeight="SemiBold" />
                                 </Border>
                             </Grid>
                             <TextBlock Text="{Binding LicenseValidityText}" Margin="0,5,0,4"
-                                       FontSize="12.5" Foreground="#52677F" />
+                                       FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" />
                             <ProgressBar Value="{Binding LicenseProgressValue}" Maximum="100"
                                          Style="{StaticResource PremiumProgressBar}" />
                             <Grid Margin="0,4,0,5">
@@ -714,9 +714,9 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding LicenseDaysRemainingText}" FontSize="11.5" Foreground="#64748B" />
+                                <TextBlock Text="{Binding LicenseDaysRemainingText}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" />
                                 <TextBlock Grid.Column="1" Text="{Binding LicenseProgressValue, StringFormat={}{0:0}%}"
-                                           FontSize="11.5" Foreground="#52677F" />
+                                           FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" />
                             </Grid>
                             <ItemsControl ItemsSource="{Binding LicenseFeatures}">
                                 <ItemsControl.ItemsPanel>
@@ -727,13 +727,13 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" Margin="0,2,4,2">
-                                            <Border Width="15" Height="15" CornerRadius="8" Background="#DCFCE7"
+                                            <Border Width="15" Height="15" CornerRadius="8" Background="{DynamicResource SuccessSoftBrush}"
                                                     VerticalAlignment="Center" Margin="0,0,6,0">
                                                 <Path Data="{StaticResource IconRoles}" Width="9" Height="9"
                                                       Stroke="#16A34A" StrokeThickness="2" Fill="Transparent"
                                                       Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
-                                            <TextBlock Text="{Binding}" FontSize="11.5" Foreground="#405875"
+                                            <TextBlock Text="{Binding}" FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}"
                                                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
                                     </DataTemplate>
@@ -749,7 +749,7 @@
                                       Style="{StaticResource DashboardSectionIcon}"
                                       Stroke="#F59E0B" />
                                 <TextBlock Text="{Binding QuickActionsTitle}" FontSize="15" FontWeight="Bold"
-                                           Foreground="#15284B" VerticalAlignment="Center" />
+                                           Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
                             </StackPanel>
                             <ItemsControl ItemsSource="{Binding QuickActions}">
                                 <ItemsControl.ItemTemplate>
@@ -768,8 +768,8 @@
                                                     <Setter Property="BorderBrush" Value="{Binding Accent}" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Key}" Value="sync">
-                                                            <Setter Property="Background" Value="#DCEBFF" />
-                                                            <Setter Property="BorderBrush" Value="#DCEBFF" />
+                                                            <Setter Property="Background" Value="{DynamicResource BrandPrimarySoftBrush}" />
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimarySoftBrush}" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -833,9 +833,9 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Path Data="{StaticResource IconDashboard}"
                                           Style="{StaticResource DashboardSectionIcon}"
-                                          Stroke="#0B82F6" />
+                                          Stroke="{DynamicResource BrandPrimaryBrush}" />
                                     <TextBlock Text="{Binding PharmacyOverviewTitle}" FontSize="15" FontWeight="Bold"
-                                               Foreground="#15284B" VerticalAlignment="Center" />
+                                               Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <Button Grid.Column="1"
                                         Content="{Binding ViewReportsLabel}"
@@ -864,7 +864,7 @@
                                 <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconCustomers}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="{Binding TotalCustomersLabel}" Style="{StaticResource MiniLabel}" /></StackPanel>
                                 <TextBlock Grid.Column="1" Text="{Binding OverviewCustomersText}" Style="{StaticResource OverviewValue}" />
                             </Grid>
-                            <Separator Margin="0,4" Background="#E8EEF5" />
+                            <Separator Margin="0,4" Background="{DynamicResource BorderBrush}" />
                             <Grid Margin="0,4">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                 <StackPanel Orientation="Horizontal"><Path Data="{StaticResource IconReports}" Width="13" Height="13" Stretch="Uniform" Stroke="#52759D" StrokeThickness="1.8" Margin="0,0,10,0" VerticalAlignment="Center" /><TextBlock Text="{Binding MonthSalesLabel}" Style="{StaticResource MiniLabel}" /></StackPanel>

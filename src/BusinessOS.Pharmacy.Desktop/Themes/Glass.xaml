@@ -1,0 +1,116 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Glass theme palette. Merged after Themes/Colors.xaml at runtime by ThemeManager.
+        Every key overrides the Classic palette, so any DynamicResource reference updates live.
+    -->
+
+    <!-- Brand / accents -->
+    <Color x:Key="BrandPrimaryColor">#2F6BFF</Color>
+    <Color x:Key="BrandPrimaryDarkColor">#1D4ED8</Color>
+    <Color x:Key="BrandPrimarySoftColor">#E3EDFF</Color>
+    <Color x:Key="SuccessColor">#0E9F6E</Color>
+    <Color x:Key="SuccessSoftColor">#E4F8F0</Color>
+    <Color x:Key="WarningColor">#E08A00</Color>
+    <Color x:Key="WarningSoftColor">#FFF5E3</Color>
+    <Color x:Key="DangerColor">#E02424</Color>
+    <Color x:Key="DangerSoftColor">#FDEBEB</Color>
+    <Color x:Key="InfoColor">#2F6BFF</Color>
+    <Color x:Key="InfoSoftColor">#E8F1FF</Color>
+    <Color x:Key="PurpleColor">#7C4DFF</Color>
+    <Color x:Key="PurpleSoftColor">#F0EAFF</Color>
+    <Color x:Key="PinkColor">#E0357F</Color>
+    <Color x:Key="PinkSoftColor">#FCE8F1</Color>
+    <Color x:Key="TealColor">#0D9488</Color>
+    <Color x:Key="TealSoftColor">#E4FAF6</Color>
+    <Color x:Key="IndigoColor">#4F46E5</Color>
+    <Color x:Key="IndigoSoftColor">#EBEDFE</Color>
+
+    <!-- Text -->
+    <Color x:Key="TextPrimaryColor">#0F172A</Color>
+    <Color x:Key="TextSecondaryColor">#44546A</Color>
+    <Color x:Key="TextMutedColor">#6B7A90</Color>
+
+    <!-- Backgrounds -->
+    <Color x:Key="AppBackgroundColor">#EEF4FF</Color>
+    <Color x:Key="SurfaceColor">#E8FFFFFF</Color>
+    <Color x:Key="SidebarColor">#BFFFFFFF</Color>
+    <Color x:Key="SurfaceMutedColor">#D6EDF4FF</Color>
+    <Color x:Key="BorderColor">#E3EBF7</Color>
+    <Color x:Key="BorderStrongColor">#C9D8EC</Color>
+    <Color x:Key="HoverColor">#EDF4FF</Color>
+    <Color x:Key="SelectedColor">#DCE9FF</Color>
+
+    <!-- Ambient application background: soft blue/white/violet gradient -->
+    <LinearGradientBrush x:Key="AppBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#E9F2FF" Offset="0" />
+        <GradientStop Color="#F7FBFF" Offset="0.42" />
+        <GradientStop Color="#F1F4FF" Offset="0.72" />
+        <GradientStop Color="#EAF0FF" Offset="1" />
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="BrandPrimaryBrush" Color="{StaticResource BrandPrimaryColor}" />
+    <SolidColorBrush x:Key="BrandPrimaryDarkBrush" Color="{StaticResource BrandPrimaryDarkColor}" />
+    <SolidColorBrush x:Key="BrandPrimarySoftBrush" Color="{StaticResource BrandPrimarySoftColor}" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
+    <SolidColorBrush x:Key="SuccessSoftBrush" Color="{StaticResource SuccessSoftColor}" />
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
+    <SolidColorBrush x:Key="WarningSoftBrush" Color="{StaticResource WarningSoftColor}" />
+    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}" />
+    <SolidColorBrush x:Key="DangerSoftBrush" Color="{StaticResource DangerSoftColor}" />
+    <SolidColorBrush x:Key="InfoBrush" Color="{StaticResource InfoColor}" />
+    <SolidColorBrush x:Key="InfoSoftBrush" Color="{StaticResource InfoSoftColor}" />
+    <SolidColorBrush x:Key="PurpleBrush" Color="{StaticResource PurpleColor}" />
+    <SolidColorBrush x:Key="PurpleSoftBrush" Color="{StaticResource PurpleSoftColor}" />
+    <SolidColorBrush x:Key="PinkBrush" Color="{StaticResource PinkColor}" />
+    <SolidColorBrush x:Key="PinkSoftBrush" Color="{StaticResource PinkSoftColor}" />
+    <SolidColorBrush x:Key="TealBrush" Color="{StaticResource TealColor}" />
+    <SolidColorBrush x:Key="TealSoftBrush" Color="{StaticResource TealSoftColor}" />
+    <SolidColorBrush x:Key="IndigoBrush" Color="{StaticResource IndigoColor}" />
+    <SolidColorBrush x:Key="IndigoSoftBrush" Color="{StaticResource IndigoSoftColor}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="SidebarBrush" Color="{StaticResource SidebarColor}" />
+    <SolidColorBrush x:Key="SurfaceMutedBrush" Color="{StaticResource SurfaceMutedColor}" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="{StaticResource BorderStrongColor}" />
+    <SolidColorBrush x:Key="HoverBrush" Color="{StaticResource HoverColor}" />
+    <SolidColorBrush x:Key="SelectedBrush" Color="{StaticResource SelectedColor}" />
+
+    <!-- Opaque surfaces for dense panels (tables, POS cart) so text stays crisp -->
+    <SolidColorBrush x:Key="SurfaceStrongBrush" Color="#F7FAFF" />
+    <SolidColorBrush x:Key="TopBarBrush" Color="#C9FFFFFF" />
+
+    <!-- Frosted card surface with a soft vertical sheen -->
+    <LinearGradientBrush x:Key="CardBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#F0FFFFFF" Offset="0" />
+        <GradientStop Color="#D8FFFFFF" Offset="1" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#EAF1FC" />
+    <SolidColorBrush x:Key="GlassHighlightBrush" Color="#99FFFFFF" />
+    <SolidColorBrush x:Key="GlassBorderSoftBrush" Color="#E7EFFB" />
+
+    <!-- Sidebar interaction states -->
+    <SolidColorBrush x:Key="SidebarItemHoverBrush" Color="#8FF1F6FF" />
+    <SolidColorBrush x:Key="SidebarItemPressedBrush" Color="#A8E3EDFF" />
+    <SolidColorBrush x:Key="SidebarItemSelectedBrush" Color="#B8DCE9FF" />
+    <SolidColorBrush x:Key="SidebarItemSelectedBorderBrush" Color="#BBD4EEFF" />
+    <SolidColorBrush x:Key="SidebarItemSelectedForegroundBrush" Color="#1D4ED8" />
+
+    <!-- Geometry -->
+    <CornerRadius x:Key="CardCornerRadius">16</CornerRadius>
+    <CornerRadius x:Key="PanelCornerRadius">18</CornerRadius>
+    <CornerRadius x:Key="ControlCornerRadius">10</CornerRadius>
+    <CornerRadius x:Key="InputCornerRadius">10</CornerRadius>
+    <CornerRadius x:Key="SidebarItemCornerRadius">10</CornerRadius>
+
+    <!-- Single shared shadow for glass cards (classic has no key -> no effect) -->
+    <DropShadowEffect x:Key="CardShadowEffect"
+                      BlurRadius="20"
+                      ShadowDepth="4"
+                      Direction="270"
+                      Opacity="0.10"
+                      Color="#1E3A8A" />
+</ResourceDictionary>

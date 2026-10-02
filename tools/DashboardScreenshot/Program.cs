@@ -173,6 +173,12 @@ internal static class Program
         var app = new App();
         app.InitializeComponent();
 
+        if (mode.Contains("glass"))
+        {
+            BusinessOS.Pharmacy.Desktop.Appearance.ThemeManager.Apply(
+                BusinessOS.Pharmacy.Desktop.Appearance.AppearanceTheme.Glass);
+        }
+
         if (mode == "barcode-label")
         {
             var label = BarcodeLabelPrinter.BuildLabel(

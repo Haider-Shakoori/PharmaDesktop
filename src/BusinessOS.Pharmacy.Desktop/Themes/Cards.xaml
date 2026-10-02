@@ -1,15 +1,16 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style x:Key="SurfaceCard" TargetType="Border">
-        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CardCornerRadius}" />
         <Setter Property="Padding" Value="16" />
+        <Setter Property="Effect" Value="{DynamicResource CardShadowEffect}" />
     </Style>
 
     <Style x:Key="CompactCard" TargetType="Border" BasedOn="{StaticResource SurfaceCard}">
-        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CardCornerRadius}" />
         <Setter Property="Padding" Value="14" />
     </Style>
 

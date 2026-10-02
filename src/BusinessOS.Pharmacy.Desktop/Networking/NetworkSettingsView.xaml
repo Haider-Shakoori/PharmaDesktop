@@ -77,6 +77,29 @@
 
             <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
                 <StackPanel>
+                    <TextBlock Text="{Binding AppearanceTitle}" Style="{StaticResource SectionTitleText}" />
+                    <TextBlock Text="{Binding AppearanceSubtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,14" TextWrapping="Wrap" />
+                    <RadioButton GroupName="ApplicationTheme"
+                                 IsChecked="{Binding UseGlassTheme}"
+                                 Margin="0,4,0,0">
+                        <StackPanel Margin="6,2,0,0">
+                            <TextBlock Text="{Binding GlassThemeLabel}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding GlassThemeDescription}" Style="{StaticResource MutedText}" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton GroupName="ApplicationTheme"
+                                 IsChecked="{Binding UseClassicTheme}"
+                                 Margin="0,12,0,0">
+                        <StackPanel Margin="6,2,0,0">
+                            <TextBlock Text="{Binding ClassicThemeLabel}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding ClassicThemeDescription}" Style="{StaticResource MutedText}" />
+                        </StackPanel>
+                    </RadioButton>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                <StackPanel>
                     <TextBlock Text="{Binding ReceiptTitle}" Style="{StaticResource SectionTitleText}" />
                     <TextBlock Text="{Binding ReceiptSubtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,14" TextWrapping="Wrap" />
                     <UniformGrid Columns="2">

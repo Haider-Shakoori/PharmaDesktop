@@ -45,4 +45,45 @@
     <SolidColorBrush x:Key="BorderStrongBrush" Color="{StaticResource BorderStrongColor}" />
     <SolidColorBrush x:Key="HoverBrush" Color="{StaticResource HoverColor}" />
     <SolidColorBrush x:Key="SelectedBrush" Color="{StaticResource SelectedColor}" />
+
+    <!-- Extended accent palette (dashboard KPI / quick actions / badges) -->
+    <Color x:Key="PurpleColor">#7C3AED</Color>
+    <Color x:Key="PurpleSoftColor">#F3ECFE</Color>
+    <Color x:Key="PinkColor">#DB2777</Color>
+    <Color x:Key="PinkSoftColor">#FCE7F3</Color>
+    <Color x:Key="TealColor">#0D9488</Color>
+    <Color x:Key="TealSoftColor">#E6FFFA</Color>
+    <Color x:Key="IndigoColor">#4F46E5</Color>
+    <Color x:Key="IndigoSoftColor">#EEF2FF</Color>
+
+    <SolidColorBrush x:Key="PurpleBrush" Color="{StaticResource PurpleColor}" />
+    <SolidColorBrush x:Key="PurpleSoftBrush" Color="{StaticResource PurpleSoftColor}" />
+    <SolidColorBrush x:Key="PinkBrush" Color="{StaticResource PinkColor}" />
+    <SolidColorBrush x:Key="PinkSoftBrush" Color="{StaticResource PinkSoftColor}" />
+    <SolidColorBrush x:Key="TealBrush" Color="{StaticResource TealColor}" />
+    <SolidColorBrush x:Key="TealSoftBrush" Color="{StaticResource TealSoftColor}" />
+    <SolidColorBrush x:Key="IndigoBrush" Color="{StaticResource IndigoColor}" />
+    <SolidColorBrush x:Key="IndigoSoftBrush" Color="{StaticResource IndigoSoftColor}" />
+
+    <!-- Chrome & surface extras (overridden by the Glass theme) -->
+    <SolidColorBrush x:Key="SurfaceStrongBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="TopBarBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#E2E8F0" />
+    <SolidColorBrush x:Key="GlassHighlightBrush" Color="#00FFFFFF" />
+    <SolidColorBrush x:Key="GlassBorderSoftBrush" Color="#D9E5F1" />
+
+    <!-- Sidebar interaction states -->
+    <SolidColorBrush x:Key="SidebarItemHoverBrush" Color="#F1F7FF" />
+    <SolidColorBrush x:Key="SidebarItemPressedBrush" Color="#E5F1FF" />
+    <SolidColorBrush x:Key="SidebarItemSelectedBrush" Color="#DDEEFF" />
+    <SolidColorBrush x:Key="SidebarItemSelectedBorderBrush" Color="#BFDBFE" />
+    <SolidColorBrush x:Key="SidebarItemSelectedForegroundBrush" Color="#0B5FC6" />
+
+    <!-- Corner radii -->
+    <CornerRadius x:Key="CardCornerRadius">12</CornerRadius>
+    <CornerRadius x:Key="PanelCornerRadius">14</CornerRadius>
+    <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
+    <CornerRadius x:Key="InputCornerRadius">8</CornerRadius>
+    <CornerRadius x:Key="SidebarItemCornerRadius">8</CornerRadius>
 </ResourceDictionary>
