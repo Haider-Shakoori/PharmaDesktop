@@ -227,10 +227,10 @@
                                 <Image Grid.ColumnSpan="2"
                                        Source="{Binding AccentArtUri}"
                                        Stretch="Uniform"
-                                       Height="126"
+                                       Height="134"
                                        HorizontalAlignment="Left"
-                                       VerticalAlignment="Bottom"
-                                       Margin="6,0,0,-18"
+                                       VerticalAlignment="Top"
+                                       Margin="-12,-26,0,0"
                                        IsHitTestVisible="False"
                                        Visibility="{Binding DataContext.IsGlassTheme,
                                                     RelativeSource={RelativeSource AncestorType=UserControl},
