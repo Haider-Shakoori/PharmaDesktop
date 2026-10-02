@@ -37,6 +37,15 @@ public sealed partial class DashboardViewModel : ObservableObject
     private bool isLoading;
 
     [ObservableProperty]
+    private bool isGlassTheme =
+        Appearance.ThemeManager.Current == Appearance.AppearanceTheme.Glass;
+
+    public bool IsClassicTheme => !IsGlassTheme;
+
+    partial void OnIsGlassThemeChanged(bool value) =>
+        OnPropertyChanged(nameof(IsClassicTheme));
+
+    [ObservableProperty]
     private string selectedPeriod = "today";
 
     [ObservableProperty]
@@ -102,6 +111,8 @@ public sealed partial class DashboardViewModel : ObservableObject
         {
             _cloudSync.ResultUpdated += OnSyncResultUpdated;
         }
+
+        Appearance.ThemeManager.ThemeChanged += OnThemeChanged;
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsLoading);
         SelectPeriodCommand = new AsyncRelayCommand<string>(SelectPeriodAsync, key => !IsLoading);
@@ -461,6 +472,9 @@ public sealed partial class DashboardViewModel : ObservableObject
                 "attention"),
         };
     }
+
+    private void OnThemeChanged(Appearance.AppearanceTheme theme) =>
+        IsGlassTheme = theme == Appearance.AppearanceTheme.Glass;
 
     private void OnSyncResultUpdated(
         BusinessOS.Pharmacy.Application.Abstractions.Sync.CloudSyncRunResult result)

@@ -43,10 +43,10 @@
 
     <!-- Ambient application background: soft blue/white/violet gradient -->
     <LinearGradientBrush x:Key="AppBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#D6E6FF" Offset="0" />
-        <GradientStop Color="#EEF5FF" Offset="0.4" />
-        <GradientStop Color="#E7EDFF" Offset="0.72" />
-        <GradientStop Color="#DCE7FF" Offset="1" />
+        <GradientStop Color="#C3D9FF" Offset="0" />
+        <GradientStop Color="#E6F0FF" Offset="0.34" />
+        <GradientStop Color="#E4E9FF" Offset="0.62" />
+        <GradientStop Color="#D8D6FF" Offset="0.84" /><GradientStop Color="#C6D5FF" Offset="1" />
     </LinearGradientBrush>
 
     <SolidColorBrush x:Key="BrandPrimaryBrush" Color="{StaticResource BrandPrimaryColor}" />

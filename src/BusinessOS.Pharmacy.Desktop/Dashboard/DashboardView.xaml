@@ -209,15 +209,38 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,8,0" MinHeight="104">
+                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,8,0" MinHeight="104" ClipToBounds="True">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="64" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
+                                <Ellipse Fill="{Binding AccentGlow}"
+                                         Grid.ColumnSpan="2"
+                                         Width="190" Height="125"
+                                         HorizontalAlignment="Right"
+                                         VerticalAlignment="Bottom"
+                                         IsHitTestVisible="False"
+                                         Visibility="{Binding DataContext.IsGlassTheme,
+                                                      RelativeSource={RelativeSource AncestorType=UserControl},
+                                                      Converter={StaticResource GlobalBoolToVisibility}}" />
+                                <Image Grid.ColumnSpan="2"
+                                       Source="{Binding AccentArtUri}"
+                                       Stretch="Uniform"
+                                       Height="126"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Bottom"
+                                       Margin="6,0,0,-18"
+                                       IsHitTestVisible="False"
+                                       Visibility="{Binding DataContext.IsGlassTheme,
+                                                    RelativeSource={RelativeSource AncestorType=UserControl},
+                                                    Converter={StaticResource GlobalBoolToVisibility}}" />
                                 <Border Width="54"
                                         Height="54"
-                                        CornerRadius="10">
+                                        CornerRadius="10"
+                                        Visibility="{Binding DataContext.IsClassicTheme,
+                                                     RelativeSource={RelativeSource AncestorType=UserControl},
+                                                     Converter={StaticResource GlobalBoolToVisibility}}">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="{Binding IconForeground}" />

@@ -32,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\Darmaltoon.ico" />
+    <Resource Include="Assets\Glass\*.png" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">
