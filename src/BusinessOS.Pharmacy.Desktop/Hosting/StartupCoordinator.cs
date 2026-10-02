@@ -102,6 +102,34 @@ public sealed class StartupCoordinator
 
         if (entitlement is null)
         {
+            // Preserve an already assigned activation across upgrades and source/debug runs.
+            // A cached offline lease may have expired even though this installation is still
+            // assigned on the licensing server. Refresh it automatically before asking the
+            // pharmacy user to enter the license key again.
+            try
+            {
+                entitlement = await licenseService.RefreshAsync(cancellationToken);
+            }
+            catch (InvalidOperationException exception)
+                when (exception.Message.Contains(
+                    "has not been activated",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                // No saved activation exists on this PC; fall through to normal activation.
+            }
+            catch (Exception exception)
+            {
+                if (string.IsNullOrWhiteSpace(activationViewModel.StatusMessage))
+                {
+                    activationViewModel.StatusMessage =
+                        $"The existing activation could not be refreshed automatically. " +
+                        $"Connect this PC to the internet and try again.\n\n{exception.Message}";
+                }
+            }
+        }
+
+        if (entitlement is null)
+        {
             if (activationWindow.ShowDialog() != true)
             {
                 System.Windows.Application.Current.Shutdown();
