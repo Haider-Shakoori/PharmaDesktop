@@ -1,5 +1,7 @@
+using System.Collections.Concurrent;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace BusinessOS.Pharmacy.Desktop.Dashboard;
 
@@ -38,8 +40,37 @@ public sealed record DashboardStatViewModel(
     /// <summary>Flowing translucent ribbon used at the bottom-right of the Glass KPI card.</summary>
     public Brush AccentRibbonBrush => CreateRibbon(AccentArtColor);
 
-    /// <summary>Soft radial accent glow behind the ribbon.</summary>
+    /// <summary>Soft radial accent glow behind the Glass KPI tile.</summary>
     public Brush AccentGlow => CreateGlow(AccentArtColor);
+
+    /// <summary>
+    /// Card decoration (soft accent wave) painted across the Glass KPI card.
+    /// A brush is used so the artwork never affects the card's layout size.
+    /// </summary>
+    public ImageBrush AccentDecorBrush => DecorBrushes.GetOrAdd(AccentArtUri, CreateDecorBrush);
+
+    private static readonly ConcurrentDictionary<string, ImageBrush> DecorBrushes = new();
+
+    private static ImageBrush CreateDecorBrush(string uri)
+    {
+        if (string.IsNullOrWhiteSpace(uri))
+        {
+            var empty = new ImageBrush();
+            empty.Freeze();
+            return empty;
+        }
+
+        var image = new BitmapImage();
+        image.BeginInit();
+        image.UriSource = new Uri(uri, UriKind.Absolute);
+        image.CacheOption = BitmapCacheOption.OnLoad;
+        image.EndInit();
+        image.Freeze();
+
+        var brush = new ImageBrush(image) { Stretch = Stretch.Fill };
+        brush.Freeze();
+        return brush;
+    }
 
     private static Brush CreateTile(string color)
     {

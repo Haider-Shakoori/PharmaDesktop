@@ -215,32 +215,25 @@
                                     <ColumnDefinition Width="64" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Ellipse Fill="{Binding AccentGlow}"
-                                         Grid.ColumnSpan="2"
-                                         Width="190" Height="125"
-                                         HorizontalAlignment="Right"
-                                         VerticalAlignment="Bottom"
+                                <Rectangle Grid.ColumnSpan="2"
+                                           Fill="{Binding AccentDecorBrush}"
+                                           Margin="-14"
+                                           IsHitTestVisible="False"
+                                           Visibility="{Binding DataContext.IsGlassTheme,
+                                                        RelativeSource={RelativeSource AncestorType=UserControl},
+                                                        Converter={StaticResource GlobalBoolToVisibility}}" />
+                                <Ellipse Grid.Column="0"
+                                         Fill="{Binding AccentGlow}"
+                                         Width="92" Height="92"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center"
                                          IsHitTestVisible="False"
                                          Visibility="{Binding DataContext.IsGlassTheme,
                                                       RelativeSource={RelativeSource AncestorType=UserControl},
                                                       Converter={StaticResource GlobalBoolToVisibility}}" />
-                                <Image Grid.ColumnSpan="2"
-                                       Source="{Binding AccentArtUri}"
-                                       Stretch="Uniform"
-                                       Height="134"
-                                       HorizontalAlignment="Left"
-                                       VerticalAlignment="Top"
-                                       Margin="-12,-26,0,0"
-                                       IsHitTestVisible="False"
-                                       Visibility="{Binding DataContext.IsGlassTheme,
-                                                    RelativeSource={RelativeSource AncestorType=UserControl},
-                                                    Converter={StaticResource GlobalBoolToVisibility}}" />
                                 <Border Width="54"
                                         Height="54"
-                                        CornerRadius="10"
-                                        Visibility="{Binding DataContext.IsClassicTheme,
-                                                     RelativeSource={RelativeSource AncestorType=UserControl},
-                                                     Converter={StaticResource GlobalBoolToVisibility}}">
+                                        CornerRadius="10">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="{Binding IconForeground}" />
