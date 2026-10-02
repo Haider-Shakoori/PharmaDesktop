@@ -38,11 +38,29 @@
         <Style x:Key="SidebarNavIconPath"
                TargetType="Path"
                BasedOn="{StaticResource NavigationIconPath}">
-            <Setter Property="Width" Value="17" />
-            <Setter Property="Height" Value="17" />
+            <Setter Property="Width" Value="19" />
+            <Setter Property="Height" Value="19" />
             <Setter Property="Stroke" Value="#496B91" />
-            <Setter Property="StrokeThickness" Value="1.9" />
+            <Setter Property="StrokeThickness" Value="2" />
             <Style.Triggers>
+                <DataTrigger Binding="{Binding Key}" Value="dashboard"><Setter Property="Stroke" Value="#0B82F6" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="pos"><Setter Property="Stroke" Value="#169B62" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="medicines"><Setter Property="Stroke" Value="#8752C7" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="inventory"><Setter Property="Stroke" Value="#ED9619" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="batches"><Setter Property="Stroke" Value="#E65779" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="purchases"><Setter Property="Stroke" Value="#159FC1" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="suppliers"><Setter Property="Stroke" Value="#6366B2" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="customers"><Setter Property="Stroke" Value="#159D98" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="expenses"><Setter Property="Stroke" Value="#DB5864" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="closing"><Setter Property="Stroke" Value="#E78A27" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="reports"><Setter Property="Stroke" Value="#237CC3" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="returns"><Setter Property="Stroke" Value="#169FB8" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="users"><Setter Property="Stroke" Value="#387BC4" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="roles"><Setter Property="Stroke" Value="#8752C7" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="backup"><Setter Property="Stroke" Value="#6564B5" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="sync"><Setter Property="Stroke" Value="#159D98" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="updates"><Setter Property="Stroke" Value="#159D98" /></DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="settings"><Setter Property="Stroke" Value="#60758D" /></DataTrigger>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
                     <Setter Property="Stroke" Value="#0B82F6" />
                     <Setter Property="StrokeThickness" Value="2.1" />
@@ -253,13 +271,13 @@
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Label}"
                                                    Margin="4,0,0,0"
-                                                   FontSize="13"
-                                                   FontWeight="Normal"
+                                                   FontSize="13.5"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="#314763" />
+                                                    <Setter Property="FontWeight" Value="Normal" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsSelected}" Value="True">
                                                             <Setter Property="Foreground" Value="#0B5FC6" />

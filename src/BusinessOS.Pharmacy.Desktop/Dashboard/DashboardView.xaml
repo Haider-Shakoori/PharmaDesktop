@@ -12,7 +12,7 @@
             <Setter Property="Foreground" Value="#24334F" />
         </Style>
         <Style x:Key="DashboardCard" TargetType="Border" BasedOn="{StaticResource SurfaceCard}">
-            <Setter Property="Padding" Value="11" />
+            <Setter Property="Padding" Value="12" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="BorderBrush" Value="#E7EDF4" />
             <Style.Triggers>
@@ -78,7 +78,7 @@
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden" />
             <Setter Property="RowHeight" Value="24" />
             <Setter Property="ColumnHeaderHeight" Value="24" />
-            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontSize" Value="11.5" />
             <Setter Property="CellStyle" Value="{StaticResource DashboardGridCell}" />
             <Setter Property="ColumnHeaderStyle" Value="{StaticResource DashboardGridHeader}" />
         </Style>
@@ -126,6 +126,7 @@
         </Style>
 
         <Style x:Key="DashboardCellText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
             <Setter Property="Foreground" Value="#314763" />
@@ -175,12 +176,12 @@
         <StackPanel Margin="12,10,12,12">
             <StackPanel Margin="0,0,0,9">
                 <TextBlock Text="Dashboard"
-                           FontSize="27"
+                           FontSize="26"
                            FontWeight="Bold"
                            Foreground="#0B1F44" />
                 <TextBlock Text="{Binding WelcomeText}"
                            Margin="0,2,0,0"
-                           FontSize="11.5"
+                           FontSize="12"
                            Foreground="#52677F" />
             </StackPanel>
 
@@ -192,7 +193,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,8,0" MinHeight="94">
+                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,8,0" MinHeight="98">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="62" />
@@ -217,26 +218,26 @@
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center" />
                                 </Border>
-                                <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <StackPanel Grid.Column="1" Margin="6,0,0,0" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Label}"
-                                               FontSize="12"
+                                               FontSize="12.5"
                                                FontWeight="SemiBold"
                                                Foreground="#2E4667"
                                                TextWrapping="Wrap" />
                                     <Viewbox Margin="0,3,0,0"
-                                             Height="25"
+                                             Height="27"
                                              Stretch="Uniform"
                                              StretchDirection="DownOnly"
                                              HorizontalAlignment="Left">
                                         <TextBlock Text="{Binding Value}"
-                                                   FontSize="21"
+                                                   FontSize="22"
                                                    FontWeight="Bold"
                                                    Foreground="#0B1F44"
                                                    TextWrapping="NoWrap" />
                                     </Viewbox>
                                     <TextBlock Text="{Binding Note}"
                                                Margin="0,3,0,0"
-                                               FontSize="10"
+                                               FontSize="11"
                                                Foreground="#64748B"
                                                TextWrapping="Wrap" />
                                 </StackPanel>
@@ -265,9 +266,9 @@
                                           Style="{StaticResource DashboardSectionIcon}"
                                           Stroke="#0B82F6" />
                                     <TextBlock Text="Sales Overview"
-                                               FontSize="14"
+                                               FontSize="15"
                                                FontWeight="Bold"
-                                               Foreground="#102A56"
+                                               Foreground="#15284B"
                                                VerticalAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
@@ -385,8 +386,8 @@
                                         <Path Data="{StaticResource IconInventory}"
                                               Style="{StaticResource DashboardSectionIcon}"
                                               Stroke="#F97316" />
-                                        <TextBlock Text="Low Stock Items" FontSize="14" FontWeight="SemiBold"
-                                                   Foreground="#102A56" VerticalAlignment="Center" />
+                                        <TextBlock Text="Low Stock Items" FontSize="15" FontWeight="Bold"
+                                                   Foreground="#15284B" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <Button Grid.Column="1"
                                             Content="View All"
@@ -420,7 +421,7 @@
                                                 <DataTemplate>
                                                     <Border Background="#FFE7EA" CornerRadius="7" Padding="5,1"
                                                             HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding Status}" FontSize="9.5" Foreground="#E11D48" FontWeight="SemiBold" />
+                                                        <TextBlock Text="{Binding Status}" FontSize="10" Foreground="#E11D48" FontWeight="SemiBold" />
                                                     </Border>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
@@ -441,8 +442,8 @@
                                         <Path Data="{StaticResource IconCalendar}"
                                               Style="{StaticResource DashboardSectionIcon}"
                                               Stroke="#F43F5E" />
-                                        <TextBlock Text="Expiring Soon" FontSize="14" FontWeight="SemiBold"
-                                                   Foreground="#102A56" VerticalAlignment="Center" />
+                                        <TextBlock Text="Expiring Soon" FontSize="15" FontWeight="Bold"
+                                                   Foreground="#15284B" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <Button Grid.Column="1"
                                             Content="View All"
@@ -491,8 +492,8 @@
                                     <Path Data="{StaticResource IconExpenses}"
                                           Style="{StaticResource DashboardSectionIcon}"
                                           Stroke="#0B82F6" />
-                                    <TextBlock Text="Recent Transactions" FontSize="14" FontWeight="SemiBold"
-                                               Foreground="#102A56" VerticalAlignment="Center" />
+                                    <TextBlock Text="Recent Transactions" FontSize="15" FontWeight="Bold"
+                                               Foreground="#15284B" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <Button Grid.Column="1"
                                         Content="View All"
@@ -502,7 +503,7 @@
                             </Grid>
                             <DataGrid ItemsSource="{Binding RecentTransactions}"
                                       Style="{StaticResource DashboardGrid}"
-                                      Height="144">
+                                      RowHeight="22" Height="136">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Date / Time" Binding="{Binding OccurredAt, StringFormat={}{0:dd MMM yyyy HH:mm}}" Width="116" />
                                     <DataGridTemplateColumn Header="Type" Width="58">
@@ -538,7 +539,7 @@
                                                             </Style.Triggers>
                                                         </Style>
                                                     </Border.Style>
-                                                    <TextBlock Text="{Binding Status}" FontSize="9.5" FontWeight="SemiBold">
+                                                    <TextBlock Text="{Binding Status}" FontSize="10" FontWeight="SemiBold">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">
                                                                 <Setter Property="Foreground" Value="#15803D" />
@@ -564,7 +565,7 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1">
-                    <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,10">
+                    <Border Style="{StaticResource DashboardCard}" MinHeight="155" Margin="0,0,0,10">
                         <StackPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -575,11 +576,11 @@
                                     <Path Data="{StaticResource IconRoles}"
                                           Style="{StaticResource DashboardSectionIcon}"
                                           Stroke="#16A34A" />
-                                    <TextBlock Text="License &amp; Subscription" FontSize="14" FontWeight="SemiBold"
-                                               Foreground="#102A56" VerticalAlignment="Center" />
+                                    <TextBlock Text="License &amp; Subscription" FontSize="15" FontWeight="Bold"
+                                               Foreground="#15284B" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <Border Grid.Column="1" Background="#DCFCE7" CornerRadius="8" Padding="8,3">
-                                    <TextBlock Text="{Binding PlanLabel}" Foreground="#15803D" FontSize="9.5" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding PlanLabel}" Foreground="#15803D" FontSize="10" FontWeight="SemiBold" />
                                 </Border>
                             </Grid>
                             <TextBlock Text="{Binding LicenseValidityText}" Margin="0,6,0,5"
@@ -610,7 +611,7 @@
                                                       Stroke="#16A34A" StrokeThickness="2" Fill="Transparent"
                                                       Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
-                                            <TextBlock Text="{Binding}" FontSize="10.5" Foreground="#405875"
+                                            <TextBlock Text="{Binding}" FontSize="11" Foreground="#405875"
                                                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
                                     </DataTemplate>
@@ -625,8 +626,8 @@
                                 <Path Data="{StaticResource IconLightning}"
                                       Style="{StaticResource DashboardSectionIcon}"
                                       Stroke="#F59E0B" />
-                                <TextBlock Text="{Binding QuickActionsTitle}" FontSize="14" FontWeight="SemiBold"
-                                           Foreground="#102A56" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding QuickActionsTitle}" FontSize="15" FontWeight="Bold"
+                                           Foreground="#15284B" VerticalAlignment="Center" />
                             </StackPanel>
                             <ItemsControl ItemsSource="{Binding QuickActions}">
                                 <ItemsControl.ItemTemplate>
@@ -635,7 +636,7 @@
                                                 CommandParameter="{Binding Key}"
                                                 IsEnabled="{Binding IsAvailable}"
                                                 Foreground="White"
-                                                MinHeight="35"
+                                                MinHeight="36"
                                                 Padding="7,3"
                                                 Margin="0,0,0,4"
                                                 HorizontalContentAlignment="Stretch">
@@ -668,11 +669,20 @@
                                                 <Border Width="20" Height="20" CornerRadius="6"
                                                         Background="#22FFFFFF"
                                                         HorizontalAlignment="Left">
-                                                    <Path Style="{StaticResource NavigationIconPath}"
-                                                          Width="12" Height="12"
-                                                          Stroke="White"
+                                                    <Path Width="14" Height="14"
                                                           HorizontalAlignment="Center"
-                                                          VerticalAlignment="Center" />
+                                                          VerticalAlignment="Center">
+                                                        <Path.Style>
+                                                            <Style TargetType="Path" BasedOn="{StaticResource NavigationIconPath}">
+                                                                <Setter Property="Stroke" Value="White" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Key}" Value="sync">
+                                                                        <Setter Property="Stroke" Value="#1559C6" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Path.Style>
+                                                    </Path>
                                                 </Border>
                                                 <TextBlock Grid.Column="1" Text="{Binding Label}"
                                                            Style="{StaticResource ActionText}" FontWeight="SemiBold"
@@ -699,8 +709,8 @@
                                     <Path Data="{StaticResource IconDashboard}"
                                           Style="{StaticResource DashboardSectionIcon}"
                                           Stroke="#0B82F6" />
-                                    <TextBlock Text="Pharmacy Overview" FontSize="14" FontWeight="SemiBold"
-                                               Foreground="#102A56" VerticalAlignment="Center" />
+                                    <TextBlock Text="Pharmacy Overview" FontSize="15" FontWeight="Bold"
+                                               Foreground="#15284B" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <Button Grid.Column="1"
                                         Content="View Reports"
