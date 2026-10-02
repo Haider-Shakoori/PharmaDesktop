@@ -84,7 +84,10 @@ public sealed class SignedLeaseVerifier : ISignedLeaseVerifier
             ParseSubscriptionState(ReadString(root, "subscription_status")),
             issuedAt,
             expiresAt,
-            features);
+            features,
+            ReadOptionalUnix(root, "trial_started_at"),
+            ReadOptionalUnix(root, "trial_expires_at"),
+            ReadOptionalUnix(root, "subscription_expires_at"));
     }
 
     private static byte[] DecodeBase64Url(string value)
@@ -105,6 +108,20 @@ public sealed class SignedLeaseVerifier : ISignedLeaseVerifier
             : throw new CryptographicException($"Signed entitlement claim '{name}' is invalid.");
 
     private static int ReadInt(JsonElement root, string name) => checked((int)ReadLong(root, name));
+
+    private static DateTimeOffset? ReadOptionalUnix(JsonElement root, string name)
+    {
+        if (!root.TryGetProperty(name, out var value) ||
+            value.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+
+        return value.TryGetInt64(out var result)
+            ? FromUnix(result)
+            : throw new CryptographicException($"Signed entitlement claim '{name}' is invalid.");
+    }
+
     private static DateTimeOffset FromUnix(long value) => DateTimeOffset.FromUnixTimeSeconds(value);
 
     private static SubscriptionState ParseSubscriptionState(string value) =>

@@ -31,6 +31,9 @@ public sealed class SignedLeaseVerifierTests
             platform = "windows",
             plan_code = "PRO",
             subscription_status = "trial",
+            trial_started_at = now - 86400,
+            trial_expires_at = now + (7 * 86400),
+            subscription_expires_at = now + (365 * 86400),
             issued_at = now,
             expires_at = now + 3600,
             entitlements = new[] { "advanced_reports", "multi_user" }
@@ -44,6 +47,8 @@ public sealed class SignedLeaseVerifierTests
 
         Assert.Equal("tenant-1", entitlement.TenantId);
         Assert.Equal("device-1", entitlement.DeviceId);
+        Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(now + (7 * 86400)), entitlement.TrialExpiresAt);
+        Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(now + (365 * 86400)), entitlement.SubscriptionExpiresAt);
         Assert.True(entitlement.HasFeature("advanced_reports"));
     }
 

@@ -344,8 +344,6 @@ public sealed partial class DashboardViewModel : ObservableObject
         AddAction("closing", Translate("Daily Closing", "بستن روزانه", "ورځنی تړل"), "daily_closing.perform", true, "#F97316", "F4");
         AddAction("backup", Translate("Backup Now", "پشتیبان‌گیری", "اوس بیک اپ"), "settings.manage", true, "#7C3AED", "F5");
         AddAction("sync", Translate("Sync Now", "همگام‌سازی", "اوس همغږي"), "dashboard.view", _cloudSync is not null, "#0EA5E9", "F6");
-        AddAction("medicines", Translate("Medicines", "ادویه", "درمل"), "medicines.manage", true, "#0F8A83", "F7");
-        AddAction("inventory", Translate("Inventory", "موجودی", "زېرمه"), "inventory.manage", true, "#475569", "F8");
     }
 
     private void AddAction(
@@ -454,19 +452,35 @@ public sealed partial class DashboardViewModel : ObservableObject
                 ?? activation.Entitlement.PlanCode
                 ?? "Plan");
 
-            var issued = activation.Entitlement.IssuedAt;
-            var expires = activation.Entitlement.ExpiresAt;
+            var entitlement = activation.Entitlement;
             var now = _clock.UtcNow;
-            var totalSeconds = Math.Max(1, (expires - issued).TotalSeconds);
-            var remainingSeconds = Math.Clamp((expires - now).TotalSeconds, 0, totalSeconds);
+
+            var displayExpires = entitlement.SubscriptionState == Domain.Licensing.SubscriptionState.Trial
+                ? entitlement.TrialExpiresAt
+                  ?? entitlement.SubscriptionExpiresAt
+                  ?? entitlement.ExpiresAt
+                : entitlement.SubscriptionExpiresAt
+                  ?? entitlement.ExpiresAt;
+
+            var displayStarts = entitlement.SubscriptionState == Domain.Licensing.SubscriptionState.Trial
+                ? entitlement.TrialStartedAt ?? entitlement.IssuedAt
+                : entitlement.IssuedAt;
+
+            if (displayStarts >= displayExpires)
+            {
+                displayStarts = now < displayExpires ? now : displayExpires.AddDays(-1);
+            }
+
+            var totalSeconds = Math.Max(1, (displayExpires - displayStarts).TotalSeconds);
+            var remainingSeconds = Math.Clamp((displayExpires - now).TotalSeconds, 0, totalSeconds);
             LicenseProgressValue = remainingSeconds / totalSeconds * 100d;
 
             LicenseValidityText = Translate(
-                $"Valid until {expires:dd MMMM yyyy}",
-                $"معتبر تا {expires:dd MMMM yyyy}",
-                $"تر {expires:dd MMMM yyyy} پورې معتبر");
+                $"Valid until {displayExpires:dd MMMM yyyy}",
+                $"معتبر تا {displayExpires:dd MMMM yyyy}",
+                $"تر {displayExpires:dd MMMM yyyy} پورې معتبر");
 
-            var days = Math.Max(0, (int)Math.Ceiling((expires - now).TotalDays));
+            var days = Math.Max(0, (int)Math.Ceiling((displayExpires - now).TotalDays));
             LicenseDaysRemainingText = Translate(
                 $"{days:N0} days remaining",
                 $"{days:N0} روز باقی مانده",
