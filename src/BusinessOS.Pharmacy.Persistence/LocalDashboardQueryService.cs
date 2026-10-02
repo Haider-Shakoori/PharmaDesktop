@@ -461,26 +461,35 @@ public sealed class LocalDashboardQueryService : ILocalDashboardQueryService
         await using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT
-                CAST(strftime('%H', COALESCE(completed_at, created_at)) AS INTEGER) AS sale_hour,
-                COALESCE(SUM(CAST(grand_total AS NUMERIC)), 0) AS sales,
-                COUNT(*) AS invoices
+                COALESCE(completed_at, created_at) AS occurred_at,
+                grand_total
             FROM sales
             WHERE status = 'completed'
               AND date(business_date) = date($businessDate)
-            GROUP BY sale_hour;
+            ORDER BY occurred_at;
             """;
         AddParameter(command, "$businessDate", businessDate);
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {
-            var hour = Convert.ToInt32(reader.GetValue(0), CultureInfo.InvariantCulture);
-            byHour[hour] = (
-                ReadDecimal(reader, 1),
-                Convert.ToInt32(reader.GetValue(2), CultureInfo.InvariantCulture));
+            var occurredAt = ReadDateTimeOffset(reader, 0);
+            if (occurredAt == DateTimeOffset.MinValue)
+            {
+                continue;
+            }
+
+            // completed_at/created_at are stored as absolute timestamps. Group the
+            // dashboard graph by the workstation's local hour so the chart matches
+            // the times shown in Recent Transactions instead of silently using UTC.
+            var localHour = occurredAt.ToLocalTime().Hour;
+            var existing = byHour.GetValueOrDefault(localHour);
+            byHour[localHour] = (
+                existing.Sales + ReadDecimal(reader, 1),
+                existing.Invoices + 1);
         }
 
-        return Enumerable.Range(8, 12)
+        return Enumerable.Range(0, 24)
             .Select(hour =>
             {
                 var value = byHour.GetValueOrDefault(hour);

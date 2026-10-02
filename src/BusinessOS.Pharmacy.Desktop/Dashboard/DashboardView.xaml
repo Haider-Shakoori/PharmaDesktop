@@ -26,7 +26,7 @@
         <Style x:Key="DashboardGridHeader" TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="#F4F7FB" />
             <Setter Property="Foreground" Value="#314763" />
-            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Padding" Value="7,0" />
             <Setter Property="BorderBrush" Value="#E5ECF4" />
@@ -50,13 +50,13 @@
             <Setter Property="RowHeaderWidth" Value="0" />
             <Setter Property="RowHeight" Value="24" />
             <Setter Property="ColumnHeaderHeight" Value="26" />
-            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="FontSize" Value="11" />
             <Setter Property="CellStyle" Value="{StaticResource DashboardGridCell}" />
             <Setter Property="ColumnHeaderStyle" Value="{StaticResource DashboardGridHeader}" />
         </Style>
 
         <Style x:Key="MiniLabel" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="FontSize" Value="10.2" />
             <Setter Property="Foreground" Value="#64748B" />
         </Style>
 
@@ -67,20 +67,20 @@
         </Style>
 
         <Style x:Key="DashboardSectionIcon" TargetType="Path">
-            <Setter Property="Width" Value="18" />
-            <Setter Property="Height" Value="18" />
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="20" />
             <Setter Property="Margin" Value="0,0,8,0" />
             <Setter Property="Stretch" Value="Uniform" />
             <Setter Property="Fill" Value="Transparent" />
-            <Setter Property="StrokeThickness" Value="1.9" />
+            <Setter Property="StrokeThickness" Value="2" />
             <Setter Property="StrokeStartLineCap" Value="Round" />
             <Setter Property="StrokeEndLineCap" Value="Round" />
             <Setter Property="StrokeLineJoin" Value="Round" />
         </Style>
 
         <Style x:Key="DashboardMetricIconPath" TargetType="Path">
-            <Setter Property="Width" Value="23" />
-            <Setter Property="Height" Value="23" />
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
             <Setter Property="Stretch" Value="Uniform" />
             <Setter Property="Fill" Value="Transparent" />
             <Setter Property="Stroke" Value="White" />
@@ -141,12 +141,12 @@
         <StackPanel Margin="12,10,12,12">
             <StackPanel Margin="0,0,0,9">
                 <TextBlock Text="Dashboard"
-                           FontSize="25"
+                           FontSize="27"
                            FontWeight="Bold"
                            Foreground="#0B1F44" />
                 <TextBlock Text="{Binding WelcomeText}"
                            Margin="0,2,0,0"
-                           FontSize="10.5"
+                           FontSize="11.5"
                            Foreground="#52677F" />
             </StackPanel>
 
@@ -158,14 +158,14 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,8,0" MinHeight="88">
+                        <Border Style="{StaticResource DashboardCard}" Margin="0,0,8,0" MinHeight="94">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="50" />
+                                    <ColumnDefinition Width="54" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Border Width="42"
-                                        Height="42"
+                                <Border Width="46"
+                                        Height="46"
                                         CornerRadius="10"
                                         Background="{Binding IconForeground}"
                                         VerticalAlignment="Top"
@@ -176,7 +176,7 @@
                                 </Border>
                                 <StackPanel Grid.Column="1" Margin="6,0,0,0">
                                     <TextBlock Text="{Binding Label}"
-                                               FontSize="10.5"
+                                               FontSize="11.2"
                                                FontWeight="SemiBold"
                                                Foreground="#2E4667"
                                                TextWrapping="Wrap" />
@@ -186,14 +186,14 @@
                                              StretchDirection="DownOnly"
                                              HorizontalAlignment="Left">
                                         <TextBlock Text="{Binding Value}"
-                                                   FontSize="18"
+                                                   FontSize="19.5"
                                                    FontWeight="Bold"
                                                    Foreground="#0B1F44"
                                                    TextWrapping="NoWrap" />
                                     </Viewbox>
                                     <TextBlock Text="{Binding Note}"
                                                Margin="0,3,0,0"
-                                               FontSize="9.2"
+                                               FontSize="10"
                                                Foreground="#64748B"
                                                TextWrapping="Wrap" />
                                 </StackPanel>
@@ -261,9 +261,32 @@
                                                       Stroke="#0B82F6"
                                                       StrokeThickness="3"
                                                       StrokeLineJoin="Round" />
+                                            <ItemsControl ItemsSource="{Binding SalesChartPoints}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <Canvas Width="760" Height="178" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemContainerStyle>
+                                                    <Style TargetType="ContentPresenter">
+                                                        <Setter Property="Canvas.Left" Value="{Binding X}" />
+                                                        <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                                                    </Style>
+                                                </ItemsControl.ItemContainerStyle>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Ellipse Width="7"
+                                                                 Height="7"
+                                                                 Fill="#0B82F6"
+                                                                 Stroke="White"
+                                                                 StrokeThickness="1.5"
+                                                                 Margin="-3.5,-3.5,0,0" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
                                         </Canvas>
                                     </Viewbox>
-                                    <ItemsControl ItemsSource="{Binding SalesTimeline}" Margin="4,2,4,0">
+                                    <ItemsControl ItemsSource="{Binding SalesAxisTimeline}" Margin="4,2,4,0">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
                                                 <UniformGrid Columns="12" />

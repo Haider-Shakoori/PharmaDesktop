@@ -126,6 +126,9 @@ public sealed partial class DashboardViewModel : ObservableObject
     public IReadOnlyList<DashboardSalesPoint> SalesTimeline =>
         _snapshot?.SalesTimeline ?? Array.Empty<DashboardSalesPoint>();
 
+    public IReadOnlyList<DashboardSalesPoint> SalesAxisTimeline =>
+        SalesTimeline.Where(x => x.Hour % 2 == 0).ToList();
+
     public PointCollection SalesChartPoints { get; private set; } = new();
     public PointCollection SalesAreaPoints { get; private set; } = new();
 
@@ -568,6 +571,7 @@ public sealed partial class DashboardViewModel : ObservableObject
         OnPropertyChanged(nameof(ExpiryItems));
         OnPropertyChanged(nameof(RecentTransactions));
         OnPropertyChanged(nameof(SalesTimeline));
+        OnPropertyChanged(nameof(SalesAxisTimeline));
         OnPropertyChanged(nameof(SalesTotalText));
         OnPropertyChanged(nameof(SalesInvoiceCountText));
         OnPropertyChanged(nameof(AverageInvoiceText));

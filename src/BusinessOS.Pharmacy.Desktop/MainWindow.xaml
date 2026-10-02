@@ -35,6 +35,21 @@
     </Window.InputBindings>
 
     <Window.Resources>
+        <Style x:Key="SidebarNavIconPath"
+               TargetType="Path"
+               BasedOn="{StaticResource NavigationIconPath}">
+            <Setter Property="Width" Value="17" />
+            <Setter Property="Height" Value="17" />
+            <Setter Property="Stroke" Value="#496B91" />
+            <Setter Property="StrokeThickness" Value="1.9" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="Stroke" Value="#0B82F6" />
+                    <Setter Property="StrokeThickness" Value="2.1" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <CollectionViewSource x:Key="GroupedNavigation" Source="{Binding NavigationItems}">
             <CollectionViewSource.GroupDescriptions>
                 <PropertyGroupDescription PropertyName="Group" />
@@ -212,19 +227,13 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
 
-                                        <Border Width="28"
-                                                Height="28"
-                                                CornerRadius="8"
-                                                Background="{Binding AccentSoftHex}"
-                                                BorderBrush="{Binding AccentSoftHex}"
-                                                BorderThickness="1"
+                                        <Border Width="30"
+                                                Height="30"
+                                                Background="Transparent"
+                                                BorderThickness="0"
                                                 HorizontalAlignment="Center"
                                                 VerticalAlignment="Center">
-                                            <Path Style="{StaticResource NavigationIconPath}"
-                                                  Width="14"
-                                                  Height="14"
-                                                  Stroke="{Binding AccentHex}"
-                                                  StrokeThickness="1.9"
+                                            <Path Style="{StaticResource SidebarNavIconPath}"
                                                   HorizontalAlignment="Center"
                                                   VerticalAlignment="Center" />
                                         </Border>
@@ -232,7 +241,7 @@
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding Label}"
                                                    Margin="4,0,0,0"
-                                                   FontSize="11.5"
+                                                   FontSize="12.5"
                                                    FontWeight="SemiBold"
                                                    VerticalAlignment="Center"
                                                    TextTrimming="CharacterEllipsis">

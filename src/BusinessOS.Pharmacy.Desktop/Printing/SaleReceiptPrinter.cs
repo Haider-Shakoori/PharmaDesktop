@@ -1,3 +1,4 @@
+using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -17,38 +18,52 @@ public sealed class SaleReceiptPrinter : ISaleReceiptPrinter
     {
         ArgumentNullException.ThrowIfNull(sale);
 
-        var dialog = new PrintDialog
+        var preview = new ReceiptPreviewWindow(sale, this)
         {
-            UserPageRangeEnabled = false,
+            Owner = System.Windows.Application.Current?.MainWindow,
         };
 
-        if (dialog.ShowDialog() != true)
-        {
-            return false;
-        }
+        preview.ShowDialog();
+        return preview.WasPrinted;
+    }
 
-        var pageWidth = dialog.PrintableAreaWidth > 0d
-            ? dialog.PrintableAreaWidth
-            : 302d;
-        var pageHeight = dialog.PrintableAreaHeight > 0d
-            ? dialog.PrintableAreaHeight
-            : 1122d;
+    public IReadOnlyList<string> GetPrinterNames()
+    {
+        using var server = new LocalPrintServer();
+        return server.GetPrintQueues()
+            .Select(queue => queue.FullName)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
 
-        var document = BuildDocument(
-            sale,
-            Math.Clamp(pageWidth, 240d, 760d));
+    public string? GetDefaultPrinterName()
+    {
+        using var server = new LocalPrintServer();
+        return server.DefaultPrintQueue?.FullName;
+    }
 
+    public void PrintToPrinter(SaleDetail sale, string printerName)
+    {
+        ArgumentNullException.ThrowIfNull(sale);
+        ArgumentException.ThrowIfNullOrWhiteSpace(printerName);
+
+        using var server = new LocalPrintServer();
+        using var queue = server.GetPrintQueue(printerName);
+        var ticket = queue.DefaultPrintTicket;
+        var capabilities = queue.GetPrintCapabilities(ticket);
+        var pageWidth = capabilities.OrientedPageMediaWidth ?? 302d;
+        var pageHeight = capabilities.OrientedPageMediaHeight ?? 1122d;
+        var printableWidth = capabilities.PageImageableArea?.ExtentWidth ?? pageWidth;
+
+        var document = CreateDocument(sale, Math.Clamp(printableWidth, 240d, 760d));
         var paginator = ((IDocumentPaginatorSource)document).DocumentPaginator;
         paginator.PageSize = new Size(pageWidth, pageHeight);
 
-        dialog.PrintDocument(
-            paginator,
-            $"Darmaltoon receipt {sale.Sale.SaleNumber}");
-
-        return true;
+        var writer = PrintQueue.CreateXpsDocumentWriter(queue);
+        writer.Write(paginator, ticket);
     }
 
-    private static FlowDocument BuildDocument(SaleDetail sale, double pageWidth)
+    public FlowDocument CreateDocument(SaleDetail sale, double pageWidth)
     {
         var document = new FlowDocument
         {
