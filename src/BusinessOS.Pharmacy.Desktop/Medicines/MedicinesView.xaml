@@ -228,16 +228,6 @@
                               SelectedItem="{Binding SelectedMedicine}"
                               Style="{StaticResource MedicineTable}">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="#" Width="44" CanUserSort="False">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=AlternationIndex}"
-                                                   Foreground="#94A3B8"
-                                                   VerticalAlignment="Center"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-
                             <DataGridTemplateColumn Header="Medicine" Width="2*" MinWidth="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -275,7 +265,7 @@
                             <DataGridTemplateColumn Header="Status" Width="95">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border Style="{StaticResource StatusPill}">
+                                        <Border>
                                             <Border.Style>
                                                 <Style TargetType="Border" BasedOn="{StaticResource StatusPill}">
                                                     <Style.Triggers>
