@@ -1013,6 +1013,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
             InvoiceDueDateText = string.Empty;
             InvoiceNotes = string.Empty;
             await RefreshSelectedOrderAsync(orderId);
+            await LoadSupplierSummaryAsync();
             SelectedInvoice = SelectedOrderDetail?.Invoices.FirstOrDefault(x => x.Id == invoiceId);
             StatusMessage = Translate("Supplier invoice recorded.", "فاکتور تأمین‌کننده ثبت شد.", "د عرضه کوونکي بل ثبت شو.");
         });
@@ -1043,6 +1044,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
             PaymentReference = string.Empty;
             PaymentNotes = string.Empty;
             await RefreshSelectedOrderAsync(orderId);
+            await LoadSupplierSummaryAsync();
             SelectedInvoice = SelectedOrderDetail?.Invoices.FirstOrDefault(x => x.Id == invoiceId);
             StatusMessage = Translate("Supplier payment recorded.", "پرداخت تأمین‌کننده ثبت شد.", "د عرضه کوونکي تادیه ثبت شوه.");
         });
