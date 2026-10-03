@@ -439,7 +439,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         AddIfAllowed("settings.manage", "settings", Translate("Settings", "تنظیمات", "امستنې"), administration);
-        AddNavigationItem("password", Translate("Change Password", "تغییر رمز عبور", "پټنوم بدلول"), administration);
     }
 
     private void AddIfAllowed(string permission, string key, string label, string group)
@@ -621,10 +620,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 await Customers.LoadAsync();
                 break;
 
-            case "password":
-                CurrentSectionKey = "password";
-                CurrentPage = PasswordChange;
-                break;
         }
     }
 
