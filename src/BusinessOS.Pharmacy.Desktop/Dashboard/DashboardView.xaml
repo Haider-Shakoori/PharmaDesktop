@@ -47,10 +47,15 @@
                           Color="#315D9B" />
 
         <Style x:Key="DashboardGlassCard" TargetType="Border" BasedOn="{StaticResource DashboardCard}">
-            <Setter Property="Background" Value="{StaticResource DashboardGlassPanelBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource DashboardGlassPanelBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1.5" />
-            <Setter Property="Effect" Value="{StaticResource DashboardGlassShadow}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.IsGlassTheme, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                             Value="True">
+                    <Setter Property="Background" Value="{StaticResource DashboardGlassPanelBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource DashboardGlassPanelBorderBrush}" />
+                    <Setter Property="BorderThickness" Value="1.5" />
+                    <Setter Property="Effect" Value="{StaticResource DashboardGlassShadow}" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="DashboardGridCell" TargetType="DataGridCell">
@@ -93,45 +98,75 @@
 
         <Style x:Key="DashboardGlassGridHeader" TargetType="DataGridColumnHeader"
                BasedOn="{StaticResource DashboardGridHeader}">
-            <Setter Property="Background" Value="{StaticResource DashboardGlassGridHeaderBrush}" />
-            <Setter Property="BorderBrush" Value="#72FFFFFF" />
-            <Setter Property="BorderThickness" Value="0,0,0,1" />
-            <Setter Property="FontWeight" Value="SemiBold" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.IsGlassTheme, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                             Value="True">
+                    <Setter Property="Background" Value="{StaticResource DashboardGlassGridHeaderBrush}" />
+                    <Setter Property="BorderBrush" Value="#72FFFFFF" />
+                    <Setter Property="BorderThickness" Value="0,0,0,1" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="DashboardGlassGridRow" TargetType="DataGridRow">
-            <Setter Property="Background" Value="{StaticResource DashboardGlassRowBrush}" />
+            <Setter Property="Background" Value="White" />
             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-            <Setter Property="BorderBrush" Value="#72FFFFFF" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Margin" Value="0,2,0,0" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Margin" Value="0" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="DataGridRow">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8"
-                                SnapsToDevicePixels="True">
-                            <DataGridCellsPresenter />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
             <Style.Triggers>
                 <Trigger Property="AlternationIndex" Value="1">
-                    <Setter Property="Background" Value="{StaticResource DashboardGlassAltRowBrush}" />
+                    <Setter Property="Background" Value="{DynamicResource SurfaceStrongBrush}" />
                 </Trigger>
-                <Trigger Property="IsMouseOver" Value="True">
+
+                <DataTrigger Binding="{Binding DataContext.IsGlassTheme, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                             Value="True">
+                    <Setter Property="Background" Value="{StaticResource DashboardGlassRowBrush}" />
+                    <Setter Property="BorderBrush" Value="#72FFFFFF" />
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="Margin" Value="0,2,0,0" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="DataGridRow">
+                                <Border Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="8"
+                                        SnapsToDevicePixels="True">
+                                    <DataGridCellsPresenter />
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding DataContext.IsGlassTheme, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=AlternationIndex}" Value="1" />
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Background" Value="{StaticResource DashboardGlassAltRowBrush}" />
+                </MultiDataTrigger>
+
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding DataContext.IsGlassTheme, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" />
+                    </MultiDataTrigger.Conditions>
                     <Setter Property="Background" Value="{StaticResource DashboardGlassHoverRowBrush}" />
                     <Setter Property="BorderBrush" Value="#B8FFFFFF" />
-                </Trigger>
-                <Trigger Property="IsSelected" Value="True">
+                </MultiDataTrigger>
+
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding DataContext.IsGlassTheme, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsSelected}" Value="True" />
+                    </MultiDataTrigger.Conditions>
                     <Setter Property="Background" Value="{StaticResource DashboardGlassSelectedRowBrush}" />
                     <Setter Property="BorderBrush" Value="#C8DCEBFF" />
                     <Setter Property="FontWeight" Value="SemiBold" />
-                </Trigger>
+                </MultiDataTrigger>
             </Style.Triggers>
         </Style>
 
@@ -144,8 +179,8 @@
             <Setter Property="GridLinesVisibility" Value="None" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="RowBackground" Value="{StaticResource DashboardGlassRowBrush}" />
-            <Setter Property="AlternatingRowBackground" Value="{StaticResource DashboardGlassAltRowBrush}" />
+            <Setter Property="RowBackground" Value="White" />
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource SurfaceStrongBrush}" />
             <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
             <Setter Property="RowHeaderWidth" Value="0" />
@@ -264,12 +299,34 @@
                Stretch="UniformToFill"
                Opacity="0.78"
                IsHitTestVisible="False"
-               RenderOptions.BitmapScalingMode="LowQuality" />
-        <Border Background="#4CFFFFFF" IsHitTestVisible="False" />
+               RenderOptions.BitmapScalingMode="LowQuality">
+            <Image.Style>
+                <Style TargetType="Image">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsGlassTheme}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Image.Style>
+        </Image>
+        <Border Background="#4CFFFFFF" IsHitTestVisible="False">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsGlassTheme}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+        </Border>
 
         <ScrollViewer VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
-                      Background="Transparent"
+                      Background="{DynamicResource PageBackgroundBrush}"
                       CanContentScroll="True">
         <StackPanel Margin="22,10,22,4"
                     MinWidth="0"
