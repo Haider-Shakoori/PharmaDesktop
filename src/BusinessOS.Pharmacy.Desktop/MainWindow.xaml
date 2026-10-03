@@ -177,6 +177,24 @@
                 Background="{DynamicResource SidebarBrush}"
                 BorderBrush="{DynamicResource GlassBorderSoftBrush}"
                 BorderThickness="0,0,1,0">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Effect" Value="{x:Null}" />
+                    <Setter Property="IsHitTestVisible" Value="True" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding CurrentPage.IsEditorOpen}" Value="True">
+                            <Setter Property="IsHitTestVisible" Value="False" />
+                            <Setter Property="Effect">
+                                <Setter.Value>
+                                    <BlurEffect Radius="7"
+                                                KernelType="Gaussian"
+                                                RenderingBias="Performance" />
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <DockPanel Margin="12,12,12,8">
                 <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
                     <Grid>
@@ -334,6 +352,22 @@
                     </ItemsControl>
                 </ScrollViewer>
             </DockPanel>
+        </Border>
+
+        <Border Grid.Column="0"
+                Panel.ZIndex="45"
+                IsHitTestVisible="False">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Setter Property="Background" Value="#55F8FAFC" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding CurrentPage.IsEditorOpen}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
         </Border>
 
         <Grid Grid.Column="1">
