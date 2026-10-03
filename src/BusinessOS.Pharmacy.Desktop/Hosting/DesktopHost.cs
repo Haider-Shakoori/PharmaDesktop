@@ -4,6 +4,7 @@ using System.Security.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Desktop.Activation;
+using BusinessOS.Pharmacy.Desktop.Administration;
 using BusinessOS.Pharmacy.Desktop.Authentication;
 using BusinessOS.Pharmacy.Desktop.Backup;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
@@ -138,6 +139,7 @@ public static class DesktopHost
                 services.AddSingleton<ActivationWindow>();
                 services.AddTransient<LoginViewModel>();
                 services.AddTransient<LoginWindow>();
+                services.AddSingleton<AccessManagementViewModel>();
                 services.AddSingleton<DashboardViewModel>();
                 services.AddSingleton<MedicinesViewModel>();
                 services.AddSingleton<InventoryViewModel>();
