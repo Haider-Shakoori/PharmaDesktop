@@ -73,6 +73,10 @@ public sealed partial class BarcodePrintViewModel : ObservableObject
         "د درمل بارکوډ لیبل د نوم، بیې او درملتون نوم سره چاپ کړئ");
     public string SearchLabel => T("Search medicine", "جستجوی دوا", "درمل ولټوئ");
     public string ResultsLabel => T("Medicines", "ادویه", "درمل");
+    public string ResultsSummary => T(
+        $"{Medicines.Count} medicines",
+        $"{Medicines.Count} دوا",
+        $"{Medicines.Count} درمل");
     public string OptionsLabel => T("Label options", "تنظیمات برچسب", "د لیبل تنظیمات");
     public string PharmacyNameLabel => T("Pharmacy name", "نام دواخانه", "د درملتون نوم");
     public string MedicineNameLabel => T("Medicine name", "نام دوا", "د درمل نوم");
@@ -91,6 +95,7 @@ public sealed partial class BarcodePrintViewModel : ObservableObject
         OnPropertyChanged(nameof(Subtitle));
         OnPropertyChanged(nameof(SearchLabel));
         OnPropertyChanged(nameof(ResultsLabel));
+        OnPropertyChanged(nameof(ResultsSummary));
         OnPropertyChanged(nameof(OptionsLabel));
         OnPropertyChanged(nameof(PharmacyNameLabel));
         OnPropertyChanged(nameof(MedicineNameLabel));
@@ -151,7 +156,8 @@ public sealed partial class BarcodePrintViewModel : ObservableObject
                 Medicines.Add(medicine);
             }
 
-            StatusMessage = $"{Medicines.Count} medicines";
+            StatusMessage = ResultsSummary;
+            OnPropertyChanged(nameof(ResultsSummary));
         }
         catch (Exception exception)
         {
@@ -242,8 +248,8 @@ public sealed partial class BarcodePrintViewModel : ObservableObject
             ? medicine.BrandName
             : $"{medicine.BrandName} {medicine.Strength}";
         var price = decimal.TryParse(PriceText, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed)
-            ? $"AFN {parsed:N2}"
-            : "AFN —";
+            ? $"؋ {parsed:N2}"
+            : "؋ —";
 
         return new BarcodeLabelModel(
             PharmacyName,
