@@ -28,33 +28,28 @@
 
         <!-- Dashboard-only glass treatment. The KPI row keeps DashboardCard unchanged. -->
         <LinearGradientBrush x:Key="DashboardGlassPanelBrush" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#D8FFFFFF" Offset="0" />
-            <GradientStop Color="#BCEFF6FF" Offset="0.52" />
-            <GradientStop Color="#A8FFFFFF" Offset="1" />
+            <GradientStop Color="#B8FFFFFF" Offset="0" />
+            <GradientStop Color="#8CF0F7FF" Offset="0.52" />
+            <GradientStop Color="#A0FFFFFF" Offset="1" />
         </LinearGradientBrush>
-        <SolidColorBrush x:Key="DashboardGlassPanelBorderBrush" Color="#EFFFFFFF" />
-        <SolidColorBrush x:Key="DashboardGlassGridHeaderBrush" Color="#86EAF2FF" />
-        <SolidColorBrush x:Key="DashboardGlassRowBrush" Color="#A8FFFFFF" />
-        <SolidColorBrush x:Key="DashboardGlassAltRowBrush" Color="#7FFFFFFF" />
-        <SolidColorBrush x:Key="DashboardGlassHoverRowBrush" Color="#D6FFFFFF" />
-        <SolidColorBrush x:Key="DashboardGlassSelectedRowBrush" Color="#DCEBFFFF" />
+        <SolidColorBrush x:Key="DashboardGlassPanelBorderBrush" Color="#E8FFFFFF" />
+        <SolidColorBrush x:Key="DashboardGlassGridHeaderBrush" Color="#78EAF3FF" />
+        <SolidColorBrush x:Key="DashboardGlassRowBrush" Color="#68FFFFFF" />
+        <SolidColorBrush x:Key="DashboardGlassAltRowBrush" Color="#4FFFFFFF" />
+        <SolidColorBrush x:Key="DashboardGlassHoverRowBrush" Color="#A8FFFFFF" />
+        <SolidColorBrush x:Key="DashboardGlassSelectedRowBrush" Color="#B8DCEBFF" />
         <DropShadowEffect x:Key="DashboardGlassShadow"
-                          BlurRadius="22"
-                          ShadowDepth="3"
+                          BlurRadius="28"
+                          ShadowDepth="5"
                           Direction="270"
-                          Opacity="0.18"
+                          Opacity="0.22"
                           Color="#315D9B" />
 
         <Style x:Key="DashboardGlassCard" TargetType="Border" BasedOn="{StaticResource DashboardCard}">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding DataContext.IsGlassTheme, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                             Value="True">
-                    <Setter Property="Background" Value="{StaticResource DashboardGlassPanelBrush}" />
-                    <Setter Property="BorderBrush" Value="{StaticResource DashboardGlassPanelBorderBrush}" />
-                    <Setter Property="BorderThickness" Value="1.2" />
-                    <Setter Property="Effect" Value="{StaticResource DashboardGlassShadow}" />
-                </DataTrigger>
-            </Style.Triggers>
+            <Setter Property="Background" Value="{StaticResource DashboardGlassPanelBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource DashboardGlassPanelBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="Effect" Value="{StaticResource DashboardGlassShadow}" />
         </Style>
 
         <Style x:Key="DashboardGridCell" TargetType="DataGridCell">
@@ -106,18 +101,34 @@
         <Style x:Key="DashboardGlassGridRow" TargetType="DataGridRow">
             <Setter Property="Background" Value="{StaticResource DashboardGlassRowBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-            <Setter Property="BorderBrush" Value="#52FFFFFF" />
-            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="BorderBrush" Value="#72FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Margin" Value="0,2,0,0" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridRow">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                SnapsToDevicePixels="True">
+                            <DataGridCellsPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Style.Triggers>
                 <Trigger Property="AlternationIndex" Value="1">
                     <Setter Property="Background" Value="{StaticResource DashboardGlassAltRowBrush}" />
                 </Trigger>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{StaticResource DashboardGlassHoverRowBrush}" />
+                    <Setter Property="BorderBrush" Value="#B8FFFFFF" />
                 </Trigger>
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="Background" Value="{StaticResource DashboardGlassSelectedRowBrush}" />
+                    <Setter Property="BorderBrush" Value="#C8DCEBFF" />
                     <Setter Property="FontWeight" Value="SemiBold" />
                 </Trigger>
             </Style.Triggers>
@@ -140,8 +151,8 @@
             <Setter Property="AlternationCount" Value="2147483647" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden" />
-            <Setter Property="RowHeight" Value="28" />
-            <Setter Property="ColumnHeaderHeight" Value="28" />
+            <Setter Property="RowHeight" Value="30" />
+            <Setter Property="ColumnHeaderHeight" Value="30" />
             <Setter Property="FontSize" Value="12.5" />
             <Setter Property="CellStyle" Value="{StaticResource DashboardGridCell}" />
             <Setter Property="ColumnHeaderStyle" Value="{StaticResource DashboardGlassGridHeader}" />
@@ -442,7 +453,7 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
                                     <Viewbox Height="118" Stretch="Fill">
-                                        <Canvas Width="760" Height="178" Background="Transparent">
+                                        <Canvas Width="760" Height="178" Background="#24FFFFFF">
                                             <Line X1="24" Y1="24" X2="696" Y2="24" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" />
                                             <Line X1="24" Y1="54" X2="696" Y2="54" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" />
                                             <Line X1="24" Y1="84" X2="696" Y2="84" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" />
@@ -551,21 +562,21 @@
                                           Style="{StaticResource DashboardGrid}"
                                           Height="160">
                                     <DataGrid.Columns>
-                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="#" Width="30" CanUserSort="False">
+                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="#" Width="30" CanUserSort="False">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource Presentation}, ConverterParameter=RowNumber}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnMedicine, Source={StaticResource ColumnsProxy}}" Binding="{Binding Medicine}" Width="*" MinWidth="130">
+                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnMedicine, Source={StaticResource ColumnsProxy}}" Binding="{Binding Medicine}" Width="*" MinWidth="130">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock" BasedOn="{StaticResource DashboardCellText}">
                                                     <Setter Property="ToolTip" Value="{Binding Medicine}" />
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnCurrentStock, Source={StaticResource ColumnsProxy}}" Binding="{Binding CurrentStock, StringFormat={}{0:0.####}}" Width="92">
+                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnCurrentStock, Source={StaticResource ColumnsProxy}}" Binding="{Binding CurrentStock, StringFormat={}{0:0.####}}" Width="92">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
@@ -575,7 +586,7 @@
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnMinimumStock, Source={StaticResource ColumnsProxy}}" Binding="{Binding MinimumStock, StringFormat={}{0:0.####}}" Width="78">
+                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnMinimumStock, Source={StaticResource ColumnsProxy}}" Binding="{Binding MinimumStock, StringFormat={}{0:0.####}}" Width="78">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="TextAlignment" Value="Right" />
@@ -584,7 +595,7 @@
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnStatus, Source={StaticResource ColumnsProxy}}" Width="72">
+                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnStatus, Source={StaticResource ColumnsProxy}}" Width="72">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{DynamicResource DangerSoftBrush}" CornerRadius="7" Padding="6,1"
@@ -623,23 +634,23 @@
                                           Style="{StaticResource DashboardGrid}"
                                           Height="160">
                                     <DataGrid.Columns>
-                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="#" Width="30" CanUserSort="False">
+                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="#" Width="30" CanUserSort="False">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource Presentation}, ConverterParameter=RowNumber}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnMedicine, Source={StaticResource ColumnsProxy}}" Binding="{Binding Medicine}" Width="*" MinWidth="130">
+                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnMedicine, Source={StaticResource ColumnsProxy}}" Binding="{Binding Medicine}" Width="*" MinWidth="130">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock" BasedOn="{StaticResource DashboardCellText}">
                                                     <Setter Property="ToolTip" Value="{Binding Medicine}" />
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnBatchNumber, Source={StaticResource ColumnsProxy}}" Binding="{Binding BatchNumber}" Width="85" />
-                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnExpiryDate, Source={StaticResource ColumnsProxy}}" Binding="{Binding ExpiryDate, StringFormat={}{0:dd MMM yyyy}}" Width="108" />
-                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnDaysLeft, Source={StaticResource ColumnsProxy}}" Width="78">
+                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnBatchNumber, Source={StaticResource ColumnsProxy}}" Binding="{Binding BatchNumber}" Width="85" />
+                                        <DataGridTextColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnExpiryDate, Source={StaticResource ColumnsProxy}}" Binding="{Binding ExpiryDate, StringFormat={}{0:dd MMM yyyy}}" Width="108" />
+                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnDaysLeft, Source={StaticResource ColumnsProxy}}" Width="78">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{Binding DaysLeft, Converter={StaticResource Presentation}, ConverterParameter=ExpiryBackground}" CornerRadius="7" Padding="6,1"
@@ -680,15 +691,15 @@
                                       Style="{StaticResource DashboardGrid}"
                                       Height="156">
                                 <DataGrid.Columns>
-                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="#" Width="34" CanUserSort="False">
+                                        <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="#" Width="34" CanUserSort="False">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Text="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource Presentation}, ConverterParameter=RowNumber}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnDateTime, Source={StaticResource ColumnsProxy}}" Binding="{Binding OccurredAt, StringFormat={}{0:dd MMM yyyy HH:mm}}" Width="150" />
-                                    <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnType, Source={StaticResource ColumnsProxy}}" Width="68">
+                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnDateTime, Source={StaticResource ColumnsProxy}}" Binding="{Binding OccurredAt, StringFormat={}{0:dd MMM yyyy HH:mm}}" Width="150" />
+                                    <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnType, Source={StaticResource ColumnsProxy}}" Width="68">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Border Background="{DynamicResource InfoSoftBrush}" CornerRadius="7" Padding="6,1"
@@ -698,9 +709,9 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnDocumentNumber, Source={StaticResource ColumnsProxy}}" Binding="{Binding DocumentNumber}" Width="150" />
-                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnParty, Source={StaticResource ColumnsProxy}}" Binding="{Binding Party}" Width="*" MinWidth="130" />
-                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnItems, Source={StaticResource ColumnsProxy}}" Binding="{Binding Items}" Width="60">
+                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnDocumentNumber, Source={StaticResource ColumnsProxy}}" Binding="{Binding DocumentNumber}" Width="150" />
+                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnParty, Source={StaticResource ColumnsProxy}}" Binding="{Binding Party}" Width="*" MinWidth="130" />
+                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnItems, Source={StaticResource ColumnsProxy}}" Binding="{Binding Items}" Width="60">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextAlignment" Value="Right" />
@@ -709,7 +720,7 @@
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnTotal, Source={StaticResource ColumnsProxy}}" Binding="{Binding Total, StringFormat={}{0:N2}}" Width="100">
+                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnTotal, Source={StaticResource ColumnsProxy}}" Binding="{Binding Total, StringFormat={}{0:N2}}" Width="100">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextAlignment" Value="Right" />
@@ -718,8 +729,8 @@
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
-                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnPaymentMethod, Source={StaticResource ColumnsProxy}}" Binding="{Binding PaymentMethod}" Width="120" />
-                                    <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGridHeader}" Header="{Binding Data.ColumnStatus, Source={StaticResource ColumnsProxy}}" Width="76">
+                                    <DataGridTextColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnPaymentMethod, Source={StaticResource ColumnsProxy}}" Binding="{Binding PaymentMethod}" Width="120" />
+                                    <DataGridTemplateColumn HeaderStyle="{StaticResource DashboardGlassGridHeader}" Header="{Binding Data.ColumnStatus, Source={StaticResource ColumnsProxy}}" Width="76">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Border CornerRadius="7" Padding="6,1"
