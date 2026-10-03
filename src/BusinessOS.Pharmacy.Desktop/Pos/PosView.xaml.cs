@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using BusinessOS.Pharmacy.Application.Abstractions.Sales;
 
 namespace BusinessOS.Pharmacy.Desktop.Pos;
 
@@ -140,6 +141,29 @@ public partial class PosView : UserControl
             RequestSearchFocus();
             e.Handled = true;
         }
+    }
+
+    private async void OnRecentInvoiceDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (_viewModel is null ||
+            RecentSalesGrid.SelectedItem is not SaleListItem sale)
+            return;
+
+        var detail = await _viewModel.LoadRecentSaleAsync(sale);
+        if (detail is null)
+            return;
+
+        var window = new InvoiceDetailWindow(
+            detail,
+            _viewModel.PrintInvoice,
+            _viewModel.RequestReturn,
+            _viewModel.CanReturnSales)
+        {
+            Owner = Window.GetWindow(this),
+        };
+
+        window.ShowDialog();
+        e.Handled = true;
     }
 
     private void RequestSearchFocus()
