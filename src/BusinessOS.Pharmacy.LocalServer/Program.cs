@@ -476,6 +476,7 @@ authorized.MapPost("/inventory/adjust", async (InventoryAdjustmentRequest reques
 authorized.MapPost("/inventory/change-status", async (ChangeBatchStatusRequest request, IInventoryService service, CancellationToken ct) => { await service.ChangeBatchStatusAsync(request, ct); return Results.NoContent(); });
 
 authorized.MapPost("/suppliers/search", async (SupplierSearchFilter filter, ISupplierService service, CancellationToken ct) => Results.Ok(await service.SearchAsync(filter, ct)));
+authorized.MapGet("/suppliers/summary", async (ISupplierService service, CancellationToken ct) => Results.Ok(await service.GetSummaryAsync(ct)));
 authorized.MapGet("/suppliers/{id}", async (string id, ISupplierService service, CancellationToken ct) => { var result = await service.GetAsync(id, ct); return result is null ? Results.NotFound() : Results.Ok(result); });
 authorized.MapPost("/suppliers", async (SaveSupplierRequest request, ISupplierService service, CancellationToken ct) => Results.Ok(new MedicineCreateResponse(await service.CreateAsync(request, ct))));
 authorized.MapPut("/suppliers/{id}", async (string id, SaveSupplierRequest request, ISupplierService service, CancellationToken ct) => { await service.UpdateAsync(id, request, ct); return Results.NoContent(); });
