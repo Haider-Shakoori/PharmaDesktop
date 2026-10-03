@@ -68,8 +68,11 @@ public sealed class CloudSyncStore(
                 x.Status == "conflict" &&
                 x.EventType == "sale.completed" &&
                 x.LastErrorCode == "reference_missing")
-            .OrderBy(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
+
+        rows = rows
+            .OrderBy(x => x.CreatedAt)
+            .ToList();
 
         var repaired = 0;
         var now = DateTimeOffset.UtcNow;
@@ -432,8 +435,6 @@ public sealed class CloudSyncStore(
         var rows = await context.Set<CloudSyncOutboxEntity>()
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId && x.Status == "conflict")
-            .OrderByDescending(x => x.CreatedAt)
-            .Take(take)
             .Select(x => new
             {
                 x.IdempotencyKey,
@@ -448,6 +449,8 @@ public sealed class CloudSyncStore(
             .ToListAsync(cancellationToken);
 
         return rows
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(take)
             .Select(x =>
             {
                 var (localId, businessDate) = ReadConflictReferences(x.PayloadJson);
