@@ -337,7 +337,7 @@
                                            VerticalAlignment="Center"
                                            HorizontalAlignment="Center"/>
                             </Border>
-                            <TextBlock Text="{Binding TotalPages, StringFormat=of {0}}"
+                            <TextBlock Text="{Binding TotalPagesLabel}"
                                        Foreground="#64748B"
                                        VerticalAlignment="Center"
                                        Margin="0,0,8,0"/>
