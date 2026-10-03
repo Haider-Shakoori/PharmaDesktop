@@ -12,13 +12,6 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
 
-        <DataTemplate x:Key="MedicineHeaderTemplate">
-            <TextBlock Text="{Binding}"
-                       HorizontalAlignment="Left"
-                       VerticalAlignment="Center"
-                       TextAlignment="Left" />
-        </DataTemplate>
-
         <Style x:Key="MedicineTableHeader" TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="#F1F5F9" />
             <Setter Property="Foreground" Value="#475569" />
@@ -30,7 +23,34 @@
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="ContentTemplate" Value="{StaticResource MedicineHeaderTemplate}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Grid Background="{TemplateBinding Background}">
+                            <Border BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                <ContentPresenter Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                  Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="Left"
+                                                  VerticalAlignment="Center"
+                                                  RecognizesAccessKey="True" />
+                            </Border>
+
+                            <Thumb x:Name="PART_LeftHeaderGripper"
+                                   Width="5"
+                                   HorizontalAlignment="Left"
+                                   Background="Transparent"
+                                   Cursor="SizeWE" />
+                            <Thumb x:Name="PART_RightHeaderGripper"
+                                   Width="5"
+                                   HorizontalAlignment="Right"
+                                   Background="Transparent"
+                                   Cursor="SizeWE" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="MedicineTableCell" TargetType="DataGridCell">
