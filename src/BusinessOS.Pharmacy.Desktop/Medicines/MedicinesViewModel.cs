@@ -13,6 +13,7 @@ public sealed partial class MedicinesViewModel : ObservableObject
     private readonly IMedicineCsvService _csv;
     private UiLanguage _language = UiLanguageCatalog.All[0];
     private string? _pendingCsvPath;
+    private List<MedicineListItem> _matchingMedicines = [];
 
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string statusMessage = string.Empty;
@@ -20,6 +21,10 @@ public sealed partial class MedicinesViewModel : ObservableObject
     [ObservableProperty] private MedicineReferenceItem? selectedFilterCategory;
     [ObservableProperty] private string selectedStatus = "All";
     [ObservableProperty] private MedicineListItem? selectedMedicine;
+    [ObservableProperty] private bool isEditorOpen;
+    [ObservableProperty] private int currentPage = 1;
+    [ObservableProperty] private int pageSize = 15;
+    [ObservableProperty] private int totalItems;
 
     [ObservableProperty] private string? editingId;
     [ObservableProperty] private MedicineReferenceItem? selectedCategory;
@@ -57,8 +62,12 @@ public sealed partial class MedicinesViewModel : ObservableObject
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
         SearchCommand = new AsyncRelayCommand(SearchAsync, () => !IsBusy);
-        NewCommand = new RelayCommand(NewMedicine);
+        NewCommand = new RelayCommand(OpenNewMedicine);
         EditSelectedCommand = new AsyncRelayCommand(EditSelectedAsync, () => SelectedMedicine is not null && !IsBusy);
+        EditMedicineCommand = new AsyncRelayCommand<MedicineListItem>(EditMedicineAsync, item => item is not null && !IsBusy);
+        CancelEditorCommand = new RelayCommand(CloseEditor);
+        PreviousPageCommand = new RelayCommand(PreviousPage, () => CurrentPage > 1);
+        NextPageCommand = new RelayCommand(NextPage, () => CurrentPage < TotalPages);
         SaveCommand = new AsyncRelayCommand(SaveAsync, () => !IsBusy);
         AddCategoryCommand = new AsyncRelayCommand(AddCategoryAsync, () => !IsBusy);
         AddManufacturerCommand = new AsyncRelayCommand(AddManufacturerAsync, () => !IsBusy);
@@ -78,6 +87,10 @@ public sealed partial class MedicinesViewModel : ObservableObject
     public IAsyncRelayCommand SearchCommand { get; }
     public IRelayCommand NewCommand { get; }
     public IAsyncRelayCommand EditSelectedCommand { get; }
+    public IAsyncRelayCommand<MedicineListItem> EditMedicineCommand { get; }
+    public IRelayCommand CancelEditorCommand { get; }
+    public IRelayCommand PreviousPageCommand { get; }
+    public IRelayCommand NextPageCommand { get; }
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand AddCategoryCommand { get; }
     public IAsyncRelayCommand AddManufacturerCommand { get; }
@@ -96,6 +109,24 @@ public sealed partial class MedicinesViewModel : ObservableObject
         ? Translate("Add medicine", "افزودن دوا", "درمل زیاتول")
         : Translate("Edit medicine", "ویرایش دوا", "درمل سمول");
     public string ReferencesTitle => Translate("Categories & manufacturers", "دسته‌بندی‌ها و تولیدکنندگان", "کټګورۍ او جوړونکي");
+    public int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalItems / (double)Math.Max(1, PageSize)));
+    public string PageSummary
+    {
+        get
+        {
+            if (TotalItems == 0)
+            {
+                return Translate("Showing 0 medicines", "نمایش ۰ دوا", "۰ درمل ښودل کېږي");
+            }
+
+            var from = ((CurrentPage - 1) * PageSize) + 1;
+            var to = Math.Min(CurrentPage * PageSize, TotalItems);
+            return Translate(
+                $"Showing {from}-{to} of {TotalItems} medicines",
+                $"نمایش {from}-{to} از {TotalItems} دوا",
+                $"له {TotalItems} درملو څخه {from}-{to} ښودل کېږي");
+        }
+    }
 
     public void SetLanguage(UiLanguage language)
     {
@@ -162,6 +193,28 @@ public sealed partial class MedicinesViewModel : ObservableObject
     partial void OnSelectedMedicineChanged(MedicineListItem? value) =>
         EditSelectedCommand.NotifyCanExecuteChanged();
 
+    partial void OnCurrentPageChanged(int value)
+    {
+        OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(PageSummary));
+        PreviousPageCommand.NotifyCanExecuteChanged();
+        NextPageCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnPageSizeChanged(int value)
+    {
+        CurrentPage = 1;
+        RefreshPage();
+    }
+
+    partial void OnTotalItemsChanged(int value)
+    {
+        OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(PageSummary));
+        PreviousPageCommand.NotifyCanExecuteChanged();
+        NextPageCommand.NotifyCanExecuteChanged();
+    }
+
     partial void OnEditingIdChanged(string? value)
     {
         OnPropertyChanged(nameof(SaveLabel));
@@ -186,11 +239,10 @@ public sealed partial class MedicinesViewModel : ObservableObject
             active,
             500));
 
-        Medicines.Clear();
-        foreach (var item in result)
-        {
-            Medicines.Add(item);
-        }
+        _matchingMedicines = result.ToList();
+        TotalItems = _matchingMedicines.Count;
+        CurrentPage = 1;
+        RefreshPage();
     }
 
     private async Task EditSelectedAsync()
@@ -200,9 +252,20 @@ public sealed partial class MedicinesViewModel : ObservableObject
             return;
         }
 
+        await EditMedicineAsync(SelectedMedicine);
+    }
+
+    private async Task EditMedicineAsync(MedicineListItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        SelectedMedicine = item;
         await ExecuteBusyAsync(async () =>
         {
-            var medicine = await _catalog.GetAsync(SelectedMedicine.Id)
+            var medicine = await _catalog.GetAsync(item.Id)
                 ?? throw new InvalidOperationException("Medicine was not found.");
 
             EditingId = medicine.Id;
@@ -223,8 +286,20 @@ public sealed partial class MedicinesViewModel : ObservableObject
             Notes = medicine.Notes ?? string.Empty;
             SelectedCategory = Categories.FirstOrDefault(x => x.Id == medicine.MedicineCategoryId);
             SelectedManufacturer = Manufacturers.FirstOrDefault(x => x.Id == medicine.ManufacturerId);
+            IsEditorOpen = true;
             StatusMessage = Translate("Medicine loaded for editing.", "دوا برای ویرایش باز شد.", "درمل د سمون لپاره پرانیستل شو.");
         });
+    }
+
+    private void OpenNewMedicine()
+    {
+        NewMedicine();
+        IsEditorOpen = true;
+    }
+
+    private void CloseEditor()
+    {
+        IsEditorOpen = false;
     }
 
     private void NewMedicine()
@@ -288,6 +363,7 @@ public sealed partial class MedicinesViewModel : ObservableObject
 
             await SearchCoreAsync();
             NewMedicine();
+            IsEditorOpen = false;
             StatusMessage = savedMessage;
         });
     }
@@ -418,11 +494,63 @@ public sealed partial class MedicinesViewModel : ObservableObject
         }
     }
 
+    private void RefreshPage()
+    {
+        var totalPages = TotalPages;
+        if (CurrentPage > totalPages)
+        {
+            CurrentPage = totalPages;
+        }
+
+        if (CurrentPage < 1)
+        {
+            CurrentPage = 1;
+        }
+
+        Medicines.Clear();
+        foreach (var item in _matchingMedicines
+                     .Skip((CurrentPage - 1) * PageSize)
+                     .Take(PageSize))
+        {
+            Medicines.Add(item);
+        }
+
+        OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(PageSummary));
+        PreviousPageCommand.NotifyCanExecuteChanged();
+        NextPageCommand.NotifyCanExecuteChanged();
+    }
+
+    private void PreviousPage()
+    {
+        if (CurrentPage <= 1)
+        {
+            return;
+        }
+
+        CurrentPage--;
+        RefreshPage();
+    }
+
+    private void NextPage()
+    {
+        if (CurrentPage >= TotalPages)
+        {
+            return;
+        }
+
+        CurrentPage++;
+        RefreshPage();
+    }
+
     private void NotifyCommands()
     {
         RefreshCommand.NotifyCanExecuteChanged();
         SearchCommand.NotifyCanExecuteChanged();
         EditSelectedCommand.NotifyCanExecuteChanged();
+        EditMedicineCommand.NotifyCanExecuteChanged();
+        PreviousPageCommand.NotifyCanExecuteChanged();
+        NextPageCommand.NotifyCanExecuteChanged();
         SaveCommand.NotifyCanExecuteChanged();
         AddCategoryCommand.NotifyCanExecuteChanged();
         AddManufacturerCommand.NotifyCanExecuteChanged();
