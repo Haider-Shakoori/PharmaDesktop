@@ -66,6 +66,50 @@ public sealed class CustomerTests
     }
 
     [Fact]
+    public async Task Customer_summary_reports_counts_and_total_credit_limit()
+    {
+        var root = CreateTemporaryRoot();
+
+        try
+        {
+            await using var provider = BuildProvider(root);
+            await InitializeAsync(provider);
+
+            var customers = provider.GetRequiredService<ICustomerService>();
+
+            await customers.CreateAsync(
+                new SaveCustomerRequest(
+                    "Active Customer",
+                    "0700111111",
+                    null,
+                    150.25m,
+                    true,
+                    null));
+
+            await customers.CreateAsync(
+                new SaveCustomerRequest(
+                    "Inactive Customer",
+                    "0700222222",
+                    null,
+                    49.75m,
+                    false,
+                    null));
+
+            var summary = await customers.GetSummaryAsync();
+
+            Assert.Equal(2, summary.TotalCustomers);
+            Assert.Equal(1, summary.ActiveCustomers);
+            Assert.Equal(1, summary.InactiveCustomers);
+            Assert.Equal(200m, summary.TotalCreditLimit);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
+    [Fact]
     public async Task Customer_validation_matches_web_field_limits()
     {
         var root = CreateTemporaryRoot();
