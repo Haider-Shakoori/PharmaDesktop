@@ -78,6 +78,39 @@ public sealed partial class ReturnsViewModel : ObservableObject
         StatusMessage = Translate("Select a completed sale to process a return.", "برای برگشت، یک فروش تکمیل‌شده را انتخاب کنید.", "د بېرته ستنولو لپاره بشپړ شوی خرڅلاو وټاکئ.");
     });
 
+    public async Task LoadSaleAsync(string saleId)
+    {
+        if (string.IsNullOrWhiteSpace(saleId))
+            return;
+
+        await ExecuteBusyAsync(async () =>
+        {
+            var detail = await _returns.GetReturnableSaleAsync(saleId);
+            if (detail is null)
+            {
+                StatusMessage = Translate(
+                    "This invoice is not available for return.",
+                    "این فاکتور برای برگشت در دسترس نیست.",
+                    "دا بل د بېرته ستنولو لپاره شتون نه لري.");
+                return;
+            }
+
+            if (Sales.All(x => x.Id != detail.Sale.Id))
+                Sales.Insert(0, detail.Sale);
+
+            SelectedSale = Sales.First(x => x.Id == detail.Sale.Id);
+            SelectedSaleDetail = detail;
+            SelectedLine = detail.Lines.FirstOrDefault(x => x.RemainingQuantity > 0m);
+            ReturnLines.Clear();
+            Refunds.Clear();
+            RaiseTotals();
+            StatusMessage = Translate(
+                $"Invoice {detail.Sale.SaleNumber} opened for return actions.",
+                $"فاکتور {detail.Sale.SaleNumber} برای عملیات برگشت باز شد.",
+                $"بل {detail.Sale.SaleNumber} د بېرته ستنولو لپاره پرانیستل شو.");
+        });
+    }
+
     partial void OnSelectedSaleChanged(SaleListItem? value)
     {
         SelectedSaleDetail = null;

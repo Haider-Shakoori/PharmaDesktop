@@ -82,7 +82,7 @@
     <!-- Opaque surfaces for dense panels (tables, POS cart) so text stays crisp -->
     <SolidColorBrush x:Key="SurfaceStrongBrush" Color="#F5FFFFFF" />
     <SolidColorBrush x:Key="TopBarBrush" Color="#BFFFFFFF" />
-    <SolidColorBrush x:Key="PageBackgroundBrush" Color="#00FFFFFF" />
+    <SolidColorBrush x:Key="PageBackgroundBrush" Color="#68FFFFFF" />
 
     <!-- Frosted card surface with a soft vertical sheen -->
     <LinearGradientBrush x:Key="CardBackgroundBrush" StartPoint="0,0" EndPoint="0,1">

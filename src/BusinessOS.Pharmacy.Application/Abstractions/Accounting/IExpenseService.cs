@@ -6,6 +6,7 @@ public interface IExpenseService
     Task<ExpenseReferenceData> GetReferenceDataAsync(CancellationToken cancellationToken = default);
     Task<ExpenseDetail> PostAsync(PostExpenseRequest request, CancellationToken cancellationToken = default);
     Task<ExpenseDetail> ReverseAsync(string expenseId, string reason, CancellationToken cancellationToken = default);
+    Task<ExpenseDetail> AmendAsync(string expenseId, PostExpenseRequest request, string reason, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ExpenseListItem>> SearchAsync(ExpenseSearchFilter filter, CancellationToken cancellationToken = default);
     Task<ExpenseDetail?> GetAsync(string expenseId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<JournalEntryDetail>> GetJournalsAsync(string expenseId, CancellationToken cancellationToken = default);

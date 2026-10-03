@@ -48,6 +48,7 @@ public sealed partial class InventoryViewModel : ObservableObject
     [ObservableProperty] private bool canManageInventory;
     [ObservableProperty] private bool canAdjustInventory;
     [ObservableProperty] private bool canChangeBatchStatus;
+    [ObservableProperty] private bool isBatchesMode;
 
     public InventoryViewModel(
         IInventoryService inventory,
@@ -92,11 +93,22 @@ public sealed partial class InventoryViewModel : ObservableObject
     public IAsyncRelayCommand DownloadCsvTemplateCommand { get; }
     public IAsyncRelayCommand ImportCsvCommand { get; }
 
-    public string Title => Translate("Inventory", "موجودی", "زېرمه");
-    public string Subtitle => Translate(
-        "Batch-aware stock, expiry and movement control",
-        "کنترل موجودی، بچ، انقضا و گردش کالا",
-        "د بېچ، تاریخ تېر او زېرمتون حرکتونو کنټرول");
+    public string Title => IsBatchesMode
+        ? Translate("Batches", "بچ‌ها", "بېچونه")
+        : Translate("Inventory", "موجودی", "زېرمه");
+    public string Eyebrow => IsBatchesMode
+        ? Translate("Batch control", "کنترل بچ", "د بېچ کنټرول")
+        : Translate("Stock control", "کنترل موجودی", "د زېرمتون کنټرول");
+    public string Subtitle => IsBatchesMode
+        ? Translate(
+            "Medicine batch status, expiry and movement history",
+            "وضعیت بچ دوا، انقضا و تاریخچه گردش",
+            "د درملو د بېچ حالت، تاریخ تېر او د حرکت تاریخچه")
+        : Translate(
+            "Opening stock, availability and controlled stock adjustments",
+            "موجودی اولیه، دسترسی و تعدیلات کنترل‌شده موجودی",
+            "پیل زېرمه، موجودي او کنټرول شوي زېرمتون سمونونه");
+    public bool IsInventoryMode => !IsBatchesMode;
     public string OpeningStockTitle => Translate("Opening stock", "موجودی اولیه", "پیل زېرمه");
     public string AdjustmentTitle => Translate("Stock adjustment", "تعدیل موجودی", "د زېرمتون سمون");
     public string StatusTitle => Translate("Batch status", "وضعیت بچ", "د بېچ حالت");
@@ -105,6 +117,19 @@ public sealed partial class InventoryViewModel : ObservableObject
     public void SetLanguage(UiLanguage language)
     {
         _language = language;
+        RaiseLocalizedProperties();
+    }
+
+    public void SetMode(bool batchesMode)
+    {
+        IsBatchesMode = batchesMode;
+        OnPropertyChanged(nameof(IsInventoryMode));
+        RaiseLocalizedProperties();
+    }
+
+    partial void OnIsBatchesModeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsInventoryMode));
         RaiseLocalizedProperties();
     }
 
@@ -495,6 +520,7 @@ public sealed partial class InventoryViewModel : ObservableObject
     private void RaiseLocalizedProperties()
     {
         OnPropertyChanged(nameof(Title));
+        OnPropertyChanged(nameof(Eyebrow));
         OnPropertyChanged(nameof(Subtitle));
         OnPropertyChanged(nameof(OpeningStockTitle));
         OnPropertyChanged(nameof(AdjustmentTitle));

@@ -650,6 +650,8 @@ public sealed class PosSalesTests
                     local_id = sale.Sale.Id,
                     idempotency_key = "historical-inactive-reference",
                     stock_location_id = location.Id,
+                    stock_location_code = "STALE-LOCATION",
+                    reference_resolution_v = 1,
                     customer_id = (string?)null,
                     cashier_user_id = "user-pos",
                     business_date = sale.Sale.BusinessDate.ToString("yyyy-MM-dd"),
@@ -659,6 +661,7 @@ public sealed class PosSalesTests
                         new
                         {
                             medicine_id = medicineId,
+                            medicine_code = "STALE-MEDICINE",
                             quantity = "1.0000",
                             unit_price = "10.0000",
                             discount_amount = "0.0000",
@@ -691,6 +694,11 @@ public sealed class PosSalesTests
             }
 
             var store = provider.GetRequiredService<ICloudSyncStore>();
+
+            Assert.True(await store.RetryConflictAsync(
+                "tenant-pos",
+                "historical-inactive-reference"));
+
             var repaired = await store.RepairReferenceConflictsAsync(
                 "tenant-pos",
                 "user-pos");

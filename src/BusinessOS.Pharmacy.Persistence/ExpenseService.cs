@@ -67,6 +67,86 @@ internal sealed class ExpenseService : IExpenseService
         return ToDetail(row);
     }
 
+    public async Task<ExpenseDetail> AmendAsync(string expenseId,PostExpenseRequest r,string reason,CancellationToken ct=default)
+    {
+        _permissions.Demand("accounting.manage");
+        ArgumentException.ThrowIfNullOrWhiteSpace(expenseId);
+        Validate(r);
+        reason=reason?.Trim()??"";
+        if(reason.Length<3||reason.Length>2000) throw new ArgumentOutOfRangeException(nameof(reason));
+        await _provisioner.EnsureDefaultsAsync(ct);
+        var actor=_sessions.Current?.UserId??throw new InvalidOperationException("A pharmacy user must be signed in.");
+
+        await using var c=await _factory.CreateDbContextAsync(ct);
+        await using var tx=await InventoryWriteTransaction.BeginAsync(c,ct);
+
+        var original=await ExpenseQuery(c).SingleOrDefaultAsync(x=>x.Id==expenseId,ct)
+            ??throw new InvalidOperationException("Expense was not found.");
+        if(original.Status!="posted")
+            throw new InvalidOperationException("Only a posted expense can be updated.");
+
+        var expense=await c.Set<LedgerAccountEntity>().SingleOrDefaultAsync(x=>x.Id==r.ExpenseAccountId&&x.IsActive,ct)
+            ??throw new InvalidOperationException("Expense account was not found or is inactive.");
+        var payment=await c.Set<LedgerAccountEntity>().SingleOrDefaultAsync(x=>x.Id==r.PaymentAccountId&&x.IsActive,ct)
+            ??throw new InvalidOperationException("Payment account was not found or is inactive.");
+        if(expense.Type!="expense") throw new InvalidOperationException("Select an expense account.");
+        if(!IsPaymentAccount(payment)) throw new InvalidOperationException("Select a cash, bank, mobile, hawala, or other settlement asset account.");
+
+        StockLocationEntity? location=null;
+        if(!string.IsNullOrWhiteSpace(r.StockLocationId))
+            location=await c.Set<StockLocationEntity>().SingleOrDefaultAsync(x=>x.Id==r.StockLocationId&&x.IsActive,ct)
+                ??throw new InvalidOperationException("Stock location was not found or is inactive.");
+
+        var journal=await c.Set<JournalEntryEntity>()
+            .Include(x=>x.Lines).ThenInclude(x=>x.LedgerAccount)
+            .SingleAsync(x=>x.SourceType=="expense"&&x.SourceId==original.Id&&x.SourceEvent=="posted"&&x.Status=="posted",ct);
+        await _ledger.ReverseAsync(c,journal,reason,actor,ct);
+
+        var now=_clock.UtcNow;
+        original.Status="reversed";
+        original.ReversedAt=now;
+        original.UpdatedAt=now;
+
+        var amount=Scale(r.Amount);
+        var currency=r.Currency.Trim().ToUpperInvariant();
+        var replacement=new ExpenseEntity
+        {
+            Id=Guid.CreateVersion7().ToString(),
+            ExpenseNumber=$"EXP-{r.BusinessDate:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..10].ToUpperInvariant()}",
+            ExpenseAccountId=expense.Id,
+            PaymentAccountId=payment.Id,
+            StockLocationId=location?.Id,
+            BusinessDate=r.BusinessDate,
+            Currency=currency,
+            Amount=amount,
+            Payee=Norm(r.Payee,180),
+            Reference=Norm(r.Reference,160),
+            Notes=Norm(r.Notes,2000),
+            Status="posted",
+            IdempotencyKey=r.IdempotencyKey.Trim(),
+            CreatedBy=actor,
+            PostedAt=now,
+            CreatedAt=now,
+            UpdatedAt=now
+        };
+        c.Add(replacement);
+
+        await _ledger.PostAsync(c,new JournalPostDraft(
+            r.BusinessDate,now,currency,"expense",replacement.Id,"posted",replacement.ExpenseNumber,
+            $"accounting:expense:{replacement.Id}",replacement.Reference,
+            $"Expense {replacement.ExpenseNumber}{(replacement.Payee is null?"":$" · {replacement.Payee}")} · amended from {original.ExpenseNumber}",actor),
+            [
+                new JournalLineDraft(expense,replacement.StockLocationId,amount,0m,Memo:replacement.Notes??"Operating expense"),
+                new JournalLineDraft(payment,replacement.StockLocationId,0m,amount,Memo:$"Expense settlement · amended from {original.ExpenseNumber}")
+            ],ct);
+
+        await c.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
+
+        await using var read=await _factory.CreateDbContextAsync(ct);
+        return ToDetail(await ExpenseQuery(read).AsNoTracking().SingleAsync(x=>x.Id==replacement.Id,ct));
+    }
+
     public async Task<IReadOnlyList<ExpenseListItem>> SearchAsync(ExpenseSearchFilter f,CancellationToken ct=default)
     {
         _permissions.Demand("accounting.manage"); ArgumentNullException.ThrowIfNull(f); var take=Math.Clamp(f.Take,1,1000); var search=Norm(f.Search,180); var status=Norm(f.Status,24)?.ToLowerInvariant();

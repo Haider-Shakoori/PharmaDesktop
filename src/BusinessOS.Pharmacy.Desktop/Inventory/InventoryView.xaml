@@ -10,7 +10,7 @@
         </Grid.RowDefinitions>
 
         <controls:PageHeader Grid.Row="0"
-                             Eyebrow="Batch-aware stock"
+                             Eyebrow="{Binding Eyebrow}"
                              Title="{Binding Title}"
                              Description="{Binding Subtitle}">
             <controls:PageHeader.Actions>
@@ -114,6 +114,16 @@
                               IsExpanded="True"
                               IsEnabled="{Binding CanManageInventory}"
                               Margin="0,0,0,12">
+                        <Expander.Style>
+                            <Style TargetType="Expander">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsInventoryMode}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Expander.Style>
                         <Border Style="{StaticResource SurfaceCard}" Margin="0,8,0,0">
                             <StackPanel>
                                 <TextBlock Text="Medicine" FontWeight="SemiBold"/>
@@ -175,6 +185,16 @@
                     <Expander Header="{Binding AdjustmentTitle}"
                               IsEnabled="{Binding CanAdjustInventory}"
                               Margin="0,0,0,12">
+                        <Expander.Style>
+                            <Style TargetType="Expander">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsInventoryMode}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Expander.Style>
                         <Border Style="{StaticResource SurfaceCard}" Margin="0,8,0,0">
                             <StackPanel>
                                 <TextBlock Text="Selected batch" FontWeight="SemiBold"/>
@@ -205,6 +225,16 @@
                     <Expander Header="{Binding StatusTitle}"
                               IsEnabled="{Binding CanChangeBatchStatus}"
                               Margin="0,0,0,12">
+                        <Expander.Style>
+                            <Style TargetType="Expander">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsBatchesMode}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Expander.Style>
                         <Border Style="{StaticResource SurfaceCard}" Margin="0,8,0,0">
                             <StackPanel>
                                 <TextBlock Text="New status" FontWeight="SemiBold"/>
@@ -225,6 +255,16 @@
                     </Expander>
 
                     <Expander Header="{Binding HistoryTitle}" IsExpanded="True">
+                        <Expander.Style>
+                            <Style TargetType="Expander">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsBatchesMode}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Expander.Style>
                         <Border Style="{StaticResource SurfaceCard}" Margin="0,8,0,0">
                             <StackPanel>
                                 <TextBlock Text="{Binding DetailTitle}" FontWeight="SemiBold" Margin="0,0,0,8"/>

@@ -41,6 +41,7 @@ public sealed partial class PosViewModel : ObservableObject
     [ObservableProperty] private string saleNotes = string.Empty;
     [ObservableProperty] private bool printInvoiceAfterPayment;
     [ObservableProperty] private SaleDetail? lastSale;
+    [ObservableProperty] private SaleListItem? selectedRecentSale;
     [ObservableProperty] private bool isTopSellersVisible;
     [ObservableProperty] private int topSellerCount = 10;
     [ObservableProperty] private int topSellerDays = 30;
@@ -101,6 +102,7 @@ public sealed partial class PosViewModel : ObservableObject
     public event EventHandler? CustomerFocusRequested;
     public event EventHandler? PaymentRequested;
     public event EventHandler? PaymentCloseRequested;
+    public event Action<string>? ReturnSaleRequested;
 
     public IAsyncRelayCommand LoadCommand { get; }
     public IRelayCommand FocusSearchCommand { get; }
@@ -129,6 +131,8 @@ public sealed partial class PosViewModel : ObservableObject
     public ObservableCollection<PosTopProductItem> TopSellers { get; } = new();
 
     public IReadOnlyList<string> PaymentMethods { get; } = ["cash", "bank", "mobile", "credit"];
+    public bool CanReturnSales => _permissions.HasPermission("returns.manage");
+
 
     public string WorkspaceTitle => Translate("Point of Sale", "فروش", "خرڅلاو");
     public string WorkspaceSubtitle => Translate(
@@ -1120,6 +1124,56 @@ public sealed partial class PosViewModel : ObservableObject
         {
             PaymentCloseRequested?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    public async Task<SaleDetail?> LoadRecentSaleAsync(SaleListItem? sale)
+    {
+        if (sale is null || IsBusy)
+            return null;
+
+        IsBusy = true;
+        NotifyCommands();
+        try
+        {
+            var detail = await _pos.GetSaleAsync(sale.Id);
+            LastSale = detail;
+            if (detail is null)
+                StatusMessage = Translate("Invoice was not found.", "فاکتور پیدا نشد.", "بل ونه موندل شو.");
+            return detail;
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = exception.Message;
+            return null;
+        }
+        finally
+        {
+            IsBusy = false;
+            NotifyCommands();
+        }
+    }
+
+    public bool PrintInvoice(SaleDetail sale)
+    {
+        try
+        {
+            var printed = _receiptPrinter.Print(sale);
+            StatusMessage = printed
+                ? Translate("Invoice sent to printer.", "فاکتور برای چاپ ارسال شد.", "بل چاپګر ته ولېږل شو.")
+                : Translate("Printing was cancelled.", "چاپ لغو شد.", "چاپ لغوه شو.");
+            return printed;
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = exception.Message;
+            return false;
+        }
+    }
+
+    public void RequestReturn(SaleDetail sale)
+    {
+        if (CanReturnSales)
+            ReturnSaleRequested?.Invoke(sale.Sale.Id);
     }
 
     private async Task RefreshSalesAsync() =>

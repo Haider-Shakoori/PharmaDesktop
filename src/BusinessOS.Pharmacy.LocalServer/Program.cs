@@ -513,6 +513,7 @@ authorized.MapPost("/expenses/defaults", async (IExpenseService service, Cancell
 authorized.MapGet("/expenses/references", async (IExpenseService service, CancellationToken ct) => Results.Ok(await service.GetReferenceDataAsync(ct)));
 authorized.MapPost("/expenses", async (PostExpenseRequest request, IExpenseService service, CancellationToken ct) => Results.Ok(await service.PostAsync(request, ct)));
 authorized.MapPost("/expenses/{id}/reverse", async (string id, ReasonApiRequest request, IExpenseService service, CancellationToken ct) => Results.Ok(await service.ReverseAsync(id, request.Reason, ct)));
+authorized.MapPost("/expenses/{id}/amend", async (string id, ExpenseAmendApiRequest request, IExpenseService service, CancellationToken ct) => Results.Ok(await service.AmendAsync(id, request.Expense, request.Reason, ct)));
 authorized.MapPost("/expenses/search", async (ExpenseSearchFilter filter, IExpenseService service, CancellationToken ct) => Results.Ok(await service.SearchAsync(filter, ct)));
 authorized.MapGet("/expenses/{id}", async (string id, IExpenseService service, CancellationToken ct) => { var result = await service.GetAsync(id, ct); return result is null ? Results.NotFound() : Results.Ok(result); });
 authorized.MapGet("/expenses/{id}/journals", async (string id, IExpenseService service, CancellationToken ct) => Results.Ok(await service.GetJournalsAsync(id, ct)));

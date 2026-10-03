@@ -32,17 +32,27 @@
                 <DataGridCheckBoxColumn Header="Verified" Binding="{Binding IsVerified}" Width="80"/>
             </DataGrid.Columns>
         </DataGrid>
-        <Grid Grid.Row="3" Margin="0,14,0,0">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <StackPanel>
-                <TextBlock Text="Type RESTORE to enable restoring the selected backup." Style="{StaticResource MutedText}"/>
-                <TextBox Text="{Binding RestoreConfirmation, UpdateSourceTrigger=PropertyChanged}" Width="220" HorizontalAlignment="Left" Margin="0,5,0,5"/>
-                <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
-            </StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-                <Button Content="Verify Selected" Command="{Binding VerifyCommand}" Padding="12,7" Margin="0,0,8,0"/>
-                <Button Content="Restore Selected" Command="{Binding RestoreCommand}" Padding="12,7"/>
-            </StackPanel>
-        </Grid>
+        <Border Grid.Row="3"
+                Margin="0,14,0,0"
+                Padding="14"
+                CornerRadius="10"
+                Background="{DynamicResource SurfaceStrongBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Type RESTORE to enable restoring the selected backup."
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding RestoreConfirmation, UpdateSourceTrigger=PropertyChanged}" Width="220" HorizontalAlignment="Left" Margin="0,7,0,7"/>
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <Button Content="Verify Selected" Command="{Binding VerifyCommand}" Padding="12,7" Margin="0,0,8,0"/>
+                    <Button Content="Restore Selected" Command="{Binding RestoreCommand}" Padding="12,7"/>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

@@ -1109,9 +1109,14 @@
                                             FontWeight="SemiBold"
                                             Padding="4,1" />
                                 </Grid>
-                                <DataGrid ItemsSource="{Binding RecentSales}"
+                                <DataGrid x:Name="RecentSalesGrid"
+                                          ItemsSource="{Binding RecentSales}"
+                                          SelectedItem="{Binding SelectedRecentSale}"
                                           Style="{StaticResource PosGrid}"
-                                          Height="128">
+                                          Height="128"
+                                          Cursor="Hand"
+                                          ToolTip="Click to select. Double-click to open invoice actions."
+                                          MouseDoubleClick="OnRecentInvoiceDoubleClick">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Invoice"
                                                             Binding="{Binding SaleNumber}"
