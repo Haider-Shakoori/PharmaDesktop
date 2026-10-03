@@ -11,6 +11,9 @@ public interface IInventoryService
         InventoryBatchFilter filter,
         CancellationToken cancellationToken = default);
 
+    Task<InventorySummary> GetSummaryAsync(
+        CancellationToken cancellationToken = default);
+
     Task<InventoryBatchDetail?> GetBatchAsync(
         string id,
         CancellationToken cancellationToken = default);
@@ -57,6 +60,14 @@ public sealed record StockLocationReferenceItem(
     string Kind,
     bool IsDefault,
     bool IsActive);
+
+public sealed record InventorySummary(
+    decimal TotalStockCost,
+    decimal PotentialSalesValue,
+    decimal PotentialGrossProfit,
+    decimal AvailableQuantity,
+    int BatchCount,
+    int SellableBatchCount);
 
 public sealed record InventoryBatchListItem(
     string Id,

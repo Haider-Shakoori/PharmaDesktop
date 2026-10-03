@@ -185,6 +185,14 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
+        <Style x:Key="InventorySummaryCard" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DCE5F0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="15,12" />
+        </Style>
+
         <Style x:Key="InventoryModalLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -242,6 +250,7 @@
 
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
@@ -251,7 +260,91 @@
                                  Title="{Binding Title}"
                                  Description="{Binding Subtitle}" />
 
-            <Border Grid.Row="1"
+            <Grid Grid.Row="1" Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource InventorySummaryCard}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding TotalStockCostLabel}"
+                                   Foreground="#64748B"
+                                   FontSize="11.5"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding TotalStockCostText}"
+                                   Foreground="#0F172A"
+                                   FontSize="21"
+                                   FontWeight="Bold"
+                                   Margin="0,5,0,2"/>
+                        <TextBlock Text="{Binding TotalStockCostHint}"
+                                   Foreground="#94A3B8"
+                                   FontSize="10.5"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource InventorySummaryCard}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding PotentialSalesValueLabel}"
+                                   Foreground="#64748B"
+                                   FontSize="11.5"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding PotentialSalesValueText}"
+                                   Foreground="#0F766E"
+                                   FontSize="21"
+                                   FontWeight="Bold"
+                                   Margin="0,5,0,2"/>
+                        <TextBlock Text="{Binding PotentialSalesValueHint}"
+                                   Foreground="#94A3B8"
+                                   FontSize="10.5"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="4" Style="{StaticResource InventorySummaryCard}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding PotentialGrossProfitLabel}"
+                                   Foreground="#64748B"
+                                   FontSize="11.5"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding PotentialGrossProfitText}"
+                                   Foreground="#0369A1"
+                                   FontSize="21"
+                                   FontWeight="Bold"
+                                   Margin="0,5,0,2"/>
+                        <TextBlock Text="{Binding PotentialGrossProfitHint}"
+                                   Foreground="#94A3B8"
+                                   FontSize="10.5"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="6" Style="{StaticResource InventorySummaryCard}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding AvailableQuantityLabel}"
+                                   Foreground="#64748B"
+                                   FontSize="11.5"
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding AvailableQuantityText}"
+                                   Foreground="#7C3AED"
+                                   FontSize="21"
+                                   FontWeight="Bold"
+                                   Margin="0,5,0,2"/>
+                        <TextBlock Text="{Binding AvailableQuantityHint}"
+                                   Foreground="#94A3B8"
+                                   FontSize="10.5"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="2"
                     Background="White"
                     BorderBrush="#DCE5F0"
                     BorderThickness="1"
@@ -407,11 +500,7 @@
                                     <Setter Property="Height" Value="38"/>
                                     <Setter Property="Padding" Value="11,7"/>
                                     <Setter Property="Margin" Value="0,0,8,0"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsInventoryMode}" Value="False">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
+
                                 </Style>
                             </Button.Style>
                         </Button>
@@ -424,11 +513,7 @@
                                     <Setter Property="Height" Value="38"/>
                                     <Setter Property="Padding" Value="11,7"/>
                                     <Setter Property="Margin" Value="0,0,8,0"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsInventoryMode}" Value="False">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
+
                                 </Style>
                             </Button.Style>
                         </Button>
@@ -449,11 +534,7 @@
                                     <Setter Property="Background" Value="#1677FF"/>
                                     <Setter Property="BorderBrush" Value="#1677FF"/>
                                     <Setter Property="Foreground" Value="White"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsInventoryMode}" Value="False">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
+
                                 </Style>
                             </Button.Style>
                             <StackPanel Orientation="Horizontal">
@@ -704,7 +785,7 @@
                 </Grid>
             </Border>
 
-            <TextBlock Grid.Row="2"
+            <TextBlock Grid.Row="3"
                        Text="{Binding StatusMessage}"
                        Style="{StaticResource MutedText}"
                        Margin="2,0,0,0"
@@ -785,9 +866,6 @@
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource InventoryTabButton}">
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsInventoryMode}" Value="False">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
                                             <DataTrigger Binding="{Binding IsOpeningEditor}" Value="True">
                                                 <Setter Property="Background" Value="#E0F2FE"/>
                                                 <Setter Property="Foreground" Value="#0369A1"/>
@@ -802,9 +880,6 @@
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource InventoryTabButton}">
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsInventoryMode}" Value="False">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
                                             <DataTrigger Binding="{Binding IsAdjustmentEditor}" Value="True">
                                                 <Setter Property="Background" Value="#CCFBF1"/>
                                                 <Setter Property="Foreground" Value="#0F766E"/>
@@ -819,9 +894,6 @@
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource InventoryTabButton}">
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsBatchesMode}" Value="False">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
                                             <DataTrigger Binding="{Binding IsStatusEditor}" Value="True">
                                                 <Setter Property="Background" Value="#FEF3C7"/>
                                                 <Setter Property="Foreground" Value="#B45309"/>

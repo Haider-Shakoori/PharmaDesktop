@@ -27,6 +27,8 @@ public sealed class LanInventoryService(LanApiClient api) : IInventoryService
     public Task<InventoryReferenceData> GetReferenceDataAsync(CancellationToken ct = default) => api.GetAsync<InventoryReferenceData>("inventory/references", ct);
     public async Task<IReadOnlyList<InventoryBatchListItem>> SearchBatchesAsync(InventoryBatchFilter filter, CancellationToken ct = default) =>
         await api.PostAsync<InventoryBatchFilter, List<InventoryBatchListItem>>("inventory/batches/search", filter, ct);
+    public Task<InventorySummary> GetSummaryAsync(CancellationToken ct = default) =>
+        api.GetAsync<InventorySummary>("inventory/summary", ct);
     public Task<InventoryBatchDetail?> GetBatchAsync(string id, CancellationToken ct = default) => api.GetOptionalAsync<InventoryBatchDetail>($"inventory/batches/{E(id)}", ct);
     public async Task<string> CreateOpeningStockAsync(CreateOpeningStockRequest request, CancellationToken ct = default) =>
         (await api.PostAsync<CreateOpeningStockRequest, IdResponse>("inventory/opening-stock", request, ct)).Id;

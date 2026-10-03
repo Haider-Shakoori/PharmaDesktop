@@ -197,7 +197,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
         "network" => Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ټرمینلونه"),
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
-        "batches" => Translate("Batches", "بچ‌ها", "بېچونه"),
         "purchases" => Translate("Supplier", "تأمین‌کننده", "عرضه کوونکی"),
         "suppliers" => Translate("Suppliers", "تأمین‌کنندگان", "عرضه کوونکي"),
         "customers" => Translate("Customers", "مشتریان", "پېرودونکي"),
@@ -248,10 +247,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "Batch-aware stock, expiry and movement control",
             "کنترل موجودی، بچ، انقضا و گردش کالا",
             "د بېچ، تاریخ تېر او زېرمتون حرکتونو کنټرول"),
-        "batches" => Translate(
-            "Medicine batches, quantities and expiry control",
-            "بچ‌های دوا، مقدار و کنترل انقضا",
-            "د درملو بېچونه، مقدار او د تاریخ تېر کنټرول"),
         "purchases" => Translate(
             "Supplier records, purchase orders, receiving, invoices and payments",
             "اطلاعات تأمین‌کننده، سفارش خرید، دریافت، فاکتور و پرداخت",
@@ -425,7 +420,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _permissions.HasPermission("inventory.status"))
         {
             AddNavigationItem("inventory", Translate("Inventory", "موجودی", "زېرمه"), stock);
-            AddNavigationItem("batches", Translate("Batches", "بچ‌ها", "بېچونه"), stock);
             AddNavigationItem("barcode", Translate("Barcode Printing", "چاپ بارکد", "بارکوډ چاپ"), stock);
         }
 
@@ -599,11 +593,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 await Inventory.LoadAsync();
                 break;
 
+            // Backward-compatible route for dashboard/old shortcuts. Batches
+            // now live inside the unified Inventory workspace.
             case "batches" when
                 _permissions.HasPermission("inventory.manage") ||
                 _permissions.HasPermission("inventory.status"):
-                Inventory.SetMode(true);
-                CurrentSectionKey = "batches";
+                Inventory.SetMode(false);
+                CurrentSectionKey = "inventory";
                 CurrentPage = Inventory;
                 await Inventory.LoadAsync();
                 break;
