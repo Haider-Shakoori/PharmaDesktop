@@ -9,6 +9,11 @@ public interface ICloudSyncStore
         DateTimeOffset now,
         CancellationToken cancellationToken = default);
 
+    Task<int> RepairReferenceConflictsAsync(
+        string tenantId,
+        string actorUserId,
+        CancellationToken cancellationToken = default);
+
     Task MarkAcceptedAsync(
         string tenantId,
         string idempotencyKey,
