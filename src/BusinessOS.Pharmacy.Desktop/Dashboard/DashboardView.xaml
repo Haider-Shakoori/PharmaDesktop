@@ -27,6 +27,7 @@
         </Style>
 
         <!-- Dashboard-only glass treatment. The KPI row keeps DashboardCard unchanged. -->
+        <!-- Visual QA: intentionally rendered by the Windows screenshot harness. -->
         <LinearGradientBrush x:Key="DashboardGlassPanelBrush" StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#B8FFFFFF" Offset="0" />
             <GradientStop Color="#8CF0F7FF" Offset="0.52" />
