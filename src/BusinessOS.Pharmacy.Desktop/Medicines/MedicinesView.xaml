@@ -17,8 +17,8 @@
             <Setter Property="Foreground" Value="#475569" />
             <Setter Property="FontSize" Value="11.5" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Padding" Value="10,0" />
-            <Setter Property="Height" Value="38" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Height" Value="42" />
             <Setter Property="BorderBrush" Value="#E2E8F0" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
@@ -28,9 +28,21 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="10,0" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Foreground" Value="#334155" />
             <Setter Property="FontSize" Value="12.5" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="MedicineTableRow" TargetType="DataGridRow">
@@ -311,11 +323,13 @@
                                     <DataTemplate>
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock Text="{Binding BrandName}"
+                                                       VerticalAlignment="Center"
                                                        FontWeight="SemiBold"
                                                        FontSize="12.2"
                                                        Foreground="#0F172A"
                                                        TextTrimming="CharacterEllipsis"/>
                                             <TextBlock Text="{Binding GenericName}"
+                                                       VerticalAlignment="Center"
                                                        FontSize="10.5"
                                                        Foreground="#64748B"
                                                        TextTrimming="CharacterEllipsis"/>
@@ -337,9 +351,9 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Strength}" Foreground="#334155"/>
-                                            <TextBlock Text="  ·  " Foreground="#CBD5E1"/>
-                                            <TextBlock Text="{Binding DosageForm}" Foreground="#64748B"/>
+                                            <TextBlock Text="{Binding Strength}" Foreground="#334155" VerticalAlignment="Center"/>
+                                            <TextBlock Text="  ·  " Foreground="#CBD5E1" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding DosageForm}" Foreground="#64748B" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -354,7 +368,7 @@
                             <DataGridTemplateColumn Header="Status" Width="92">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border>
+                                        <Border VerticalAlignment="Center">
                                             <Border.Style>
                                                 <Style TargetType="Border" BasedOn="{StaticResource StatusPill}">
                                                     <Setter Property="Background" Value="#D1FAE5"/>
@@ -392,7 +406,8 @@
                                                 Style="{StaticResource MedicineActionButton}"
                                                 Width="30"
                                                 Height="28"
-                                                ToolTip="Edit medicine">
+                                                ToolTip="Edit medicine"
+                                                VerticalAlignment="Center">
                                             <Path Data="M4,16 L4,20 L8,20 L19,9 L15,5 Z M13.8,6.2 L17.8,10.2"
                                                   Width="13" Height="13"
                                                   Stroke="#2563EB"
