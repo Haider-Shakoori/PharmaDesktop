@@ -469,6 +469,7 @@ authorized.MapPut(
 authorized.MapPost("/inventory/defaults", async (IInventoryService service, CancellationToken ct) => { await service.EnsureDefaultsAsync(ct); return Results.NoContent(); });
 authorized.MapGet("/inventory/references", async (IInventoryService service, CancellationToken ct) => Results.Ok(await service.GetReferenceDataAsync(ct)));
 authorized.MapPost("/inventory/batches/search", async (InventoryBatchFilter filter, IInventoryService service, CancellationToken ct) => Results.Ok(await service.SearchBatchesAsync(filter, ct)));
+authorized.MapGet("/inventory/summary", async (IInventoryService service, CancellationToken ct) => Results.Ok(await service.GetSummaryAsync(ct)));
 authorized.MapGet("/inventory/batches/{id}", async (string id, IInventoryService service, CancellationToken ct) => { var result = await service.GetBatchAsync(id, ct); return result is null ? Results.NotFound() : Results.Ok(result); });
 authorized.MapPost("/inventory/opening-stock", async (CreateOpeningStockRequest request, IInventoryService service, CancellationToken ct) => Results.Ok(new MedicineCreateResponse(await service.CreateOpeningStockAsync(request, ct))));
 authorized.MapPost("/inventory/adjust", async (InventoryAdjustmentRequest request, IInventoryService service, CancellationToken ct) => Results.Ok(await service.AdjustAsync(request, ct)));
