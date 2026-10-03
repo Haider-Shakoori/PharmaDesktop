@@ -36,8 +36,8 @@
         <Style x:Key="MedicineTableRow" TargetType="DataGridRow">
             <Setter Property="Height" Value="42" />
             <Setter Property="Background" Value="#FFFFFF" />
-            <Setter Property="BorderBrush" Value="#EEF2F7" />
-            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="BorderBrush" Value="#D9E2EC" />
+            <Setter Property="BorderThickness" Value="0,0,0,2" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Style.Triggers>
                 <Trigger Property="AlternationIndex" Value="1">
@@ -105,7 +105,25 @@
     </UserControl.Resources>
 
     <Grid Background="{DynamicResource PageBackgroundBrush}">
-        <Grid Margin="22">
+        <Grid Margin="22" x:Name="MedicinePageContent">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Effect" Value="{x:Null}" />
+                    <Setter Property="IsHitTestVisible" Value="True" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsEditorOpen}" Value="True">
+                            <Setter Property="IsHitTestVisible" Value="False" />
+                            <Setter Property="Effect">
+                                <Setter.Value>
+                                    <BlurEffect Radius="7"
+                                                KernelType="Gaussian"
+                                                RenderingBias="Performance" />
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -499,8 +517,14 @@
 
         <!-- Modern Add / Edit medicine modal -->
         <Grid Panel.ZIndex="50"
-              Background="#780F172A"
               Visibility="{Binding IsEditorOpen, Converter={StaticResource GlobalBoolToVisibility}}">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#70F8FAFC" Offset="0" />
+                    <GradientStop Color="#60E9EFF7" Offset="0.55" />
+                    <GradientStop Color="#72FFFFFF" Offset="1" />
+                </LinearGradientBrush>
+            </Grid.Background>
             <Border Width="960"
                     MaxHeight="760"
                     Background="White"
@@ -539,6 +563,7 @@
                                 Content="✕"
                                 Command="{Binding CancelEditorCommand}"
                                 Style="{StaticResource GhostButton}"
+                                Foreground="#475569"
                                 Width="34"
                                 Height="34"
                                 FontSize="15"/>
@@ -683,6 +708,7 @@
                                                     Content="Add"
                                                     Command="{Binding AddCategoryCommand}"
                                                     Style="{StaticResource SecondaryButton}"
+                                                    Foreground="#334155"
                                                     Margin="8,0,0,0"
                                                     Padding="11,6"/>
                                         </Grid>
@@ -746,11 +772,13 @@
                                 <Button Content="Cancel"
                                         Command="{Binding CancelEditorCommand}"
                                         Style="{StaticResource SecondaryButton}"
+                                        Foreground="#334155"
                                         Padding="16,8"
                                         Margin="0,0,8,0"/>
                                 <Button Content="{Binding SaveLabel}"
                                         Command="{Binding SaveCommand}"
                                         Style="{StaticResource PrimaryButton}"
+                                        Foreground="White"
                                         Padding="18,8"/>
                             </StackPanel>
                         </Grid>
