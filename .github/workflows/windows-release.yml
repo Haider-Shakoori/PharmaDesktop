@@ -111,6 +111,40 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Upload Standalone self-update package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-Standalone-Update-${{ steps.release_version.outputs.version }}
+          path: artifacts/windows/Darmaltoon-Standalone-${{ steps.release_version.outputs.version }}-win-x64.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Main Server self-update package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-MainServer-Update-${{ steps.release_version.outputs.version }}
+          path: artifacts/windows/Darmaltoon-MainServer-${{ steps.release_version.outputs.version }}-win-x64.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Client Terminal self-update package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-ClientTerminal-Update-${{ steps.release_version.outputs.version }}
+          path: artifacts/windows/Darmaltoon-ClientTerminal-${{ steps.release_version.outputs.version }}-win-x64.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload release metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-Release-Metadata-${{ steps.release_version.outputs.version }}
+          path: |
+            artifacts/windows/SHA256SUMS.txt
+            artifacts/windows/release-manifest.json
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Upload Standalone installer
         uses: actions/upload-artifact@v4
         with:
