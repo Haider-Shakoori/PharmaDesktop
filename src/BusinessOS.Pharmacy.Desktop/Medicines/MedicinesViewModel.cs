@@ -68,6 +68,7 @@ public sealed partial class MedicinesViewModel : ObservableObject
         CancelEditorCommand = new RelayCommand(CloseEditor);
         PreviousPageCommand = new RelayCommand(PreviousPage, () => CurrentPage > 1);
         NextPageCommand = new RelayCommand(NextPage, () => CurrentPage < TotalPages);
+        GoToPageCommand = new RelayCommand<int>(GoToPage, page => page >= 1 && page <= TotalPages);
         SaveCommand = new AsyncRelayCommand(SaveAsync, () => !IsBusy);
         AddCategoryCommand = new AsyncRelayCommand(AddCategoryAsync, () => !IsBusy);
         AddManufacturerCommand = new AsyncRelayCommand(AddManufacturerAsync, () => !IsBusy);
@@ -80,8 +81,10 @@ public sealed partial class MedicinesViewModel : ObservableObject
     public ObservableCollection<MedicineReferenceItem> Categories { get; } = new();
     public ObservableCollection<ManufacturerReferenceItem> Manufacturers { get; } = new();
     public ObservableCollection<MedicineCsvRowViewModel> CsvPreviewRows { get; } = new();
+    public ObservableCollection<int> PageNumbers { get; } = new();
 
     public IReadOnlyList<string> StatusOptions { get; } = ["All", "Active", "Inactive"];
+    public IReadOnlyList<int> PageSizeOptions { get; } = [10, 15, 25, 50];
 
     public IAsyncRelayCommand RefreshCommand { get; }
     public IAsyncRelayCommand SearchCommand { get; }
@@ -91,6 +94,7 @@ public sealed partial class MedicinesViewModel : ObservableObject
     public IRelayCommand CancelEditorCommand { get; }
     public IRelayCommand PreviousPageCommand { get; }
     public IRelayCommand NextPageCommand { get; }
+    public IRelayCommand<int> GoToPageCommand { get; }
     public IAsyncRelayCommand SaveCommand { get; }
     public IAsyncRelayCommand AddCategoryCommand { get; }
     public IAsyncRelayCommand AddManufacturerCommand { get; }
@@ -201,6 +205,8 @@ public sealed partial class MedicinesViewModel : ObservableObject
         OnPropertyChanged(nameof(PageSummary));
         PreviousPageCommand.NotifyCanExecuteChanged();
         NextPageCommand.NotifyCanExecuteChanged();
+        GoToPageCommand.NotifyCanExecuteChanged();
+        RebuildPageNumbers();
     }
 
     partial void OnPageSizeChanged(int value)
@@ -525,6 +531,38 @@ public sealed partial class MedicinesViewModel : ObservableObject
         OnPropertyChanged(nameof(PageSummary));
         PreviousPageCommand.NotifyCanExecuteChanged();
         NextPageCommand.NotifyCanExecuteChanged();
+        GoToPageCommand.NotifyCanExecuteChanged();
+        RebuildPageNumbers();
+    }
+
+    private void RebuildPageNumbers()
+    {
+        PageNumbers.Clear();
+        var totalPages = TotalPages;
+        if (totalPages <= 0)
+        {
+            return;
+        }
+
+        var start = Math.Max(1, CurrentPage - 2);
+        var end = Math.Min(totalPages, start + 4);
+        start = Math.Max(1, end - 4);
+
+        for (var page = start; page <= end; page++)
+        {
+            PageNumbers.Add(page);
+        }
+    }
+
+    private void GoToPage(int page)
+    {
+        if (page < 1 || page > TotalPages || page == CurrentPage)
+        {
+            return;
+        }
+
+        CurrentPage = page;
+        RefreshPage();
     }
 
     private void PreviousPage()
@@ -557,6 +595,7 @@ public sealed partial class MedicinesViewModel : ObservableObject
         EditMedicineCommand.NotifyCanExecuteChanged();
         PreviousPageCommand.NotifyCanExecuteChanged();
         NextPageCommand.NotifyCanExecuteChanged();
+        GoToPageCommand.NotifyCanExecuteChanged();
         SaveCommand.NotifyCanExecuteChanged();
         AddCategoryCommand.NotifyCanExecuteChanged();
         AddManufacturerCommand.NotifyCanExecuteChanged();
