@@ -690,16 +690,26 @@ public sealed class PosService : IPosService
         var syncPayload = new Dictionary<string, object?>
         {
             ["v"] = 1,
+            ["reference_resolution_v"] = 1,
             ["local_id"] = sale.Id,
             ["idempotency_key"] = sale.IdempotencyKey,
             ["stock_location_id"] = sale.StockLocationId,
+            ["stock_location_code"] = location.Code,
             ["customer_id"] = sale.CustomerId,
+            ["customer_name"] = customer?.Name,
+            ["customer_phone"] = customer?.Phone,
+            ["customer_email"] = customer?.Email,
             ["cashier_user_id"] = actorId,
             ["business_date"] = sale.BusinessDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             ["currency"] = sale.Currency,
+            ["prescription_reference"] = sale.PrescriptionReference,
+            ["prescriber_name"] = sale.PrescriberName,
+            ["prescription_date"] = sale.PrescriptionDate?
+                .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             ["lines"] = sale.Lines.Select(line => new Dictionary<string, object?>
             {
                 ["medicine_id"] = line.MedicineId,
+                ["medicine_code"] = medicines[line.MedicineId].MedicineCode,
                 ["quantity"] = line.Quantity.ToString("0.0000", CultureInfo.InvariantCulture),
                 ["unit_price"] = line.UnitPrice.ToString("0.0000", CultureInfo.InvariantCulture),
                 ["discount_amount"] = line.DiscountAmount.ToString("0.0000", CultureInfo.InvariantCulture),
