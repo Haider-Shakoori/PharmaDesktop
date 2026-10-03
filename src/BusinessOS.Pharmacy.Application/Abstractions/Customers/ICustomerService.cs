@@ -6,6 +6,9 @@ public interface ICustomerService
         CustomerSearchFilter filter,
         CancellationToken cancellationToken = default);
 
+    Task<CustomerSummary> GetSummaryAsync(
+        CancellationToken cancellationToken = default);
+
     Task<CustomerEditorModel?> GetAsync(
         string id,
         CancellationToken cancellationToken = default);
@@ -32,6 +35,12 @@ public sealed record CustomerSearchFilter(
     string? Search = null,
     bool? IsActive = null,
     int Take = 250);
+
+public sealed record CustomerSummary(
+    int TotalCustomers,
+    int ActiveCustomers,
+    int InactiveCustomers,
+    decimal TotalCreditLimit);
 
 public sealed record CustomerListItem(
     string Id,

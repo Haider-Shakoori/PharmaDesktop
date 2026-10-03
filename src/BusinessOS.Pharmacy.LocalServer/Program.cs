@@ -493,6 +493,7 @@ authorized.MapPost("/purchasing/orders/{id}/invoices", async (string id, CreateP
 authorized.MapPost("/purchasing/invoices/{id}/payments", async (string id, RecordSupplierPaymentRequest request, IPurchasingService service, CancellationToken ct) => Results.Ok(new MedicineCreateResponse(await service.RecordSupplierPaymentAsync(id, request, ct))));
 
 authorized.MapPost("/customers/search", async (CustomerSearchFilter filter, ICustomerService service, CancellationToken ct) => Results.Ok(await service.SearchAsync(filter, ct)));
+authorized.MapGet("/customers/summary", async (ICustomerService service, CancellationToken ct) => Results.Ok(await service.GetSummaryAsync(ct)));
 authorized.MapGet("/customers/{id}", async (string id, ICustomerService service, CancellationToken ct) => { var result = await service.GetAsync(id, ct); return result is null ? Results.NotFound() : Results.Ok(result); });
 authorized.MapPost("/customers", async (SaveCustomerRequest request, ICustomerService service, CancellationToken ct) => Results.Ok(new MedicineCreateResponse(await service.CreateAsync(request, ct))));
 authorized.MapPut("/customers/{id}", async (string id, SaveCustomerRequest request, ICustomerService service, CancellationToken ct) => { await service.UpdateAsync(id, request, ct); return Results.NoContent(); });
