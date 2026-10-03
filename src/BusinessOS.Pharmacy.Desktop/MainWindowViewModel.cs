@@ -125,7 +125,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
         currentPage = Dashboard;
 
         AccessManagement.SetLanguage(SelectedLanguage);
-        AccessManagement.SetLanguage(SelectedLanguage);
         Dashboard.SetLanguage(SelectedLanguage);
         Customers.SetLanguage(SelectedLanguage);
         Medicines.SetLanguage(SelectedLanguage);
@@ -350,6 +349,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(UserRoleText));
         OnPropertyChanged(nameof(PermissionCount));
 
+        AccessManagement.SetLanguage(SelectedLanguage);
         Dashboard.SetLanguage(SelectedLanguage);
         Customers.SetLanguage(SelectedLanguage);
         Medicines.SetLanguage(SelectedLanguage);
