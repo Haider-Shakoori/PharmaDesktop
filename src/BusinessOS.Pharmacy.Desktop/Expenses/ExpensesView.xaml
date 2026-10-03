@@ -11,14 +11,14 @@
 </StackPanel></Border>
 <Border Grid.Column="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,12,0"><StackPanel>
 <TextBlock Text="Payee" Style="{StaticResource MutedText}"/><TextBox Text="{Binding Payee}"/><TextBlock Text="Reference" Style="{StaticResource MutedText}" Margin="0,8,0,0"/><TextBox Text="{Binding Reference}"/>
-<TextBlock Text="Notes" Style="{StaticResource MutedText}" Margin="0,8,0,0"/><TextBox Text="{Binding Notes}" Height="100" AcceptsReturn="True"/><Button Content="{Binding PostLabel}" Command="{Binding PostCommand}" Padding="14,8" Margin="0,12,0,0"/>
+<TextBlock Text="Notes" Style="{StaticResource MutedText}" Margin="0,8,0,0"/><TextBox Text="{Binding Notes}" Height="100" AcceptsReturn="True"/><TextBlock Text="{Binding EditHint}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0"/><StackPanel Orientation="Horizontal" Margin="0,12,0,0"><Button Content="{Binding PostLabel}" Command="{Binding PostCommand}" Padding="14,8"/><Button Content="Cancel edit" Command="{Binding CancelEditCommand}" Padding="14,8" Margin="8,0,0,0"/></StackPanel>
 </StackPanel></Border>
 <Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12"><StackPanel>
 <TextBlock Text="Reverse selected expense" FontWeight="SemiBold"/><TextBox Text="{Binding ReversalReason}" Height="80" AcceptsReturn="True" Margin="0,8,0,0" ToolTip="Reason"/><Button Content="{Binding ReverseLabel}" Command="{Binding ReverseCommand}" Padding="14,8" Margin="0,8,0,0"/>
 </StackPanel></Border></Grid>
 <Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,18,0,0"><StackPanel>
 <DockPanel><Button DockPanel.Dock="Right" Content="Search" Command="{Binding SearchCommand}" Padding="10,4"/><TextBox Text="{Binding SearchText}" Width="260" HorizontalAlignment="Left" ToolTip="Number, payee or reference"/></DockPanel>
-<DataGrid ItemsSource="{Binding Expenses}" SelectedItem="{Binding SelectedExpense}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" Margin="0,8,0,0" MaxHeight="320"><DataGrid.Columns>
+<DataGrid x:Name="ExpensesGrid" ItemsSource="{Binding Expenses}" SelectedItem="{Binding SelectedExpense}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" Margin="0,8,0,0" MaxHeight="320" Cursor="Hand" ToolTip="Double-click a posted expense to edit it" MouseDoubleClick="OnExpensesDoubleClick"><DataGrid.Columns>
 <DataGridTextColumn Header="Number" Binding="{Binding ExpenseNumber}" Width="*"/><DataGridTextColumn Header="Date" Binding="{Binding BusinessDate}" Width="110"/><DataGridTextColumn Header="Account" Binding="{Binding ExpenseAccountName}" Width="*"/><DataGridTextColumn Header="Paid from" Binding="{Binding PaymentAccountName}" Width="*"/><DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat=N4}" Width="100"/><DataGridTextColumn Header="Payee" Binding="{Binding Payee}" Width="*"/><DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
 </DataGrid.Columns></DataGrid></StackPanel></Border>
 </Grid></ScrollViewer></UserControl>
