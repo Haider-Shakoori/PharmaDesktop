@@ -648,7 +648,7 @@
                             <DataGridTemplateColumn Header="Status" Width="100">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border Style="{StaticResource CustomerStatusPill}">
+                                        <Border>
                                             <Border.Style>
                                                 <Style TargetType="Border" BasedOn="{StaticResource CustomerStatusPill}">
                                                     <Setter Property="Background" Value="#D1FAE5" />
