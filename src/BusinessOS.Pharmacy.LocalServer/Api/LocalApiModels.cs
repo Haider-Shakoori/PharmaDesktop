@@ -1,3 +1,4 @@
+using BusinessOS.Pharmacy.Application.Abstractions.Accounting;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 
 namespace BusinessOS.Pharmacy.LocalServer.Api;
@@ -58,6 +59,7 @@ public sealed record CreateManufacturerRequest(
 
 public sealed record StockLocationApiRequest(string StockLocationId);
 public sealed record ReasonApiRequest(string Reason);
+public sealed record ExpenseAmendApiRequest(PostExpenseRequest Expense, string Reason);
 public sealed record ClosingWorkspaceApiRequest(string StockLocationId, DateOnly? BusinessDate);
 public sealed record OpenShiftApiRequest(string StockLocationId, decimal OpeningCash);
 public sealed record CloseShiftApiRequest(decimal CountedCash, string? Notes);
