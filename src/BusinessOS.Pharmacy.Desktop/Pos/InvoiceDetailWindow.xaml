@@ -47,7 +47,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel>
                     <TextBlock Text="Customer" Style="{StaticResource MutedText}"/>
-                    <TextBlock Text="{Binding Sale.CustomerName, TargetNullValue=Walk-in customer}" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding Sale.CustomerName, TargetNullValue='Walk-in customer'}" FontWeight="SemiBold"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1">
                     <TextBlock Text="Subtotal" Style="{StaticResource MutedText}"/>
