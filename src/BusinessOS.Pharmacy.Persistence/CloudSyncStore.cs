@@ -102,7 +102,7 @@ public sealed class CloudSyncStore(
             var location = await context.Set<StockLocationEntity>()
                 .AsNoTracking()
                 .SingleOrDefaultAsync(
-                    x => x.Id == locationId && x.IsActive,
+                    x => x.Id == locationId,
                     cancellationToken);
             if (location is null)
                 continue;
@@ -115,7 +115,7 @@ public sealed class CloudSyncStore(
                 var customer = await context.Set<CustomerEntity>()
                     .AsNoTracking()
                     .SingleOrDefaultAsync(
-                        x => x.Id == customerId && x.IsActive,
+                        x => x.Id == customerId,
                         cancellationToken);
                 if (customer is null)
                     continue;
@@ -147,7 +147,7 @@ public sealed class CloudSyncStore(
                 var medicine = await context.Set<MedicineEntity>()
                     .AsNoTracking()
                     .SingleOrDefaultAsync(
-                        x => x.Id == medicineId && x.IsActive,
+                        x => x.Id == medicineId,
                         cancellationToken);
                 if (medicine is null)
                 {
