@@ -401,11 +401,7 @@
 
                         <Button Grid.Column="5"
                                 Content="{Binding TemplateLabel}"
-                                Command="{Binding DownloadCsvTemplateCommand}"
-                                Style="{StaticResource SecondaryButton}"
-                                Height="38"
-                                Padding="11,7"
-                                Margin="0,0,8,0">
+                                Command="{Binding DownloadCsvTemplateCommand}">
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
                                     <Setter Property="Height" Value="38"/>
@@ -551,7 +547,7 @@
                             <DataGridTemplateColumn Header="Status" Width="105">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border Style="{StaticResource InventoryStatusPill}">
+                                        <Border>
                                             <Border.Style>
                                                 <Style TargetType="Border" BasedOn="{StaticResource InventoryStatusPill}">
                                                     <Setter Property="Background" Value="#D1FAE5"/>
@@ -576,8 +572,7 @@
                                             </Border.Style>
                                             <TextBlock Text="{Binding Status}"
                                                        FontSize="10.2"
-                                                       FontWeight="SemiBold"
-                                                       TextTransform="Capitalize">
+                                                       FontWeight="SemiBold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Foreground" Value="#047857"/>
