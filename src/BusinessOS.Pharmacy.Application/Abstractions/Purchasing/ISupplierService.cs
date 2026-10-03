@@ -6,6 +6,9 @@ public interface ISupplierService
         SupplierSearchFilter filter,
         CancellationToken cancellationToken = default);
 
+    Task<SupplierSummary> GetSummaryAsync(
+        CancellationToken cancellationToken = default);
+
     Task<SupplierEditorModel?> GetAsync(
         string id,
         CancellationToken cancellationToken = default);
@@ -25,6 +28,13 @@ public sealed record SupplierSearchFilter(
     bool? IsActive = null,
     int Take = 250);
 
+public sealed record SupplierSummary(
+    int TotalSuppliers,
+    decimal TotalDealValue,
+    decimal TotalPaid,
+    decimal OutstandingPayable,
+    decimal TotalOpeningBalance);
+
 public sealed record SupplierListItem(
     string Id,
     string Code,
@@ -36,6 +46,7 @@ public sealed record SupplierListItem(
     string? City,
     string? Province,
     int PaymentTermsDays,
+    decimal OpeningBalance,
     bool IsActive,
     int PurchaseOrderCount,
     int InvoiceCount);
@@ -52,6 +63,7 @@ public sealed record SupplierEditorModel(
     string? City,
     string? Province,
     int PaymentTermsDays,
+    decimal OpeningBalance,
     bool IsActive,
     string? Notes);
 
@@ -66,5 +78,6 @@ public sealed record SaveSupplierRequest(
     string? City,
     string? Province,
     int PaymentTermsDays,
+    decimal OpeningBalance,
     bool IsActive,
     string? Notes);
