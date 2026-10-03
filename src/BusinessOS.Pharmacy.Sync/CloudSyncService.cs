@@ -168,6 +168,11 @@ public sealed class CloudSyncService : ICloudSyncService
         var pulled = 0;
         var runConflicts = 0;
 
+        await _store.RepairReferenceConflictsAsync(
+            entitlement.TenantId,
+            user.UserId,
+            cancellationToken);
+
         var pending = await _store.GetPendingAsync(
             entitlement.TenantId,
             user.UserId,
