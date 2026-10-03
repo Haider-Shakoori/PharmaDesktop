@@ -76,6 +76,7 @@
             <DataTrigger Binding="{Binding Key}" Value="medicines"><Setter Property="Data" Value="{StaticResource IconMedicines}" /></DataTrigger>
             <DataTrigger Binding="{Binding Key}" Value="inventory"><Setter Property="Data" Value="{StaticResource IconInventory}" /></DataTrigger>
             <DataTrigger Binding="{Binding Key}" Value="batches"><Setter Property="Data" Value="{StaticResource IconBatches}" /></DataTrigger>
+            <DataTrigger Binding="{Binding Key}" Value="barcode"><Setter Property="Data" Value="{StaticResource IconBarcode}" /></DataTrigger>
             <DataTrigger Binding="{Binding Key}" Value="purchases"><Setter Property="Data" Value="{StaticResource IconPurchases}" /></DataTrigger>
             <DataTrigger Binding="{Binding Key}" Value="suppliers"><Setter Property="Data" Value="{StaticResource IconSuppliers}" /></DataTrigger>
             <DataTrigger Binding="{Binding Key}" Value="customers"><Setter Property="Data" Value="{StaticResource IconCustomers}" /></DataTrigger>
