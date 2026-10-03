@@ -12,6 +12,13 @@
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
 
+        <DataTemplate x:Key="MedicineHeaderTemplate">
+            <TextBlock Text="{Binding}"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center"
+                       TextAlignment="Left" />
+        </DataTemplate>
+
         <Style x:Key="MedicineTableHeader" TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="#F1F5F9" />
             <Setter Property="Foreground" Value="#475569" />
@@ -22,6 +29,8 @@
             <Setter Property="BorderBrush" Value="#E2E8F0" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="ContentTemplate" Value="{StaticResource MedicineHeaderTemplate}" />
         </Style>
 
         <Style x:Key="MedicineTableCell" TargetType="DataGridCell">
