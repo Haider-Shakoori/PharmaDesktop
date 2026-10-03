@@ -110,6 +110,7 @@ public sealed partial class MedicinesViewModel : ObservableObject
         : Translate("Edit medicine", "ویرایش دوا", "درمل سمول");
     public string ReferencesTitle => Translate("Categories & manufacturers", "دسته‌بندی‌ها و تولیدکنندگان", "کټګورۍ او جوړونکي");
     public int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalItems / (double)Math.Max(1, PageSize)));
+    public string TotalPagesLabel => $"of {TotalPages}";
     public string PageSummary
     {
         get
@@ -196,6 +197,7 @@ public sealed partial class MedicinesViewModel : ObservableObject
     partial void OnCurrentPageChanged(int value)
     {
         OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(TotalPagesLabel));
         OnPropertyChanged(nameof(PageSummary));
         PreviousPageCommand.NotifyCanExecuteChanged();
         NextPageCommand.NotifyCanExecuteChanged();
@@ -459,7 +461,11 @@ public sealed partial class MedicinesViewModel : ObservableObject
 
     private string NextMedicineCode()
     {
-        var max = Medicines
+        var source = _matchingMedicines.Count > 0
+            ? _matchingMedicines
+            : Medicines.ToList();
+
+        var max = source
             .Select(x => x.MedicineCode)
             .Where(x => x.StartsWith("MED-", StringComparison.OrdinalIgnoreCase))
             .Select(x => int.TryParse(x.AsSpan(4), NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) ? number : 0)
