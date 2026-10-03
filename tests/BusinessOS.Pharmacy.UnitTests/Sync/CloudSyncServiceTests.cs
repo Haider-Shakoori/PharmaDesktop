@@ -253,6 +253,74 @@ public sealed class CloudSyncServiceTests
         Assert.Contains("Sign in", review.Message);
     }
 
+    [Fact]
+    public async Task Same_cycle_reference_rejection_is_repaired_before_final_status()
+    {
+        var user = User();
+        var pending = new CloudSyncOutboxItem(
+            "outbox-reference",
+            "tenant-1",
+            "user-1",
+            "sale.completed",
+            "sale:reference",
+            """{"local_id":"record-1"}""",
+            0,
+            Now.AddMinutes(-1));
+
+        var store = new FakeStore { Pending = [pending] };
+        var transport = new FakeTransport
+        {
+            PushAcknowledgements =
+            [
+                new CloudSyncPushAcknowledgement(
+                    "sale:reference",
+                    "rejected",
+                    "reference_missing",
+                    "A referenced pharmacy record could not be resolved.",
+                    false,
+                    null,
+                    null),
+            ],
+        };
+
+        var service = CreateService(
+            DeploymentMode.Standalone,
+            store,
+            transport,
+            user,
+            Entitlement(),
+            ProtectedSession(user));
+
+        var result = await service.SyncOnceAsync();
+
+        Assert.Equal(CloudSyncRunState.Synced, result.State);
+        Assert.Equal(0, result.Conflicts);
+        Assert.Empty(store.Conflicts);
+        Assert.True(store.RepairCalls >= 2);
+    }
+
+    [Fact]
+    public async Task Another_cashiers_retained_conflict_does_not_poison_current_sync_state()
+    {
+        var user = User();
+        var store = new FakeStore();
+        store.Conflicts.Add(Conflict("sale:other", "user-2"));
+
+        var service = CreateService(
+            DeploymentMode.Standalone,
+            store,
+            new FakeTransport(),
+            user,
+            Entitlement(),
+            ProtectedSession(user));
+
+        var result = await service.SyncOnceAsync();
+
+        Assert.Equal(CloudSyncRunState.Synced, result.State);
+        Assert.Equal(0, result.Conflicts);
+        Assert.Single(store.Conflicts);
+    }
+
     private static CloudSyncConflictItem Conflict(string key, string actorUserId) =>
         new(
             key,
@@ -401,6 +469,7 @@ public sealed class CloudSyncServiceTests
         public int PushCalls { get; private set; }
         public int PullCalls { get; private set; }
         public Exception? PushFailure { get; init; }
+        public IReadOnlyList<CloudSyncPushAcknowledgement>? PushAcknowledgements { get; init; }
 
         public Task<IReadOnlyList<CloudSyncPushAcknowledgement>> PushAsync(
             string accessToken,
@@ -414,8 +483,9 @@ public sealed class CloudSyncServiceTests
                     IReadOnlyList<CloudSyncPushAcknowledgement>>(
                     PushFailure);
 
-            return Task.FromResult<
-                IReadOnlyList<CloudSyncPushAcknowledgement>>([]);
+            return Task.FromResult(
+                PushAcknowledgements ??
+                (IReadOnlyList<CloudSyncPushAcknowledgement>)[]);
         }
 
         public Task<CloudSyncPullPage> PullAsync(
@@ -459,7 +529,20 @@ public sealed class CloudSyncServiceTests
             CancellationToken cancellationToken = default)
         {
             RepairCalls++;
-            return Task.FromResult(0);
+
+            var repairable = Conflicts
+                .Where(x =>
+                    x.ActorUserId == actorUserId &&
+                    string.Equals(x.EventType, "sale.completed", StringComparison.Ordinal) &&
+                    string.Equals(x.ErrorCode, "reference_missing", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            foreach (var conflict in repairable)
+            {
+                Conflicts.Remove(conflict);
+            }
+
+            return Task.FromResult(repairable.Count);
         }
 
         public Task MarkAcceptedAsync(
@@ -483,6 +566,28 @@ public sealed class CloudSyncServiceTests
             CancellationToken cancellationToken = default)
         {
             RejectedKeys.Add(idempotencyKey);
+
+            if (!retryable)
+            {
+                var source = Pending.FirstOrDefault(x =>
+                    string.Equals(x.IdempotencyKey, idempotencyKey, StringComparison.Ordinal));
+
+                if (source is not null)
+                {
+                    Conflicts.Add(new CloudSyncConflictItem(
+                        idempotencyKey,
+                        source.EventType,
+                        source.ActorUserId,
+                        "record-1",
+                        "2026-10-01",
+                        code,
+                        message,
+                        source.AttemptCount + 1,
+                        source.CreatedAt,
+                        CanRetry: true));
+                }
+            }
+
             return Task.CompletedTask;
         }
 
@@ -513,15 +618,16 @@ public sealed class CloudSyncServiceTests
 
         public Task<CloudSyncQueueSnapshot> GetQueueSnapshotAsync(
             string tenantId,
+            string actorUserId,
             CancellationToken cancellationToken = default) =>
             Task.FromResult(
                 new CloudSyncQueueSnapshot(
-                    Pending.Count,
-                    Conflicts.Count,
+                    Pending.Count(x => x.ActorUserId == actorUserId),
+                    Conflicts.Count(x => x.ActorUserId == actorUserId),
                     0,
-                    Pending.Count == 0
-                        ? null
-                        : Pending.Min(x => x.CreatedAt)));
+                    Pending.Where(x => x.ActorUserId == actorUserId)
+                        .Select(x => (DateTimeOffset?)x.CreatedAt)
+                        .Min()));
 
         public Task<IReadOnlyList<CloudSyncConflictItem>> GetConflictsAsync(
             string tenantId,
