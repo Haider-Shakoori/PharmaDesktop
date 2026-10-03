@@ -18,6 +18,7 @@ public sealed partial class InventoryViewModel : ObservableObject
     private readonly IMedicineCatalogService _medicines;
     private readonly IPermissionAuthorizer _permissions;
     private UiLanguage _language = UiLanguageCatalog.All[0];
+    private List<InventoryBatchListItem> _matchingBatches = [];
 
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string statusMessage = string.Empty;
@@ -26,6 +27,11 @@ public sealed partial class InventoryViewModel : ObservableObject
     [ObservableProperty] private string selectedExpiryFilter = "All";
     [ObservableProperty] private StockLocationReferenceItem? selectedFilterLocation;
     [ObservableProperty] private InventoryBatchListItem? selectedBatch;
+    [ObservableProperty] private bool isEditorOpen;
+    [ObservableProperty] private string editorSection = "opening";
+    [ObservableProperty] private int currentPage = 1;
+    [ObservableProperty] private int pageSize = 15;
+    [ObservableProperty] private int totalItems;
 
     [ObservableProperty] private MedicineListItem? selectedOpeningMedicine;
     [ObservableProperty] private StockLocationReferenceItem? selectedOpeningLocation;
@@ -67,6 +73,26 @@ public sealed partial class InventoryViewModel : ObservableObject
         LoadDetailCommand = new AsyncRelayCommand(LoadSelectedDetailAsync, () => !IsBusy && SelectedBatch is not null);
         DownloadCsvTemplateCommand = new AsyncRelayCommand(DownloadCsvTemplateAsync, () => !IsBusy);
         ImportCsvCommand = new AsyncRelayCommand(ImportCsvAsync, () => !IsBusy && CanManageInventory);
+        OpenOpeningStockCommand = new RelayCommand(OpenOpeningStock, () => !IsBusy && CanManageInventory);
+        OpenBatchEditorCommand = new RelayCommand<InventoryBatchListItem>(
+            OpenBatchEditor,
+            item => item is not null && !IsBusy);
+        CloseEditorCommand = new RelayCommand(CloseEditor);
+        ShowOpeningTabCommand = new RelayCommand(() => EditorSection = "opening");
+        ShowAdjustmentTabCommand = new RelayCommand(
+            () => EditorSection = "adjustment",
+            () => SelectedBatch is not null && CanAdjustInventory);
+        ShowStatusTabCommand = new RelayCommand(
+            () => EditorSection = "status",
+            () => SelectedBatch is not null && CanChangeBatchStatus);
+        ShowHistoryTabCommand = new RelayCommand(
+            () => EditorSection = "history",
+            () => SelectedBatch is not null);
+        PreviousPageCommand = new RelayCommand(PreviousPage, () => CurrentPage > 1);
+        NextPageCommand = new RelayCommand(NextPage, () => CurrentPage < TotalPages);
+        GoToPageCommand = new RelayCommand<int>(
+            GoToPage,
+            page => page >= 1 && page <= TotalPages);
     }
 
     public ObservableCollection<InventoryBatchListItem> Batches { get; } = new();
@@ -74,7 +100,9 @@ public sealed partial class InventoryViewModel : ObservableObject
     public ObservableCollection<StockLocationReferenceItem> Locations { get; } = new();
     public ObservableCollection<StockMovementItem> Movements { get; } = new();
     public ObservableCollection<BatchStatusEventItem> StatusEvents { get; } = new();
+    public ObservableCollection<int> PageNumbers { get; } = new();
 
+    public IReadOnlyList<int> PageSizeOptions { get; } = [10, 15, 25, 50];
     public IReadOnlyList<string> FilterStatuses { get; } =
         ["All", "active", "depleted", "quarantined", "recalled", "damaged"];
     public IReadOnlyList<string> ExpiryFilters { get; } =
@@ -92,6 +120,16 @@ public sealed partial class InventoryViewModel : ObservableObject
     public IAsyncRelayCommand LoadDetailCommand { get; }
     public IAsyncRelayCommand DownloadCsvTemplateCommand { get; }
     public IAsyncRelayCommand ImportCsvCommand { get; }
+    public IRelayCommand OpenOpeningStockCommand { get; }
+    public IRelayCommand<InventoryBatchListItem> OpenBatchEditorCommand { get; }
+    public IRelayCommand CloseEditorCommand { get; }
+    public IRelayCommand ShowOpeningTabCommand { get; }
+    public IRelayCommand ShowAdjustmentTabCommand { get; }
+    public IRelayCommand ShowStatusTabCommand { get; }
+    public IRelayCommand ShowHistoryTabCommand { get; }
+    public IRelayCommand PreviousPageCommand { get; }
+    public IRelayCommand NextPageCommand { get; }
+    public IRelayCommand<int> GoToPageCommand { get; }
 
     public string Title => IsBatchesMode
         ? Translate("Batches", "بچ‌ها", "بېچونه")
@@ -114,6 +152,40 @@ public sealed partial class InventoryViewModel : ObservableObject
     public string StatusTitle => Translate("Batch status", "وضعیت بچ", "د بېچ حالت");
     public string HistoryTitle => Translate("Movement & status history", "تاریخچه گردش و وضعیت", "د حرکت او حالت تاریخچه");
 
+    public string OpeningStockLabel => Translate("Opening stock", "موجودی اولیه", "پیل زېرمه");
+    public string ManageLabel => Translate("Manage", "مدیریت", "اداره");
+    public string TemplateLabel => Translate("CSV template", "قالب CSV", "CSV نمونه");
+    public string ImportLabel => Translate("Import CSV", "وارد کردن CSV", "CSV واردول");
+    public string EditorTitle => EditorSection switch
+    {
+        "adjustment" => AdjustmentTitle,
+        "status" => StatusTitle,
+        "history" => HistoryTitle,
+        _ => OpeningStockTitle,
+    };
+    public bool IsOpeningEditor => EditorSection == "opening";
+    public bool IsAdjustmentEditor => EditorSection == "adjustment";
+    public bool IsStatusEditor => EditorSection == "status";
+    public bool IsHistoryEditor => EditorSection == "history";
+    public int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalItems / (double)Math.Max(1, PageSize)));
+    public string PageSummary
+    {
+        get
+        {
+            if (TotalItems == 0)
+            {
+                return Translate("Showing 0 batches", "نمایش ۰ بچ", "۰ بېچونه ښودل کېږي");
+            }
+
+            var from = ((CurrentPage - 1) * PageSize) + 1;
+            var to = Math.Min(CurrentPage * PageSize, TotalItems);
+            return Translate(
+                $"Showing {from}-{to} of {TotalItems} batches",
+                $"نمایش {from}-{to} از {TotalItems} بچ",
+                $"له {TotalItems} بېچونو څخه {from}-{to} ښودل کېږي");
+        }
+    }
+
     public void SetLanguage(UiLanguage language)
     {
         _language = language;
@@ -123,6 +195,7 @@ public sealed partial class InventoryViewModel : ObservableObject
     public void SetMode(bool batchesMode)
     {
         IsBatchesMode = batchesMode;
+        IsEditorOpen = false;
         OnPropertyChanged(nameof(IsInventoryMode));
         RaiseLocalizedProperties();
     }
@@ -147,10 +220,45 @@ public sealed partial class InventoryViewModel : ObservableObject
             await SearchCoreAsync();
 
             StatusMessage = Translate(
-                $"{Batches.Count} batch records loaded.",
-                $"{Batches.Count} رکورد بچ بارگذاری شد.",
-                $"{Batches.Count} د بېچ ریکارډونه پورته شول.");
+                $"{TotalItems} batch records loaded.",
+                $"{TotalItems} رکورد بچ بارگذاری شد.",
+                $"{TotalItems} د بېچ ریکارډونه پورته شول.");
         });
+    }
+
+    partial void OnEditorSectionChanged(string value)
+    {
+        OnPropertyChanged(nameof(EditorTitle));
+        OnPropertyChanged(nameof(IsOpeningEditor));
+        OnPropertyChanged(nameof(IsAdjustmentEditor));
+        OnPropertyChanged(nameof(IsStatusEditor));
+        OnPropertyChanged(nameof(IsHistoryEditor));
+    }
+
+    partial void OnCurrentPageChanged(int value)
+    {
+        OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(PageSummary));
+        PreviousPageCommand.NotifyCanExecuteChanged();
+        NextPageCommand.NotifyCanExecuteChanged();
+        GoToPageCommand.NotifyCanExecuteChanged();
+        RebuildPageNumbers();
+    }
+
+    partial void OnPageSizeChanged(int value)
+    {
+        CurrentPage = 1;
+        RefreshPage();
+    }
+
+    partial void OnTotalItemsChanged(int value)
+    {
+        OnPropertyChanged(nameof(TotalPages));
+        OnPropertyChanged(nameof(PageSummary));
+        PreviousPageCommand.NotifyCanExecuteChanged();
+        NextPageCommand.NotifyCanExecuteChanged();
+        GoToPageCommand.NotifyCanExecuteChanged();
+        RebuildPageNumbers();
     }
 
     partial void OnSelectedBatchChanged(InventoryBatchListItem? value)
@@ -158,6 +266,10 @@ public sealed partial class InventoryViewModel : ObservableObject
         LoadDetailCommand.NotifyCanExecuteChanged();
         AdjustCommand.NotifyCanExecuteChanged();
         ChangeStatusCommand.NotifyCanExecuteChanged();
+        OpenBatchEditorCommand.NotifyCanExecuteChanged();
+        ShowAdjustmentTabCommand.NotifyCanExecuteChanged();
+        ShowStatusTabCommand.NotifyCanExecuteChanged();
+        ShowHistoryTabCommand.NotifyCanExecuteChanged();
 
         if (value is not null)
         {
@@ -192,10 +304,91 @@ public sealed partial class InventoryViewModel : ObservableObject
                 NearExpiryDays: 90,
                 Take: 750));
 
+        _matchingBatches = result.ToList();
+        TotalItems = _matchingBatches.Count;
+        CurrentPage = 1;
+        RefreshPage();
+    }
+
+    private void OpenOpeningStock()
+    {
+        EditorSection = "opening";
+        IsEditorOpen = true;
+    }
+
+    private void OpenBatchEditor(InventoryBatchListItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        SelectedBatch = item;
+        EditorSection = IsBatchesMode ? "history" : "adjustment";
+        IsEditorOpen = true;
+    }
+
+    private void CloseEditor() => IsEditorOpen = false;
+
+    private void PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            CurrentPage--;
+            RefreshPage();
+        }
+    }
+
+    private void NextPage()
+    {
+        if (CurrentPage < TotalPages)
+        {
+            CurrentPage++;
+            RefreshPage();
+        }
+    }
+
+    private void GoToPage(int page)
+    {
+        if (page < 1 || page > TotalPages || page == CurrentPage)
+        {
+            return;
+        }
+
+        CurrentPage = page;
+        RefreshPage();
+    }
+
+    private void RefreshPage()
+    {
+        var totalPages = TotalPages;
+        if (CurrentPage > totalPages)
+        {
+            CurrentPage = totalPages;
+        }
+
+        var skip = Math.Max(0, (CurrentPage - 1) * Math.Max(1, PageSize));
         Batches.Clear();
-        foreach (var item in result)
+        foreach (var item in _matchingBatches.Skip(skip).Take(Math.Max(1, PageSize)))
         {
             Batches.Add(item);
+        }
+
+        OnPropertyChanged(nameof(PageSummary));
+        RebuildPageNumbers();
+    }
+
+    private void RebuildPageNumbers()
+    {
+        var total = TotalPages;
+        var start = Math.Max(1, CurrentPage - 2);
+        var end = Math.Min(total, start + 4);
+        start = Math.Max(1, end - 4);
+
+        PageNumbers.Clear();
+        for (var page = start; page <= end; page++)
+        {
+            PageNumbers.Add(page);
         }
     }
 
@@ -284,6 +477,7 @@ public sealed partial class InventoryViewModel : ObservableObject
             SalePrice = null;
             OpeningNotes = string.Empty;
 
+            IsEditorOpen = false;
             StatusMessage = Translate(
                 "Opening stock posted and movement recorded.",
                 "موجودی اولیه ثبت و گردش کالا ایجاد شد.",
@@ -314,6 +508,7 @@ public sealed partial class InventoryViewModel : ObservableObject
             AdjustmentQuantity = 0m;
             AdjustmentReason = string.Empty;
 
+            IsEditorOpen = false;
             StatusMessage = Translate(
                 $"Adjustment {result.Number} posted. Balance: {result.BalanceAfter:0.####}",
                 $"تعدیل {result.Number} ثبت شد. موجودی: {result.BalanceAfter:0.####}",
@@ -342,6 +537,7 @@ public sealed partial class InventoryViewModel : ObservableObject
             SelectedBatch = Batches.FirstOrDefault(x => x.Id == batchId);
             BatchStatusReason = string.Empty;
 
+            IsEditorOpen = false;
             StatusMessage = Translate(
                 "Batch status updated with an audit event.",
                 "وضعیت بچ با رویداد حسابرسی به‌روزرسانی شد.",
@@ -507,6 +703,14 @@ public sealed partial class InventoryViewModel : ObservableObject
         LoadDetailCommand.NotifyCanExecuteChanged();
         DownloadCsvTemplateCommand.NotifyCanExecuteChanged();
         ImportCsvCommand.NotifyCanExecuteChanged();
+        OpenOpeningStockCommand.NotifyCanExecuteChanged();
+        OpenBatchEditorCommand.NotifyCanExecuteChanged();
+        ShowAdjustmentTabCommand.NotifyCanExecuteChanged();
+        ShowStatusTabCommand.NotifyCanExecuteChanged();
+        ShowHistoryTabCommand.NotifyCanExecuteChanged();
+        PreviousPageCommand.NotifyCanExecuteChanged();
+        NextPageCommand.NotifyCanExecuteChanged();
+        GoToPageCommand.NotifyCanExecuteChanged();
     }
 
     private string Translate(string english, string dari, string pashto) =>
@@ -526,5 +730,11 @@ public sealed partial class InventoryViewModel : ObservableObject
         OnPropertyChanged(nameof(AdjustmentTitle));
         OnPropertyChanged(nameof(StatusTitle));
         OnPropertyChanged(nameof(HistoryTitle));
+        OnPropertyChanged(nameof(OpeningStockLabel));
+        OnPropertyChanged(nameof(ManageLabel));
+        OnPropertyChanged(nameof(TemplateLabel));
+        OnPropertyChanged(nameof(ImportLabel));
+        OnPropertyChanged(nameof(EditorTitle));
+        OnPropertyChanged(nameof(PageSummary));
     }
 }
