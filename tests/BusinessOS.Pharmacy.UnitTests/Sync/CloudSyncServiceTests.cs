@@ -109,6 +109,25 @@ public sealed class CloudSyncServiceTests
     }
 
     [Fact]
+    public async Task Signed_in_sync_repairs_legacy_reference_conflicts_before_cloud_work()
+    {
+        var user = User();
+        var store = new FakeStore();
+        var service = CreateService(
+            DeploymentMode.Standalone,
+            store,
+            new FakeTransport(),
+            user,
+            Entitlement(),
+            ProtectedSession(user));
+
+        var result = await service.SyncOnceAsync();
+
+        Assert.Equal(CloudSyncRunState.Synced, result.State);
+        Assert.Equal(1, store.RepairCalls);
+    }
+
+    [Fact]
     public async Task Conflict_review_lists_retained_conflicts_for_signed_in_cashier()
     {
         var user = User();
@@ -424,6 +443,7 @@ public sealed class CloudSyncServiceTests
         public List<string> RejectedKeys { get; } = [];
         public List<string> DeferredKeys { get; } = [];
         public List<CloudSyncConflictItem> Conflicts { get; } = [];
+        public int RepairCalls { get; private set; }
 
         public Task<IReadOnlyList<CloudSyncOutboxItem>> GetPendingAsync(
             string tenantId,
@@ -432,6 +452,15 @@ public sealed class CloudSyncServiceTests
             DateTimeOffset now,
             CancellationToken cancellationToken = default) =>
             Task.FromResult(Pending);
+
+        public Task<int> RepairReferenceConflictsAsync(
+            string tenantId,
+            string actorUserId,
+            CancellationToken cancellationToken = default)
+        {
+            RepairCalls++;
+            return Task.FromResult(0);
+        }
 
         public Task MarkAcceptedAsync(
             string tenantId,

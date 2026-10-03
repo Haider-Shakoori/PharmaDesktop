@@ -352,6 +352,21 @@ public sealed class PosSalesTests
                         .GetProperty("lines")[0]
                         .GetProperty("medicine_id")
                         .GetString());
+                Assert.Equal(
+                    1,
+                    payload.RootElement
+                        .GetProperty("reference_resolution_v")
+                        .GetInt32());
+                Assert.False(string.IsNullOrWhiteSpace(
+                    payload.RootElement
+                        .GetProperty("stock_location_code")
+                        .GetString()));
+                Assert.Equal(
+                    "POS-SALE-1",
+                    payload.RootElement
+                        .GetProperty("lines")[0]
+                        .GetProperty("medicine_code")
+                        .GetString());
             }
 
             var line = Assert.Single(sale.Lines);
