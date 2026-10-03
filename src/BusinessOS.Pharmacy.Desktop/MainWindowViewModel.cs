@@ -4,6 +4,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Desktop.Authentication;
+using BusinessOS.Pharmacy.Desktop.Administration;
 using BusinessOS.Pharmacy.Desktop.Barcode;
 using BusinessOS.Pharmacy.Desktop.Customers;
 using BusinessOS.Pharmacy.Desktop.Backup;
@@ -71,6 +72,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IClock clock,
         IUserSessionService sessions,
         IPermissionAuthorizer permissions,
+        AccessManagementViewModel accessManagement,
         DashboardViewModel dashboard,
         CustomersViewModel customers,
         MedicinesViewModel medicines,
@@ -104,6 +106,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IsGlassTheme = Appearance.ThemeManager.Current == Appearance.AppearanceTheme.Glass;
         Appearance.ThemeManager.ThemeChanged += OnThemeChanged;
         _profile = _profileStore.Load();
+        AccessManagement = accessManagement;
         Dashboard = dashboard;
         Customers = customers;
         Medicines = medicines;
@@ -121,6 +124,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         BarcodePrint = barcodePrint;
         currentPage = Dashboard;
 
+        AccessManagement.SetLanguage(SelectedLanguage);
+        AccessManagement.SetLanguage(SelectedLanguage);
         Dashboard.SetLanguage(SelectedLanguage);
         Customers.SetLanguage(SelectedLanguage);
         Medicines.SetLanguage(SelectedLanguage);
@@ -160,6 +165,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public IRelayCommand ToggleFullScreenCommand { get; }
     public bool IsPosMode => string.Equals(CurrentSectionKey, "pos", StringComparison.OrdinalIgnoreCase);
     public double SidebarWidth => IsPosMode ? 0d : SidebarCollapsed ? 70d : 224d;
+    public AccessManagementViewModel AccessManagement { get; }
     public DashboardViewModel Dashboard { get; }
     public CustomersViewModel Customers { get; }
     public MedicinesViewModel Medicines { get; }
@@ -176,9 +182,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public PasswordChangeViewModel PasswordChange { get; }
     public BarcodePrintViewModel BarcodePrint { get; }
 
-    public string ApplicationName => "BusinessOS Pharmacy";
-    public string ProductName => "BusinessOS Pharmacy";
-    public string ParentBrand => "Darmaltoon Pharmacy";
+    public string ApplicationName => "Darmaltoon";
+    public string ProductName => "Darmaltoon";
+    public string ParentBrand => "BusinessOS";
     public string PageTitle => CurrentSectionKey switch
     {
         "pos" => Translate("Point of Sale", "فروش", "خرڅلاو"),
@@ -192,9 +198,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
         "batches" => Translate("Batches", "بچ‌ها", "بېچونه"),
-        "purchases" => Translate("Purchases", "خریداری", "پېرود"),
+        "purchases" => Translate("Supplier", "تأمین‌کننده", "عرضه کوونکی"),
         "suppliers" => Translate("Suppliers", "تأمین‌کنندگان", "عرضه کوونکي"),
         "customers" => Translate("Customers", "مشتریان", "پېرودونکي"),
+        "users" => Translate("Users", "کاربران", "کارنان"),
+        "roles" => Translate("Roles & Permissions", "نقش‌ها و مجوزها", "رولونه او اجازې"),
         "settings" => Translate("Settings", "تنظیمات", "امستنې"),
         _ => Translate("Dashboard", "داشبورد", "ډشبورډ"),
     };
@@ -245,9 +253,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "بچ‌های دوا، مقدار و کنترل انقضا",
             "د درملو بېچونه، مقدار او د تاریخ تېر کنټرول"),
         "purchases" => Translate(
-            "Purchase orders, receiving, invoices and supplier payments",
-            "سفارش خرید، دریافت، فاکتور و پرداخت تأمین‌کننده",
-            "پېرود امرونه، ترلاسه کول، بلونه او د عرضه کوونکي تادیات"),
+            "Supplier records, purchase orders, receiving, invoices and payments",
+            "اطلاعات تأمین‌کننده، سفارش خرید، دریافت، فاکتور و پرداخت",
+            "د عرضه کوونکي معلومات، پېرود امرونه، ترلاسه کول، بلونه او تادیات"),
         "suppliers" => Translate(
             "Supplier records and purchasing relationships",
             "اطلاعات تأمین‌کنندگان و روابط خرید",
@@ -260,6 +268,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "Customer records and per-sale credit limits",
             "اطلاعات مشتری و سقف اعتبار هر فروش",
             "د پېرودونکو معلومات او د هر خرڅلاو د پور حد"),
+        "users" => Translate(
+            "Manage pharmacy staff accounts and role assignments",
+            "مدیریت حساب کارمندان دواخانه و نقش‌های آنان",
+            "د درملتون د کارکوونکو حسابونه او رولونه اداره کړئ"),
+        "roles" => Translate(
+            "Manage roles and permissions for pharmacy staff",
+            "مدیریت نقش‌ها و مجوزهای کارمندان دواخانه",
+            "د درملتون د کارکوونکو رولونه او اجازې اداره کړئ"),
         _ => Translate(
             "Local-first pharmacy operations",
             "عملیات محلی دواخانه",
@@ -356,6 +372,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     partial void OnSelectedLanguageChanged(UiLanguage value)
     {
         LayoutDirection = value.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+        AccessManagement.SetLanguage(value);
         Dashboard.SetLanguage(value);
         Customers.SetLanguage(value);
         Medicines.SetLanguage(value);
@@ -411,8 +428,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
             AddNavigationItem("barcode", Translate("Barcode Printing", "چاپ بارکد", "بارکوډ چاپ"), stock);
         }
 
-        AddIfAllowed("purchases.manage", "purchases", Translate("Purchases", "خریداری", "پېرود"), purchasing);
         AddIfAllowed("customers.manage", "customers", Translate("Customers", "مشتریان", "پېرودونکي"), operations);
+        AddIfAllowed("purchases.manage", "purchases", Translate("Supplier", "تأمین‌کننده", "عرضه کوونکی"), purchasing);
         AddIfAllowed("accounting.manage", "expenses", Translate("Expenses", "مصارف", "لګښتونه"), finance);
         AddIfAllowed("daily_closing.perform", "closing", Translate("Daily Closing", "بستن حساب روزانه", "ورځنی حساب"), finance);
         AddIfAllowed("reports.view", "reports", Translate("Reports", "گزارش‌ها", "راپورونه"), finance);
@@ -575,6 +592,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             case "inventory" when
                 _permissions.HasPermission("inventory.manage") ||
                 _permissions.HasPermission("inventory.status"):
+                Inventory.SetMode(false);
                 CurrentSectionKey = "inventory";
                 CurrentPage = Inventory;
                 await Inventory.LoadAsync();
@@ -583,6 +601,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             case "batches" when
                 _permissions.HasPermission("inventory.manage") ||
                 _permissions.HasPermission("inventory.status"):
+                Inventory.SetMode(true);
                 CurrentSectionKey = "batches";
                 CurrentPage = Inventory;
                 await Inventory.LoadAsync();
@@ -605,6 +624,20 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 CurrentSectionKey = "suppliers";
                 CurrentPage = Purchasing;
                 await Purchasing.LoadAsync();
+                break;
+
+            case "users" when _permissions.HasPermission("users.manage"):
+                AccessManagement.SetSection("users");
+                CurrentSectionKey = "users";
+                CurrentPage = AccessManagement;
+                await AccessManagement.LoadAsync();
+                break;
+
+            case "roles" when _permissions.HasPermission("roles.manage"):
+                AccessManagement.SetSection("roles");
+                CurrentSectionKey = "roles";
+                CurrentPage = AccessManagement;
+                await AccessManagement.LoadAsync();
                 break;
 
             case "settings" when _permissions.HasPermission("settings.manage"):
