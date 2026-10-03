@@ -186,11 +186,45 @@
         </Style>
 
         <Style x:Key="InventorySummaryCard" TargetType="Border">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#DCE5F0" />
+            <Setter Property="BorderBrush" Value="#B8FFFFFF" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Padding" Value="15,12" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="14"
+                                      ShadowDepth="3"
+                                      Opacity="0.12"
+                                      RenderingBias="Performance" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="InventorySummaryLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#475569" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="InventorySummaryValue" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#0F172A" />
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,7,0,4" />
+        </Style>
+
+        <Style x:Key="InventorySummaryHint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#64748B" />
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style x:Key="InventorySummaryBadge" TargetType="Border">
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Padding" Value="7,3" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Top" />
         </Style>
 
         <Style x:Key="InventoryModalLabel" TargetType="TextBlock">
@@ -260,7 +294,7 @@
                                  Title="{Binding Title}"
                                  Description="{Binding Subtitle}" />
 
-            <Grid Grid.Row="1" Margin="0,0,0,12">
+            <Grid Grid.Row="1" Margin="0,0,0,14">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="12"/>
@@ -271,76 +305,179 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Style="{StaticResource InventorySummaryCard}">
-                    <StackPanel>
-                        <TextBlock Text="{Binding TotalStockCostLabel}"
-                                   Foreground="#64748B"
-                                   FontSize="11.5"
-                                   FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding TotalStockCostText}"
-                                   Foreground="#0F172A"
-                                   FontSize="21"
-                                   FontWeight="Bold"
-                                   Margin="0,5,0,2"/>
-                        <TextBlock Text="{Binding TotalStockCostHint}"
-                                   Foreground="#94A3B8"
-                                   FontSize="10.5"
-                                   TextTrimming="CharacterEllipsis"/>
-                    </StackPanel>
+                <Border Grid.Column="0"
+                        Style="{StaticResource InventorySummaryCard}">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#E8FFFFFF" Offset="0"/>
+                            <GradientStop Color="#BFF0FDFF" Offset="0.56"/>
+                            <GradientStop Color="#A8DDF9FF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <TextBlock Text="{Binding TotalStockCostLabel}"
+                                       Style="{StaticResource InventorySummaryLabel}"
+                                       VerticalAlignment="Center"/>
+                            <Border Style="{StaticResource InventorySummaryBadge}"
+                                    Background="#78CFFAFE">
+                                <TextBlock Text="AFN"
+                                           Foreground="#0E7490"
+                                           FontSize="9.5"
+                                           FontWeight="Bold"/>
+                            </Border>
+                        </Grid>
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding TotalStockCostText}"
+                                   Style="{StaticResource InventorySummaryValue}"/>
+                        <TextBlock Grid.Row="2"
+                                   Text="{Binding TotalStockCostHint}"
+                                   Style="{StaticResource InventorySummaryHint}"/>
+                        <Ellipse Width="82"
+                                 Height="82"
+                                 Fill="#28FFFFFF"
+                                 HorizontalAlignment="Right"
+                                 VerticalAlignment="Bottom"
+                                 Margin="0,0,-34,-42"
+                                 IsHitTestVisible="False"/>
+                    </Grid>
                 </Border>
 
-                <Border Grid.Column="2" Style="{StaticResource InventorySummaryCard}">
-                    <StackPanel>
-                        <TextBlock Text="{Binding PotentialSalesValueLabel}"
-                                   Foreground="#64748B"
-                                   FontSize="11.5"
-                                   FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding PotentialSalesValueText}"
-                                   Foreground="#0F766E"
-                                   FontSize="21"
-                                   FontWeight="Bold"
-                                   Margin="0,5,0,2"/>
-                        <TextBlock Text="{Binding PotentialSalesValueHint}"
-                                   Foreground="#94A3B8"
-                                   FontSize="10.5"
-                                   TextTrimming="CharacterEllipsis"/>
-                    </StackPanel>
+                <Border Grid.Column="2"
+                        Style="{StaticResource InventorySummaryCard}">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#E9FFFFFF" Offset="0"/>
+                            <GradientStop Color="#C8EFF6FF" Offset="0.56"/>
+                            <GradientStop Color="#B7DCEBFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <TextBlock Text="{Binding PotentialSalesValueLabel}"
+                                       Style="{StaticResource InventorySummaryLabel}"
+                                       VerticalAlignment="Center"/>
+                            <Border Style="{StaticResource InventorySummaryBadge}"
+                                    Background="#74DBEAFE">
+                                <TextBlock Text="AFN"
+                                           Foreground="#0369A1"
+                                           FontSize="9.5"
+                                           FontWeight="Bold"/>
+                            </Border>
+                        </Grid>
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding PotentialSalesValueText}"
+                                   Style="{StaticResource InventorySummaryValue}"
+                                   Foreground="#075985"/>
+                        <TextBlock Grid.Row="2"
+                                   Text="{Binding PotentialSalesValueHint}"
+                                   Style="{StaticResource InventorySummaryHint}"/>
+                        <Ellipse Width="86"
+                                 Height="86"
+                                 Fill="#26FFFFFF"
+                                 HorizontalAlignment="Right"
+                                 VerticalAlignment="Bottom"
+                                 Margin="0,0,-36,-44"
+                                 IsHitTestVisible="False"/>
+                    </Grid>
                 </Border>
 
-                <Border Grid.Column="4" Style="{StaticResource InventorySummaryCard}">
-                    <StackPanel>
-                        <TextBlock Text="{Binding PotentialGrossProfitLabel}"
-                                   Foreground="#64748B"
-                                   FontSize="11.5"
-                                   FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding PotentialGrossProfitText}"
-                                   Foreground="#0369A1"
-                                   FontSize="21"
-                                   FontWeight="Bold"
-                                   Margin="0,5,0,2"/>
-                        <TextBlock Text="{Binding PotentialGrossProfitHint}"
-                                   Foreground="#94A3B8"
-                                   FontSize="10.5"
-                                   TextTrimming="CharacterEllipsis"/>
-                    </StackPanel>
+                <Border Grid.Column="4"
+                        Style="{StaticResource InventorySummaryCard}">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#EAFFFFFF" Offset="0"/>
+                            <GradientStop Color="#CBEFF8FF" Offset="0.52"/>
+                            <GradientStop Color="#BFEDE9FE" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <TextBlock Text="{Binding PotentialGrossProfitLabel}"
+                                       Style="{StaticResource InventorySummaryLabel}"
+                                       VerticalAlignment="Center"/>
+                            <Border Style="{StaticResource InventorySummaryBadge}"
+                                    Background="#70E9D5FF">
+                                <TextBlock Text="AFN"
+                                           Foreground="#6D28D9"
+                                           FontSize="9.5"
+                                           FontWeight="Bold"/>
+                            </Border>
+                        </Grid>
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding PotentialGrossProfitText}"
+                                   Style="{StaticResource InventorySummaryValue}"
+                                   Foreground="#6D28D9"/>
+                        <TextBlock Grid.Row="2"
+                                   Text="{Binding PotentialGrossProfitHint}"
+                                   Style="{StaticResource InventorySummaryHint}"/>
+                        <Ellipse Width="90"
+                                 Height="90"
+                                 Fill="#28FFFFFF"
+                                 HorizontalAlignment="Right"
+                                 VerticalAlignment="Bottom"
+                                 Margin="0,0,-38,-46"
+                                 IsHitTestVisible="False"/>
+                    </Grid>
                 </Border>
 
-                <Border Grid.Column="6" Style="{StaticResource InventorySummaryCard}">
-                    <StackPanel>
-                        <TextBlock Text="{Binding AvailableQuantityLabel}"
-                                   Foreground="#64748B"
-                                   FontSize="11.5"
-                                   FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding AvailableQuantityText}"
-                                   Foreground="#7C3AED"
-                                   FontSize="21"
-                                   FontWeight="Bold"
-                                   Margin="0,5,0,2"/>
-                        <TextBlock Text="{Binding AvailableQuantityHint}"
-                                   Foreground="#94A3B8"
-                                   FontSize="10.5"
-                                   TextTrimming="CharacterEllipsis"/>
-                    </StackPanel>
+                <Border Grid.Column="6"
+                        Style="{StaticResource InventorySummaryCard}">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#EAFFFFFF" Offset="0"/>
+                            <GradientStop Color="#C9F0FDF4" Offset="0.54"/>
+                            <GradientStop Color="#B6D1FAE5" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <TextBlock Text="{Binding AvailableQuantityLabel}"
+                                       Style="{StaticResource InventorySummaryLabel}"
+                                       VerticalAlignment="Center"/>
+                            <Border Style="{StaticResource InventorySummaryBadge}"
+                                    Background="#74D1FAE5">
+                                <TextBlock Text="QTY"
+                                           Foreground="#047857"
+                                           FontSize="9.5"
+                                           FontWeight="Bold"/>
+                            </Border>
+                        </Grid>
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding AvailableQuantityText}"
+                                   Style="{StaticResource InventorySummaryValue}"
+                                   Foreground="#047857"/>
+                        <TextBlock Grid.Row="2"
+                                   Text="{Binding AvailableQuantityHint}"
+                                   Style="{StaticResource InventorySummaryHint}"/>
+                        <Ellipse Width="88"
+                                 Height="88"
+                                 Fill="#26FFFFFF"
+                                 HorizontalAlignment="Right"
+                                 VerticalAlignment="Bottom"
+                                 Margin="0,0,-36,-44"
+                                 IsHitTestVisible="False"/>
+                    </Grid>
                 </Border>
             </Grid>
 
