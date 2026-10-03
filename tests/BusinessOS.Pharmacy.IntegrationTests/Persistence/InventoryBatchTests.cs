@@ -96,6 +96,73 @@ public sealed class InventoryBatchTests
     }
 
     [Fact]
+    public async Task Inventory_summary_reports_cost_sale_value_and_profit_from_on_hand_stock()
+    {
+        var root = CreateTemporaryRoot();
+
+        try
+        {
+            await using var provider = BuildProvider(root);
+            await InitializeAsync(provider);
+
+            var inventory = provider.GetRequiredService<IInventoryService>();
+            var catalog = provider.GetRequiredService<IMedicineCatalogService>();
+
+            await inventory.EnsureDefaultsAsync();
+            var location = (await inventory.GetReferenceDataAsync()).Locations.Single();
+
+            var medicineId = await CreateMedicineAsync(
+                catalog,
+                "INV-SUMMARY",
+                "Summary Medicine");
+
+            await inventory.CreateOpeningStockAsync(
+                new CreateOpeningStockRequest(
+                    medicineId,
+                    location.Id,
+                    "SUMMARY-ACTIVE",
+                    null,
+                    new DateOnly(2028, 1, 1),
+                    10m,
+                    50m,
+                    75m,
+                    null));
+
+            var quarantinedId = await inventory.CreateOpeningStockAsync(
+                new CreateOpeningStockRequest(
+                    medicineId,
+                    location.Id,
+                    "SUMMARY-HOLD",
+                    null,
+                    new DateOnly(2028, 2, 1),
+                    5m,
+                    20m,
+                    40m,
+                    null));
+
+            await inventory.ChangeBatchStatusAsync(
+                new ChangeBatchStatusRequest(
+                    quarantinedId,
+                    "quarantined",
+                    "Summary valuation test"));
+
+            var summary = await inventory.GetSummaryAsync();
+
+            Assert.Equal(600m, summary.TotalStockCost);
+            Assert.Equal(750m, summary.PotentialSalesValue);
+            Assert.Equal(250m, summary.PotentialGrossProfit);
+            Assert.Equal(15m, summary.AvailableQuantity);
+            Assert.Equal(2, summary.BatchCount);
+            Assert.Equal(1, summary.SellableBatchCount);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
+    [Fact]
     public async Task Negative_adjustment_rolls_back_without_partial_inventory_state()
     {
         var root = CreateTemporaryRoot();
