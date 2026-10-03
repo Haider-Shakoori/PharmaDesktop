@@ -44,6 +44,8 @@ public sealed class LanSupplierService(LanApiClient api) : ISupplierService
 {
     public async Task<IReadOnlyList<SupplierListItem>> SearchAsync(SupplierSearchFilter filter, CancellationToken ct = default) =>
         await api.PostAsync<SupplierSearchFilter, List<SupplierListItem>>("suppliers/search", filter, ct);
+    public Task<SupplierSummary> GetSummaryAsync(CancellationToken ct = default) =>
+        api.GetAsync<SupplierSummary>("suppliers/summary", ct);
     public Task<SupplierEditorModel?> GetAsync(string id, CancellationToken ct = default) => api.GetOptionalAsync<SupplierEditorModel>($"suppliers/{E(id)}", ct);
     public async Task<string> CreateAsync(SaveSupplierRequest request, CancellationToken ct = default) =>
         (await api.PostAsync<SaveSupplierRequest, IdResponse>("suppliers", request, ct)).Id;
