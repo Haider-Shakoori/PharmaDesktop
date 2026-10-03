@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +48,148 @@ public sealed class CloudSyncStore(
                 x.AttemptCount,
                 x.CreatedAt))
             .ToList();
+    }
+
+    public async Task<int> RepairReferenceConflictsAsync(
+        string tenantId,
+        string actorUserId,
+        CancellationToken cancellationToken = default)
+    {
+        tenantId = Required(tenantId, nameof(tenantId));
+        actorUserId = Required(actorUserId, nameof(actorUserId));
+
+        await using var context =
+            await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var rows = await context.Set<CloudSyncOutboxEntity>()
+            .Where(x =>
+                x.TenantId == tenantId &&
+                x.ActorUserId == actorUserId &&
+                x.Status == "conflict" &&
+                x.EventType == "sale.completed" &&
+                x.LastErrorCode == "reference_missing")
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var repaired = 0;
+        var now = DateTimeOffset.UtcNow;
+
+        foreach (var row in rows)
+        {
+            JsonObject? payload;
+            try
+            {
+                payload = JsonNode.Parse(row.PayloadJson) as JsonObject;
+            }
+            catch (JsonException)
+            {
+                continue;
+            }
+
+            if (payload is null ||
+                payload["reference_resolution_v"] is not null)
+            {
+                continue;
+            }
+
+            var locationId = ReadString(payload, "stock_location_id");
+            if (string.IsNullOrWhiteSpace(locationId))
+                continue;
+
+            var location = await context.Set<StockLocationEntity>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    x => x.Id == locationId && x.IsActive,
+                    cancellationToken);
+            if (location is null)
+                continue;
+
+            payload["stock_location_code"] = location.Code;
+
+            var customerId = ReadString(payload, "customer_id");
+            if (!string.IsNullOrWhiteSpace(customerId))
+            {
+                var customer = await context.Set<CustomerEntity>()
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(
+                        x => x.Id == customerId && x.IsActive,
+                        cancellationToken);
+                if (customer is null)
+                    continue;
+
+                payload["customer_name"] = customer.Name;
+                payload["customer_phone"] = customer.Phone;
+                payload["customer_email"] = customer.Email;
+            }
+
+            if (payload["lines"] is not JsonArray lines || lines.Count == 0)
+                continue;
+
+            var resolvedAllLines = true;
+            foreach (var node in lines)
+            {
+                if (node is not JsonObject line)
+                {
+                    resolvedAllLines = false;
+                    break;
+                }
+
+                var medicineId = ReadString(line, "medicine_id");
+                if (string.IsNullOrWhiteSpace(medicineId))
+                {
+                    resolvedAllLines = false;
+                    break;
+                }
+
+                var medicine = await context.Set<MedicineEntity>()
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(
+                        x => x.Id == medicineId && x.IsActive,
+                        cancellationToken);
+                if (medicine is null)
+                {
+                    resolvedAllLines = false;
+                    break;
+                }
+
+                line["medicine_code"] = medicine.MedicineCode;
+            }
+
+            if (!resolvedAllLines)
+                continue;
+
+            var localId = ReadString(payload, "local_id");
+            if (!string.IsNullOrWhiteSpace(localId))
+            {
+                var sale = await context.Set<SaleEntity>()
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(
+                        x => x.Id == localId,
+                        cancellationToken);
+                if (sale is not null)
+                {
+                    payload["prescription_reference"] = sale.PrescriptionReference;
+                    payload["prescriber_name"] = sale.PrescriberName;
+                    payload["prescription_date"] = sale.PrescriptionDate?
+                        .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                }
+            }
+
+            payload["reference_resolution_v"] = 1;
+            row.PayloadJson = payload.ToJsonString();
+            row.Status = "pending";
+            row.AttemptCount = 0;
+            row.NextAttemptAt = null;
+            row.LastErrorCode = null;
+            row.LastErrorMessage = null;
+            row.UpdatedAt = now;
+            repaired++;
+        }
+
+        if (repaired > 0)
+            await context.SaveChangesAsync(cancellationToken);
+
+        return repaired;
     }
 
     public async Task MarkAcceptedAsync(
@@ -395,6 +539,24 @@ public sealed class CloudSyncStore(
         catch (JsonException)
         {
             return (null, null);
+        }
+    }
+
+    private static string? ReadString(JsonObject value, string property)
+    {
+        if (!value.TryGetPropertyValue(property, out var node) ||
+            node is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return node.GetValue<string>();
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
         }
     }
 
