@@ -169,11 +169,12 @@ public sealed partial class ExpensesViewModel : ObservableObject
                 Notes,
                 _idempotencyKey);
 
+            var wasEditing = IsEditingExpense && _editingExpenseId is not null;
             ExpenseDetail result;
-            if (IsEditingExpense && _editingExpenseId is not null)
+            if (wasEditing)
             {
                 result = await _service.AmendAsync(
-                    _editingExpenseId,
+                    _editingExpenseId!,
                     request,
                     "Expense amended from Darmaltoon desktop.");
             }
@@ -186,7 +187,7 @@ public sealed partial class ExpensesViewModel : ObservableObject
             ResetEditor();
             await SearchCore();
             SelectedExpense = Expenses.FirstOrDefault(x => x.Id == result.Expense.Id);
-            StatusMessage = IsEditingExpense
+            StatusMessage = wasEditing
                 ? T($"Updated {result.Expense.ExpenseNumber}", $"به‌روزرسانی شد {result.Expense.ExpenseNumber}", $"تازه شو {result.Expense.ExpenseNumber}")
                 : T($"Posted {result.Expense.ExpenseNumber}", $"ثبت شد {result.Expense.ExpenseNumber}", $"ثبت شو {result.Expense.ExpenseNumber}");
         });
