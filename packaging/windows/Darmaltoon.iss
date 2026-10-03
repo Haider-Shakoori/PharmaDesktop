@@ -63,6 +63,9 @@ VersionInfoProductVersion={#MyAppVersion}
 SetupIconFile={#AppIconFile}
 #endif
 
+[Dirs]
+Name: "{commonappdata}\BusinessOS\Pharmacy"; Permissions: users-modify; Flags: uninsneveruninstall
+
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
@@ -73,6 +76,9 @@ Name: "{autodesktop}\Darmaltoon"; Filename: "{app}\{#MyAppExeName}"; WorkingDir:
 [Registry]
 Root: HKLM; Subkey: "Software\BusinessOS\Darmaltoon"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "Software\BusinessOS\Darmaltoon"; ValueType: string; ValueName: "DeploymentPackage"; ValueData: "{#DeploymentMode}"; Flags: uninsdeletevalue
+
+[Run]
+Filename: "{sys}\icacls.exe"; Parameters: """{commonappdata}\BusinessOS\Pharmacy"" /inheritance:e /grant *S-1-5-32-545:(OI)(CI)M /T /C"; Flags: runhidden waituntilterminated
 
 #if DeploymentMode == "Server"
 [Run]
