@@ -430,8 +430,27 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         }
     }
 
-    public string Title => T("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ترمینلونه");
-    public string Subtitle => T("Local pharmacy server, terminals and diagnostics", "سرور محلی دواخانه، ترمینال‌ها و عیب‌یابی", "د درملتون محلي سرور، ترمینلونه او تشخیص");
+    public string Title => T("Settings", "تنظیمات", "امستنې");
+    public string Subtitle => T(
+        "Profile, appearance, sales, printing, security and local network configuration",
+        "تنظیمات پروفایل، ظاهر، فروش، چاپ، امنیت و شبکه محلی",
+        "د پروفایل، بڼې، خرڅلاو، چاپ، امنیت او محلي شبکې امستنې");
+    public string ProfileAppearanceTabLabel => T(
+        "Profile & Appearance",
+        "پروفایل و ظاهر",
+        "پروفایل او بڼه");
+    public string SalesPrintingTabLabel => T(
+        "Sales & Printing",
+        "فروش و چاپ",
+        "خرڅلاو او چاپ");
+    public string NetworkTerminalsTabLabel => T(
+        "Network & Terminals",
+        "شبکه و ترمینال‌ها",
+        "شبکه او ترمینلونه");
+    public string SecurityTabLabel => T(
+        "Security",
+        "امنیت",
+        "امنیت");
     public string DeploymentModeLabel => T("Deployment mode", "حالت نصب", "د نصب حالت");
     public string ServerNameLabel => T("Server name", "نام سرور", "د سرور نوم");
     public string ServerAddressLabel => T("Server address", "آدرس سرور", "د سرور پته");
@@ -995,6 +1014,10 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(Subtitle));
+        OnPropertyChanged(nameof(ProfileAppearanceTabLabel));
+        OnPropertyChanged(nameof(SalesPrintingTabLabel));
+        OnPropertyChanged(nameof(NetworkTerminalsTabLabel));
+        OnPropertyChanged(nameof(SecurityTabLabel));
         OnPropertyChanged(nameof(DeploymentModeLabel));
         OnPropertyChanged(nameof(ServerNameLabel));
         OnPropertyChanged(nameof(ServerAddressLabel));
@@ -1033,5 +1056,24 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(ReceiptShowFooterLabel));
         OnPropertyChanged(nameof(ReceiptFooterTextLabel));
         OnPropertyChanged(nameof(SaveReceiptLabel));
+        OnPropertyChanged(nameof(PosTitle));
+        OnPropertyChanged(nameof(PosSubtitle));
+        OnPropertyChanged(nameof(PosShowTopSellersLabel));
+        OnPropertyChanged(nameof(PosShowTopSellersHint));
+        OnPropertyChanged(nameof(PosTopSellerCountLabel));
+        OnPropertyChanged(nameof(PosTopSellerDaysLabel));
+        OnPropertyChanged(nameof(PosTopSellerDaysText));
+        OnPropertyChanged(nameof(SavePosLabel));
+        OnPropertyChanged(nameof(PosPreviewTitle));
+        OnPropertyChanged(nameof(PosPreviewRefreshLabel));
+        OnPropertyChanged(nameof(PosPreviewEmpty));
+        OnPropertyChanged(nameof(PosPreviewSoldFormat));
+        OnPropertyChanged(nameof(AppearanceTitle));
+        OnPropertyChanged(nameof(AppearanceSubtitle));
+        OnPropertyChanged(nameof(GlassThemeLabel));
+        OnPropertyChanged(nameof(GlassThemeDescription));
+        OnPropertyChanged(nameof(ClassicThemeLabel));
+        OnPropertyChanged(nameof(ClassicThemeDescription));
+        OnPropertyChanged(nameof(AppearanceUpdatedMessage));
     }
 }
