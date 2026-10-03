@@ -140,6 +140,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         PasswordChange.SetLanguage(SelectedLanguage);
         BarcodePrint.SetLanguage(SelectedLanguage);
         Dashboard.NavigationRequested += OnDashboardNavigationRequested;
+        Pos.ReturnSaleRequested += OnPosReturnSaleRequested;
 
         if (_connectionMonitor is not null)
         {
@@ -659,6 +660,17 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private async void OnDashboardNavigationRequested(string key)
     {
         await NavigateAsync(key);
+    }
+
+    private async void OnPosReturnSaleRequested(string saleId)
+    {
+        if (!_permissions.HasPermission("returns.manage"))
+            return;
+
+        CurrentSectionKey = "returns";
+        CurrentPage = Returns;
+        await Returns.LoadAsync();
+        await Returns.LoadSaleAsync(saleId);
     }
 
     private async Task GlobalSearchAsync()
