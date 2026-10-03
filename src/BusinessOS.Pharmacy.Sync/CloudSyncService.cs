@@ -167,6 +167,7 @@ public sealed class CloudSyncService : ICloudSyncService
         var pushed = 0;
         var pulled = 0;
         var runConflicts = 0;
+        var referenceRepairsQueued = 0;
 
         await _store.RepairReferenceConflictsAsync(
             entitlement.TenantId,
@@ -256,21 +257,48 @@ public sealed class CloudSyncService : ICloudSyncService
                     continue;
                 }
 
-                if (!acknowledgement.Retryable)
+                var rejectionCode =
+                    acknowledgement.Code ?? "rejected";
+                var canAutoRepairReference =
+                    !acknowledgement.Retryable &&
+                    string.Equals(
+                        rejectionCode,
+                        "reference_missing",
+                        StringComparison.OrdinalIgnoreCase) &&
+                    item.AttemptCount < 2;
+                var retryable =
+                    acknowledgement.Retryable ||
+                    canAutoRepairReference;
+
+                if (!retryable)
+                {
                     runConflicts++;
+                }
+                else if (canAutoRepairReference)
+                {
+                    referenceRepairsQueued++;
+                }
 
                 await _store.MarkRejectedAsync(
                     entitlement.TenantId,
                     item.IdempotencyKey,
-                    acknowledgement.Code ?? "rejected",
+                    rejectionCode,
                     acknowledgement.Message ??
                     "BusinessOS cloud rejected this synchronization event.",
-                    acknowledgement.Retryable,
-                    acknowledgement.Retryable
+                    retryable,
+                    retryable
                         ? now + RetryDelay(item.AttemptCount + 1)
                         : null,
                     cancellationToken);
             }
+        }
+
+        if (referenceRepairsQueued > 0)
+        {
+            await _store.RepairReferenceConflictsAsync(
+                entitlement.TenantId,
+                user.UserId,
+                cancellationToken);
         }
 
         foreach (var stream in PullStreams)
@@ -339,6 +367,7 @@ public sealed class CloudSyncService : ICloudSyncService
 
         var queue = await _store.GetQueueSnapshotAsync(
             entitlement.TenantId,
+            user.UserId,
             cancellationToken);
         var totalConflicts = Math.Max(runConflicts, queue.Conflicts);
 
@@ -348,7 +377,9 @@ public sealed class CloudSyncService : ICloudSyncService
                 : CloudSyncRunState.Synced,
             totalConflicts > 0
                 ? $"{totalConflicts} cloud synchronization conflict(s) require review; local pharmacy data was not changed."
-                : "BusinessOS cloud synchronization completed.",
+                : referenceRepairsQueued > 0
+                    ? $"BusinessOS cloud synchronization completed; {referenceRepairsQueued} reference issue(s) were queued for automatic repair and retry."
+                    : "BusinessOS cloud synchronization completed.",
             AttemptedAt: now,
             SucceededAt: _clock.UtcNow,
             Pushed: pushed,

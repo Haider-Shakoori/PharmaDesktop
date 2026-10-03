@@ -394,16 +394,20 @@ public sealed class CloudSyncStore(
 
     public async Task<CloudSyncQueueSnapshot> GetQueueSnapshotAsync(
         string tenantId,
+        string actorUserId,
         CancellationToken cancellationToken = default)
     {
         tenantId = Required(tenantId, nameof(tenantId));
+        actorUserId = Required(actorUserId, nameof(actorUserId));
 
         await using var context =
             await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var rows = await context.Set<CloudSyncOutboxEntity>()
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId)
+            .Where(x =>
+                x.TenantId == tenantId &&
+                x.ActorUserId == actorUserId)
             .Select(x => new
             {
                 x.Status,

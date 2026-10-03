@@ -266,6 +266,79 @@ public sealed class CloudSyncServiceTests
             Now.AddHours(-2),
             CanRetry: true);
 
+    [Fact]
+    public async Task Conflict_from_another_cashier_does_not_poison_current_cashier_sync_state()
+    {
+        var user = User();
+        var store = new FakeStore();
+        store.Conflicts.Add(Conflict("sale:other-user", "user-2"));
+
+        var service = CreateService(
+            DeploymentMode.Standalone,
+            store,
+            new FakeTransport(),
+            user,
+            Entitlement(),
+            ProtectedSession(user));
+
+        var result = await service.SyncOnceAsync();
+
+        Assert.Equal(CloudSyncRunState.Synced, result.State);
+        Assert.Equal(0, result.Conflicts);
+    }
+
+    [Fact]
+    public async Task First_reference_missing_rejection_is_auto_repairable_instead_of_becoming_conflict()
+    {
+        var user = User();
+        var store = new FakeStore
+        {
+            Pending =
+            [
+                new CloudSyncOutboxItem(
+                    "outbox-reference",
+                    "tenant-1",
+                    "user-1",
+                    "sale.completed",
+                    "sale:reference",
+                    """{"local_id":"sale-reference"}""",
+                    0,
+                    Now.AddMinutes(-1)),
+            ],
+        };
+        var transport = new FakeTransport
+        {
+            PushResults =
+            [
+                new CloudSyncPushAcknowledgement(
+                    "sale:reference",
+                    "rejected",
+                    "reference_missing",
+                    "A historical reference could not be resolved.",
+                    Retryable: false,
+                    ServerId: null,
+                    ServerUpdatedAt: null),
+            ],
+        };
+
+        var service = CreateService(
+            DeploymentMode.Standalone,
+            store,
+            transport,
+            user,
+            Entitlement(),
+            ProtectedSession(user));
+
+        var result = await service.SyncOnceAsync();
+
+        Assert.Equal(CloudSyncRunState.Synced, result.State);
+        Assert.Equal(0, result.Conflicts);
+        Assert.Equal(1, store.RepairCallsAfterRejection);
+        var rejection = Assert.Single(store.Rejections);
+        Assert.Equal("reference_missing", rejection.Code);
+        Assert.True(rejection.Retryable);
+    }
+
     private static CloudSyncService CreateService(
         DeploymentMode mode,
         FakeStore store,
@@ -401,6 +474,7 @@ public sealed class CloudSyncServiceTests
         public int PushCalls { get; private set; }
         public int PullCalls { get; private set; }
         public Exception? PushFailure { get; init; }
+        public IReadOnlyList<CloudSyncPushAcknowledgement> PushResults { get; init; } = [];
 
         public Task<IReadOnlyList<CloudSyncPushAcknowledgement>> PushAsync(
             string accessToken,
@@ -414,8 +488,7 @@ public sealed class CloudSyncServiceTests
                     IReadOnlyList<CloudSyncPushAcknowledgement>>(
                     PushFailure);
 
-            return Task.FromResult<
-                IReadOnlyList<CloudSyncPushAcknowledgement>>([]);
+            return Task.FromResult(PushResults);
         }
 
         public Task<CloudSyncPullPage> PullAsync(
@@ -441,9 +514,12 @@ public sealed class CloudSyncServiceTests
         public IReadOnlyList<CloudSyncOutboxItem> Pending { get; init; } = [];
         public List<string> AcceptedKeys { get; } = [];
         public List<string> RejectedKeys { get; } = [];
+        public List<(string Code, bool Retryable)> Rejections { get; } = [];
         public List<string> DeferredKeys { get; } = [];
         public List<CloudSyncConflictItem> Conflicts { get; } = [];
         public int RepairCalls { get; private set; }
+        public int RepairCallsAfterRejection =>
+            Math.Max(0, RepairCalls - 1);
 
         public Task<IReadOnlyList<CloudSyncOutboxItem>> GetPendingAsync(
             string tenantId,
@@ -483,6 +559,7 @@ public sealed class CloudSyncServiceTests
             CancellationToken cancellationToken = default)
         {
             RejectedKeys.Add(idempotencyKey);
+            Rejections.Add((code, retryable));
             return Task.CompletedTask;
         }
 
@@ -513,15 +590,26 @@ public sealed class CloudSyncServiceTests
 
         public Task<CloudSyncQueueSnapshot> GetQueueSnapshotAsync(
             string tenantId,
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult(
+            string actorUserId,
+            CancellationToken cancellationToken = default)
+        {
+            var pending = Pending
+                .Where(x =>
+                    string.Equals(x.TenantId, tenantId, StringComparison.Ordinal) &&
+                    string.Equals(x.ActorUserId, actorUserId, StringComparison.Ordinal))
+                .ToList();
+            var conflicts = Conflicts.Count(x =>
+                string.Equals(x.ActorUserId, actorUserId, StringComparison.Ordinal));
+
+            return Task.FromResult(
                 new CloudSyncQueueSnapshot(
-                    Pending.Count,
-                    Conflicts.Count,
+                    pending.Count,
+                    conflicts,
                     0,
-                    Pending.Count == 0
+                    pending.Count == 0
                         ? null
-                        : Pending.Min(x => x.CreatedAt)));
+                        : pending.Min(x => x.CreatedAt)));
+        }
 
         public Task<IReadOnlyList<CloudSyncConflictItem>> GetConflictsAsync(
             string tenantId,
