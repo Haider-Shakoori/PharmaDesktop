@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Authentication;
+using BusinessOS.Pharmacy.Application.Abstractions.Administration;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
 using Microsoft.Extensions.Configuration;
@@ -36,6 +37,7 @@ public static class DependencyInjection
         services.AddSingleton<ILicenseService, LicenseService>();
         services.AddSingleton<IUserSessionService, PharmacyUserSessionService>();
         services.AddSingleton<IPermissionAuthorizer, PermissionAuthorizer>();
+        services.AddTransient<IAccessManagementService, DesktopAccessManagementService>();
 
         services.AddHttpClient(HttpClientName, (serviceProvider, client) =>
         {
