@@ -72,7 +72,7 @@ public sealed class StartupCoordinator
 
         _mainViewModel.ApplyCurrentUser();
         await _dashboard.LoadAsync();
-        _mainWindow.Show();
+        ShowMainWindowMaximized();
     }
 
     private async Task StartDatabaseOwnerAsync(CancellationToken cancellationToken)
@@ -235,7 +235,14 @@ public sealed class StartupCoordinator
 
         _mainViewModel.ApplyCurrentUser();
         await _dashboard.LoadAsync();
+        ShowMainWindowMaximized();
+    }
+
+    private void ShowMainWindowMaximized()
+    {
+        _mainWindow.WindowState = WindowState.Maximized;
         _mainWindow.Show();
+        _mainWindow.Activate();
     }
 
     private bool ShowLogin()
@@ -264,7 +271,7 @@ public sealed class StartupCoordinator
 
             _mainViewModel.ApplyCurrentUser();
             await _dashboard.LoadAsync();
-            _mainWindow.Show();
+            ShowMainWindowMaximized();
         }
         finally
         {
