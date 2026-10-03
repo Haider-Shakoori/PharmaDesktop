@@ -13,6 +13,7 @@ public sealed record NavigationItemViewModel(
         "medicines" => "#8B5CF6",
         "inventory" => "#F59E0B",
         "batches" => "#F43F5E",
+        "barcode" => "#7C3AED",
         "purchases" => "#06B6D4",
         "suppliers" => "#6366F1",
         "customers" => "#14B8A6",
@@ -49,7 +50,6 @@ public sealed record NavigationItemViewModel(
         "updates" => "Alt+3",
         "network" => "Alt+4",
         "settings" => "Alt+5",
-        "password" => "Alt+6",
         "barcode" => "Alt+7",
         _ => null,
     };
@@ -63,6 +63,7 @@ public sealed record NavigationItemViewModel(
         "medicines" => "#F2ECFF",
         "inventory" => "#FFF5D9",
         "batches" => "#FFEAF0",
+        "barcode" => "#F2EAFE",
         "purchases" => "#E8FAFD",
         "suppliers" => "#EEF0FF",
         "customers" => "#E8FAF7",
