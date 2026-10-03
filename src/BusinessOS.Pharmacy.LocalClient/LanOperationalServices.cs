@@ -101,6 +101,7 @@ public sealed class LanExpenseService(LanApiClient api) : IExpenseService
     public Task<ExpenseReferenceData> GetReferenceDataAsync(CancellationToken ct = default) => api.GetAsync<ExpenseReferenceData>("expenses/references", ct);
     public Task<ExpenseDetail> PostAsync(PostExpenseRequest request, CancellationToken ct = default) => api.PostAsync<PostExpenseRequest, ExpenseDetail>("expenses", request, ct);
     public Task<ExpenseDetail> ReverseAsync(string expenseId, string reason, CancellationToken ct = default) => api.PostAsync<ReasonRequest, ExpenseDetail>($"expenses/{E(expenseId)}/reverse", new ReasonRequest(reason), ct);
+    public Task<ExpenseDetail> AmendAsync(string expenseId, PostExpenseRequest request, string reason, CancellationToken ct = default) => api.PostAsync<ExpenseAmendRequest, ExpenseDetail>($"expenses/{E(expenseId)}/amend", new ExpenseAmendRequest(request, reason), ct);
     public async Task<IReadOnlyList<ExpenseListItem>> SearchAsync(ExpenseSearchFilter filter, CancellationToken ct = default) =>
         await api.PostAsync<ExpenseSearchFilter, List<ExpenseListItem>>("expenses/search", filter, ct);
     public Task<ExpenseDetail?> GetAsync(string expenseId, CancellationToken ct = default) => api.GetOptionalAsync<ExpenseDetail>($"expenses/{E(expenseId)}", ct);
@@ -144,6 +145,7 @@ public sealed class LanPharmacyReportService(LanApiClient api) : IPharmacyReport
 internal sealed record IdResponse(string Id);
 internal sealed record StockLocationRequest(string StockLocationId);
 internal sealed record ReasonRequest(string Reason);
+internal sealed record ExpenseAmendRequest(PostExpenseRequest Expense, string Reason);
 internal sealed record WorkspaceRequest(string StockLocationId, DateOnly? BusinessDate);
 internal sealed record OpenShiftRequest(string StockLocationId, decimal OpeningCash);
 internal sealed record CloseShiftRequest(decimal CountedCash, string? Notes);
