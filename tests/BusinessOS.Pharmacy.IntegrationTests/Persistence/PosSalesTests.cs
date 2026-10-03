@@ -589,6 +589,142 @@ public sealed class PosSalesTests
         }
     }
 
+
+    [Fact]
+    public async Task Legacy_reference_conflict_can_be_repaired_after_medicine_is_deactivated()
+    {
+        var root = CreateTemporaryRoot();
+
+        try
+        {
+            await using var provider = BuildProvider(root);
+            await InitializeAsync(provider);
+
+            var medicineId = await CreateMedicineAsync(
+                provider,
+                "POS-HISTORICAL-INACTIVE",
+                "Historical Inactive Medicine");
+
+            var inventory = provider.GetRequiredService<IInventoryService>();
+            await inventory.EnsureDefaultsAsync();
+            var location = (await inventory.GetReferenceDataAsync()).Locations.Single();
+
+            await inventory.CreateOpeningStockAsync(new CreateOpeningStockRequest(
+                medicineId,
+                location.Id,
+                "HIST-1",
+                null,
+                new DateOnly(2027, 12, 1),
+                2m,
+                4m,
+                10m,
+                null));
+
+            var pos = provider.GetRequiredService<IPosService>();
+            var sale = await pos.CheckoutAsync(new PosCheckoutRequest(
+                location.Id,
+                null,
+                "historical-inactive-reference",
+                null,
+                null,
+                null,
+                null,
+                [new PosCheckoutLineRequest(medicineId, 1m)],
+                [new PosPaymentRequest("cash", 10m)]));
+
+            var paths = provider.GetRequiredService<ApplicationPaths>();
+            await using (var connection = new SqliteConnection($"Data Source={paths.DatabasePath}"))
+            {
+                await connection.OpenAsync();
+
+                await using (var deactivate = connection.CreateCommand())
+                {
+                    deactivate.CommandText = "UPDATE medicines SET is_active = 0 WHERE id = @id;";
+                    deactivate.Parameters.AddWithValue("@id", medicineId);
+                    await deactivate.ExecuteNonQueryAsync();
+                }
+
+                var legacyPayload = JsonSerializer.Serialize(new
+                {
+                    v = 1,
+                    local_id = sale.Sale.Id,
+                    idempotency_key = "historical-inactive-reference",
+                    stock_location_id = location.Id,
+                    customer_id = (string?)null,
+                    cashier_user_id = "user-pos",
+                    business_date = sale.Sale.BusinessDate.ToString("yyyy-MM-dd"),
+                    currency = "AFN",
+                    lines = new[]
+                    {
+                        new
+                        {
+                            medicine_id = medicineId,
+                            quantity = "1.0000",
+                            unit_price = "10.0000",
+                            discount_amount = "0.0000",
+                        },
+                    },
+                    payments = new[]
+                    {
+                        new
+                        {
+                            method = "cash",
+                            amount = "10.0000",
+                            reference = (string?)null,
+                        },
+                    },
+                });
+
+                await using var conflict = connection.CreateCommand();
+                conflict.CommandText =
+                    """
+                    UPDATE cloud_sync_outbox
+                    SET status = 'conflict',
+                        attempt_count = 1,
+                        last_error_code = 'reference_missing',
+                        last_error_message = 'A referenced pharmacy record no longer exists.',
+                        payload_json = @payload
+                    WHERE idempotency_key = 'historical-inactive-reference';
+                    """;
+                conflict.Parameters.AddWithValue("@payload", legacyPayload);
+                await conflict.ExecuteNonQueryAsync();
+            }
+
+            var store = provider.GetRequiredService<ICloudSyncStore>();
+            var repaired = await store.RepairReferenceConflictsAsync(
+                "tenant-pos",
+                "user-pos");
+
+            Assert.Equal(1, repaired);
+
+            var pending = await store.GetPendingAsync(
+                "tenant-pos",
+                "user-pos",
+                10,
+                DateTimeOffset.UtcNow.AddMinutes(1));
+
+            var item = Assert.Single(
+                pending.Where(x => x.IdempotencyKey == "historical-inactive-reference"));
+
+            using var payload = JsonDocument.Parse(item.PayloadJson);
+            Assert.Equal(
+                "POS-HISTORICAL-INACTIVE",
+                payload.RootElement.GetProperty("lines")[0]
+                    .GetProperty("medicine_code")
+                    .GetString());
+            Assert.False(string.IsNullOrWhiteSpace(
+                payload.RootElement.GetProperty("stock_location_code").GetString()));
+            Assert.Equal(
+                1,
+                payload.RootElement.GetProperty("reference_resolution_v").GetInt32());
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
     private static async Task<string> CreateMedicineAsync(
         ServiceProvider provider,
         string code,
