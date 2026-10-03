@@ -39,10 +39,11 @@
         <SolidColorBrush x:Key="DashboardGlassHoverRowBrush" Color="#A8FFFFFF" />
         <SolidColorBrush x:Key="DashboardGlassSelectedRowBrush" Color="#B8DCEBFF" />
         <DropShadowEffect x:Key="DashboardGlassShadow"
-                          BlurRadius="28"
-                          ShadowDepth="5"
+                          BlurRadius="12"
+                          ShadowDepth="2"
                           Direction="270"
-                          Opacity="0.22"
+                          Opacity="0.12"
+                          RenderingBias="Performance"
                           Color="#315D9B" />
 
         <Style x:Key="DashboardGlassCard" TargetType="Border" BasedOn="{StaticResource DashboardCard}">
@@ -149,7 +150,7 @@
             <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
             <Setter Property="RowHeaderWidth" Value="0" />
             <Setter Property="AlternationCount" Value="2147483647" />
-            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden" />
             <Setter Property="RowHeight" Value="30" />
             <Setter Property="ColumnHeaderHeight" Value="30" />
@@ -261,18 +262,18 @@
         <!-- Dashboard-only backdrop: slightly blurred so glass surfaces remain readable. -->
         <Image Source="pack://application:,,,/Darmaltoon;component/Assets/Glass/background.png"
                Stretch="UniformToFill"
-               Opacity="0.94"
-               IsHitTestVisible="False">
-            <Image.Effect>
-                <BlurEffect Radius="7" KernelType="Gaussian" />
-            </Image.Effect>
-        </Image>
-        <Border Background="#20FFFFFF" IsHitTestVisible="False" />
+               Opacity="0.78"
+               IsHitTestVisible="False"
+               RenderOptions.BitmapScalingMode="LowQuality" />
+        <Border Background="#4CFFFFFF" IsHitTestVisible="False" />
 
         <ScrollViewer VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Auto"
-                      Background="Transparent">
-        <StackPanel Margin="22,10,22,4" MinWidth="1240">
+                      HorizontalScrollBarVisibility="Disabled"
+                      Background="Transparent"
+                      CanContentScroll="True">
+        <StackPanel Margin="22,10,22,4"
+                    MinWidth="0"
+                    HorizontalAlignment="Stretch">
             <StackPanel Margin="0,0,0,8">
                 <TextBlock Text="{Binding DashboardTitle}"
                            FontSize="27"
