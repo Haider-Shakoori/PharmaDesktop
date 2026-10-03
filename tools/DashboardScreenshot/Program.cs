@@ -629,6 +629,12 @@ internal static class Program
             new(CloudSyncRunState.Synced,"Synced 2 min ago",now.AddMinutes(-2),now.AddMinutes(-2));
         public event Action<CloudSyncRunResult>? ResultUpdated { add { } remove { } }
         public Task<CloudSyncRunResult> SyncOnceAsync(CancellationToken cancellationToken = default) => Task.FromResult(LastResult);
+        public Task<CloudSyncConflictReview> GetConflictReviewAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(CloudSyncConflictReview.Unavailable("Cloud synchronization is disabled for this terminal mode."));
+        public Task<CloudSyncConflictReview> RetryConflictAsync(string idempotencyKey, CancellationToken cancellationToken = default) =>
+            GetConflictReviewAsync(cancellationToken);
+        public Task<CloudSyncConflictReview> DismissConflictAsync(string idempotencyKey, CancellationToken cancellationToken = default) =>
+            GetConflictReviewAsync(cancellationToken);
     }
 
     private sealed class FakeMedicineCatalogService : BusinessOS.Pharmacy.Application.Abstractions.Medicines.IMedicineCatalogService

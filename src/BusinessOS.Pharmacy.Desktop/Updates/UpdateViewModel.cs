@@ -1,7 +1,9 @@
+using System.Collections.ObjectModel;
 using BusinessOS.Pharmacy.Application.Abstractions.Backup;
 using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Storage;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.Infrastructure.Networking;
 using BusinessOS.Pharmacy.LocalClient;
@@ -27,6 +29,9 @@ public sealed partial class UpdateViewModel : ObservableObject
     [ObservableProperty] private string releaseNotes = string.Empty;
     [ObservableProperty] private string compatibilityText = string.Empty;
     [ObservableProperty] private bool isBusy;
+    [ObservableProperty] private string conflictSummary = string.Empty;
+    [ObservableProperty] private bool hasConflicts;
+
     public UpdateViewModel(
         IServiceProvider services,
         NetworkConfiguration network,
@@ -47,11 +52,41 @@ public sealed partial class UpdateViewModel : ObservableObject
         InstallCommand = new AsyncRelayCommand(
             InstallAsync,
             () => !IsBusy && _prepared is not null);
+        RefreshConflictsCommand = new AsyncRelayCommand(
+            RefreshConflictsAsync,
+            () => !IsBusy);
+        RetryConflictCommand = new AsyncRelayCommand<string>(
+            RetryConflictAsync,
+            _ => !IsBusy);
+        DismissConflictCommand = new AsyncRelayCommand<string>(
+            DismissConflictAsync,
+            _ => !IsBusy);
     }
+
+    public ObservableCollection<SyncConflictItemViewModel> Conflicts { get; } = new();
 
     public IAsyncRelayCommand CheckCommand { get; }
     public IAsyncRelayCommand DownloadCommand { get; }
     public IAsyncRelayCommand InstallCommand { get; }
+    public IAsyncRelayCommand RefreshConflictsCommand { get; }
+    public IAsyncRelayCommand<string> RetryConflictCommand { get; }
+    public IAsyncRelayCommand<string> DismissConflictCommand { get; }
+
+    public string ConflictsTitle => T(
+        "Cloud synchronization conflicts",
+        "تعارض‌های همگام‌سازی ابری",
+        "د کلود سینک نړۍوالۍConflicts");
+    public string ConflictsEmptyText => T(
+        "No cloud synchronization conflicts require review.",
+        "هیچ تعارضی برای همگام‌سازی ابری وجود ندارد.",
+        "د کلود سینک کوم نړۍوال نه دي.");
+    public string ConflictsHelpText => T(
+        "Retrying re-sends the event to BusinessOS cloud. The local sale is never deleted or rewritten.",
+        "تلاش دوباره رویداد را به فضای ابری BusinessOS ارسال می‌کند. فروش محلی هرگز حذف یا بازنویسی نمی‌شود.",
+        "بیا هڅه په کلود ته ولېږي. پلارې نه شي پاک یا بیا لیکل کېږي.");
+    public string RetryLabel => T("Retry", "تلاش دوباره", "بیا هڅه");
+    public string DismissLabel => T("Dismiss", "نادیده گرفتن", "پرېږده");
+    public string RefreshConflictsLabel => T("Refresh conflicts", "به‌روزرسانی تعارض‌ها", "Conflicts نوې کړئ");
 
     public string Title => T("Application Updates", "به‌روزرسانی برنامه", "د اپلېکېشن تازه کول");
     public string Subtitle => T(
@@ -84,7 +119,95 @@ public sealed partial class UpdateViewModel : ObservableObject
                 "تازه کول یوازې د سم لاسلیک او د بسته د سم checksum سره منل کېږي.");
         }
 
-        return Task.CompletedTask;
+        return RefreshConflictsAsync();
+    }
+
+    private async Task RefreshConflictsAsync()
+    {
+        var sync = _services.GetService<ICloudSyncService>();
+        if (sync is null)
+        {
+            ApplyConflicts(
+                CloudSyncConflictReview.Unavailable(
+                    "Cloud synchronization is disabled for this terminal mode."),
+                keepSummary: true);
+            return;
+        }
+
+        await BusyAsync(async () =>
+        {
+            try
+            {
+                ApplyConflicts(
+                    await sync.GetConflictReviewAsync(),
+                    keepSummary: false);
+            }
+            catch (Exception exception)
+            {
+                ConflictSummary = exception.Message;
+                HasConflicts = false;
+                Conflicts.Clear();
+            }
+        });
+    }
+
+    private async Task RetryConflictAsync(string? idempotencyKey)
+    {
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+            return;
+
+        var sync = _services.GetService<ICloudSyncService>();
+        if (sync is null)
+            return;
+
+        await BusyAsync(async () =>
+        {
+            try
+            {
+                ApplyConflicts(await sync.RetryConflictAsync(idempotencyKey), keepSummary: false);
+            }
+            catch (Exception exception)
+            {
+                ConflictSummary = exception.Message;
+            }
+        });
+    }
+
+    private async Task DismissConflictAsync(string? idempotencyKey)
+    {
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+            return;
+
+        var sync = _services.GetService<ICloudSyncService>();
+        if (sync is null)
+            return;
+
+        await BusyAsync(async () =>
+        {
+            try
+            {
+                ApplyConflicts(await sync.DismissConflictAsync(idempotencyKey), keepSummary: false);
+            }
+            catch (Exception exception)
+            {
+                ConflictSummary = exception.Message;
+            }
+        });
+    }
+
+    private void ApplyConflicts(
+        CloudSyncConflictReview review,
+        bool keepSummary)
+    {
+        if (!keepSummary)
+            ConflictSummary = review.Message;
+
+        Conflicts.Clear();
+        foreach (var conflict in review.Conflicts)
+            Conflicts.Add(new SyncConflictItemViewModel(conflict));
+
+        HasConflicts = Conflicts.Count > 0;
+        NotifyCommands();
     }
 
     private async Task CheckAsync()
@@ -191,6 +314,9 @@ public sealed partial class UpdateViewModel : ObservableObject
         CheckCommand.NotifyCanExecuteChanged();
         DownloadCommand.NotifyCanExecuteChanged();
         InstallCommand.NotifyCanExecuteChanged();
+        RefreshConflictsCommand.NotifyCanExecuteChanged();
+        RetryConflictCommand.NotifyCanExecuteChanged();
+        DismissConflictCommand.NotifyCanExecuteChanged();
     }
 
     private string ModeText() => _network.Mode switch

@@ -47,6 +47,21 @@ public interface ICloudSyncStore
     Task<CloudSyncQueueSnapshot> GetQueueSnapshotAsync(
         string tenantId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<CloudSyncConflictItem>> GetConflictsAsync(
+        string tenantId,
+        int take,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> RetryConflictAsync(
+        string tenantId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> DismissConflictAsync(
+        string tenantId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
 }
 
 public interface ICloudSyncService
@@ -57,6 +72,37 @@ public interface ICloudSyncService
     CloudSyncRunResult LastResult { get; }
 
     event Action<CloudSyncRunResult>? ResultUpdated;
+
+    Task<CloudSyncConflictReview> GetConflictReviewAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<CloudSyncConflictReview> RetryConflictAsync(
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+
+    Task<CloudSyncConflictReview> DismissConflictAsync(
+        string idempotencyKey,
+        CancellationToken cancellationToken = default);
+}
+
+public sealed record CloudSyncConflictItem(
+    string IdempotencyKey,
+    string EventType,
+    string ActorUserId,
+    string? LocalId,
+    string? BusinessDate,
+    string? ErrorCode,
+    string? ErrorMessage,
+    int AttemptCount,
+    DateTimeOffset CreatedAt,
+    bool CanRetry);
+
+public sealed record CloudSyncConflictReview(
+    IReadOnlyList<CloudSyncConflictItem> Conflicts,
+    string Message)
+{
+    public static CloudSyncConflictReview Unavailable(string message) =>
+        new([], message);
 }
 
 public sealed record CloudSyncOutboxItem(

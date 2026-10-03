@@ -457,34 +457,26 @@
                                 BorderThickness="1"
                                 CornerRadius="9"
                                 Margin="0,0,8,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="34" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Path Data="{StaticResource IconGlobe}" Width="17" Height="17"
-                                      Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.7" Fill="Transparent"
-                                      Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <ComboBox Grid.Column="1"
-                                          ItemsSource="{Binding Languages}"
-                                          SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
-                                          FontSize="12"
-                                          BorderThickness="0"
-                                          Background="Transparent"
-                                          Padding="0"
-                                          ToolTip="Language">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <localization:LanguageFlag LanguageCode="{Binding Code}"
-                                                                           Margin="0,0,8,0"
-                                                                           VerticalAlignment="Center" />
-                                                <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </Grid>
+                            <ComboBox ItemsSource="{Binding Languages}"
+                                      SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
+                                      FontSize="12"
+                                      BorderThickness="0"
+                                      Background="Transparent"
+                                      Padding="11,0"
+                                      HorizontalContentAlignment="Left"
+                                      VerticalContentAlignment="Center"
+                                      ToolTip="Language">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <localization:LanguageFlag LanguageCode="{Binding Code}"
+                                                                       Margin="0,0,8,0"
+                                                                       VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                         </Border>
 
                         <Button Command="{Binding NavigateCommand}"
@@ -499,7 +491,17 @@
                                 <Border Background="{DynamicResource DangerBrush}" CornerRadius="7"
                                         MinWidth="14" Height="14" Padding="3,0"
                                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12,-5,-7,0">
-                                    <TextBlock Text="{Binding Dashboard.Alerts.Count}" Foreground="White"
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Dashboard.HasAlertBadge}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding Dashboard.AlertBadgeText}" Foreground="White"
                                                FontSize="8.5" FontWeight="Bold"
                                                HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Border>

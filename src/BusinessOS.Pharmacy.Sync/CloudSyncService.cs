@@ -351,6 +351,88 @@ public sealed class CloudSyncService : ICloudSyncService
             Conflicts: totalConflicts);
     }
 
+    public async Task<CloudSyncConflictReview> GetConflictReviewAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = ResolveConflictTenantId();
+        if (tenantId is null)
+        {
+            return CloudSyncConflictReview.Unavailable(
+                "Sign in as a pharmacy user to review cloud synchronization conflicts.");
+        }
+
+        var conflicts = await _store.GetConflictsAsync(
+            tenantId,
+            _options.ConflictReviewLimit,
+            cancellationToken);
+
+        return new CloudSyncConflictReview(
+            conflicts,
+            conflicts.Count == 0
+                ? "No cloud synchronization conflicts require review."
+                : $"{conflicts.Count} cloud synchronization conflict(s) require review. Local pharmacy data was not changed.");
+    }
+
+    public async Task<CloudSyncConflictReview> RetryConflictAsync(
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = ResolveConflictTenantId();
+        if (tenantId is null)
+        {
+            return CloudSyncConflictReview.Unavailable(
+                "Sign in as a pharmacy user to resolve cloud synchronization conflicts.");
+        }
+
+        var currentUserId = _sessions.Current?.UserId;
+        var conflicts = await _store.GetConflictsAsync(
+            tenantId,
+            _options.ConflictReviewLimit,
+            cancellationToken);
+
+        var target = conflicts.FirstOrDefault(
+            x => string.Equals(x.IdempotencyKey, idempotencyKey, StringComparison.Ordinal));
+
+        if (target is null)
+            return new CloudSyncConflictReview(conflicts, "This conflict no longer requires review.");
+
+        if (!string.Equals(target.ActorUserId, currentUserId, StringComparison.Ordinal))
+        {
+            return new CloudSyncConflictReview(
+                conflicts,
+                "This conflict belongs to another cashier and can only be retried when they are signed in.");
+        }
+
+        await _store.RetryConflictAsync(tenantId, idempotencyKey, cancellationToken);
+
+        return await GetConflictReviewAsync(cancellationToken);
+    }
+
+    public async Task<CloudSyncConflictReview> DismissConflictAsync(
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = ResolveConflictTenantId();
+        if (tenantId is null)
+        {
+            return CloudSyncConflictReview.Unavailable(
+                "Sign in as a pharmacy user to resolve cloud synchronization conflicts.");
+        }
+
+        await _store.DismissConflictAsync(tenantId, idempotencyKey, cancellationToken);
+
+        return await GetConflictReviewAsync(cancellationToken);
+    }
+
+    private string? ResolveConflictTenantId()
+    {
+        var user = _sessions.Current;
+        if (user is null || !user.IsValidAt(_clock.UtcNow))
+            return null;
+
+        return user.TenantId;
+    }
+
     private async Task<BusinessOS.Pharmacy.Domain.Licensing.EntitlementSnapshot?>
         GetEntitlementAsync(CancellationToken cancellationToken)
     {

@@ -8,6 +8,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0">
@@ -45,6 +46,79 @@
                 <Button Content="{Binding DownloadLabel}" Command="{Binding DownloadCommand}" Padding="14,8" Margin="0,0,8,0"/>
                 <Button Content="{Binding InstallLabel}" Command="{Binding InstallCommand}" Padding="14,8"/>
             </StackPanel>
+
+            <Border Grid.Row="4" Margin="0,24,0,0"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="16">
+                <StackPanel>
+                    <Grid>
+                        <TextBlock Text="{Binding ConflictsTitle}" FontSize="15" FontWeight="SemiBold"
+                                   VerticalAlignment="Center"/>
+                        <Button Content="{Binding RefreshConflictsLabel}"
+                                Command="{Binding RefreshConflictsCommand}"
+                                HorizontalAlignment="Right" Padding="10,5"/>
+                    </Grid>
+
+                    <TextBlock Text="{Binding ConflictSummary}" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+
+                    <ItemsControl ItemsSource="{Binding Conflicts}" Margin="0,12,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                        CornerRadius="6" Padding="12" Margin="0,0,0,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding EventType}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Reference}" FontSize="11.5" Margin="0,3,0,0"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                                            <TextBlock Margin="0,3,0,0" FontSize="11"
+                                                       Foreground="{DynamicResource TextMutedBrush}">
+                                                <Run Text="{Binding ErrorCode, Mode=OneWay}"/>
+                                                <Run Text=" · "/>
+                                                <Run Text="{Binding RaisedText, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                                    VerticalAlignment="Center" Margin="12,0,0,0">
+                                            <Button Content="{Binding DataContext.RetryLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    Command="{Binding DataContext.RetryConflictCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding IdempotencyKey}"
+                                                    Padding="10,5" Margin="0,0,6,0"/>
+                                            <Button Content="{Binding DataContext.DismissLabel, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    Command="{Binding DataContext.DismissConflictCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding IdempotencyKey}"
+                                                    Padding="10,5"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="{Binding ConflictsEmptyText}" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Foreground="{DynamicResource TextMutedBrush}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasConflicts}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <TextBlock Text="{Binding ConflictsHelpText}" TextWrapping="Wrap" Margin="0,10,0,0"
+                               FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}"/>
+                </StackPanel>
+            </Border>
         </Grid>
     </ScrollViewer>
 </UserControl>

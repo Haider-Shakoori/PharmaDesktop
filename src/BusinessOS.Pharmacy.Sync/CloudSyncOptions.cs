@@ -8,7 +8,8 @@ public sealed record CloudSyncOptions(
     int BatchSize = 25,
     int PullPageSize = 100,
     int MaxPullPagesPerRun = 5,
-    int IntervalSeconds = 30)
+    int IntervalSeconds = 30,
+    int ConflictReviewLimit = 50)
 {
     public void Validate()
     {
@@ -34,6 +35,8 @@ public sealed record CloudSyncOptions(
             throw new InvalidOperationException("Cloud sync max pages per run must be between 1 and 20.");
         if (IntervalSeconds is < 15 or > 3600)
             throw new InvalidOperationException("Cloud sync interval must be between 15 and 3600 seconds.");
+        if (ConflictReviewLimit is < 1 or > 200)
+            throw new InvalidOperationException("Cloud sync conflict review limit must be between 1 and 200.");
     }
 
     private static bool IsApiPath(string? path) =>

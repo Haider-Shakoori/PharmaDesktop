@@ -67,6 +67,12 @@ public sealed partial class DashboardViewModel : ObservableObject
     private bool hasAlerts;
 
     [ObservableProperty]
+    private string alertBadgeText = string.Empty;
+
+    [ObservableProperty]
+    private bool hasAlertBadge;
+
+    [ObservableProperty]
     private string attentionTitle = "Attention required";
 
     [ObservableProperty]
@@ -252,6 +258,7 @@ public sealed partial class DashboardViewModel : ObservableObject
                 QuickActions.Clear();
                 Alerts.Clear();
                 HasAlerts = false;
+                SetAlertBadge(0);
                 return;
             }
 
@@ -373,6 +380,7 @@ public sealed partial class DashboardViewModel : ObservableObject
             "#F5F3FF"));
 
         HasAlerts = _snapshot.TotalAlerts > 0;
+        SetAlertBadge(_snapshot.TotalAlerts);
         AttentionTitle = Translate("Attention required", "نیاز به توجه", "پاملرنه اړینه ده");
         AttentionSummary = Translate(
             $"{_snapshot.LowStockCount} low stock · {_snapshot.NearExpiryCount} near expiry · {_snapshot.ExpiredCount} expired",
@@ -774,6 +782,15 @@ public sealed partial class DashboardViewModel : ObservableObject
             "ps" => pashto,
             _ => english,
         };
+
+    private void SetAlertBadge(int totalAlerts)
+    {
+        var total = Math.Max(0, totalAlerts);
+        HasAlertBadge = total > 0;
+        AlertBadgeText = total > 99
+            ? "99+"
+            : total.ToString(CultureInfo.InvariantCulture);
+    }
 
     private void RaiseLocalizedProperties()
     {

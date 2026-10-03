@@ -108,6 +108,145 @@ public sealed class CloudSyncServiceTests
         Assert.Equal(0, transport.PullCalls);
     }
 
+    [Fact]
+    public async Task Conflict_review_lists_retained_conflicts_for_signed_in_cashier()
+    {
+        var user = User();
+        var store = new FakeStore();
+        store.Conflicts.Add(Conflict("sale:1", "user-1"));
+        store.Conflicts.Add(Conflict("sale:2", "user-1"));
+
+        var service = CreateService(
+            DeploymentMode.Standalone,
+            store,
+            new FakeTransport(),
+            user,
+            Entitlement(),
+            ProtectedSession(user));
+
+        var review = await service.GetConflictReviewAsync();
+
+        Assert.Equal(2, review.Conflicts.Count);
+        Assert.Contains("2", review.Message);
+        Assert.Equal("sale:1", review.Conflicts[0].IdempotencyKey);
+        Assert.Equal("record-1", review.Conflicts[0].LocalId);
+        Assert.Equal("2026-10-01", review.Conflicts[0].BusinessDate);
+    }
+
+    [Fact]
+    public async Task Retrying_a_conflict_requeues_it_for_the_next_sync_run()
+    {
+        var user = User();
+        var store = new FakeStore();
+        store.Conflicts.Add(Conflict("sale:1", "user-1"));
+
+        var service = CreateService(
+            DeploymentMode.Standalone,
+            store,
+            new FakeTransport(),
+            user,
+            Entitlement(),
+            ProtectedSession(user));
+
+        var review = await service.RetryConflictAsync("sale:1");
+
+        Assert.Empty(review.Conflicts);
+        Assert.Empty(store.Conflicts);
+    }
+
+    [Fact]
+    public async Task Conflict_retry_is_blocked_for_another_cashiers_event()
+    {
+        var user = User();
+        var store = new FakeStore();
+        store.Conflicts.Add(Conflict("sale:1", "user-2"));
+
+        var service = CreateService(
+            DeploymentMode.Standalone,
+            store,
+            new FakeTransport(),
+            user,
+            Entitlement(),
+            ProtectedSession(user));
+
+        var review = await service.RetryConflictAsync("sale:1");
+
+        Assert.Single(review.Conflicts);
+        Assert.Single(store.Conflicts);
+        Assert.Contains("another cashier", review.Message);
+    }
+
+    [Fact]
+    public async Task Dismissing_a_conflict_clears_it_without_touching_pending_events()
+    {
+        var user = User();
+        var store = new FakeStore
+        {
+            Pending =
+            [
+                new CloudSyncOutboxItem(
+                    "outbox-1",
+                    "tenant-1",
+                    "user-1",
+                    "sale.completed",
+                    "sale:2",
+                    """{"local_id":"record-2"}""",
+                    0,
+                    Now.AddMinutes(-1)),
+            ],
+            Conflicts =
+            {
+                Conflict("sale:1", "user-1"),
+            },
+        };
+
+        var service = CreateService(
+            DeploymentMode.Standalone,
+            store,
+            new FakeTransport(),
+            user,
+            Entitlement(),
+            ProtectedSession(user));
+
+        var review = await service.DismissConflictAsync("sale:1");
+
+        Assert.Empty(review.Conflicts);
+        Assert.Single(store.Pending);
+    }
+
+    [Fact]
+    public async Task Conflict_review_requires_a_signed_in_pharmacy_user()
+    {
+        var store = new FakeStore();
+        store.Conflicts.Add(Conflict("sale:1", "user-1"));
+
+        var service = CreateService(
+            DeploymentMode.Standalone,
+            store,
+            new FakeTransport(),
+            user: null,
+            entitlement: null,
+            protectedSession: null);
+
+        var review = await service.GetConflictReviewAsync();
+
+        Assert.Empty(review.Conflicts);
+        Assert.Contains("Sign in", review.Message);
+    }
+
+    private static CloudSyncConflictItem Conflict(string key, string actorUserId) =>
+        new(
+            key,
+            "sale.completed",
+            actorUserId,
+            "record-1",
+            "2026-10-01",
+            "reference_missing",
+            "A referenced pharmacy record no longer exists.",
+            1,
+            Now.AddHours(-2),
+            CanRetry: true);
+
     private static CloudSyncService CreateService(
         DeploymentMode mode,
         FakeStore store,
@@ -284,6 +423,7 @@ public sealed class CloudSyncServiceTests
         public List<string> AcceptedKeys { get; } = [];
         public List<string> RejectedKeys { get; } = [];
         public List<string> DeferredKeys { get; } = [];
+        public List<CloudSyncConflictItem> Conflicts { get; } = [];
 
         public Task<IReadOnlyList<CloudSyncOutboxItem>> GetPendingAsync(
             string tenantId,
@@ -348,10 +488,41 @@ public sealed class CloudSyncServiceTests
             Task.FromResult(
                 new CloudSyncQueueSnapshot(
                     Pending.Count,
-                    0,
+                    Conflicts.Count,
                     0,
                     Pending.Count == 0
                         ? null
                         : Pending.Min(x => x.CreatedAt)));
+
+        public Task<IReadOnlyList<CloudSyncConflictItem>> GetConflictsAsync(
+            string tenantId,
+            int take,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<CloudSyncConflictItem>>(
+                Conflicts.Take(Math.Clamp(take, 1, 200)).ToList());
+
+        public Task<bool> RetryConflictAsync(
+            string tenantId,
+            string idempotencyKey,
+            CancellationToken cancellationToken = default)
+        {
+            var index = Conflicts.FindIndex(
+                x => string.Equals(
+                    x.IdempotencyKey,
+                    idempotencyKey,
+                    StringComparison.Ordinal));
+
+            if (index < 0)
+                return Task.FromResult(false);
+
+            Conflicts.RemoveAt(index);
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> DismissConflictAsync(
+            string tenantId,
+            string idempotencyKey,
+            CancellationToken cancellationToken = default) =>
+            RetryConflictAsync(tenantId, idempotencyKey, cancellationToken);
     }
 }

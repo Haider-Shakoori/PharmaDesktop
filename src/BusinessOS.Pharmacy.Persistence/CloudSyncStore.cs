@@ -1,3 +1,4 @@
+using System.Text.Json;
 using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -272,6 +273,136 @@ public sealed class CloudSyncStore(
                 .Select(x => (DateTimeOffset?)x.CreatedAt)
                 .Min());
     }
+
+    public async Task<IReadOnlyList<CloudSyncConflictItem>> GetConflictsAsync(
+        string tenantId,
+        int take,
+        CancellationToken cancellationToken = default)
+    {
+        tenantId = Required(tenantId, nameof(tenantId));
+        take = Math.Clamp(take, 1, 200);
+
+        await using var context =
+            await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var rows = await context.Set<CloudSyncOutboxEntity>()
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Status == "conflict")
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(take)
+            .Select(x => new
+            {
+                x.IdempotencyKey,
+                x.EventType,
+                x.ActorUserId,
+                x.PayloadJson,
+                x.LastErrorCode,
+                x.LastErrorMessage,
+                x.AttemptCount,
+                x.CreatedAt,
+            })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(x =>
+            {
+                var (localId, businessDate) = ReadConflictReferences(x.PayloadJson);
+                return new CloudSyncConflictItem(
+                    x.IdempotencyKey,
+                    x.EventType,
+                    x.ActorUserId,
+                    localId,
+                    businessDate,
+                    x.LastErrorCode,
+                    x.LastErrorMessage,
+                    x.AttemptCount,
+                    x.CreatedAt,
+                    CanRetry: true);
+            })
+            .ToList();
+    }
+
+    public async Task<bool> RetryConflictAsync(
+        string tenantId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        tenantId = Required(tenantId, nameof(tenantId));
+        idempotencyKey = Required(idempotencyKey, nameof(idempotencyKey));
+
+        await using var context =
+            await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var row = await context.Set<CloudSyncOutboxEntity>()
+            .SingleOrDefaultAsync(
+                x => x.TenantId == tenantId &&
+                     x.IdempotencyKey == idempotencyKey &&
+                     x.Status == "conflict",
+                cancellationToken);
+
+        if (row is null)
+            return false;
+
+        row.Status = "pending";
+        row.AttemptCount = 0;
+        row.NextAttemptAt = null;
+        row.LastErrorCode = null;
+        row.LastErrorMessage = null;
+        row.UpdatedAt = DateTimeOffset.UtcNow;
+        await context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> DismissConflictAsync(
+        string tenantId,
+        string idempotencyKey,
+        CancellationToken cancellationToken = default)
+    {
+        tenantId = Required(tenantId, nameof(tenantId));
+        idempotencyKey = Required(idempotencyKey, nameof(idempotencyKey));
+
+        await using var context =
+            await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var row = await context.Set<CloudSyncOutboxEntity>()
+            .SingleOrDefaultAsync(
+                x => x.TenantId == tenantId &&
+                     x.IdempotencyKey == idempotencyKey &&
+                     x.Status == "conflict",
+                cancellationToken);
+
+        if (row is null)
+            return false;
+
+        row.Status = "dismissed";
+        row.NextAttemptAt = null;
+        row.UpdatedAt = DateTimeOffset.UtcNow;
+        await context.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    private static (string? LocalId, string? BusinessDate) ReadConflictReferences(
+        string payloadJson)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(payloadJson);
+            var root = document.RootElement;
+            return (
+                ReadString(root, "local_id"),
+                ReadString(root, "business_date"));
+        }
+        catch (JsonException)
+        {
+            return (null, null);
+        }
+    }
+
+    private static string? ReadString(JsonElement element, string property) =>
+        element.TryGetProperty(property, out var value) &&
+        value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
 
     private static string Required(string value, string parameter)
     {
