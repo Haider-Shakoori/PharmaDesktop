@@ -32,6 +32,12 @@ public sealed partial class InventoryViewModel : ObservableObject
     [ObservableProperty] private int currentPage = 1;
     [ObservableProperty] private int pageSize = 15;
     [ObservableProperty] private int totalItems;
+    [ObservableProperty] private decimal totalStockCost;
+    [ObservableProperty] private decimal potentialSalesValue;
+    [ObservableProperty] private decimal potentialGrossProfit;
+    [ObservableProperty] private decimal availableQuantity;
+    [ObservableProperty] private int stockBatchCount;
+    [ObservableProperty] private int sellableBatchCount;
 
     [ObservableProperty] private MedicineListItem? selectedOpeningMedicine;
     [ObservableProperty] private StockLocationReferenceItem? selectedOpeningLocation;
@@ -131,22 +137,13 @@ public sealed partial class InventoryViewModel : ObservableObject
     public IRelayCommand NextPageCommand { get; }
     public IRelayCommand<int> GoToPageCommand { get; }
 
-    public string Title => IsBatchesMode
-        ? Translate("Batches", "بچ‌ها", "بېچونه")
-        : Translate("Inventory", "موجودی", "زېرمه");
-    public string Eyebrow => IsBatchesMode
-        ? Translate("Batch control", "کنترل بچ", "د بېچ کنټرول")
-        : Translate("Stock control", "کنترل موجودی", "د زېرمتون کنټرول");
-    public string Subtitle => IsBatchesMode
-        ? Translate(
-            "Medicine batch status, expiry and movement history",
-            "وضعیت بچ دوا، انقضا و تاریخچه گردش",
-            "د درملو د بېچ حالت، تاریخ تېر او د حرکت تاریخچه")
-        : Translate(
-            "Opening stock, availability and controlled stock adjustments",
-            "موجودی اولیه، دسترسی و تعدیلات کنترل‌شده موجودی",
-            "پیل زېرمه، موجودي او کنټرول شوي زېرمتون سمونونه");
-    public bool IsInventoryMode => !IsBatchesMode;
+    public string Title => Translate("Inventory", "موجودی", "زېرمه");
+    public string Eyebrow => Translate("Stock & batch control", "کنترل موجودی و بچ", "د زېرمې او بېچ کنټرول");
+    public string Subtitle => Translate(
+        "Stock value, batches, expiry, adjustments and movement history in one place",
+        "ارزش موجودی، بچ‌ها، انقضا، تعدیلات و تاریخچه گردش در یک بخش",
+        "د زېرمې ارزښت، بېچونه، تاریخ تېر، سمونونه او د حرکت تاریخچه په یوه برخه کې");
+    public bool IsInventoryMode => true;
     public string OpeningStockTitle => Translate("Opening stock", "موجودی اولیه", "پیل زېرمه");
     public string AdjustmentTitle => Translate("Stock adjustment", "تعدیل موجودی", "د زېرمتون سمون");
     public string StatusTitle => Translate("Batch status", "وضعیت بچ", "د بېچ حالت");
@@ -156,6 +153,30 @@ public sealed partial class InventoryViewModel : ObservableObject
     public string ManageLabel => Translate("Manage", "مدیریت", "اداره");
     public string TemplateLabel => Translate("CSV template", "قالب CSV", "CSV نمونه");
     public string ImportLabel => Translate("Import CSV", "وارد کردن CSV", "CSV واردول");
+    public string TotalStockCostLabel => Translate("Total medicine cost", "هزینه مجموع ادویه", "د درملو ټول لګښت");
+    public string PotentialSalesValueLabel => Translate("Total selling value", "ارزش مجموع فروش", "د خرڅلاو ټول ارزښت");
+    public string PotentialGrossProfitLabel => Translate("Potential gross profit", "سود ناخالص بالقوه", "اټکلي ناخالصه ګټه");
+    public string AvailableQuantityLabel => Translate("Available quantity", "مقدار موجود", "موجود مقدار");
+    public string TotalStockCostText => $"AFN {TotalStockCost:N2}";
+    public string PotentialSalesValueText => $"AFN {PotentialSalesValue:N2}";
+    public string PotentialGrossProfitText => $"AFN {PotentialGrossProfit:N2}";
+    public string AvailableQuantityText => $"{AvailableQuantity:N4}";
+    public string TotalStockCostHint => Translate(
+        $"{StockBatchCount} on-hand batches at purchase cost",
+        $"{StockBatchCount} بچ موجود بر اساس هزینه خرید",
+        $"{StockBatchCount} موجود بېچونه د پېرود په لګښت");
+    public string PotentialSalesValueHint => Translate(
+        $"{SellableBatchCount} sellable batches at current sale prices",
+        $"{SellableBatchCount} بچ قابل فروش با قیمت فعلی",
+        $"{SellableBatchCount} د اوسني خرڅلاو په بیه د پلور وړ بېچونه");
+    public string PotentialGrossProfitHint => Translate(
+        "Selling value minus cost of sellable stock",
+        "ارزش فروش منهای هزینه موجودی قابل فروش",
+        "د خرڅلاو ارزښت منفي د پلور وړ زېرمو لګښت");
+    public string AvailableQuantityHint => Translate(
+        "Total units currently on hand",
+        "مجموع واحدهای موجود فعلی",
+        "ټول اوسني موجود واحدونه");
     public string EditorTitle => EditorSection switch
     {
         "adjustment" => AdjustmentTitle,
@@ -194,7 +215,9 @@ public sealed partial class InventoryViewModel : ObservableObject
 
     public void SetMode(bool batchesMode)
     {
-        IsBatchesMode = batchesMode;
+        // Kept for compatibility with old navigation links. Inventory and
+        // batches now share one unified workspace.
+        IsBatchesMode = false;
         IsEditorOpen = false;
         OnPropertyChanged(nameof(IsInventoryMode));
         RaiseLocalizedProperties();
@@ -218,6 +241,7 @@ public sealed partial class InventoryViewModel : ObservableObject
             await LoadReferencesAsync();
             await LoadMedicinesAsync();
             await SearchCoreAsync();
+            await LoadSummaryAsync();
 
             StatusMessage = Translate(
                 $"{TotalItems} batch records loaded.",
@@ -225,6 +249,24 @@ public sealed partial class InventoryViewModel : ObservableObject
                 $"{TotalItems} د بېچ ریکارډونه پورته شول.");
         });
     }
+
+    partial void OnTotalStockCostChanged(decimal value) =>
+        OnPropertyChanged(nameof(TotalStockCostText));
+
+    partial void OnPotentialSalesValueChanged(decimal value) =>
+        OnPropertyChanged(nameof(PotentialSalesValueText));
+
+    partial void OnPotentialGrossProfitChanged(decimal value) =>
+        OnPropertyChanged(nameof(PotentialGrossProfitText));
+
+    partial void OnAvailableQuantityChanged(decimal value) =>
+        OnPropertyChanged(nameof(AvailableQuantityText));
+
+    partial void OnStockBatchCountChanged(int value) =>
+        OnPropertyChanged(nameof(TotalStockCostHint));
+
+    partial void OnSellableBatchCountChanged(int value) =>
+        OnPropertyChanged(nameof(PotentialSalesValueHint));
 
     partial void OnEditorSectionChanged(string value)
     {
@@ -324,7 +366,7 @@ public sealed partial class InventoryViewModel : ObservableObject
         }
 
         SelectedBatch = item;
-        EditorSection = IsBatchesMode ? "history" : "adjustment";
+        EditorSection = CanAdjustInventory ? "adjustment" : "history";
         IsEditorOpen = true;
     }
 
@@ -390,6 +432,27 @@ public sealed partial class InventoryViewModel : ObservableObject
         {
             PageNumbers.Add(page);
         }
+    }
+
+    private async Task LoadSummaryAsync()
+    {
+        var summary = await _inventory.GetSummaryAsync();
+
+        TotalStockCost = summary.TotalStockCost;
+        PotentialSalesValue = summary.PotentialSalesValue;
+        PotentialGrossProfit = summary.PotentialGrossProfit;
+        AvailableQuantity = summary.AvailableQuantity;
+        StockBatchCount = summary.BatchCount;
+        SellableBatchCount = summary.SellableBatchCount;
+
+        OnPropertyChanged(nameof(TotalStockCostText));
+        OnPropertyChanged(nameof(PotentialSalesValueText));
+        OnPropertyChanged(nameof(PotentialGrossProfitText));
+        OnPropertyChanged(nameof(AvailableQuantityText));
+        OnPropertyChanged(nameof(TotalStockCostHint));
+        OnPropertyChanged(nameof(PotentialSalesValueHint));
+        OnPropertyChanged(nameof(PotentialGrossProfitHint));
+        OnPropertyChanged(nameof(AvailableQuantityHint));
     }
 
     private async Task LoadReferencesAsync()
@@ -468,6 +531,7 @@ public sealed partial class InventoryViewModel : ObservableObject
                     OpeningNotes));
 
             await SearchCoreAsync();
+            await LoadSummaryAsync();
             SelectedBatch = Batches.FirstOrDefault(x => x.Id == id);
             OpeningBatchNumber = string.Empty;
             ManufacturedAtText = string.Empty;
@@ -504,6 +568,7 @@ public sealed partial class InventoryViewModel : ObservableObject
                     AdjustmentReason));
 
             await SearchCoreAsync();
+            await LoadSummaryAsync();
             SelectedBatch = Batches.FirstOrDefault(x => x.Id == batchId);
             AdjustmentQuantity = 0m;
             AdjustmentReason = string.Empty;
@@ -534,6 +599,7 @@ public sealed partial class InventoryViewModel : ObservableObject
                     BatchStatusReason));
 
             await SearchCoreAsync();
+            await LoadSummaryAsync();
             SelectedBatch = Batches.FirstOrDefault(x => x.Id == batchId);
             BatchStatusReason = string.Empty;
 
@@ -604,6 +670,7 @@ public sealed partial class InventoryViewModel : ObservableObject
                 location.Id);
 
             await SearchCoreAsync();
+            await LoadSummaryAsync();
 
             StatusMessage = result.FailedCount == 0
                 ? Translate(
@@ -734,6 +801,14 @@ public sealed partial class InventoryViewModel : ObservableObject
         OnPropertyChanged(nameof(ManageLabel));
         OnPropertyChanged(nameof(TemplateLabel));
         OnPropertyChanged(nameof(ImportLabel));
+        OnPropertyChanged(nameof(TotalStockCostLabel));
+        OnPropertyChanged(nameof(PotentialSalesValueLabel));
+        OnPropertyChanged(nameof(PotentialGrossProfitLabel));
+        OnPropertyChanged(nameof(AvailableQuantityLabel));
+        OnPropertyChanged(nameof(TotalStockCostHint));
+        OnPropertyChanged(nameof(PotentialSalesValueHint));
+        OnPropertyChanged(nameof(PotentialGrossProfitHint));
+        OnPropertyChanged(nameof(AvailableQuantityHint));
         OnPropertyChanged(nameof(EditorTitle));
         OnPropertyChanged(nameof(PageSummary));
     }
