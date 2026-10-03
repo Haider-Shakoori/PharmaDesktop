@@ -1,69 +1,197 @@
 <UserControl x:Class="BusinessOS.Pharmacy.Desktop.Medicines.MedicinesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:controls="clr-namespace:BusinessOS.Pharmacy.Desktop.Controls">
-    <Grid Margin="22">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+             xmlns:controls="clr-namespace:BusinessOS.Pharmacy.Desktop.Controls"
+             FontFamily="Segoe UI"
+             TextOptions.TextFormattingMode="Display"
+             TextOptions.TextRenderingMode="ClearType">
+    <UserControl.Resources>
+        <Style x:Key="MedicineToolbarBox" TargetType="Control">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
 
-        <controls:PageHeader Grid.Row="0"
-                             Eyebrow="Medicine catalog"
-                             Title="{Binding Title}"
-                             Description="{Binding Subtitle}">
-            <controls:PageHeader.Actions>
-                <StackPanel Orientation="Horizontal">
-                    <Button Content="{Binding TemplateLabel}"
-                            Click="OnDownloadTemplateClick"
-                            Style="{StaticResource SecondaryButton}"
-                            Margin="0,0,8,0"/>
-                    <Button Content="{Binding ImportLabel}"
-                            Click="OnImportCsvClick"
-                            Style="{StaticResource SecondaryButton}"
-                            Margin="0,0,8,0"/>
+        <Style x:Key="MedicineTableHeader" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#F8FAFC" />
+            <Setter Property="Foreground" Value="#475569" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="BorderBrush" Value="#E2E8F0" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+
+        <Style x:Key="MedicineTableCell" TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        </Style>
+
+        <Style x:Key="MedicineTableRow" TargetType="DataGridRow">
+            <Setter Property="Height" Value="46" />
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#EEF2F7" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Style.Triggers>
+                <Trigger Property="AlternationIndex" Value="1">
+                    <Setter Property="Background" Value="#FBFDFF" />
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F8FBFF" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#EFF6FF" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="MedicineTable" TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserResizeRows" Value="False" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="GridLinesVisibility" Value="None" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="RowHeaderWidth" Value="0" />
+            <Setter Property="AlternationCount" Value="2" />
+            <Setter Property="SelectionMode" Value="Single" />
+            <Setter Property="SelectionUnit" Value="FullRow" />
+            <Setter Property="CellStyle" Value="{StaticResource MedicineTableCell}" />
+            <Setter Property="ColumnHeaderStyle" Value="{StaticResource MedicineTableHeader}" />
+            <Setter Property="RowStyle" Value="{StaticResource MedicineTableRow}" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        </Style>
+
+        <Style x:Key="MedicineActionButton" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+            <Setter Property="MinWidth" Value="30" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="7,3" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="#2563EB" />
+            <Setter Property="Background" Value="#EFF6FF" />
+            <Setter Property="BorderBrush" Value="#DBEAFE" />
+        </Style>
+
+        <Style x:Key="StatusPill" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="9,3" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Background" Value="#DCFCE7" />
+        </Style>
+
+        <Style x:Key="ModalFieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="Margin" Value="0,0,0,5" />
+        </Style>
+
+        <Style x:Key="ModalFieldBox" TargetType="Control">
+            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource PageBackgroundBrush}">
+        <Grid Margin="22">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <controls:PageHeader Grid.Row="0"
+                                 Eyebrow="Medicine catalog"
+                                 Title="{Binding Title}"
+                                 Description="{Binding Subtitle}">
+                <controls:PageHeader.Actions>
                     <Button Content="{Binding AddMedicineLabel}"
                             Command="{Binding NewCommand}"
-                            Style="{StaticResource PrimaryButton}"/>
-                </StackPanel>
-            </controls:PageHeader.Actions>
-        </controls:PageHeader>
+                            Style="{StaticResource PrimaryButton}"
+                            Padding="16,8"/>
+                </controls:PageHeader.Actions>
+            </controls:PageHeader>
 
-        <Border Grid.Row="1" Style="{StaticResource SurfaceCard}" Margin="0,0,0,14">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="210"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         Margin="0,0,10,0" Padding="10,8"
-                         ToolTip="Brand, generic, code, barcode or strength"/>
-                <ComboBox Grid.Column="1"
-                          ItemsSource="{Binding Categories}"
-                          SelectedItem="{Binding SelectedFilterCategory}"
-                          DisplayMemberPath="Name"
-                          Margin="0,0,10,0"
-                          ToolTip="Category filter"/>
-                <ComboBox Grid.Column="2"
-                          ItemsSource="{Binding StatusOptions}"
-                          SelectedItem="{Binding SelectedStatus}"
-                          Margin="0,0,10,0"/>
-                <Button Grid.Column="3" Content="Search" Command="{Binding SearchCommand}"
-                        Padding="14,8"/>
-            </Grid>
-        </Border>
+            <!-- Tailwind-style toolbar -->
+            <Border Grid.Row="1"
+                    Background="White"
+                    BorderBrush="#E2E8F0"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="12"
+                    Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2.2*"/>
+                        <ColumnDefinition Width="190"/>
+                        <ColumnDefinition Width="145"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.15*"/>
-                <ColumnDefinition Width="14"/>
-                <ColumnDefinition Width="0.85*"/>
-            </Grid.ColumnDefinitions>
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MedicineToolbarBox}"
+                             Padding="12,7"
+                             Margin="0,0,10,0"
+                             ToolTip="Search brand, generic, code, barcode or strength"/>
 
-            <Border Grid.Column="0" Style="{StaticResource SurfaceCard}">
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding Categories}"
+                              SelectedItem="{Binding SelectedFilterCategory}"
+                              DisplayMemberPath="Name"
+                              Style="{StaticResource MedicineToolbarBox}"
+                              Margin="0,0,10,0"
+                              ToolTip="All categories"/>
+
+                    <ComboBox Grid.Column="2"
+                              ItemsSource="{Binding StatusOptions}"
+                              SelectedItem="{Binding SelectedStatus}"
+                              Style="{StaticResource MedicineToolbarBox}"
+                              Margin="0,0,10,0"/>
+
+                    <Button Grid.Column="3"
+                            Content="Search"
+                            Command="{Binding SearchCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            Padding="14,8"
+                            Margin="0,0,8,0"/>
+
+                    <Button Grid.Column="4"
+                            Content="{Binding TemplateLabel}"
+                            Click="OnDownloadTemplateClick"
+                            Style="{StaticResource SecondaryButton}"
+                            Padding="13,8"
+                            Margin="0,0,8,0"/>
+
+                    <Button Grid.Column="5"
+                            Content="{Binding ImportLabel}"
+                            Click="OnImportCsvClick"
+                            Style="{StaticResource SecondaryButton}"
+                            Padding="13,8"/>
+                </Grid>
+            </Border>
+
+            <!-- Main catalog -->
+            <Border Grid.Row="2"
+                    Background="White"
+                    BorderBrush="#E2E8F0"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    ClipToBounds="True">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -71,176 +199,464 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <Grid Margin="0,0,0,10">
+                    <Grid Background="#FFFFFF" Margin="16,12,16,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Medicine catalog" Style="{StaticResource SectionTitleText}"/>
-                        <Button Grid.Column="1" Content="{Binding EditLabel}"
+                        <StackPanel>
+                            <TextBlock Text="Medicine catalog"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       Foreground="#0F172A"/>
+                            <TextBlock Text="{Binding StatusMessage}"
+                                       Margin="0,3,0,0"
+                                       FontSize="11.5"
+                                       Foreground="#64748B"
+                                       TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="{Binding EditLabel}"
                                 Command="{Binding EditSelectedCommand}"
-                                Padding="10,6"/>
+                                Style="{StaticResource SecondaryButton}"
+                                Padding="12,7"
+                                VerticalAlignment="Center"/>
                     </Grid>
 
                     <DataGrid Grid.Row="1"
                               ItemsSource="{Binding Medicines}"
                               SelectedItem="{Binding SelectedMedicine}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              SelectionMode="Single"
-                              CanUserAddRows="False"
-                              HeadersVisibility="Column"
-                              GridLinesVisibility="Horizontal">
+                              Style="{StaticResource MedicineTable}">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Medicine" Binding="{Binding BrandName}" Width="1.5*"/>
-                            <DataGridTextColumn Header="Code" Binding="{Binding MedicineCode}" Width="100"/>
-                            <DataGridTextColumn Header="Generic" Binding="{Binding GenericName}" Width="1.2*"/>
-                            <DataGridTextColumn Header="Strength" Binding="{Binding Strength}" Width="90"/>
-                            <DataGridTextColumn Header="Form" Binding="{Binding DosageForm}" Width="90"/>
-                            <DataGridTextColumn Header="Category" Binding="{Binding CategoryName}" Width="1.1*"/>
-                            <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" Width="65"/>
+                            <DataGridTemplateColumn Header="#" Width="44" CanUserSort="False">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=AlternationIndex}"
+                                                   Foreground="#94A3B8"
+                                                   VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Medicine" Width="2*" MinWidth="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding BrandName}"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#0F172A"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding GenericName}"
+                                                       FontSize="10.5"
+                                                       Foreground="#64748B"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Code" Binding="{Binding MedicineCode}" Width="105"/>
+                            <DataGridTextColumn Header="Category" Binding="{Binding CategoryName}" Width="1.2*" MinWidth="110"/>
+                            <DataGridTemplateColumn Header="Strength / Form" Width="1.2*" MinWidth="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Strength}" Foreground="#334155"/>
+                                            <TextBlock Text="  ·  " Foreground="#CBD5E1"/>
+                                            <TextBlock Text="{Binding DosageForm}" Foreground="#64748B"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Sale Unit" Binding="{Binding SaleUnit}" Width="90"/>
+                            <DataGridTextColumn Header="Reorder" Binding="{Binding ReorderLevel, StringFormat={}{0:0.####}}" Width="85"/>
+
+                            <DataGridTemplateColumn Header="Status" Width="95">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource StatusPill}">
+                                            <Border.Style>
+                                                <Style TargetType="Border" BasedOn="{StaticResource StatusPill}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                            <Setter Property="Background" Value="#FEE2E2"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock FontSize="10.5" FontWeight="SemiBold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="Active"/>
+                                                        <Setter Property="Foreground" Value="#15803D"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                                <Setter Property="Text" Value="Inactive"/>
+                                                                <Setter Property="Foreground" Value="#DC2626"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Actions" Width="78">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Edit"
+                                                Style="{StaticResource MedicineActionButton}"
+                                                Command="{Binding DataContext.EditMedicineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <TextBlock Grid.Row="2"
-                               Text="{Binding StatusMessage}"
-                               Style="{StaticResource MutedText}"
-                               Margin="0,10,0,0"
-                               TextWrapping="Wrap"/>
+                    <!-- DataTables-like footer -->
+                    <Grid Grid.Row="2"
+                          Background="#FFFFFF"
+                          Margin="16,10,16,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding PageSummary}"
+                                   Foreground="#64748B"
+                                   FontSize="11.5"
+                                   VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="Previous"
+                                    Command="{Binding PreviousPageCommand}"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Padding="10,5"
+                                    MinHeight="30"/>
+                            <Border Background="#2563EB"
+                                    CornerRadius="7"
+                                    MinWidth="34"
+                                    Height="30"
+                                    Margin="6,0"
+                                    Padding="8,0">
+                                <TextBlock Text="{Binding CurrentPage}"
+                                           Foreground="White"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="{Binding TotalPages, StringFormat=of {0}}"
+                                       Foreground="#64748B"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0"/>
+                            <Button Content="Next"
+                                    Command="{Binding NextPageCommand}"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Padding="10,5"
+                                    MinHeight="30"/>
+                        </StackPanel>
+                    </Grid>
                 </Grid>
             </Border>
 
-            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,12">
+            <!-- CSV preview remains available without cluttering the main catalog -->
+            <Expander Grid.Row="3"
+                      Header="CSV import preview"
+                      IsExpanded="{Binding HasCsvPreview}"
+                      Margin="0,10,0,0">
+                <Border Background="White"
+                        BorderBrush="#E2E8F0"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="12"
+                        Margin="0,6,0,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding CsvPreviewSummary}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <DataGrid ItemsSource="{Binding CsvPreviewRows}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False"
+                                  MaxHeight="190">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="#" Binding="{Binding RowNumber}" Width="45"/>
+                                <DataGridTextColumn Header="Code" Binding="{Binding MedicineCode}" Width="90"/>
+                                <DataGridTextColumn Header="Medicine" Binding="{Binding BrandName}" Width="*"/>
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="75"/>
+                                <DataGridTextColumn Header="Errors" Binding="{Binding Errors}" Width="1.5*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <Button Content="Import valid rows"
+                                Command="{Binding ImportValidRowsCommand}"
+                                Style="{StaticResource PrimaryButton}"
+                                HorizontalAlignment="Right"
+                                Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Expander>
+        </Grid>
+
+        <!-- Modern Add / Edit medicine modal -->
+        <Grid Panel.ZIndex="50"
+              Background="#780F172A"
+              Visibility="{Binding IsEditorOpen, Converter={StaticResource GlobalBoolToVisibility}}">
+            <Border Width="960"
+                    MaxHeight="760"
+                    Background="White"
+                    BorderBrush="#E2E8F0"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="24" ShadowDepth="6" Opacity="0.22" Color="#0F172A"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Margin="22,18,22,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="{Binding EditorTitle}" Style="{StaticResource SectionTitleText}" Margin="0,0,0,12"/>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel>
-                                    <TextBlock Text="Brand name" FontWeight="SemiBold"/>
-                                    <TextBox Text="{Binding BrandName, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,10" Padding="9,7"/>
-
-                                    <TextBlock Text="Medicine code" FontWeight="SemiBold"/>
-                                    <TextBox Text="{Binding MedicineCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,10" Padding="9,7"/>
-
-                                    <TextBlock Text="Strength" FontWeight="SemiBold"/>
-                                    <TextBox Text="{Binding Strength}" Margin="0,5,0,10" Padding="9,7"/>
-
-                                    <TextBlock Text="Category" FontWeight="SemiBold"/>
-                                    <ComboBox ItemsSource="{Binding Categories}"
-                                              SelectedItem="{Binding SelectedCategory}"
-                                              DisplayMemberPath="Name"
-                                              Margin="0,5,0,10" Padding="5"/>
-
-                                    <TextBlock Text="Purchase unit" FontWeight="SemiBold"/>
-                                    <TextBox Text="{Binding PurchaseUnit}" Margin="0,5,0,10" Padding="9,7"/>
-
-                                    <TextBlock Text="Units / purchase unit" FontWeight="SemiBold"/>
-                                    <TextBox Text="{Binding UnitsPerPurchaseUnit, ValidatesOnExceptions=True}"
-                                             Margin="0,5,0,10" Padding="9,7"/>
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Generic name" FontWeight="SemiBold"/>
-                                    <TextBox Text="{Binding GenericName}" Margin="0,5,0,10" Padding="9,7"/>
-
-                                    <TextBlock Text="Barcode (optional)" FontWeight="SemiBold"/>
-                                    <TextBox Text="{Binding Barcode}" Margin="0,5,0,10" Padding="9,7"/>
-
-                                    <TextBlock Text="Dosage form" FontWeight="SemiBold"/>
-                                    <TextBox Text="{Binding DosageForm}" Margin="0,5,0,10" Padding="9,7"/>
-
-                                    <TextBlock Text="Manufacturer" FontWeight="SemiBold"/>
-                                    <ComboBox ItemsSource="{Binding Manufacturers}"
-                                              SelectedItem="{Binding SelectedManufacturer}"
-                                              DisplayMemberPath="Name"
-                                              Margin="0,5,0,10" Padding="5"/>
-
-                                    <TextBlock Text="Sale unit" FontWeight="SemiBold"/>
-                                    <TextBox Text="{Binding SaleUnit}" Margin="0,5,0,10" Padding="9,7"/>
-
-                                    <TextBlock Text="Reorder level" FontWeight="SemiBold"/>
-                                    <TextBox Text="{Binding ReorderLevel, ValidatesOnExceptions=True}"
-                                             Margin="0,5,0,10" Padding="9,7"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <UniformGrid Columns="2" Margin="0,4,0,10">
-                                <CheckBox Content="Prescription required" IsChecked="{Binding PrescriptionRequired}" Margin="0,4"/>
-                                <CheckBox Content="Batch tracking required" IsChecked="{Binding BatchTrackingRequired}" Margin="0,4"/>
-                                <CheckBox Content="Expiry tracking required" IsChecked="{Binding ExpiryTrackingRequired}" Margin="0,4"/>
-                                <CheckBox Content="Active medicine" IsChecked="{Binding IsActive}" Margin="0,4"/>
-                            </UniformGrid>
-
-                            <TextBlock Text="Notes" FontWeight="SemiBold"/>
-                            <TextBox Text="{Binding Notes}" AcceptsReturn="True" TextWrapping="Wrap"
-                                     MinHeight="62" Margin="0,5,0,12" Padding="9,7"/>
-
-                            <Button Content="{Binding SaveLabel}" Command="{Binding SaveCommand}"
-                                    Style="{StaticResource PrimaryButton}" MinHeight="40"/>
+                            <TextBlock Text="{Binding EditorTitle}"
+                                       FontSize="21"
+                                       FontWeight="Bold"
+                                       Foreground="#0F172A"/>
+                            <TextBlock Text="Medicine details, units, tracking and reference data"
+                                       Margin="0,4,0,0"
+                                       Foreground="#64748B"
+                                       FontSize="12"/>
                         </StackPanel>
-                    </Border>
+                        <Button Grid.Column="1"
+                                Content="✕"
+                                Command="{Binding CancelEditorCommand}"
+                                Style="{StaticResource GhostButton}"
+                                Width="34"
+                                Height="34"
+                                FontSize="15"/>
+                    </Grid>
 
-                    <Expander Header="{Binding ReferencesTitle}" IsExpanded="False" Margin="0,0,0,12">
-                        <Border Style="{StaticResource SurfaceCard}" Margin="0,8,0,0">
-                            <StackPanel>
-                                <TextBlock Text="Add category" FontWeight="SemiBold"/>
-                                <Grid Margin="0,6,0,12">
+                    <TabControl Grid.Row="1"
+                                Margin="18,0,18,0"
+                                Background="Transparent"
+                                BorderBrush="#E2E8F0">
+                        <TabItem Header="General">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <Grid Margin="18">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="18"/>
+                                        <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBox Text="{Binding NewCategoryName, UpdateSourceTrigger=PropertyChanged}" Padding="8,6"/>
-                                    <Button Grid.Column="1" Content="Add" Command="{Binding AddCategoryCommand}" Margin="8,0,0,0" Padding="10,6"/>
-                                </Grid>
 
-                                <TextBlock Text="Add manufacturer" FontWeight="SemiBold"/>
-                                <Grid Margin="0,6,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Brand name" Style="{StaticResource ModalFieldLabel}"/>
+                                        <TextBox Text="{Binding BrandName, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource ModalFieldBox}"
+                                                 Margin="0,0,0,13"/>
+
+                                        <TextBlock Text="Medicine code" Style="{StaticResource ModalFieldLabel}"/>
+                                        <TextBox Text="{Binding MedicineCode, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource ModalFieldBox}"
+                                                 Margin="0,0,0,13"/>
+
+                                        <TextBlock Text="Strength" Style="{StaticResource ModalFieldLabel}"/>
+                                        <TextBox Text="{Binding Strength}"
+                                                 Style="{StaticResource ModalFieldBox}"
+                                                 Margin="0,0,0,13"/>
+
+                                        <TextBlock Text="Category" Style="{StaticResource ModalFieldLabel}"/>
+                                        <ComboBox ItemsSource="{Binding Categories}"
+                                                  SelectedItem="{Binding SelectedCategory}"
+                                                  DisplayMemberPath="Name"
+                                                  Style="{StaticResource ModalFieldBox}"
+                                                  Margin="0,0,0,13"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Generic name" Style="{StaticResource ModalFieldLabel}"/>
+                                        <TextBox Text="{Binding GenericName}"
+                                                 Style="{StaticResource ModalFieldBox}"
+                                                 Margin="0,0,0,13"/>
+
+                                        <TextBlock Text="Barcode (optional)" Style="{StaticResource ModalFieldLabel}"/>
+                                        <TextBox Text="{Binding Barcode}"
+                                                 Style="{StaticResource ModalFieldBox}"
+                                                 Margin="0,0,0,13"/>
+
+                                        <TextBlock Text="Dosage form" Style="{StaticResource ModalFieldLabel}"/>
+                                        <TextBox Text="{Binding DosageForm}"
+                                                 Style="{StaticResource ModalFieldBox}"
+                                                 Margin="0,0,0,13"/>
+
+                                        <TextBlock Text="Manufacturer" Style="{StaticResource ModalFieldLabel}"/>
+                                        <ComboBox ItemsSource="{Binding Manufacturers}"
+                                                  SelectedItem="{Binding SelectedManufacturer}"
+                                                  DisplayMemberPath="Name"
+                                                  Style="{StaticResource ModalFieldBox}"
+                                                  Margin="0,0,0,13"/>
+                                    </StackPanel>
+                                </Grid>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <TabItem Header="Units & Tracking">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <Grid Margin="18">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="110"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="18"/>
+                                        <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBox Text="{Binding NewManufacturerName, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" ToolTip="Manufacturer name"/>
-                                    <TextBox Grid.Column="1" Text="{Binding NewManufacturerCountry, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,0,0" Padding="8,6" ToolTip="Country"/>
-                                    <Button Grid.Column="2" Content="Add" Command="{Binding AddManufacturerCommand}" Margin="8,0,0,0" Padding="10,6"/>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-                    </Expander>
+                                    <StackPanel>
+                                        <TextBlock Text="Purchase unit" Style="{StaticResource ModalFieldLabel}"/>
+                                        <TextBox Text="{Binding PurchaseUnit}"
+                                                 Style="{StaticResource ModalFieldBox}"
+                                                 Margin="0,0,0,13"/>
 
-                    <Expander Header="CSV import preview" IsExpanded="{Binding HasCsvPreview}">
-                        <Border Style="{StaticResource SurfaceCard}" Margin="0,8,0,0">
-                            <StackPanel>
-                                <TextBlock Text="{Binding CsvPreviewSummary}" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                <DataGrid ItemsSource="{Binding CsvPreviewRows}"
-                                          AutoGenerateColumns="False"
-                                          IsReadOnly="True"
-                                          CanUserAddRows="False"
-                                          MaxHeight="220">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="#" Binding="{Binding RowNumber}" Width="45"/>
-                                        <DataGridTextColumn Header="Code" Binding="{Binding MedicineCode}" Width="90"/>
-                                        <DataGridTextColumn Header="Medicine" Binding="{Binding BrandName}" Width="*"/>
-                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="75"/>
-                                        <DataGridTextColumn Header="Errors" Binding="{Binding Errors}" Width="1.5*"/>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                                <Button Content="Import valid rows"
-                                        Command="{Binding ImportValidRowsCommand}"
+                                        <TextBlock Text="Units / purchase unit" Style="{StaticResource ModalFieldLabel}"/>
+                                        <TextBox Text="{Binding UnitsPerPurchaseUnit, ValidatesOnExceptions=True}"
+                                                 Style="{StaticResource ModalFieldBox}"
+                                                 Margin="0,0,0,13"/>
+
+                                        <CheckBox Content="Prescription required"
+                                                  IsChecked="{Binding PrescriptionRequired}"
+                                                  Margin="0,8,0,10"/>
+                                        <CheckBox Content="Batch tracking required"
+                                                  IsChecked="{Binding BatchTrackingRequired}"
+                                                  Margin="0,0,0,10"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Sale unit" Style="{StaticResource ModalFieldLabel}"/>
+                                        <TextBox Text="{Binding SaleUnit}"
+                                                 Style="{StaticResource ModalFieldBox}"
+                                                 Margin="0,0,0,13"/>
+
+                                        <TextBlock Text="Reorder level" Style="{StaticResource ModalFieldLabel}"/>
+                                        <TextBox Text="{Binding ReorderLevel, ValidatesOnExceptions=True}"
+                                                 Style="{StaticResource ModalFieldBox}"
+                                                 Margin="0,0,0,13"/>
+
+                                        <CheckBox Content="Expiry tracking required"
+                                                  IsChecked="{Binding ExpiryTrackingRequired}"
+                                                  Margin="0,8,0,10"/>
+                                        <CheckBox Content="Active medicine"
+                                                  IsChecked="{Binding IsActive}"
+                                                  Margin="0,0,0,10"/>
+                                    </StackPanel>
+                                </Grid>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <TabItem Header="References & Notes">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <Grid Margin="18">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="18"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel>
+                                        <TextBlock Text="Add category" Style="{StaticResource ModalFieldLabel}"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Text="{Binding NewCategoryName, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModalFieldBox}"/>
+                                            <Button Grid.Column="1"
+                                                    Content="Add"
+                                                    Command="{Binding AddCategoryCommand}"
+                                                    Style="{StaticResource SecondaryButton}"
+                                                    Margin="8,0,0,0"
+                                                    Padding="11,6"/>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Add manufacturer" Style="{StaticResource ModalFieldLabel}"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="105"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Text="{Binding NewManufacturerName, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModalFieldBox}"/>
+                                            <TextBox Grid.Column="1"
+                                                     Text="{Binding NewManufacturerCountry, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModalFieldBox}"
+                                                     Margin="8,0,0,0"
+                                                     ToolTip="Country"/>
+                                            <Button Grid.Column="2"
+                                                    Content="Add"
+                                                    Command="{Binding AddManufacturerCommand}"
+                                                    Style="{StaticResource SecondaryButton}"
+                                                    Margin="8,0,0,0"
+                                                    Padding="11,6"/>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Margin="0,20,0,0">
+                                        <TextBlock Text="Notes" Style="{StaticResource ModalFieldLabel}"/>
+                                        <TextBox Text="{Binding Notes}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 MinHeight="120"
+                                                 Padding="10"
+                                                 VerticalScrollBarVisibility="Auto"/>
+                                    </StackPanel>
+                                </Grid>
+                            </ScrollViewer>
+                        </TabItem>
+                    </TabControl>
+
+                    <Border Grid.Row="2"
+                            Background="#F8FAFC"
+                            BorderBrush="#E2E8F0"
+                            BorderThickness="0,1,0,0"
+                            CornerRadius="0,0,16,16"
+                            Padding="18,13">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding StatusMessage}"
+                                       Foreground="#64748B"
+                                       FontSize="11.5"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Content="Cancel"
+                                        Command="{Binding CancelEditorCommand}"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Padding="16,8"
+                                        Margin="0,0,8,0"/>
+                                <Button Content="{Binding SaveLabel}"
+                                        Command="{Binding SaveCommand}"
                                         Style="{StaticResource PrimaryButton}"
-                                        Margin="0,10,0,0"/>
+                                        Padding="18,8"/>
                             </StackPanel>
-                        </Border>
-                    </Expander>
-                </StackPanel>
-            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>
