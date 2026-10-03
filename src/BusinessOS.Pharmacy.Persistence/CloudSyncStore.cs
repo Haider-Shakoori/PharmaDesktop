@@ -65,7 +65,7 @@ public sealed class CloudSyncStore(
             .Where(x =>
                 x.TenantId == tenantId &&
                 x.ActorUserId == actorUserId &&
-                x.Status == "conflict" &&
+                (x.Status == "conflict" || x.Status == "pending") &&
                 x.EventType == "sale.completed" &&
                 x.LastErrorCode == "reference_missing")
             .ToListAsync(cancellationToken);
@@ -89,8 +89,7 @@ public sealed class CloudSyncStore(
                 continue;
             }
 
-            if (payload is null ||
-                payload["reference_resolution_v"] is not null)
+            if (payload is null)
             {
                 continue;
             }
@@ -490,11 +489,18 @@ public sealed class CloudSyncStore(
         if (row is null)
             return false;
 
+        var needsReferenceRepair =
+            string.Equals(row.EventType, "sale.completed", StringComparison.Ordinal) &&
+            string.Equals(row.LastErrorCode, "reference_missing", StringComparison.OrdinalIgnoreCase);
+
         row.Status = "pending";
         row.AttemptCount = 0;
         row.NextAttemptAt = null;
-        row.LastErrorCode = null;
-        row.LastErrorMessage = null;
+        if (!needsReferenceRepair)
+        {
+            row.LastErrorCode = null;
+            row.LastErrorMessage = null;
+        }
         row.UpdatedAt = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync(cancellationToken);
         return true;
