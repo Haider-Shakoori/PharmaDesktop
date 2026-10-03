@@ -26,6 +26,37 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Dashboard-only glass treatment. The KPI row keeps DashboardCard unchanged. -->
+        <LinearGradientBrush x:Key="DashboardGlassPanelBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#D8FFFFFF" Offset="0" />
+            <GradientStop Color="#BCEFF6FF" Offset="0.52" />
+            <GradientStop Color="#A8FFFFFF" Offset="1" />
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="DashboardGlassPanelBorderBrush" Color="#EFFFFFFF" />
+        <SolidColorBrush x:Key="DashboardGlassGridHeaderBrush" Color="#86EAF2FF" />
+        <SolidColorBrush x:Key="DashboardGlassRowBrush" Color="#A8FFFFFF" />
+        <SolidColorBrush x:Key="DashboardGlassAltRowBrush" Color="#7FFFFFFF" />
+        <SolidColorBrush x:Key="DashboardGlassHoverRowBrush" Color="#D6FFFFFF" />
+        <SolidColorBrush x:Key="DashboardGlassSelectedRowBrush" Color="#DCEBFFFF" />
+        <DropShadowEffect x:Key="DashboardGlassShadow"
+                          BlurRadius="22"
+                          ShadowDepth="3"
+                          Direction="270"
+                          Opacity="0.18"
+                          Color="#315D9B" />
+
+        <Style x:Key="DashboardGlassCard" TargetType="Border" BasedOn="{StaticResource DashboardCard}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.IsGlassTheme, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                             Value="True">
+                    <Setter Property="Background" Value="{StaticResource DashboardGlassPanelBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource DashboardGlassPanelBorderBrush}" />
+                    <Setter Property="BorderThickness" Value="1.2" />
+                    <Setter Property="Effect" Value="{StaticResource DashboardGlassShadow}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="DashboardGridCell" TargetType="DataGridCell">
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="5,0" />
@@ -64,28 +95,57 @@
             </Setter>
         </Style>
 
+        <Style x:Key="DashboardGlassGridHeader" TargetType="DataGridColumnHeader"
+               BasedOn="{StaticResource DashboardGridHeader}">
+            <Setter Property="Background" Value="{StaticResource DashboardGlassGridHeaderBrush}" />
+            <Setter Property="BorderBrush" Value="#72FFFFFF" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="DashboardGlassGridRow" TargetType="DataGridRow">
+            <Setter Property="Background" Value="{StaticResource DashboardGlassRowBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="#52FFFFFF" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Style.Triggers>
+                <Trigger Property="AlternationIndex" Value="1">
+                    <Setter Property="Background" Value="{StaticResource DashboardGlassAltRowBrush}" />
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource DashboardGlassHoverRowBrush}" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource DashboardGlassSelectedRowBrush}" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="DashboardGrid" TargetType="DataGrid">
             <Setter Property="AutoGenerateColumns" Value="False" />
             <Setter Property="IsReadOnly" Value="True" />
             <Setter Property="CanUserAddRows" Value="False" />
             <Setter Property="CanUserResizeRows" Value="False" />
             <Setter Property="HeadersVisibility" Value="Column" />
-            <Setter Property="GridLinesVisibility" Value="Horizontal" />
+            <Setter Property="GridLinesVisibility" Value="None" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="RowBackground" Value="White" />
-            <Setter Property="AlternatingRowBackground" Value="{DynamicResource SurfaceStrongBrush}" />
+            <Setter Property="RowBackground" Value="{StaticResource DashboardGlassRowBrush}" />
+            <Setter Property="AlternatingRowBackground" Value="{StaticResource DashboardGlassAltRowBrush}" />
             <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
             <Setter Property="RowHeaderWidth" Value="0" />
             <Setter Property="AlternationCount" Value="2147483647" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden" />
-            <Setter Property="RowHeight" Value="26" />
-            <Setter Property="ColumnHeaderHeight" Value="26" />
+            <Setter Property="RowHeight" Value="28" />
+            <Setter Property="ColumnHeaderHeight" Value="28" />
             <Setter Property="FontSize" Value="12.5" />
             <Setter Property="CellStyle" Value="{StaticResource DashboardGridCell}" />
-            <Setter Property="ColumnHeaderStyle" Value="{StaticResource DashboardGridHeader}" />
+            <Setter Property="ColumnHeaderStyle" Value="{StaticResource DashboardGlassGridHeader}" />
+            <Setter Property="RowStyle" Value="{StaticResource DashboardGlassGridRow}" />
         </Style>
 
         <Style x:Key="MiniLabel" TargetType="TextBlock">
@@ -287,7 +347,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                    <Border Style="{StaticResource DashboardCard}" Margin="0,0,0,8">
+                    <Border Style="{StaticResource DashboardGlassCard}" Margin="0,0,0,8">
                         <StackPanel>
                             <Grid Margin="0,0,0,6">
                                 <Grid.ColumnDefinitions>
@@ -382,7 +442,7 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
                                     <Viewbox Height="118" Stretch="Fill">
-                                        <Canvas Width="760" Height="178" Background="White">
+                                        <Canvas Width="760" Height="178" Background="Transparent">
                                             <Line X1="24" Y1="24" X2="696" Y2="24" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" />
                                             <Line X1="24" Y1="54" X2="696" Y2="54" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" />
                                             <Line X1="24" Y1="84" X2="696" Y2="84" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" />
@@ -467,7 +527,7 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Border Grid.Column="0" Style="{StaticResource DashboardCard}" Margin="0,0,6,0">
+                        <Border Grid.Column="0" Style="{StaticResource DashboardGlassCard}" Margin="0,0,6,0">
                             <StackPanel>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
@@ -539,7 +599,7 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Column="1" Style="{StaticResource DashboardCard}" Margin="6,0,0,0">
+                        <Border Grid.Column="1" Style="{StaticResource DashboardGlassCard}" Margin="6,0,0,0">
                             <StackPanel>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
@@ -596,7 +656,7 @@
                         </Border>
                     </Grid>
 
-                    <Border Style="{StaticResource DashboardCard}">
+                    <Border Style="{StaticResource DashboardGlassCard}">
                         <StackPanel>
                             <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
