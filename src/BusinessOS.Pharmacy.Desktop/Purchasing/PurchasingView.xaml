@@ -215,6 +215,22 @@
         </controls:PageHeader>
 
         <TabControl Grid.Row="1">
+            <TabControl.Style>
+                <Style TargetType="TabControl">
+                    <Setter Property="Effect" Value="{x:Null}" />
+                    <Setter Property="IsHitTestVisible" Value="True" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsEditorOpen}" Value="True">
+                            <Setter Property="IsHitTestVisible" Value="False" />
+                            <Setter Property="Effect">
+                                <Setter.Value>
+                                    <BlurEffect Radius="7" KernelType="Gaussian" RenderingBias="Performance" />
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TabControl.Style>
             <TabItem Header="Suppliers">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
@@ -1040,6 +1056,122 @@
                 </Grid>
             </TabItem>
         </TabControl>
+
+        <Grid Grid.RowSpan="3"
+              Panel.ZIndex="70"
+              Visibility="{Binding IsEditorOpen, Converter={StaticResource GlobalBoolToVisibility}}">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#70F8FAFC" Offset="0" />
+                    <GradientStop Color="#60E9EFF7" Offset="0.55" />
+                    <GradientStop Color="#72FFFFFF" Offset="1" />
+                </LinearGradientBrush>
+            </Grid.Background>
+
+            <Border Width="930"
+                    MaxWidth="930"
+                    MaxHeight="740"
+                    Margin="28"
+                    Background="White"
+                    BorderBrush="#D8E2EE"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="18" ShadowDepth="5" Opacity="0.18" RenderingBias="Performance" />
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Margin="22,18,18,12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{Binding SupplierEditorTitle}" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A"/>
+                            <TextBlock Text="{Binding SupplierSubtitle}" FontSize="11.5" Foreground="#64748B" Margin="0,3,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="✕" Command="{Binding CloseSupplierEditorCommand}" Style="{StaticResource GhostButton}" Foreground="#475569" Width="32" Height="32" Padding="0" FontSize="14"/>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="22,12,22,18">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Supplier code" Style="{StaticResource SupplierModalLabel}"/>
+                                <TextBox Text="{Binding SupplierCode, UpdateSourceTrigger=PropertyChanged}" MinHeight="38" Padding="9,6" Margin="0,0,0,12"/>
+                                <TextBlock Text="Supplier name" Style="{StaticResource SupplierModalLabel}"/>
+                                <TextBox Text="{Binding SupplierName, UpdateSourceTrigger=PropertyChanged}" MinHeight="38" Padding="9,6" Margin="0,0,0,12"/>
+                                <TextBlock Text="Contact person" Style="{StaticResource SupplierModalLabel}"/>
+                                <TextBox Text="{Binding SupplierContactPerson, UpdateSourceTrigger=PropertyChanged}" MinHeight="38" Padding="9,6" Margin="0,0,0,12"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Phone" Style="{StaticResource SupplierModalLabel}"/>
+                                        <TextBox Text="{Binding SupplierPhone, UpdateSourceTrigger=PropertyChanged}" MinHeight="38" Padding="9,6"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="WhatsApp" Style="{StaticResource SupplierModalLabel}"/>
+                                        <TextBox Text="{Binding SupplierWhatsapp, UpdateSourceTrigger=PropertyChanged}" MinHeight="38" Padding="9,6"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock Text="Email" Style="{StaticResource SupplierModalLabel}" Margin="0,12,0,5"/>
+                                <TextBox Text="{Binding SupplierEmail, UpdateSourceTrigger=PropertyChanged}" MinHeight="38" Padding="9,6"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Opening balance (AFN)" Style="{StaticResource SupplierModalLabel}"/>
+                                <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Height="38" Margin="0,0,0,5" IsEnabled="{Binding CanEditSupplierOpeningBalance}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="34"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="؋" Foreground="#6D28D9" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="1" Text="{Binding SupplierOpeningBalance, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" Padding="0" VerticalContentAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="Opening balance is entered when the supplier is created and is kept unchanged on later edits."
+                                           Foreground="#64748B" FontSize="10.2" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Payment terms (days)" Style="{StaticResource SupplierModalLabel}"/>
+                                        <TextBox Text="{Binding SupplierPaymentTermsDays, UpdateSourceTrigger=PropertyChanged}" MinHeight="38" Padding="9,6"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="City" Style="{StaticResource SupplierModalLabel}"/>
+                                        <TextBox Text="{Binding SupplierCity, UpdateSourceTrigger=PropertyChanged}" MinHeight="38" Padding="9,6"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock Text="Province" Style="{StaticResource SupplierModalLabel}" Margin="0,12,0,5"/>
+                                <TextBox Text="{Binding SupplierProvince, UpdateSourceTrigger=PropertyChanged}" MinHeight="38" Padding="9,6" Margin="0,0,0,12"/>
+                                <TextBlock Text="Address" Style="{StaticResource SupplierModalLabel}"/>
+                                <TextBox Text="{Binding SupplierAddress, UpdateSourceTrigger=PropertyChanged}" MinHeight="38" Padding="9,6" Margin="0,0,0,12"/>
+                                <TextBlock Text="Notes" Style="{StaticResource SupplierModalLabel}"/>
+                                <TextBox Text="{Binding SupplierNotes, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="72" Padding="9,6" VerticalScrollBarVisibility="Auto" Margin="0,0,0,12"/>
+                                <CheckBox Content="Active supplier" IsChecked="{Binding SupplierIsActive}" Foreground="#334155" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Background="#F8FAFC" Padding="18,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding StatusMessage}" Foreground="#64748B" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Content="Cancel" Command="{Binding CloseSupplierEditorCommand}" Style="{StaticResource SecondaryButton}" Foreground="#334155" Height="36" Padding="13,6" Margin="0,0,8,0"/>
+                                <Button Content="{Binding SaveSupplierLabel}" Command="{Binding SaveSupplierCommand}" Style="{StaticResource PrimaryButton}" Foreground="White" Height="36" Padding="14,6"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
 
         <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" Margin="0,10,0,0"/>
     </Grid>
