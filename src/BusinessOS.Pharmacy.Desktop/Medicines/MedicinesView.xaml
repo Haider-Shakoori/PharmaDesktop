@@ -13,12 +13,12 @@
         </Style>
 
         <Style x:Key="MedicineTableHeader" TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="#F8FAFC" />
+            <Setter Property="Background" Value="#F1F5F9" />
             <Setter Property="Foreground" Value="#475569" />
             <Setter Property="FontSize" Value="11.5" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Padding" Value="10,0" />
-            <Setter Property="Height" Value="40" />
+            <Setter Property="Height" Value="38" />
             <Setter Property="BorderBrush" Value="#E2E8F0" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
@@ -34,17 +34,17 @@
         </Style>
 
         <Style x:Key="MedicineTableRow" TargetType="DataGridRow">
-            <Setter Property="Height" Value="46" />
+            <Setter Property="Height" Value="42" />
             <Setter Property="Background" Value="#FFFFFF" />
             <Setter Property="BorderBrush" Value="#EEF2F7" />
             <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Style.Triggers>
                 <Trigger Property="AlternationIndex" Value="1">
-                    <Setter Property="Background" Value="#FBFDFF" />
+                    <Setter Property="Background" Value="#FAFCFF" />
                 </Trigger>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#F8FBFF" />
+                    <Setter Property="Background" Value="#F8FAFC" />
                 </Trigger>
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="Background" Value="#EFF6FF" />
@@ -116,82 +116,17 @@
             <controls:PageHeader Grid.Row="0"
                                  Eyebrow="Medicine catalog"
                                  Title="{Binding Title}"
-                                 Description="{Binding Subtitle}">
-                <controls:PageHeader.Actions>
-                    <Button Content="{Binding AddMedicineLabel}"
-                            Command="{Binding NewCommand}"
-                            Style="{StaticResource PrimaryButton}"
-                            Padding="16,8"/>
-                </controls:PageHeader.Actions>
-            </controls:PageHeader>
+                                 Description="{Binding Subtitle}" />
 
-            <!-- Tailwind-style toolbar -->
+            <!-- Tailwind/DataTables-style medicine catalog -->
             <Border Grid.Row="1"
+                    Grid.RowSpan="2"
                     Background="White"
-                    BorderBrush="#E2E8F0"
+                    BorderBrush="#DCE5F0"
                     BorderThickness="1"
-                    CornerRadius="12"
-                    Padding="12"
-                    Margin="0,0,0,12">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2.2*"/>
-                        <ColumnDefinition Width="190"/>
-                        <ColumnDefinition Width="145"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource MedicineToolbarBox}"
-                             Padding="12,7"
-                             Margin="0,0,10,0"
-                             ToolTip="Search brand, generic, code, barcode or strength"/>
-
-                    <ComboBox Grid.Column="1"
-                              ItemsSource="{Binding Categories}"
-                              SelectedItem="{Binding SelectedFilterCategory}"
-                              DisplayMemberPath="Name"
-                              Style="{StaticResource MedicineToolbarBox}"
-                              Margin="0,0,10,0"
-                              ToolTip="All categories"/>
-
-                    <ComboBox Grid.Column="2"
-                              ItemsSource="{Binding StatusOptions}"
-                              SelectedItem="{Binding SelectedStatus}"
-                              Style="{StaticResource MedicineToolbarBox}"
-                              Margin="0,0,10,0"/>
-
-                    <Button Grid.Column="3"
-                            Content="Search"
-                            Command="{Binding SearchCommand}"
-                            Style="{StaticResource SecondaryButton}"
-                            Padding="14,8"
-                            Margin="0,0,8,0"/>
-
-                    <Button Grid.Column="4"
-                            Content="{Binding TemplateLabel}"
-                            Click="OnDownloadTemplateClick"
-                            Style="{StaticResource SecondaryButton}"
-                            Padding="13,8"
-                            Margin="0,0,8,0"/>
-
-                    <Button Grid.Column="5"
-                            Content="{Binding ImportLabel}"
-                            Click="OnImportCsvClick"
-                            Style="{StaticResource SecondaryButton}"
-                            Padding="13,8"/>
-                </Grid>
-            </Border>
-
-            <!-- Main catalog -->
-            <Border Grid.Row="2"
-                    Background="White"
-                    BorderBrush="#E2E8F0"
-                    BorderThickness="1"
-                    CornerRadius="12"
-                    ClipToBounds="True">
+                    CornerRadius="13"
+                    ClipToBounds="True"
+                    Margin="0,0,0,10">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -199,41 +134,167 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <Grid Background="#FFFFFF" Margin="16,12,16,8">
+                    <!-- Single toolbar inside the table card, matching the approved reference -->
+                    <Grid Margin="12,12,12,10">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="2.35*"/>
+                            <ColumnDefinition Width="185"/>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel>
-                            <TextBlock Text="Medicine catalog"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       Foreground="#0F172A"/>
-                            <TextBlock Text="{Binding StatusMessage}"
-                                       Margin="0,3,0,0"
-                                       FontSize="11.5"
-                                       Foreground="#64748B"
-                                       TextTrimming="CharacterEllipsis"/>
-                        </StackPanel>
-                        <Button Grid.Column="1"
-                                Content="{Binding EditLabel}"
-                                Command="{Binding EditSelectedCommand}"
+
+                        <Border Background="#FFFFFF"
+                                BorderBrush="#CBD5E1"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Height="38"
+                                Margin="0,0,10,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource IconSearch}"
+                                      Width="15" Height="15"
+                                      Stroke="#64748B"
+                                      StrokeThickness="1.7"
+                                      Fill="Transparent"
+                                      Stretch="Uniform"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                                <Grid Grid.Column="1">
+                                    <TextBlock Text="Search medicines..."
+                                               Foreground="#94A3B8"
+                                               FontSize="11.5"
+                                               VerticalAlignment="Center"
+                                               IsHitTestVisible="False">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SearchText}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             Padding="0"
+                                             FontSize="12"
+                                             VerticalContentAlignment="Center"
+                                             ToolTip="Brand, generic, code, barcode or strength"/>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Column="1"
+                                Background="White"
+                                BorderBrush="#CBD5E1"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Height="38"
+                                Margin="0,0,10,0">
+                            <Grid>
+                                <TextBlock Text="All Categories"
+                                           Foreground="#475569"
+                                           FontSize="11.5"
+                                           Margin="11,0,28,0"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedFilterCategory}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <ComboBox ItemsSource="{Binding Categories}"
+                                          SelectedItem="{Binding SelectedFilterCategory}"
+                                          DisplayMemberPath="Name"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          Padding="8,0"
+                                          FontSize="11.5"
+                                          VerticalContentAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Column="2"
+                                Background="White"
+                                BorderBrush="#CBD5E1"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Height="38"
+                                Margin="0,0,10,0">
+                            <ComboBox ItemsSource="{Binding StatusOptions}"
+                                      SelectedItem="{Binding SelectedStatus}"
+                                      Background="Transparent"
+                                      BorderThickness="0"
+                                      Padding="8,0"
+                                      FontSize="11.5"
+                                      VerticalContentAlignment="Center"/>
+                        </Border>
+
+                        <Button Grid.Column="3"
+                                Content="{Binding TemplateLabel}"
+                                Click="OnDownloadTemplateClick"
                                 Style="{StaticResource SecondaryButton}"
-                                Padding="12,7"
-                                VerticalAlignment="Center"/>
+                                Height="38"
+                                Padding="11,7"
+                                Margin="0,0,8,0"/>
+
+                        <Button Grid.Column="4"
+                                Content="{Binding ImportLabel}"
+                                Click="OnImportCsvClick"
+                                Style="{StaticResource SecondaryButton}"
+                                Height="38"
+                                Padding="11,7"
+                                Margin="0,0,8,0"/>
+
+                        <Button Grid.Column="5"
+                                Command="{Binding NewCommand}"
+                                Height="38"
+                                Padding="14,7"
+                                Background="#1677FF"
+                                BorderBrush="#1677FF"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                FontSize="12">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconAdd}"
+                                      Width="14" Height="14"
+                                      Stroke="White"
+                                      StrokeThickness="2"
+                                      Fill="Transparent"
+                                      Stretch="Uniform"
+                                      Margin="0,0,6,0"/>
+                                <TextBlock Text="{Binding AddMedicineLabel}" Foreground="White"/>
+                            </StackPanel>
+                        </Button>
                     </Grid>
 
                     <DataGrid Grid.Row="1"
                               ItemsSource="{Binding Medicines}"
                               SelectedItem="{Binding SelectedMedicine}"
-                              Style="{StaticResource MedicineTable}">
+                              Style="{StaticResource MedicineTable}"
+                              Margin="12,0,12,0">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="Medicine" Width="2*" MinWidth="180">
+                            <DataGridTemplateColumn Header="Medicine" Width="2.1*" MinWidth="210">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock Text="{Binding BrandName}"
                                                        FontWeight="SemiBold"
+                                                       FontSize="12.2"
                                                        Foreground="#0F172A"
                                                        TextTrimming="CharacterEllipsis"/>
                                             <TextBlock Text="{Binding GenericName}"
@@ -245,12 +306,19 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="Code" Binding="{Binding MedicineCode}" Width="105"/>
-                            <DataGridTextColumn Header="Category" Binding="{Binding CategoryName}" Width="1.2*" MinWidth="110"/>
-                            <DataGridTemplateColumn Header="Strength / Form" Width="1.2*" MinWidth="120">
+                            <DataGridTextColumn Header="Code"
+                                                Binding="{Binding MedicineCode}"
+                                                Width="105"/>
+                            <DataGridTextColumn Header="Category"
+                                                Binding="{Binding CategoryName}"
+                                                Width="1.2*"
+                                                MinWidth="120"/>
+                            <DataGridTemplateColumn Header="Strength / Form"
+                                                    Width="1.35*"
+                                                    MinWidth="135">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Strength}" Foreground="#334155"/>
                                             <TextBlock Text="  ·  " Foreground="#CBD5E1"/>
                                             <TextBlock Text="{Binding DosageForm}" Foreground="#64748B"/>
@@ -258,16 +326,20 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Sale Unit"
+                                                Binding="{Binding SaleUnit}"
+                                                Width="90"/>
+                            <DataGridTextColumn Header="Reorder"
+                                                Binding="{Binding ReorderLevel, StringFormat={}{0:0.####}}"
+                                                Width="85"/>
 
-                            <DataGridTextColumn Header="Sale Unit" Binding="{Binding SaleUnit}" Width="90"/>
-                            <DataGridTextColumn Header="Reorder" Binding="{Binding ReorderLevel, StringFormat={}{0:0.####}}" Width="85"/>
-
-                            <DataGridTemplateColumn Header="Status" Width="95">
+                            <DataGridTemplateColumn Header="Status" Width="92">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border>
                                             <Border.Style>
                                                 <Style TargetType="Border" BasedOn="{StaticResource StatusPill}">
+                                                    <Setter Property="Background" Value="#D1FAE5"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsActive}" Value="False">
                                                             <Setter Property="Background" Value="#FEE2E2"/>
@@ -275,11 +347,11 @@
                                                     </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
-                                            <TextBlock FontSize="10.5" FontWeight="SemiBold">
+                                            <TextBlock FontSize="10.3" FontWeight="SemiBold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Text" Value="Active"/>
-                                                        <Setter Property="Foreground" Value="#15803D"/>
+                                                        <Setter Property="Foreground" Value="#047857"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsActive}" Value="False">
                                                                 <Setter Property="Text" Value="Inactive"/>
@@ -294,58 +366,96 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn Header="Actions" Width="78">
+                            <DataGridTemplateColumn Header="Actions" Width="72">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Content="Edit"
+                                        <Button Command="{Binding DataContext.EditMedicineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
                                                 Style="{StaticResource MedicineActionButton}"
-                                                Command="{Binding DataContext.EditMedicineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"/>
+                                                Width="30"
+                                                Height="28"
+                                                ToolTip="Edit medicine">
+                                            <Path Data="M4,16 L4,20 L8,20 L19,9 L15,5 Z M13.8,6.2 L17.8,10.2"
+                                                  Width="13" Height="13"
+                                                  Stroke="#2563EB"
+                                                  StrokeThickness="1.7"
+                                                  Fill="Transparent"
+                                                  StrokeStartLineCap="Round"
+                                                  StrokeEndLineCap="Round"
+                                                  StrokeLineJoin="Round"
+                                                  Stretch="Uniform"/>
+                                        </Button>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <!-- DataTables-like footer -->
+                    <!-- DataTables-style footer -->
                     <Grid Grid.Row="2"
-                          Background="#FFFFFF"
-                          Margin="16,10,16,12">
+                          Margin="14,10,14,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="{Binding PageSummary}"
-                                   Foreground="#64748B"
-                                   FontSize="11.5"
-                                   VerticalAlignment="Center"/>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding PageSummary}"
+                                       Foreground="#64748B"
+                                       FontSize="11.5"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Text="   Rows:"
+                                       Foreground="#94A3B8"
+                                       FontSize="11"
+                                       VerticalAlignment="Center"/>
+                            <ComboBox ItemsSource="{Binding PageSizeOptions}"
+                                      SelectedItem="{Binding PageSize}"
+                                      Width="58"
+                                      Height="28"
+                                      Margin="5,0,0,0"
+                                      FontSize="11"/>
+                        </StackPanel>
+
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <Button Content="Previous"
                                     Command="{Binding PreviousPageCommand}"
                                     Style="{StaticResource SecondaryButton}"
-                                    Padding="10,5"
-                                    MinHeight="30"/>
-                            <Border Background="#2563EB"
-                                    CornerRadius="7"
-                                    MinWidth="34"
                                     Height="30"
-                                    Margin="6,0"
-                                    Padding="8,0">
-                                <TextBlock Text="{Binding CurrentPage}"
-                                           Foreground="White"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"
-                                           HorizontalAlignment="Center"/>
-                            </Border>
-                            <TextBlock Text="{Binding TotalPagesLabel}"
-                                       Foreground="#64748B"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,8,0"/>
+                                    MinHeight="30"
+                                    Padding="10,4"
+                                    FontSize="11"
+                                    Margin="0,0,5,0"/>
+
+                            <ItemsControl ItemsSource="{Binding PageNumbers}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{Binding}"
+                                                Command="{Binding DataContext.GoToPageCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                MinWidth="30"
+                                                Height="30"
+                                                Padding="7,3"
+                                                Margin="0,0,4,0"
+                                                Background="White"
+                                                Foreground="#334155"
+                                                BorderBrush="#DCE5F0"
+                                                FontSize="11"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
                             <Button Content="Next"
                                     Command="{Binding NextPageCommand}"
                                     Style="{StaticResource SecondaryButton}"
-                                    Padding="10,5"
-                                    MinHeight="30"/>
+                                    Height="30"
+                                    MinHeight="30"
+                                    Padding="10,4"
+                                    FontSize="11"/>
                         </StackPanel>
                     </Grid>
                 </Grid>
