@@ -498,7 +498,7 @@
                             </ScrollViewer>
                         </TabItem>
 
-                        <TabItem Header="Units & Tracking">
+                        <TabItem Header="Units &amp; Tracking">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <Grid Margin="18">
                                     <Grid.ColumnDefinitions>
@@ -547,7 +547,7 @@
                             </ScrollViewer>
                         </TabItem>
 
-                        <TabItem Header="References & Notes">
+                        <TabItem Header="References &amp; Notes">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <Grid Margin="18">
                                     <Grid.RowDefinitions>
