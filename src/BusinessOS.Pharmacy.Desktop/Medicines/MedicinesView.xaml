@@ -33,12 +33,6 @@
             <Setter Property="FontSize" Value="12.5" />
             <Setter Property="TextBlock.TextAlignment" Value="Center" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Foreground" Value="White" />
-                    <Setter Property="FontWeight" Value="Bold" />
-                </Trigger>
-            </Style.Triggers>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DataGridCell">
@@ -50,6 +44,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="FontWeight" Value="Bold" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="MedicineTableRow" TargetType="DataGridRow">
