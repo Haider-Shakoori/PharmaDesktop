@@ -189,6 +189,7 @@ public sealed class UpdateService
             start = new ProcessStartInfo(runner, $"--apply \"{planPath}\"")
             {
                 UseShellExecute = true,
+                Verb = "runas",
             };
         }
         else
