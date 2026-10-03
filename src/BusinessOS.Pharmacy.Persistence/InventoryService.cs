@@ -212,6 +212,75 @@ public sealed class InventoryService : IInventoryService
             .ToList();
     }
 
+    public async Task<InventorySummary> GetSummaryAsync(
+        CancellationToken cancellationToken = default)
+    {
+        DemandView();
+
+        var businessDate = StockLedger.BusinessDate(_clock.UtcNow);
+
+        await using var context =
+            await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var rows = await context.Set<ProductBatchEntity>()
+            .AsNoTracking()
+            .Where(x => x.AvailableQuantity > 0m)
+            .Select(x => new
+            {
+                x.AvailableQuantity,
+                x.PurchaseCost,
+                x.SalePrice,
+                x.Status,
+                x.ExpiresAt,
+            })
+            .ToListAsync(cancellationToken);
+
+        decimal totalStockCost = 0m;
+        decimal potentialSalesValue = 0m;
+        decimal potentialSellableCost = 0m;
+        var sellableBatchCount = 0;
+
+        foreach (var row in rows)
+        {
+            var quantity = row.AvailableQuantity;
+            totalStockCost += quantity * row.PurchaseCost;
+
+            var expired =
+                row.ExpiresAt is not null &&
+                row.ExpiresAt.Value < businessDate;
+            var sellable =
+                string.Equals(
+                    row.Status,
+                    "active",
+                    StringComparison.OrdinalIgnoreCase) &&
+                !expired &&
+                row.SalePrice is not null;
+
+            if (!sellable)
+            {
+                continue;
+            }
+
+            sellableBatchCount++;
+            potentialSalesValue += quantity * row.SalePrice!.Value;
+            potentialSellableCost += quantity * row.PurchaseCost;
+        }
+
+        return new InventorySummary(
+            decimal.Round(totalStockCost, 4, MidpointRounding.AwayFromZero),
+            decimal.Round(potentialSalesValue, 4, MidpointRounding.AwayFromZero),
+            decimal.Round(
+                potentialSalesValue - potentialSellableCost,
+                4,
+                MidpointRounding.AwayFromZero),
+            decimal.Round(
+                rows.Sum(x => x.AvailableQuantity),
+                4,
+                MidpointRounding.AwayFromZero),
+            rows.Count,
+            sellableBatchCount);
+    }
+
     public async Task<InventoryBatchDetail?> GetBatchAsync(
         string id,
         CancellationToken cancellationToken = default)
