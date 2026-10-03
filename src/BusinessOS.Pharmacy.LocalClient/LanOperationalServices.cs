@@ -12,6 +12,8 @@ public sealed class LanCustomerService(LanApiClient api) : ICustomerService
 {
     public async Task<IReadOnlyList<CustomerListItem>> SearchAsync(CustomerSearchFilter filter, CancellationToken ct = default) =>
         await api.PostAsync<CustomerSearchFilter, List<CustomerListItem>>("customers/search", filter, ct);
+    public Task<CustomerSummary> GetSummaryAsync(CancellationToken ct = default) =>
+        api.GetAsync<CustomerSummary>("customers/summary", ct);
     public Task<CustomerEditorModel?> GetAsync(string id, CancellationToken ct = default) =>
         api.GetOptionalAsync<CustomerEditorModel>($"customers/{E(id)}", ct);
     public async Task<string> CreateAsync(SaveCustomerRequest request, CancellationToken ct = default) =>
