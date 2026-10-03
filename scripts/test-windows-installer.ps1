@@ -108,6 +108,26 @@ function Verify-ProgramDataPreserved {
     if ((Get-Content (Join-Path $dataRoot "licensing\activation.bin") -Raw) -ne "KEEP-LICENSE") { throw "activation data was modified or removed." }
 }
 
+function Verify-ProgramDataWritableAcl {
+    if (-not (Test-Path $dataRoot)) { throw "Darmaltoon ProgramData directory is missing." }
+
+    $usersSid = New-Object System.Security.Principal.SecurityIdentifier(
+        [System.Security.Principal.WellKnownSidType]::BuiltinUsersSid,
+        $null)
+    $acl = Get-Acl $dataRoot
+    $hasModify = $acl.Access | Where-Object {
+        $_.IdentityReference -eq $usersSid.Translate([System.Security.Principal.NTAccount]) -and
+        $_.AccessControlType -eq [System.Security.AccessControl.AccessControlType]::Allow -and
+        (($_.FileSystemRights -band [System.Security.AccessControl.FileSystemRights]::Modify) -ne 0) -and
+        (($_.InheritanceFlags -band [System.Security.AccessControl.InheritanceFlags]::ContainerInherit) -ne 0) -and
+        (($_.InheritanceFlags -band [System.Security.AccessControl.InheritanceFlags]::ObjectInherit) -ne 0)
+    }
+
+    if (-not $hasModify) {
+        throw "Built-in Users do not have inherited Modify access to $dataRoot."
+    }
+}
+
 $standaloneSetup = Join-Path $artifacts "Darmaltoon-Standalone-Setup-$Version-win-x64.exe"
 $serverSetup = Join-Path $artifacts "Darmaltoon-MainServer-Setup-$Version-win-x64.exe"
 $clientSetup = Join-Path $artifacts "Darmaltoon-ClientTerminal-Setup-$Version-win-x64.exe"
@@ -118,6 +138,7 @@ foreach ($file in @($standaloneSetup, $serverSetup, $clientSetup)) {
 # Clean standalone install.
 Install-Setup $standaloneSetup
 Verify-InstalledApp "Standalone"
+Verify-ProgramDataWritableAcl
 Verify-FirstInteractiveLaunch
 Seed-PreservedData
 Uninstall-Darmaltoon
@@ -136,6 +157,7 @@ Install-Setup $baselineSetup
 Verify-ProgramDataPreserved
 Install-Setup $standaloneSetup
 Verify-InstalledApp "Standalone"
+Verify-ProgramDataWritableAcl
 Verify-ProgramDataPreserved
 Uninstall-Darmaltoon
 Verify-ProgramDataPreserved
@@ -143,6 +165,7 @@ Verify-ProgramDataPreserved
 # Main Server package.
 Install-Setup $serverSetup
 Verify-InstalledApp "Server"
+Verify-ProgramDataWritableAcl
 $service = Get-Service -Name "BusinessOS Pharmacy Local Server" -ErrorAction Stop
 if ($service.StartType -ne "Automatic") { throw "Main Server service is not configured for automatic startup." }
 if (-not (Test-Path (Join-Path $installDir "Server\BusinessOS.Pharmacy.LocalServer.exe"))) { throw "Main Server executable is missing." }
@@ -155,6 +178,7 @@ Verify-ProgramDataPreserved
 # Client Terminal package must not install server service.
 Install-Setup $clientSetup
 Verify-InstalledApp "Client"
+Verify-ProgramDataWritableAcl
 if (Get-Service -Name "BusinessOS Pharmacy Local Server" -ErrorAction SilentlyContinue) { throw "Client Terminal installed the Main Server service." }
 Verify-ProgramDataPreserved
 Uninstall-Darmaltoon
