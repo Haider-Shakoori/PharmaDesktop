@@ -51,6 +51,7 @@ public interface ICloudSyncStore
 
     Task<CloudSyncQueueSnapshot> GetQueueSnapshotAsync(
         string tenantId,
+        string actorUserId,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<CloudSyncConflictItem>> GetConflictsAsync(
