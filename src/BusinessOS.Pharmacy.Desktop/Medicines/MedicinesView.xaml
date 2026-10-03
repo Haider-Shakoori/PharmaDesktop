@@ -93,6 +93,12 @@
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
         </Style>
 
+        <Style x:Key="MedicineTextColumnText" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Left" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
         <Style x:Key="MedicineRowPrimaryText" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#0F172A" />
             <Setter Property="HorizontalAlignment" Value="Left" />
@@ -381,9 +387,11 @@
 
                             <DataGridTextColumn Header="Code"
                                                 Binding="{Binding MedicineCode}"
+                                                ElementStyle="{StaticResource MedicineTextColumnText}"
                                                 Width="105"/>
                             <DataGridTextColumn Header="Category"
                                                 Binding="{Binding CategoryName}"
+                                                ElementStyle="{StaticResource MedicineTextColumnText}"
                                                 Width="1.2*"
                                                 MinWidth="120"/>
                             <DataGridTemplateColumn Header="Strength / Form"
@@ -403,9 +411,11 @@
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Sale Unit"
                                                 Binding="{Binding SaleUnit}"
+                                                ElementStyle="{StaticResource MedicineTextColumnText}"
                                                 Width="90"/>
                             <DataGridTextColumn Header="Reorder"
                                                 Binding="{Binding ReorderLevel, StringFormat={}{0:0.####}}"
+                                                ElementStyle="{StaticResource MedicineTextColumnText}"
                                                 Width="85"/>
 
                             <DataGridTemplateColumn Header="Status" Width="92">
