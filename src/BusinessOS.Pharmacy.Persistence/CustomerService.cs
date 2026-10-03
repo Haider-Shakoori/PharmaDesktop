@@ -62,6 +62,29 @@ public sealed class CustomerService : ICustomerService, ICustomerCreditPolicy
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<CustomerSummary> GetSummaryAsync(
+        CancellationToken cancellationToken = default)
+    {
+        _permissions.Demand("customers.manage");
+
+        await using var context =
+            await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var query = context.Set<CustomerEntity>().AsNoTracking();
+
+        var total = await query.CountAsync(cancellationToken);
+        var active = await query.CountAsync(x => x.IsActive, cancellationToken);
+        var totalCreditLimit = await query
+            .Select(x => (decimal?)x.CreditLimit)
+            .SumAsync(cancellationToken) ?? 0m;
+
+        return new CustomerSummary(
+            total,
+            active,
+            total - active,
+            ScaleMoney(totalCreditLimit));
+    }
+
     public async Task<CustomerEditorModel?> GetAsync(
         string id,
         CancellationToken cancellationToken = default)
