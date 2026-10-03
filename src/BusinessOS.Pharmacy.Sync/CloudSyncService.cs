@@ -271,6 +271,14 @@ public sealed class CloudSyncService : ICloudSyncService
                         : null,
                     cancellationToken);
             }
+
+            // A newly rejected historical sale may only need its stable local
+            // references refreshed. Repair it in the same sync cycle so a
+            // recoverable reference mismatch does not surface as a conflict.
+            await _store.RepairReferenceConflictsAsync(
+                entitlement.TenantId,
+                user.UserId,
+                cancellationToken);
         }
 
         foreach (var stream in PullStreams)
@@ -339,8 +347,13 @@ public sealed class CloudSyncService : ICloudSyncService
 
         var queue = await _store.GetQueueSnapshotAsync(
             entitlement.TenantId,
+            user.UserId,
             cancellationToken);
-        var totalConflicts = Math.Max(runConflicts, queue.Conflicts);
+
+        // Queue state is authoritative after same-cycle repair. This prevents a
+        // repaired rejection, or another cashier's retained conflict, from
+        // leaving the signed-in user stuck in a false conflict state.
+        var totalConflicts = queue.Conflicts;
 
         return new(
             totalConflicts > 0
