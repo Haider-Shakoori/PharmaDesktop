@@ -1,4 +1,5 @@
 using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Infrastructure;
 using BusinessOS.Pharmacy.Infrastructure.Storage;
 using BusinessOS.Pharmacy.Persistence;
@@ -106,6 +107,63 @@ public sealed class LocalPersistenceTests
 
             await Assert.ThrowsAsync<ArgumentException>(
                 () => settings.SetAsync("auth.access_token", "must-not-be-stored"));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
+    [Fact]
+    public async Task Cloud_sync_conflict_review_orders_DateTimeOffset_values_in_memory_for_sqlite()
+    {
+        var root = CreateTemporaryRoot();
+
+        try
+        {
+            await using var provider = BuildProvider(root);
+            var paths = provider.GetRequiredService<ApplicationPaths>();
+            await provider.GetRequiredService<ILocalDatabaseInitializer>()
+                .InitializeAsync("tenant-a");
+
+            await using (var connection = new SqliteConnection($"Data Source={paths.DatabasePath}"))
+            {
+                await connection.OpenAsync();
+
+                foreach (var item in new[]
+                {
+                    (Id: "conflict-old", Key: "sale:old", CreatedAt: new DateTimeOffset(2026, 10, 1, 8, 0, 0, TimeSpan.Zero)),
+                    (Id: "conflict-new", Key: "sale:new", CreatedAt: new DateTimeOffset(2026, 10, 3, 8, 0, 0, TimeSpan.Zero)),
+                })
+                {
+                    await using var command = connection.CreateCommand();
+                    command.CommandText =
+                        """
+                        INSERT INTO cloud_sync_outbox
+                        (id, tenant_id, actor_user_id, event_type, idempotency_key, payload_json,
+                         status, attempt_count, last_error_code, last_error_message, created_at, updated_at)
+                        VALUES
+                        (@id, 'tenant-a', 'user-a', 'sale.completed', @key, @payload,
+                         'conflict', 1, 'reference_missing', 'Missing reference', @created, @updated);
+                        """;
+                    command.Parameters.AddWithValue("@id", item.Id);
+                    command.Parameters.AddWithValue("@key", item.Key);
+                    command.Parameters.AddWithValue(
+                        "@payload",
+                        $"{{\"local_id\":\"{item.Id}\",\"business_date\":\"2026-10-03\"}}");
+                    command.Parameters.AddWithValue("@created", item.CreatedAt);
+                    command.Parameters.AddWithValue("@updated", item.CreatedAt);
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+
+            var store = provider.GetRequiredService<ICloudSyncStore>();
+            var conflicts = await store.GetConflictsAsync("tenant-a", 10);
+
+            Assert.Equal(2, conflicts.Count);
+            Assert.Equal("sale:new", conflicts[0].IdempotencyKey);
+            Assert.Equal("sale:old", conflicts[1].IdempotencyKey);
         }
         finally
         {
