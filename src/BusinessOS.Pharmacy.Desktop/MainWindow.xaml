@@ -77,7 +77,7 @@
                 <DataTrigger Binding="{Binding Key}" Value="network"><Setter Property="Stroke" Value="#2297B7" /></DataTrigger>
                 <DataTrigger Binding="{Binding Key}" Value="settings"><Setter Property="Stroke" Value="#60758D" /></DataTrigger>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter Property="Stroke" Value="White" />
+                    <Setter Property="Stroke" Value="{DynamicResource SidebarItemSelectedForegroundBrush}" />
                     <Setter Property="StrokeThickness" Value="2.1" />
                 </DataTrigger>
             </Style.Triggers>
