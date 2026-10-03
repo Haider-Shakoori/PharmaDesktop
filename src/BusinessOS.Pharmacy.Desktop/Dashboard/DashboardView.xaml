@@ -258,9 +258,21 @@
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Auto"
-                  Background="{DynamicResource PageBackgroundBrush}">
+    <Grid ClipToBounds="True">
+        <!-- Dashboard-only backdrop: slightly blurred so glass surfaces remain readable. -->
+        <Image Source="pack://application:,,,/Darmaltoon;component/Assets/Glass/background.png"
+               Stretch="UniformToFill"
+               Opacity="0.94"
+               IsHitTestVisible="False">
+            <Image.Effect>
+                <BlurEffect Radius="7" KernelType="Gaussian" />
+            </Image.Effect>
+        </Image>
+        <Border Background="#20FFFFFF" IsHitTestVisible="False" />
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Auto"
+                      Background="Transparent">
         <StackPanel Margin="22,10,22,4" MinWidth="1240">
             <StackPanel Margin="0,0,0,8">
                 <TextBlock Text="{Binding DashboardTitle}"
@@ -968,5 +980,6 @@
                 </StackPanel>
             </Grid>
         </StackPanel>
-    </ScrollViewer>
+        </ScrollViewer>
+    </Grid>
 </UserControl>
