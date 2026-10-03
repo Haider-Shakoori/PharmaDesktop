@@ -1,13 +1,16 @@
 on:
   push:
     branches:
-      - feat/batch-21-windows-installer
+      - main
+    paths:
+      - ".release/windows-version.txt"
+      - ".github/workflows/windows-release.yml"
   workflow_dispatch:
     inputs:
       version:
         description: Darmaltoon release version
         required: false
-        default: "1.0.3"
+        default: "1.0.4"
 
 permissions:
   contents: read
@@ -17,7 +20,7 @@ jobs:
     runs-on: windows-2025
     timeout-minutes: 45
     env:
-      RELEASE_VERSION: ${{ inputs.version || '1.0.3' }}
+      RELEASE_VERSION: ${{ inputs.version || '' }}
       DARMALTOON_LICENSE_SIGNING_PUBLIC_KEY: ${{ secrets.DARMALTOON_LICENSE_SIGNING_PUBLIC_KEY }}
       DARMALTOON_UPDATE_SIGNING_PUBLIC_KEY_PEM: ${{ secrets.DARMALTOON_UPDATE_SIGNING_PUBLIC_KEY_PEM }}
       DARMALTOON_SIGNING_PFX_BASE64: ${{ secrets.DARMALTOON_SIGNING_PFX_BASE64 }}
@@ -27,6 +30,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Resolve release version
+        id: release_version
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_VERSION
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            $version = (Get-Content ".release/windows-version.txt" -Raw).Trim()
+          }
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Release version must use semantic x.y.z format."
+          }
+          "RELEASE_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "Building Darmaltoon $version"
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
@@ -84,7 +102,7 @@ jobs:
       - name: Upload Windows release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Darmaltoon-Windows-${{ env.RELEASE_VERSION }}
+          name: Darmaltoon-Windows-${{ steps.release_version.outputs.version }}
           path: |
             artifacts/windows/*Setup*.exe
             artifacts/windows/*.zip
@@ -96,23 +114,23 @@ jobs:
       - name: Upload Standalone installer
         uses: actions/upload-artifact@v4
         with:
-          name: Darmaltoon-Standalone-Setup-${{ env.RELEASE_VERSION }}
-          path: artifacts/windows/Darmaltoon-Standalone-Setup-${{ env.RELEASE_VERSION }}-win-x64.exe
+          name: Darmaltoon-Standalone-Setup-${{ steps.release_version.outputs.version }}
+          path: artifacts/windows/Darmaltoon-Standalone-Setup-${{ steps.release_version.outputs.version }}-win-x64.exe
           if-no-files-found: error
           retention-days: 30
 
       - name: Upload Main Server installer
         uses: actions/upload-artifact@v4
         with:
-          name: Darmaltoon-MainServer-Setup-${{ env.RELEASE_VERSION }}
-          path: artifacts/windows/Darmaltoon-MainServer-Setup-${{ env.RELEASE_VERSION }}-win-x64.exe
+          name: Darmaltoon-MainServer-Setup-${{ steps.release_version.outputs.version }}
+          path: artifacts/windows/Darmaltoon-MainServer-Setup-${{ steps.release_version.outputs.version }}-win-x64.exe
           if-no-files-found: error
           retention-days: 30
 
       - name: Upload Client Terminal installer
         uses: actions/upload-artifact@v4
         with:
-          name: Darmaltoon-ClientTerminal-Setup-${{ env.RELEASE_VERSION }}
-          path: artifacts/windows/Darmaltoon-ClientTerminal-Setup-${{ env.RELEASE_VERSION }}-win-x64.exe
+          name: Darmaltoon-ClientTerminal-Setup-${{ steps.release_version.outputs.version }}
+          path: artifacts/windows/Darmaltoon-ClientTerminal-Setup-${{ steps.release_version.outputs.version }}-win-x64.exe
           if-no-files-found: error
           retention-days: 30
