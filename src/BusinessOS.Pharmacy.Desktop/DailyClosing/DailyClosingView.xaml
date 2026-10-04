@@ -48,11 +48,27 @@
         </Style>
 
         <Style x:Key="ClosingPanel" TargetType="Border">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderBrush" Value="#DCE5F0" />
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#FCFFFFFF" Offset="0" />
+                        <GradientStop Color="#F4FFFFFF" Offset=".55" />
+                        <GradientStop Color="#EAF8FAFC" Offset="1" />
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#D9FFFFFF" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="13" />
+            <Setter Property="CornerRadius" Value="16" />
             <Setter Property="Padding" Value="16" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="18"
+                                      ShadowDepth="3"
+                                      Opacity="0.10"
+                                      RenderingBias="Performance" />
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="ClosingSectionTitle" TargetType="TextBlock">
