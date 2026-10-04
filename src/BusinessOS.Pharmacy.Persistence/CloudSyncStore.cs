@@ -402,6 +402,33 @@ public sealed class CloudSyncStore(
         await transaction.CommitAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<CloudSyncRemoteRecord>> GetRemoteRecordsAsync(
+        string tenantId,
+        string stream,
+        int take = 2000,
+        CancellationToken cancellationToken = default)
+    {
+        tenantId = Required(tenantId, nameof(tenantId));
+        stream = Required(stream, nameof(stream)).ToLowerInvariant();
+        take = Math.Clamp(take, 1, 5000);
+
+        await using var context =
+            await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context.Set<CloudSyncRemoteRecordEntity>()
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == tenantId &&
+                x.Stream == stream)
+            .OrderBy(x => x.ServerId)
+            .Take(take)
+            .Select(x => new CloudSyncRemoteRecord(
+                x.ServerId,
+                x.PayloadJson,
+                x.ServerUpdatedAt))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<CloudSyncQueueSnapshot> GetQueueSnapshotAsync(
         string tenantId,
         string actorUserId,
