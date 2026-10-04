@@ -127,6 +127,7 @@ var
   ExistingActivationVerified: Boolean;
   LicenseActivationSucceeded: Boolean;
 #endif
+#endif
 
 #ifndef DisableInstallerLicenseGate
 #if DeploymentMode != "Client"
