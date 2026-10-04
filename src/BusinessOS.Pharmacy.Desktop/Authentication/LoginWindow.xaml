@@ -123,8 +123,7 @@
                                            Foreground="White"
                                            FontSize="12"
                                            FontWeight="Bold"
-                                           Margin="0,20,0,0"
-                                           CharacterSpacing="180" />
+                                           Margin="0,20,0,0" />
                                 <TextBlock Text="Pharmacy, simplified."
                                            Foreground="White"
                                            FontSize="29"
@@ -269,8 +268,7 @@
                                 <TextBlock Text="SECURE STAFF ACCESS"
                                            Foreground="{DynamicResource BrandPrimaryDarkBrush}"
                                            FontSize="10.5"
-                                           FontWeight="Bold"
-                                           CharacterSpacing="90" />
+                                           FontWeight="Bold" />
                             </Border>
 
                             <TextBlock Text="Welcome back"
