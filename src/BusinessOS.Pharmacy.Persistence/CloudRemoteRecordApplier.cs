@@ -160,11 +160,15 @@ internal static class CloudRemoteRecordApplier
         using var document = Parse(record);
         var root = document.RootElement;
         var code = RequiredString(root, "medicine_code");
+        var desktopSourceId = OptionalString(root, "desktop_source_id");
         var serverUpdatedAt = ServerUpdatedAt(root, record, receivedAt);
 
         var entity = await context.Set<MedicineEntity>()
             .SingleOrDefaultAsync(
-                x => x.Id == record.ServerId || x.MedicineCode == code,
+                x => x.Id == record.ServerId ||
+                     (!string.IsNullOrWhiteSpace(desktopSourceId) &&
+                      x.Id == desktopSourceId) ||
+                     x.MedicineCode == code,
                 cancellationToken);
 
         if (entity is null)
@@ -210,11 +214,14 @@ internal static class CloudRemoteRecordApplier
         var root = document.RootElement;
         var email = OptionalString(root, "email");
         var phone = OptionalString(root, "phone");
+        var desktopSourceId = OptionalString(root, "desktop_source_id");
         var serverUpdatedAt = ServerUpdatedAt(root, record, receivedAt);
 
         var entity = await context.Set<CustomerEntity>()
             .SingleOrDefaultAsync(
-                x => x.Id == record.ServerId,
+                x => x.Id == record.ServerId ||
+                     (!string.IsNullOrWhiteSpace(desktopSourceId) &&
+                      x.Id == desktopSourceId),
                 cancellationToken);
 
         if (entity is null && !string.IsNullOrWhiteSpace(email))
