@@ -14,6 +14,7 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $desktopProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.Desktop/BusinessOS.Pharmacy.Desktop.csproj"
 $serverProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.LocalServer/BusinessOS.Pharmacy.LocalServer.csproj"
 $updaterProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.Updater/BusinessOS.Pharmacy.Updater.csproj"
+$activationBootstrapProject = Join-Path $repoRoot "src/BusinessOS.Pharmacy.ActivationBootstrap/BusinessOS.Pharmacy.ActivationBootstrap.csproj"
 $installerScript = Join-Path $repoRoot "packaging/windows/Darmaltoon.iss"
 $appIcon = Join-Path $repoRoot "src/BusinessOS.Pharmacy.Desktop/Assets/Darmaltoon.ico"
 $serviceRegistrationScript = Join-Path $repoRoot "scripts/register-darmaltoon-local-server-service.ps1"
@@ -23,6 +24,8 @@ $publishRoot = Join-Path $workRoot "publish"
 $desktopPublish = Join-Path $publishRoot "desktop"
 $serverPublish = Join-Path $publishRoot "server"
 $updaterPublish = Join-Path $publishRoot "updater"
+$activationBootstrapPublish = Join-Path $publishRoot "activation-bootstrap"
+$smokeInstallerRoot = Join-Path $workRoot "smoke-installers"
 
 if (Test-Path $outputRoot) { Remove-Item $outputRoot -Recurse -Force }
 New-Item -ItemType Directory -Path $outputRoot, $workRoot, $publishRoot | Out-Null
@@ -121,6 +124,14 @@ $embeddedUpdater = Join-Path $desktopPublish "Updater"
 New-Item -ItemType Directory -Path $embeddedUpdater | Out-Null
 Copy-Item (Join-Path $updaterPublish "*") $embeddedUpdater -Recurse -Force
 dotnet publish $serverProject -c $Configuration -r $RuntimeIdentifier --self-contained true -p:Version=$Version -p:PublishReadyToRun=true -p:PublishSingleFile=false -o $serverPublish
+dotnet publish $activationBootstrapProject -c $Configuration -r $RuntimeIdentifier --self-contained true -p:Version=$Version -p:PublishSingleFile=true -p:PublishTrimmed=false -p:IncludeNativeLibrariesForSelfExtract=true -o $activationBootstrapPublish
+
+$activationBootstrapExe = Join-Path $activationBootstrapPublish "Darmaltoon.ActivationBootstrap.exe"
+if (-not (Test-Path $activationBootstrapExe)) {
+    throw "Installer activation bootstrap executable is missing."
+}
+Sign-File $activationBootstrapExe
+New-Item -ItemType Directory -Force -Path $smokeInstallerRoot | Out-Null
 
 foreach ($required in @(
     (Join-Path $desktopPublish "Darmaltoon.exe"),
@@ -157,8 +168,12 @@ foreach ($item in $modes) {
     Get-ChildItem $payloadRoot -Filter *.exe -Recurse | ForEach-Object { Sign-File $_.FullName }
 
     $setupBase = "Darmaltoon-$fileLabel-Setup-$Version-$RuntimeIdentifier"
-    & $iscc "/DMyAppVersion=$Version" "/DSourceDir=$payloadRoot" "/DDeploymentMode=$mode" "/DModeLabel=$label" "/DOutputDir=$outputRoot" "/DOutputBaseFilename=$setupBase" "/DAppIconFile=$appIcon" $installerScript
+    & $iscc "/DMyAppVersion=$Version" "/DSourceDir=$payloadRoot" "/DDeploymentMode=$mode" "/DModeLabel=$label" "/DOutputDir=$outputRoot" "/DOutputBaseFilename=$setupBase" "/DAppIconFile=$appIcon" "/DActivationBootstrapFile=$activationBootstrapExe" "/DEnableInstallerLicenseGate=1" $installerScript
     if ($LASTEXITCODE -ne 0) { throw "Installer compilation failed for $mode." }
+
+    $smokeBase = "Darmaltoon-$fileLabel-Smoke-Setup-$Version-$RuntimeIdentifier"
+    & $iscc "/DMyAppVersion=$Version" "/DSourceDir=$payloadRoot" "/DDeploymentMode=$mode" "/DModeLabel=$label" "/DOutputDir=$smokeInstallerRoot" "/DOutputBaseFilename=$smokeBase" "/DAppIconFile=$appIcon" "/DEnableInstallerLicenseGate=0" $installerScript
+    if ($LASTEXITCODE -ne 0) { throw "Smoke-test installer compilation failed for $mode." }
 
     $setup = Join-Path $outputRoot "$setupBase.exe"
     if (-not (Test-Path $setup)) { throw "Installer did not produce $setup" }
