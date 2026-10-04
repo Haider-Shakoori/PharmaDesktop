@@ -48,6 +48,7 @@ jobs:
           dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/dashboard-real.png dashboard
           dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/pos-real.png pos
           dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/pos-payment-real.png pos-payment
+          dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/notification-toast-real.png notification-toast
           if (-not (Test-Path artifacts/ui/dashboard-real.png)) {
             throw "Real WPF dashboard screenshot was not produced."
           }
@@ -56,6 +57,9 @@ jobs:
           }
           if (-not (Test-Path artifacts/ui/pos-payment-real.png)) {
             throw "Real WPF POS payment dialog screenshot was not produced."
+          }
+          if (-not (Test-Path artifacts/ui/notification-toast-real.png)) {
+            throw "Real WPF notification toast screenshot was not produced."
           }
 
       - name: Upload visual QA artifact
