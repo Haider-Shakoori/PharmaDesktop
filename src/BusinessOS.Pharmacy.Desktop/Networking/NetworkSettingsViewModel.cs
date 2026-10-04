@@ -22,6 +22,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     private readonly Printing.ReceiptSettingsStore _receiptSettings;
     private readonly Pos.PosSettingsStore _posSettings;
     private readonly Appearance.AppearanceSettingsStore _appearanceSettings;
+    private readonly Notifications.NotificationSettingsStore _notificationSettings;
     private bool _applyingAppearance;
 
     private UiLanguage _language = UiLanguageCatalog.All[0];
@@ -55,6 +56,15 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     [ObservableProperty] private int posTopSellerCount = 10;
     [ObservableProperty] private int posTopSellerDays = 30;
     [ObservableProperty] private bool useGlassTheme;
+    [ObservableProperty] private bool notificationEnableToasts = true;
+    [ObservableProperty] private bool notificationSuccessToasts = true;
+    [ObservableProperty] private bool notificationInformationToasts = true;
+    [ObservableProperty] private bool notificationWarningToasts = true;
+    [ObservableProperty] private bool notificationErrorToasts = true;
+    [ObservableProperty] private bool notificationSyncToasts = true;
+    [ObservableProperty] private bool notificationConnectivityToasts = true;
+    [ObservableProperty] private bool notificationStockAlerts = true;
+    [ObservableProperty] private int notificationToastDurationSeconds = 5;
     [ObservableProperty] private RegisteredTerminal? selectedTerminal;
     [ObservableProperty] private string renameTerminalTo = string.Empty;
     [ObservableProperty] private bool isBusy;
@@ -68,7 +78,8 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         Notifications.NotificationService notifications,
         Printing.ReceiptSettingsStore receiptSettings,
         Pos.PosSettingsStore posSettings,
-        Appearance.AppearanceSettingsStore appearanceSettings)
+        Appearance.AppearanceSettingsStore appearanceSettings,
+        Notifications.NotificationSettingsStore notificationSettings)
     {
         _services = services;
         _configurationStore = configurationStore;
@@ -79,11 +90,13 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         _receiptSettings = receiptSettings;
         _posSettings = posSettings;
         _appearanceSettings = appearanceSettings;
+        _notificationSettings = notificationSettings;
 
         UploadProfileImageCommand = new RelayCommand(UploadProfileImage);
         SaveProfileCommand = new RelayCommand(SaveProfile);
         SaveReceiptSettingsCommand = new RelayCommand(SaveReceiptSettings);
         SavePosSettingsCommand = new RelayCommand(SavePosSettings);
+        SaveNotificationSettingsCommand = new RelayCommand(SaveNotificationSettings);
         RefreshTopSellersCommand = new AsyncRelayCommand(RefreshTopSellersAsync, () => PosShowTopSellers && !IsBusy);
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
@@ -118,6 +131,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     public IRelayCommand SaveProfileCommand { get; }
     public IRelayCommand SaveReceiptSettingsCommand { get; }
     public IRelayCommand SavePosSettingsCommand { get; }
+    public IRelayCommand SaveNotificationSettingsCommand { get; }
     public IAsyncRelayCommand RefreshTopSellersCommand { get; }
 
     public string ReceiptTitle => T("Receipt printing", "چاپ فاکتور", "د بل چاپ");
@@ -200,6 +214,71 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
 
     public IReadOnlyList<int> PosTopSellerCountOptions { get; } = [5, 10, 20, 30];
     public IReadOnlyList<int> PosTopSellerDaysOptions { get; } = [7, 15, 30, 90, 180, 365];
+    public IReadOnlyList<int> NotificationDurationOptions { get; } = [3, 5, 7, 9, 12, 15];
+
+    public string NotificationTitle => T("Notification & feedback", "اعلان و بازخورد", "خبرتیا او فیډبک");
+    public string NotificationSubtitle => T(
+        "Choose which transient glass popups appear on this workstation. All operational events remain available in Notification Center history.",
+        "مشخص کنید کدام پیام‌های شیشه‌ای موقت در این ایستگاه نمایش داده شود. رویدادهای عملیاتی در تاریخچه مرکز اعلان باقی می‌ماند.",
+        "وټاکئ چې په دې ورک سټیشن کې کوم لنډمهاله شیشې خبرتیاوې ښکاره شي. عملیاتي پېښې د خبرتیا مرکز په تاریخچه کې پاتې کېږي.");
+    public string NotificationEnableLabel => T("Enable popup notifications", "فعال‌سازی پیام‌های پاپ‌آپ", "پاپ اپ خبرتیاوې فعالول");
+    public string NotificationSuccessLabel => T("Success messages", "پیام‌های موفقیت", "د بریا پیغامونه");
+    public string NotificationInformationLabel => T("Information messages", "پیام‌های معلوماتی", "معلوماتي پیغامونه");
+    public string NotificationWarningLabel => T("Warning messages", "پیام‌های هشدار", "د خبرداري پیغامونه");
+    public string NotificationErrorLabel => T("Error messages", "پیام‌های خطا", "د تېروتنې پیغامونه");
+    public string NotificationSyncLabel => T("Synchronization messages", "پیام‌های همگام‌سازی", "د همغږۍ پیغامونه");
+    public string NotificationConnectivityLabel => T("Connectivity messages", "پیام‌های اتصال", "د اړیکې پیغامونه");
+    public string NotificationStockLabel => T("Stock alerts in Notification Center", "هشدارهای موجودی در مرکز اعلان", "د خبرتیا مرکز کې د زېرمتون خبرتیاوې");
+    public string NotificationDurationLabel => T("Popup duration", "مدت نمایش پاپ‌آپ", "د پاپ اپ موده");
+    public string NotificationDurationSuffix => T("seconds", "ثانیه", "ثانیې");
+    public string SaveNotificationLabel => T("Save notification options", "ذخیره تنظیمات اعلان", "د خبرتیا تنظیمات خوندي کړئ");
+
+    public void LoadNotificationSettings()
+    {
+        var settings = _notificationSettings.Load();
+        NotificationEnableToasts = settings.EnableToasts;
+        NotificationSuccessToasts = settings.SuccessToasts;
+        NotificationInformationToasts = settings.InformationToasts;
+        NotificationWarningToasts = settings.WarningToasts;
+        NotificationErrorToasts = settings.ErrorToasts;
+        NotificationSyncToasts = settings.SyncToasts;
+        NotificationConnectivityToasts = settings.ConnectivityToasts;
+        NotificationStockAlerts = settings.StockAlerts;
+        NotificationToastDurationSeconds = settings.ToastDurationSeconds;
+    }
+
+    private void SaveNotificationSettings()
+    {
+        try
+        {
+            _notificationSettings.Save(new Notifications.NotificationSettings(
+                NotificationEnableToasts,
+                NotificationSuccessToasts,
+                NotificationInformationToasts,
+                NotificationWarningToasts,
+                NotificationErrorToasts,
+                NotificationSyncToasts,
+                NotificationConnectivityToasts,
+                NotificationStockAlerts,
+                NotificationToastDurationSeconds));
+
+            _notifications.ShowSuccess(
+                T(
+                    "Notification options saved.",
+                    "تنظیمات اعلان ذخیره شد.",
+                    "د خبرتیا تنظیمات خوندي شول."),
+                Notifications.NotificationCategory.System);
+        }
+        catch (Exception exception)
+        {
+            _notifications.ShowError(
+                T(
+                    $"Notification options could not be saved: {exception.Message}",
+                    $"تنظیمات اعلان ذخیره نشد: {exception.Message}",
+                    $"د خبرتیا تنظیمات خوندي نه شول: {exception.Message}"),
+                Notifications.NotificationCategory.System);
+        }
+    }
 
     public string AppearanceTitle => T("Appearance", "ظاهر", "ښکاره");
     public string AppearanceSubtitle => T(
@@ -443,6 +522,10 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         "Sales & Printing",
         "فروش و چاپ",
         "خرڅلاو او چاپ");
+    public string NotificationTabLabel => T(
+        "Notifications",
+        "اعلان‌ها",
+        "خبرتیاوې");
     public string NetworkTerminalsTabLabel => T(
         "Network & Terminals",
         "شبکه و ترمینال‌ها",
@@ -489,6 +572,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
             LoadReceiptSettings();
             LoadPosSettings();
             LoadAppearance();
+            LoadNotificationSettings();
 
             var configuration = await _configurationStore.LoadAsync();
             ApplyConfiguration(configuration);
@@ -1016,6 +1100,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(Subtitle));
         OnPropertyChanged(nameof(ProfileAppearanceTabLabel));
         OnPropertyChanged(nameof(SalesPrintingTabLabel));
+        OnPropertyChanged(nameof(NotificationTabLabel));
         OnPropertyChanged(nameof(NetworkTerminalsTabLabel));
         OnPropertyChanged(nameof(SecurityTabLabel));
         OnPropertyChanged(nameof(DeploymentModeLabel));
@@ -1068,6 +1153,19 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(PosPreviewRefreshLabel));
         OnPropertyChanged(nameof(PosPreviewEmpty));
         OnPropertyChanged(nameof(PosPreviewSoldFormat));
+        OnPropertyChanged(nameof(NotificationTitle));
+        OnPropertyChanged(nameof(NotificationSubtitle));
+        OnPropertyChanged(nameof(NotificationEnableLabel));
+        OnPropertyChanged(nameof(NotificationSuccessLabel));
+        OnPropertyChanged(nameof(NotificationInformationLabel));
+        OnPropertyChanged(nameof(NotificationWarningLabel));
+        OnPropertyChanged(nameof(NotificationErrorLabel));
+        OnPropertyChanged(nameof(NotificationSyncLabel));
+        OnPropertyChanged(nameof(NotificationConnectivityLabel));
+        OnPropertyChanged(nameof(NotificationStockLabel));
+        OnPropertyChanged(nameof(NotificationDurationLabel));
+        OnPropertyChanged(nameof(NotificationDurationSuffix));
+        OnPropertyChanged(nameof(SaveNotificationLabel));
         OnPropertyChanged(nameof(AppearanceTitle));
         OnPropertyChanged(nameof(AppearanceSubtitle));
         OnPropertyChanged(nameof(GlassThemeLabel));
