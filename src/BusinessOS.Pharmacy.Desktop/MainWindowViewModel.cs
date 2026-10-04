@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Desktop.Authentication;
 using BusinessOS.Pharmacy.Desktop.Administration;
@@ -35,9 +36,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly NetworkConfiguration _networkConfiguration;
     private readonly IPermissionAuthorizer _permissions;
     private readonly ILocalServerConnectionMonitor? _connectionMonitor;
+    private readonly ICloudSyncService? _cloudSync;
     private readonly NotificationService _notifications;
     private readonly Profile.UserProfileStore _profileStore;
     private Profile.UserProfile? _profile;
+    private int _remoteSignOutInProgress;
 
     [ObservableProperty]
     private UiLanguage selectedLanguage = UiLanguageCatalog.All[0];
@@ -101,7 +104,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _notifications = notifications;
         _profileStore = profileStore;
         _connectionMonitor = services.GetService<ILocalServerConnectionMonitor>();
+        _cloudSync = services.GetService<ICloudSyncService>();
         _notifications.NotificationRaised += OnNotificationRaised;
+
+        if (_cloudSync is not null)
+        {
+            _cloudSync.ResultUpdated += OnCloudSyncResultUpdated;
+        }
         _profileStore.ProfileChanged += OnProfileChanged;
 
         IsGlassTheme = Appearance.ThemeManager.Current == Appearance.AppearanceTheme.Glass;
@@ -738,6 +747,59 @@ public sealed partial class MainWindowViewModel : ObservableObject
         await _sessions.LogoutAsync();
         ApplyCurrentUser();
         LogoutRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnCloudSyncResultUpdated(CloudSyncRunResult result)
+    {
+        if (result.State != CloudSyncRunState.LicenseRejected ||
+            _sessions.Current is null)
+        {
+            return;
+        }
+
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is null)
+        {
+            return;
+        }
+
+        _ = dispatcher.InvokeAsync(() =>
+        {
+            _ = HandleRemoteSessionInvalidationAsync(result.Message);
+        });
+    }
+
+    private async Task HandleRemoteSessionInvalidationAsync(string message)
+    {
+        if (Interlocked.Exchange(ref _remoteSignOutInProgress, 1) != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_sessions.Current is null)
+            {
+                return;
+            }
+
+            await _sessions.LogoutAsync();
+            ApplyCurrentUser();
+
+            MessageBox.Show(
+                string.IsNullOrWhiteSpace(message)
+                    ? "This Darmaltoon session was ended by the platform. Sign in again to continue."
+                    : $"{message}\n\nSign in again to continue.",
+                "Darmaltoon — Session Ended",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+
+            LogoutRequested?.Invoke(this, EventArgs.Empty);
+        }
+        finally
+        {
+            Volatile.Write(ref _remoteSignOutInProgress, 0);
+        }
     }
 
     private void OnLanStatusChanged(
