@@ -362,7 +362,7 @@ internal static class Program
         var captureHeight = args.Length > 3 ? int.Parse(args[3], System.Globalization.CultureInfo.InvariantCulture) : 1080;
         var shell = new ScreenshotShell(dashboard, currentPage, selectedKey, session.Current!);
 
-        if (mode == "notification-toast")
+        if (mode.StartsWith("notification-toast", StringComparison.OrdinalIgnoreCase))
         {
             var notification = new BusinessOS.Pharmacy.Desktop.Notifications.AppNotification(
                 "visual-toast-probe",
