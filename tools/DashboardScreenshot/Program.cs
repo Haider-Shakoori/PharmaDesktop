@@ -361,6 +361,23 @@ internal static class Program
         var captureWidth = args.Length > 2 ? int.Parse(args[2], System.Globalization.CultureInfo.InvariantCulture) : 1920;
         var captureHeight = args.Length > 3 ? int.Parse(args[3], System.Globalization.CultureInfo.InvariantCulture) : 1080;
         var shell = new ScreenshotShell(dashboard, currentPage, selectedKey, session.Current!);
+
+        if (mode == "notification-toast")
+        {
+            var notification = new BusinessOS.Pharmacy.Desktop.Notifications.AppNotification(
+                "visual-toast-probe",
+                "Cloud sync complete · 2 uploaded · 4 downloaded.",
+                BusinessOS.Pharmacy.Desktop.Notifications.NotificationKind.Success,
+                now,
+                BusinessOS.Pharmacy.Desktop.Notifications.NotificationCategory.Sync,
+                "Synchronization complete");
+
+            shell.Notifications.Add(
+                new BusinessOS.Pharmacy.Desktop.Notifications.NotificationViewModel(
+                    notification,
+                    item => shell.Notifications.Remove(item)));
+        }
+
         var window = new MainWindow(null!)
         {
             DataContext = shell,
@@ -552,6 +569,7 @@ internal static class Program
         public IReadOnlyList<UiLanguage> Languages => UiLanguageCatalog.All;
         public UiLanguage SelectedLanguage { get; set; }
         public ObservableCollection<NavigationItemViewModel> NavigationItems { get; }
+        public ObservableCollection<BusinessOS.Pharmacy.Desktop.Notifications.NotificationViewModel> Notifications { get; } = new();
         public ICommand NavigateCommand { get; } = new NoOpCommand();
         public ICommand GlobalSearchCommand { get; } = new NoOpCommand();
         public ICommand ToggleSidebarCommand { get; } = new NoOpCommand();
