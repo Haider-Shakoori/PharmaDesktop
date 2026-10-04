@@ -10,7 +10,16 @@ namespace BusinessOS.Pharmacy.Sync;
 public sealed class CloudSyncService : ICloudSyncService
 {
     private static readonly string[] PullStreams =
-        ["medicines", "customers", "inventory"];
+    [
+        "branches",
+        "stock_locations",
+        "medicines",
+        "customers",
+        "inventory",
+        "permissions",
+        "roles",
+        "users",
+    ];
 
     private readonly ICloudSyncStore _store;
     private readonly ICloudSyncTransport _transport;
