@@ -303,6 +303,40 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="4,16,4,6">
+                        <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,20,0">
+                                    <TextBlock Text="{Binding LiveServerSyncTitle}"
+                                               Style="{StaticResource SectionTitleText}" />
+                                    <TextBlock Text="{Binding LiveServerSyncSubtitle}"
+                                               Style="{StaticResource MutedText}"
+                                               Margin="0,4,0,12"
+                                               TextWrapping="Wrap"
+                                               MaxWidth="760"
+                                               HorizontalAlignment="Left" />
+                                    <TextBlock Text="{Binding LiveServerSyncStatus}"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               FontWeight="SemiBold"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding LiveServerSyncManagedBy}"
+                                               Style="{StaticResource MutedText}"
+                                               Margin="0,4,0,0" />
+                                </StackPanel>
+                                <CheckBox Grid.Column="1"
+                                          Content="{Binding LiveServerSyncToggleLabel}"
+                                          IsChecked="{Binding LiveServerSyncEnabled, Mode=OneWay}"
+                                          IsThreeState="True"
+                                          IsEnabled="False"
+                                          VerticalAlignment="Center"
+                                          FontWeight="SemiBold"
+                                          ToolTip="{Binding LiveServerSyncManagedLabel}" />
+                            </Grid>
+                        </Border>
+
                         <UniformGrid Columns="2" Margin="0,0,0,16">
                         <Border Style="{StaticResource SurfaceCard}" Margin="0,0,8,0">
                         <StackPanel>
