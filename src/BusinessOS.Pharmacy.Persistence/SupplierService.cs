@@ -66,10 +66,57 @@ public sealed class SupplierService : ISupplierService
                 x.City,
                 x.Province,
                 x.PaymentTermsDays,
+                x.OpeningBalance,
                 x.IsActive,
                 x.PurchaseOrders.Count,
                 x.Invoices.Count))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<SupplierSummary> GetSummaryAsync(
+        CancellationToken cancellationToken = default)
+    {
+        _permissions.Demand("purchases.manage");
+
+        await using var context =
+            await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var suppliers = await context.Set<SupplierEntity>()
+            .AsNoTracking()
+            .Include(x => x.Invoices)
+            .ToListAsync(cancellationToken);
+
+        decimal totalDealValue = 0m;
+        decimal totalPaid = 0m;
+        decimal outstandingInvoices = 0m;
+        decimal totalOpeningBalance = 0m;
+
+        foreach (var supplier in suppliers)
+        {
+            totalOpeningBalance += supplier.OpeningBalance;
+
+            foreach (var invoice in supplier.Invoices)
+            {
+                if (string.Equals(
+                        invoice.Status,
+                        "cancelled",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                totalDealValue += invoice.GrandTotal;
+                totalPaid += invoice.PaidTotal;
+                outstandingInvoices += invoice.BalanceDue;
+            }
+        }
+
+        return new SupplierSummary(
+            suppliers.Count,
+            ScaleMoney(totalDealValue),
+            ScaleMoney(totalPaid),
+            ScaleMoney(totalOpeningBalance + outstandingInvoices),
+            ScaleMoney(totalOpeningBalance));
     }
 
     public async Task<SupplierEditorModel?> GetAsync(
@@ -96,6 +143,7 @@ public sealed class SupplierService : ISupplierService
                 x.City,
                 x.Province,
                 x.PaymentTermsDays,
+                x.OpeningBalance,
                 x.IsActive,
                 x.Notes))
             .SingleOrDefaultAsync(cancellationToken);
@@ -124,7 +172,7 @@ public sealed class SupplierService : ISupplierService
             UpdatedAt = now,
         };
 
-        Apply(entity, request);
+        Apply(entity, request, includeOpeningBalance: true);
         context.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
         return entity.Id;
@@ -152,12 +200,15 @@ public sealed class SupplierService : ISupplierService
             throw new ArgumentException($"Supplier code '{code}' already exists.");
         }
 
-        Apply(entity, request);
+        Apply(entity, request, includeOpeningBalance: false);
         entity.UpdatedAt = _clock.UtcNow;
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    private static void Apply(SupplierEntity entity, SaveSupplierRequest request)
+    private static void Apply(
+        SupplierEntity entity,
+        SaveSupplierRequest request,
+        bool includeOpeningBalance)
     {
         entity.Code = request.Code.Trim();
         entity.Name = request.Name.Trim();
@@ -169,6 +220,11 @@ public sealed class SupplierService : ISupplierService
         entity.City = NormalizeOptional(request.City, 100, nameof(request.City));
         entity.Province = NormalizeOptional(request.Province, 100, nameof(request.Province));
         entity.PaymentTermsDays = request.PaymentTermsDays;
+        if (includeOpeningBalance)
+        {
+            entity.OpeningBalance = ScaleMoney(request.OpeningBalance);
+        }
+
         entity.IsActive = request.IsActive;
         entity.Notes = NormalizeOptional(request.Notes, 2000, nameof(request.Notes));
     }
@@ -192,11 +248,20 @@ public sealed class SupplierService : ISupplierService
             throw new ArgumentOutOfRangeException(nameof(request.PaymentTermsDays));
         }
 
+        if (request.OpeningBalance < 0m ||
+            request.OpeningBalance > 999_999_999_999m)
+        {
+            throw new ArgumentOutOfRangeException(nameof(request.OpeningBalance));
+        }
+
         if (email is not null && !MailAddress.TryCreate(email, out _))
         {
             throw new ArgumentException("Supplier email is not valid.", nameof(request.Email));
         }
     }
+
+    private static decimal ScaleMoney(decimal value) =>
+        decimal.Round(value, 4, MidpointRounding.AwayFromZero);
 
     internal static string NormalizeRequired(string value, int maxLength, string parameterName)
     {

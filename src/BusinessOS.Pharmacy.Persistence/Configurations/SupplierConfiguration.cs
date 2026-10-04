@@ -22,6 +22,7 @@ internal sealed class SupplierConfiguration : IEntityTypeConfiguration<SupplierE
         builder.Property(x => x.City).HasColumnName("city").HasMaxLength(100);
         builder.Property(x => x.Province).HasColumnName("province").HasMaxLength(100);
         builder.Property(x => x.PaymentTermsDays).HasColumnName("payment_terms_days").IsRequired();
+        builder.Property(x => x.OpeningBalance).HasColumnName("opening_balance").HasPrecision(20, 4).IsRequired();
         builder.Property(x => x.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(x => x.Notes).HasColumnName("notes").HasMaxLength(2000);
         builder.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();

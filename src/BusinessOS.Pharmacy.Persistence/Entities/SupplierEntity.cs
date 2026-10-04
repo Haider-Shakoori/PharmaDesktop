@@ -13,6 +13,7 @@ internal sealed class SupplierEntity
     public string? City { get; set; }
     public string? Province { get; set; }
     public int PaymentTermsDays { get; set; }
+    public decimal OpeningBalance { get; set; }
     public bool IsActive { get; set; } = true;
     public string? Notes { get; set; }
     public DateTimeOffset CreatedAt { get; set; }

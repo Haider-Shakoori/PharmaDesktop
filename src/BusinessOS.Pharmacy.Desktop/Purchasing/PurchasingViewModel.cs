@@ -16,12 +16,23 @@ public sealed partial class PurchasingViewModel : ObservableObject
     private readonly IPermissionAuthorizer _permissions;
     private readonly IClock _clock;
     private UiLanguage _language = UiLanguageCatalog.All[0];
+    private List<SupplierListItem> _matchingSuppliers = [];
 
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string statusMessage = string.Empty;
 
     [ObservableProperty] private string supplierSearchText = string.Empty;
+    [ObservableProperty] private string selectedSupplierActiveFilter = "All";
     [ObservableProperty] private SupplierListItem? selectedSupplier;
+    [ObservableProperty] private bool isEditorOpen;
+    [ObservableProperty] private int supplierCurrentPage = 1;
+    [ObservableProperty] private int supplierPageSize = 15;
+    [ObservableProperty] private int supplierTotalItems;
+    [ObservableProperty] private decimal supplierTotalDealValue;
+    [ObservableProperty] private decimal supplierTotalPaid;
+    [ObservableProperty] private decimal supplierOutstandingPayable;
+    [ObservableProperty] private decimal supplierTotalOpeningBalance;
+    [ObservableProperty] private int supplierTotalCount;
     [ObservableProperty] private string supplierCode = string.Empty;
     [ObservableProperty] private string supplierName = string.Empty;
     [ObservableProperty] private string supplierContactPerson = string.Empty;
@@ -32,6 +43,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
     [ObservableProperty] private string supplierCity = string.Empty;
     [ObservableProperty] private string supplierProvince = string.Empty;
     [ObservableProperty] private int supplierPaymentTermsDays;
+    [ObservableProperty] private decimal supplierOpeningBalance;
     [ObservableProperty] private bool supplierIsActive = true;
     [ObservableProperty] private string supplierNotes = string.Empty;
 
@@ -99,8 +111,21 @@ public sealed partial class PurchasingViewModel : ObservableObject
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
         SearchSuppliersCommand = new AsyncRelayCommand(SearchSuppliersAsync, () => !IsBusy);
-        NewSupplierCommand = new RelayCommand(NewSupplier, () => !IsBusy);
+        NewSupplierCommand = new RelayCommand(NewSupplier, () => !IsBusy && CanManagePurchases);
+        EditSupplierCommand = new AsyncRelayCommand<SupplierListItem>(
+            EditSupplierAsync,
+            item => item is not null && !IsBusy && CanManagePurchases);
+        CloseSupplierEditorCommand = new RelayCommand(() => IsEditorOpen = false);
         SaveSupplierCommand = new AsyncRelayCommand(SaveSupplierAsync, () => !IsBusy && CanManagePurchases);
+        SupplierPreviousPageCommand = new RelayCommand(
+            SupplierPreviousPage,
+            () => SupplierCurrentPage > 1);
+        SupplierNextPageCommand = new RelayCommand(
+            SupplierNextPage,
+            () => SupplierCurrentPage < SupplierTotalPages);
+        SupplierGoToPageCommand = new RelayCommand<int>(
+            SupplierGoToPage,
+            page => page >= 1 && page <= SupplierTotalPages);
 
         SearchOrdersCommand = new AsyncRelayCommand(SearchOrdersAsync, () => !IsBusy);
         AddDraftLineCommand = new RelayCommand(AddDraftLine, () => !IsBusy && SelectedDraftMedicine is not null);
@@ -120,11 +145,15 @@ public sealed partial class PurchasingViewModel : ObservableObject
     }
 
     public ObservableCollection<SupplierListItem> Suppliers { get; } = new();
+    public ObservableCollection<int> SupplierPageNumbers { get; } = new();
     public ObservableCollection<PurchaseOrderListItem> Orders { get; } = new();
     public ObservableCollection<PurchaseSupplierReferenceItem> SupplierReferences { get; } = new();
     public ObservableCollection<PurchaseMedicineReferenceItem> MedicineReferences { get; } = new();
     public ObservableCollection<PurchaseStockLocationReferenceItem> StockLocations { get; } = new();
     public ObservableCollection<PurchaseOrderDraftLineViewModel> DraftLines { get; } = new();
+
+    public IReadOnlyList<string> SupplierActiveFilters { get; } = ["All", "Active", "Inactive"];
+    public IReadOnlyList<int> SupplierPageSizeOptions { get; } = [10, 15, 25, 50];
 
     public IReadOnlyList<string> OrderStatuses { get; } =
         ["All", "draft", "submitted", "approved", "partially_received", "received", "cancelled", "closed"];
@@ -135,7 +164,12 @@ public sealed partial class PurchasingViewModel : ObservableObject
     public IAsyncRelayCommand RefreshCommand { get; }
     public IAsyncRelayCommand SearchSuppliersCommand { get; }
     public IRelayCommand NewSupplierCommand { get; }
+    public IAsyncRelayCommand<SupplierListItem> EditSupplierCommand { get; }
+    public IRelayCommand CloseSupplierEditorCommand { get; }
     public IAsyncRelayCommand SaveSupplierCommand { get; }
+    public IRelayCommand SupplierPreviousPageCommand { get; }
+    public IRelayCommand SupplierNextPageCommand { get; }
+    public IRelayCommand<int> SupplierGoToPageCommand { get; }
     public IAsyncRelayCommand SearchOrdersCommand { get; }
     public IRelayCommand AddDraftLineCommand { get; }
     public IRelayCommand<PurchaseOrderDraftLineViewModel> RemoveDraftLineCommand { get; }
@@ -156,6 +190,66 @@ public sealed partial class PurchasingViewModel : ObservableObject
         "Suppliers, purchase orders, receiving, invoices and supplier payments",
         "تأمین‌کنندگان، سفارش خرید، دریافت، فاکتور و پرداخت",
         "عرضه کوونکي، پېرود امرونه، ترلاسه کول، بلونه او تادیات");
+
+    public string SupplierEyebrow => Translate("Supplier & purchasing control", "کنترل تأمین‌کننده و خرید", "د عرضه کوونکو او پېرود کنټرول");
+    public string SupplierTitle => Translate("Suppliers", "تأمین‌کنندگان", "عرضه کوونکي");
+    public string SupplierSubtitle => Translate(
+        "Supplier relationships, purchase deals, payments and outstanding balances in one place",
+        "روابط تأمین‌کنندگان، معاملات خرید، پرداخت‌ها و مانده بدهی در یک بخش",
+        "د عرضه کوونکو اړیکې، د پېرود معاملې، تادیات او پاتې پورونه په یوه برخه کې");
+    public string NewSupplierLabel => Translate("New supplier", "تأمین‌کننده جدید", "نوی عرضه کوونکی");
+    public string EditSupplierLabel => Translate("Edit", "ویرایش", "سمون");
+    public string SaveSupplierLabel => Translate("Save supplier", "ذخیره تأمین‌کننده", "عرضه کوونکی خوندي کړئ");
+    public string SupplierEditorTitle => SelectedSupplier is null
+        ? NewSupplierLabel
+        : Translate("Edit supplier", "ویرایش تأمین‌کننده", "عرضه کوونکی سمول");
+    public bool CanEditSupplierOpeningBalance => SelectedSupplier is null;
+
+    public string TotalDealValueLabel => Translate("Total deal value", "ارزش مجموع معاملات", "د معاملو ټول ارزښت");
+    public string TotalPaidLabel => Translate("Total paid", "مجموع پرداخت‌شده", "ټولې تادیې");
+    public string OutstandingPayableLabel => Translate("Outstanding payable", "بدهی باقی‌مانده", "پاتې تادیه");
+    public string OpeningBalancesLabel => Translate("Opening balances", "مانده‌های افتتاحیه", "پیل بیلانسونه");
+    public string TotalDealValueText => $"؋ {SupplierTotalDealValue:N2}";
+    public string TotalPaidText => $"؋ {SupplierTotalPaid:N2}";
+    public string OutstandingPayableText => $"؋ {SupplierOutstandingPayable:N2}";
+    public string OpeningBalancesText => $"؋ {SupplierTotalOpeningBalance:N2}";
+    public string TotalDealValueHint => Translate(
+        "Non-cancelled supplier invoices",
+        "فاکتورهای لغونشده تأمین‌کنندگان",
+        "د عرضه کوونکو نه لغوه شوي بلونه");
+    public string TotalPaidHint => Translate(
+        "Payments recorded against supplier invoices",
+        "پرداخت‌های ثبت‌شده در برابر فاکتورها",
+        "د عرضه کوونکو د بلونو ثبت شوې تادیې");
+    public string OutstandingPayableHint => Translate(
+        "Opening balances plus unpaid invoice balances",
+        "مانده افتتاحیه به‌علاوه فاکتورهای پرداخت‌نشده",
+        "پیل بیلانسونه او د نه تادیه شوو بلونو پاتې");
+    public string OpeningBalancesHint => Translate(
+        "Historical supplier balances captured at creation",
+        "مانده تاریخی تأمین‌کنندگان ثبت‌شده هنگام ایجاد",
+        "د جوړولو پر مهال ثبت شوي تاریخي پیل بیلانسونه");
+
+    public int SupplierTotalPages => Math.Max(
+        1,
+        (int)Math.Ceiling(SupplierTotalItems / (double)Math.Max(1, SupplierPageSize)));
+    public string SupplierPageSummary
+    {
+        get
+        {
+            if (SupplierTotalItems == 0)
+            {
+                return Translate("Showing 0 suppliers", "نمایش ۰ تأمین‌کننده", "۰ عرضه کوونکي ښودل کېږي");
+            }
+
+            var from = ((SupplierCurrentPage - 1) * SupplierPageSize) + 1;
+            var to = Math.Min(SupplierCurrentPage * SupplierPageSize, SupplierTotalItems);
+            return Translate(
+                $"Showing {from}-{to} of {SupplierTotalItems} suppliers",
+                $"نمایش {from}-{to} از {SupplierTotalItems} تأمین‌کننده",
+                $"له {SupplierTotalItems} عرضه کوونکو څخه {from}-{to} ښودل کېږي");
+        }
+    }
 
     public string QuickCreateLabel => CanApprovePurchases
         ? Translate("Create & approve", "ایجاد و تأیید", "جوړ او تایید")
@@ -198,6 +292,22 @@ public sealed partial class PurchasingViewModel : ObservableObject
         _language = language;
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(Subtitle));
+        OnPropertyChanged(nameof(SupplierEyebrow));
+        OnPropertyChanged(nameof(SupplierTitle));
+        OnPropertyChanged(nameof(SupplierSubtitle));
+        OnPropertyChanged(nameof(NewSupplierLabel));
+        OnPropertyChanged(nameof(EditSupplierLabel));
+        OnPropertyChanged(nameof(SaveSupplierLabel));
+        OnPropertyChanged(nameof(SupplierEditorTitle));
+        OnPropertyChanged(nameof(TotalDealValueLabel));
+        OnPropertyChanged(nameof(TotalPaidLabel));
+        OnPropertyChanged(nameof(OutstandingPayableLabel));
+        OnPropertyChanged(nameof(OpeningBalancesLabel));
+        OnPropertyChanged(nameof(TotalDealValueHint));
+        OnPropertyChanged(nameof(TotalPaidHint));
+        OnPropertyChanged(nameof(OutstandingPayableHint));
+        OnPropertyChanged(nameof(OpeningBalancesHint));
+        OnPropertyChanged(nameof(SupplierPageSummary));
         OnPropertyChanged(nameof(QuickCreateLabel));
         OnPropertyChanged(nameof(QuickCreateHint));
         OnPropertyChanged(nameof(DraftSummary));
@@ -215,6 +325,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
 
             await LoadReferencesAsync();
             await SearchSuppliersCoreAsync();
+            await LoadSupplierSummaryAsync();
             await SearchOrdersCoreAsync();
 
             StatusMessage = Translate(
@@ -226,11 +337,48 @@ public sealed partial class PurchasingViewModel : ObservableObject
 
     partial void OnSelectedSupplierChanged(SupplierListItem? value)
     {
-        if (value is not null)
-        {
-            _ = LoadSupplierAsync(value.Id);
-        }
+        OnPropertyChanged(nameof(SupplierEditorTitle));
+        OnPropertyChanged(nameof(CanEditSupplierOpeningBalance));
+        EditSupplierCommand.NotifyCanExecuteChanged();
     }
+
+    partial void OnSupplierCurrentPageChanged(int value)
+    {
+        OnPropertyChanged(nameof(SupplierTotalPages));
+        OnPropertyChanged(nameof(SupplierPageSummary));
+        SupplierPreviousPageCommand.NotifyCanExecuteChanged();
+        SupplierNextPageCommand.NotifyCanExecuteChanged();
+        SupplierGoToPageCommand.NotifyCanExecuteChanged();
+        RebuildSupplierPageNumbers();
+    }
+
+    partial void OnSupplierPageSizeChanged(int value)
+    {
+        SupplierCurrentPage = 1;
+        RefreshSupplierPage();
+    }
+
+    partial void OnSupplierTotalItemsChanged(int value)
+    {
+        OnPropertyChanged(nameof(SupplierTotalPages));
+        OnPropertyChanged(nameof(SupplierPageSummary));
+        SupplierPreviousPageCommand.NotifyCanExecuteChanged();
+        SupplierNextPageCommand.NotifyCanExecuteChanged();
+        SupplierGoToPageCommand.NotifyCanExecuteChanged();
+        RebuildSupplierPageNumbers();
+    }
+
+    partial void OnSupplierTotalDealValueChanged(decimal value) =>
+        OnPropertyChanged(nameof(TotalDealValueText));
+
+    partial void OnSupplierTotalPaidChanged(decimal value) =>
+        OnPropertyChanged(nameof(TotalPaidText));
+
+    partial void OnSupplierOutstandingPayableChanged(decimal value) =>
+        OnPropertyChanged(nameof(OutstandingPayableText));
+
+    partial void OnSupplierTotalOpeningBalanceChanged(decimal value) =>
+        OnPropertyChanged(nameof(OpeningBalancesText));
 
     partial void OnSelectedOrderChanged(PurchaseOrderListItem? value)
     {
@@ -321,16 +469,31 @@ public sealed partial class PurchasingViewModel : ObservableObject
             return;
         }
 
-        var result = await _suppliers.SearchAsync(new SupplierSearchFilter(SupplierSearchText, Take: 500));
-        var selectedId = SelectedSupplier?.Id;
-
-        Suppliers.Clear();
-        foreach (var item in result)
+        bool? active = SelectedSupplierActiveFilter switch
         {
-            Suppliers.Add(item);
-        }
+            "Active" => true,
+            "Inactive" => false,
+            _ => null,
+        };
 
-        SelectedSupplier = Suppliers.FirstOrDefault(x => x.Id == selectedId);
+        var result = await _suppliers.SearchAsync(
+            new SupplierSearchFilter(
+                string.IsNullOrWhiteSpace(SupplierSearchText)
+                    ? null
+                    : SupplierSearchText.Trim(),
+                active,
+                1000));
+
+        var selectedId = SelectedSupplier?.Id;
+        _matchingSuppliers = result.ToList();
+        SupplierTotalItems = _matchingSuppliers.Count;
+        SupplierCurrentPage = 1;
+        RefreshSupplierPage();
+
+        if (selectedId is not null)
+        {
+            SelectedSupplier = _matchingSuppliers.FirstOrDefault(x => x.Id == selectedId);
+        }
     }
 
     private async Task SearchOrdersAsync() => await ExecuteBusyAsync(SearchOrdersCoreAsync);
@@ -369,8 +532,22 @@ public sealed partial class PurchasingViewModel : ObservableObject
         SupplierCity = string.Empty;
         SupplierProvince = string.Empty;
         SupplierPaymentTermsDays = 0;
+        SupplierOpeningBalance = 0m;
         SupplierIsActive = true;
         SupplierNotes = string.Empty;
+        IsEditorOpen = true;
+    }
+
+    private async Task EditSupplierAsync(SupplierListItem? item)
+    {
+        if (item is null || IsBusy || !CanManagePurchases)
+        {
+            return;
+        }
+
+        SelectedSupplier = item;
+        await LoadSupplierAsync(item.Id);
+        IsEditorOpen = true;
     }
 
     private async Task LoadSupplierAsync(string id)
@@ -393,6 +570,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
             SupplierCity = supplier.City ?? string.Empty;
             SupplierProvince = supplier.Province ?? string.Empty;
             SupplierPaymentTermsDays = supplier.PaymentTermsDays;
+            SupplierOpeningBalance = supplier.OpeningBalance;
             SupplierIsActive = supplier.IsActive;
             SupplierNotes = supplier.Notes ?? string.Empty;
         }
@@ -417,6 +595,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
                 SupplierCity,
                 SupplierProvince,
                 SupplierPaymentTermsDays,
+                SupplierOpeningBalance,
                 SupplierIsActive,
                 SupplierNotes);
 
@@ -432,11 +611,112 @@ public sealed partial class PurchasingViewModel : ObservableObject
             }
 
             await SearchSuppliersCoreAsync();
+            await LoadSupplierSummaryAsync();
             await LoadReferencesAsync();
-            SelectedSupplier = Suppliers.FirstOrDefault(x => x.Id == id);
+            SelectSupplierAndPage(id);
+            IsEditorOpen = false;
 
             StatusMessage = Translate("Supplier saved.", "تأمین‌کننده ذخیره شد.", "عرضه کوونکی خوندي شو.");
         });
+    }
+
+    private async Task LoadSupplierSummaryAsync()
+    {
+        if (!CanManagePurchases)
+        {
+            return;
+        }
+
+        var summary = await _suppliers.GetSummaryAsync();
+        SupplierTotalCount = summary.TotalSuppliers;
+        SupplierTotalDealValue = summary.TotalDealValue;
+        SupplierTotalPaid = summary.TotalPaid;
+        SupplierOutstandingPayable = summary.OutstandingPayable;
+        SupplierTotalOpeningBalance = summary.TotalOpeningBalance;
+    }
+
+    private void SelectSupplierAndPage(string id)
+    {
+        var index = _matchingSuppliers.FindIndex(x => x.Id == id);
+        if (index < 0)
+        {
+            SelectedSupplier = null;
+            return;
+        }
+
+        SupplierCurrentPage = (index / Math.Max(1, SupplierPageSize)) + 1;
+        RefreshSupplierPage();
+        SelectedSupplier = Suppliers.FirstOrDefault(x => x.Id == id);
+    }
+
+    private void SupplierPreviousPage()
+    {
+        if (SupplierCurrentPage <= 1)
+        {
+            return;
+        }
+
+        SupplierCurrentPage--;
+        RefreshSupplierPage();
+    }
+
+    private void SupplierNextPage()
+    {
+        if (SupplierCurrentPage >= SupplierTotalPages)
+        {
+            return;
+        }
+
+        SupplierCurrentPage++;
+        RefreshSupplierPage();
+    }
+
+    private void SupplierGoToPage(int page)
+    {
+        if (page < 1 || page > SupplierTotalPages || page == SupplierCurrentPage)
+        {
+            return;
+        }
+
+        SupplierCurrentPage = page;
+        RefreshSupplierPage();
+    }
+
+    private void RefreshSupplierPage()
+    {
+        if (SupplierCurrentPage > SupplierTotalPages)
+        {
+            SupplierCurrentPage = SupplierTotalPages;
+        }
+
+        var skip = Math.Max(
+            0,
+            (SupplierCurrentPage - 1) * Math.Max(1, SupplierPageSize));
+
+        Suppliers.Clear();
+        foreach (var item in _matchingSuppliers
+                     .Skip(skip)
+                     .Take(Math.Max(1, SupplierPageSize)))
+        {
+            Suppliers.Add(item);
+        }
+
+        OnPropertyChanged(nameof(SupplierPageSummary));
+        RebuildSupplierPageNumbers();
+    }
+
+    private void RebuildSupplierPageNumbers()
+    {
+        var total = SupplierTotalPages;
+        var start = Math.Max(1, SupplierCurrentPage - 2);
+        var end = Math.Min(total, start + 4);
+        start = Math.Max(1, end - 4);
+
+        SupplierPageNumbers.Clear();
+        for (var page = start; page <= end; page++)
+        {
+            SupplierPageNumbers.Add(page);
+        }
     }
 
     private void AddDraftLine()
@@ -733,6 +1013,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
             InvoiceDueDateText = string.Empty;
             InvoiceNotes = string.Empty;
             await RefreshSelectedOrderAsync(orderId);
+            await LoadSupplierSummaryAsync();
             SelectedInvoice = SelectedOrderDetail?.Invoices.FirstOrDefault(x => x.Id == invoiceId);
             StatusMessage = Translate("Supplier invoice recorded.", "فاکتور تأمین‌کننده ثبت شد.", "د عرضه کوونکي بل ثبت شو.");
         });
@@ -763,6 +1044,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
             PaymentReference = string.Empty;
             PaymentNotes = string.Empty;
             await RefreshSelectedOrderAsync(orderId);
+            await LoadSupplierSummaryAsync();
             SelectedInvoice = SelectedOrderDetail?.Invoices.FirstOrDefault(x => x.Id == invoiceId);
             StatusMessage = Translate("Supplier payment recorded.", "پرداخت تأمین‌کننده ثبت شد.", "د عرضه کوونکي تادیه ثبت شوه.");
         });
@@ -880,7 +1162,11 @@ public sealed partial class PurchasingViewModel : ObservableObject
         RefreshCommand.NotifyCanExecuteChanged();
         SearchSuppliersCommand.NotifyCanExecuteChanged();
         NewSupplierCommand.NotifyCanExecuteChanged();
+        EditSupplierCommand.NotifyCanExecuteChanged();
         SaveSupplierCommand.NotifyCanExecuteChanged();
+        SupplierPreviousPageCommand.NotifyCanExecuteChanged();
+        SupplierNextPageCommand.NotifyCanExecuteChanged();
+        SupplierGoToPageCommand.NotifyCanExecuteChanged();
         SearchOrdersCommand.NotifyCanExecuteChanged();
         AddDraftLineCommand.NotifyCanExecuteChanged();
         RemoveDraftLineCommand.NotifyCanExecuteChanged();

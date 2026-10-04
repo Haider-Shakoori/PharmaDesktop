@@ -39,6 +39,7 @@ public sealed class PurchasingTests
                     "Kabul",
                     "Kabul",
                     30,
+                    1250.50m,
                     true,
                     "Primary wholesaler"));
 
@@ -47,6 +48,7 @@ public sealed class PurchasingTests
             Assert.Equal("SUP-001", created!.Code);
             Assert.Equal("Kabul Medical Supply", created.Name);
             Assert.Equal(30, created.PaymentTermsDays);
+            Assert.Equal(1250.50m, created.OpeningBalance);
 
             await suppliers.UpdateAsync(
                 id,
@@ -61,6 +63,7 @@ public sealed class PurchasingTests
                     "Kabul",
                     "Kabul",
                     45,
+                    9999m,
                     true,
                     "Updated terms"));
 
@@ -71,6 +74,7 @@ public sealed class PurchasingTests
             Assert.Equal(id, updated.Id);
             Assert.Equal("Kabul Medical Supply Ltd", updated.Name);
             Assert.Equal(45, updated.PaymentTermsDays);
+            Assert.Equal(1250.50m, updated.OpeningBalance);
 
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 suppliers.CreateAsync(
@@ -85,8 +89,86 @@ public sealed class PurchasingTests
                         null,
                         null,
                         0,
+                        0m,
                         true,
                         null)));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
+    [Fact]
+    public async Task Supplier_summary_combines_deals_payments_and_opening_balances()
+    {
+        var root = CreateTemporaryRoot();
+
+        try
+        {
+            await using var provider = BuildProvider(root);
+            await InitializeAsync(provider);
+
+            var suppliers = provider.GetRequiredService<ISupplierService>();
+            var purchasing = provider.GetRequiredService<IPurchasingService>();
+
+            var supplierId = await suppliers.CreateAsync(
+                new SaveSupplierRequest(
+                    "SUP-SUMMARY",
+                    "Summary Supplier",
+                    null,
+                    "0700000099",
+                    null,
+                    null,
+                    null,
+                    "Kabul",
+                    "Kabul",
+                    30,
+                    200m,
+                    true,
+                    null));
+
+            var medicineId = await CreateMedicineAsync(provider, "SUP-SUM-MED", "Summary Medicine");
+            var orderId = await purchasing.CreateOrderAsync(
+                new CreatePurchaseOrderRequest(
+                    supplierId,
+                    new DateOnly(2026, 10, 4),
+                    null,
+                    "AFN",
+                    null,
+                    [new CreatePurchaseOrderLineRequest(medicineId, 10m, 50m)]));
+
+            await purchasing.SubmitOrderAsync(orderId);
+            await purchasing.ApproveOrderAsync(orderId);
+
+            var invoiceId = await purchasing.CreateInvoiceAsync(
+                orderId,
+                new CreatePurchaseInvoiceRequest(
+                    "SUP-SUM-INV",
+                    null,
+                    new DateOnly(2026, 10, 4),
+                    null,
+                    null));
+
+            await purchasing.RecordSupplierPaymentAsync(
+                invoiceId,
+                new RecordSupplierPaymentRequest(
+                    125m,
+                    "AFN",
+                    "cash",
+                    null,
+                    DateTimeOffset.Parse("2026-10-04T09:00:00+04:30"),
+                    "supplier-summary-payment",
+                    null));
+
+            var summary = await suppliers.GetSummaryAsync();
+
+            Assert.Equal(1, summary.TotalSuppliers);
+            Assert.Equal(500m, summary.TotalDealValue);
+            Assert.Equal(125m, summary.TotalPaid);
+            Assert.Equal(575m, summary.OutstandingPayable);
+            Assert.Equal(200m, summary.TotalOpeningBalance);
         }
         finally
         {
@@ -501,6 +583,7 @@ public sealed class PurchasingTests
                 "Kabul",
                 "Kabul",
                 paymentTermsDays,
+                0m,
                 true,
                 null));
     }

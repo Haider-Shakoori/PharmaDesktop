@@ -3248,6 +3248,11 @@ namespace BusinessOS.Pharmacy.Persistence.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("payment_terms_days");
 
+                    b.Property<decimal>("OpeningBalance")
+                        .HasPrecision(20, 4)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("opening_balance");
+
                     b.Property<string>("Phone")
                         .HasMaxLength(64)
                         .HasColumnType("TEXT")
