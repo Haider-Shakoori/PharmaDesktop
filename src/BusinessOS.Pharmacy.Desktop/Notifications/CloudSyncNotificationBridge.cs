@@ -49,7 +49,8 @@ public sealed class CloudSyncNotificationBridge(
             case CloudSyncRunState.Synced:
                 if (priorState is CloudSyncRunState.Offline
                     or CloudSyncRunState.Failed
-                    or CloudSyncRunState.LicenseRejected)
+                    or CloudSyncRunState.LicenseRejected
+                    or CloudSyncRunState.DisabledByPlatform)
                 {
                     notifications.ShowConnectivity(
                         "Cloud connection restored. Automatic synchronization has resumed.",
@@ -113,6 +114,15 @@ public sealed class CloudSyncNotificationBridge(
                         NotificationKind.Info,
                         "Cloud sync waiting");
                 }
+                break;
+
+            case CloudSyncRunState.DisabledByPlatform:
+                PublishOnce(
+                    result.Message,
+                    () => notifications.ShowSync(
+                        result.Message,
+                        NotificationKind.Info,
+                        "Cloud sync paused by platform"));
                 break;
 
             case CloudSyncRunState.DisabledForClientTerminal:
