@@ -88,6 +88,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         NetworkSettingsViewModel networkSettings,
         PasswordChangeViewModel passwordChange,
         BarcodePrintViewModel barcodePrint,
+        NotificationCenterViewModel notificationCenter,
         NetworkConfiguration networkConfiguration,
         NotificationService notifications,
         Profile.UserProfileStore profileStore,
@@ -122,6 +123,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         NetworkSettings = networkSettings;
         PasswordChange = passwordChange;
         BarcodePrint = barcodePrint;
+        NotificationCenter = notificationCenter;
         currentPage = Dashboard;
 
         AccessManagement.SetLanguage(SelectedLanguage);
@@ -138,6 +140,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         NetworkSettings.SetLanguage(SelectedLanguage);
         PasswordChange.SetLanguage(SelectedLanguage);
         BarcodePrint.SetLanguage(SelectedLanguage);
+        NotificationCenter.SetLanguage(SelectedLanguage);
         Dashboard.NavigationRequested += OnDashboardNavigationRequested;
         Pos.ReturnSaleRequested += OnPosReturnSaleRequested;
 
@@ -181,6 +184,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public NetworkSettingsViewModel NetworkSettings { get; }
     public PasswordChangeViewModel PasswordChange { get; }
     public BarcodePrintViewModel BarcodePrint { get; }
+    public NotificationCenterViewModel NotificationCenter { get; }
 
     public string ApplicationName => "Darmaltoon";
     public string ProductName => "Darmaltoon";
@@ -203,6 +207,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         "users" => Translate("Users", "کاربران", "کارنان"),
         "roles" => Translate("Roles & Permissions", "نقش‌ها و مجوزها", "رولونه او اجازې"),
         "settings" => Translate("Settings", "تنظیمات", "امستنې"),
+        "notifications" => Translate("Notifications", "اعلان‌ها", "خبرتیاوې"),
         _ => Translate("Dashboard", "داشبورد", "ډشبورډ"),
     };
     public string PageSubtitle => CurrentSectionKey switch
@@ -259,6 +264,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "Application, deployment and local network settings",
             "تنظیمات برنامه، حالت نصب و شبکه محلی",
             "د اپلېکېشن، نصب حالت او محلي شبکې امستنې"),
+        "notifications" => Translate(
+            "Stock purchasing alerts, operations, synchronization, warnings and system history",
+            "هشدارهای خرید موجودی، عملیات، همگام‌سازی، هشدارها و تاریخچه سیستم",
+            "د زېرمتون د پېرود خبرتیاوې، عملیات، همغږي، خبرداری او سیسټم تاریخچه"),
         "customers" => Translate(
             "Customer records and per-sale credit limits",
             "اطلاعات مشتری و سقف اعتبار هر فروش",
@@ -325,7 +334,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 Notifications.RemoveAt(0);
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(9));
+            var duration = Math.Clamp(
+                _notifications.GetSettings().ToastDurationSeconds,
+                2,
+                15);
+            await Task.Delay(TimeSpan.FromSeconds(duration));
             RemoveNotification(item);
         });
     }
@@ -360,6 +373,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         NetworkSettings.SetLanguage(SelectedLanguage);
         PasswordChange.SetLanguage(SelectedLanguage);
         BarcodePrint.SetLanguage(SelectedLanguage);
+        NotificationCenter.SetLanguage(SelectedLanguage);
         CurrentSectionKey = "dashboard";
         CurrentPage = Dashboard;
         RefreshNavigation();
@@ -384,6 +398,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         NetworkSettings.SetLanguage(value);
         PasswordChange.SetLanguage(value);
         BarcodePrint.SetLanguage(value);
+        NotificationCenter.SetLanguage(value);
         RefreshLanStatusText();
         RefreshNavigation();
         RaisePageText();
@@ -570,6 +585,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
             case "sync" when _permissions.HasPermission("dashboard.view"):
                 await Dashboard.SyncNowAsync();
+                break;
+
+            case "notifications":
+                CurrentSectionKey = "notifications";
+                CurrentPage = NotificationCenter;
+                await NotificationCenter.LoadAsync();
                 break;
 
             case "closing" when _permissions.HasPermission("daily_closing.perform"):

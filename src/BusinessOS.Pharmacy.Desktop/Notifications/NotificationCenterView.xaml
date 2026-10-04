@@ -1,0 +1,443 @@
+<UserControl x:Class="BusinessOS.Pharmacy.Desktop.Notifications.NotificationCenterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="Segoe UI"
+             TextOptions.TextFormattingMode="Display"
+             TextOptions.TextRenderingMode="ClearType">
+    <UserControl.Resources>
+        <Style x:Key="NotificationSummaryCard" TargetType="Border">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#FAFFFFFF" Offset="0" />
+                        <GradientStop Color="#F0FFFFFF" Offset=".56" />
+                        <GradientStop Color="#E2F8FAFC" Offset="1" />
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#D9FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="16"
+                                      ShadowDepth="3"
+                                      Opacity="0.10"
+                                      RenderingBias="Performance" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="NotificationCardLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#475569" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="NotificationCardValue" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#0F172A" />
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,7,0,4" />
+        </Style>
+
+        <Style x:Key="NotificationCardHint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#64748B" />
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style x:Key="NotificationTableHeader" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#F1F5F9" />
+            <Setter Property="Foreground" Value="#475569" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="BorderBrush" Value="#E2E8F0" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+        </Style>
+
+        <Style x:Key="NotificationTableCell" TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        </Style>
+
+        <Style x:Key="NotificationTableRow" TargetType="DataGridRow">
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#E8EEF4" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Style.Triggers>
+                <Trigger Property="AlternationIndex" Value="1">
+                    <Setter Property="Background" Value="#FBFCFE" />
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F3FAF8" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#E9FBF7" />
+                    <Setter Property="Foreground" Value="#115E59" />
+                    <Setter Property="BorderBrush" Value="#99E7D9" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="NotificationTable" TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserResizeRows" Value="False" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="GridLinesVisibility" Value="None" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="RowHeaderWidth" Value="0" />
+            <Setter Property="AlternationCount" Value="2" />
+            <Setter Property="SelectionMode" Value="Single" />
+            <Setter Property="SelectionUnit" Value="FullRow" />
+            <Setter Property="ColumnHeaderStyle" Value="{StaticResource NotificationTableHeader}" />
+            <Setter Property="CellStyle" Value="{StaticResource NotificationTableCell}" />
+            <Setter Property="RowStyle" Value="{StaticResource NotificationTableRow}" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        </Style>
+
+        <Style x:Key="NotificationPanel" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DCE5F0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="13" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource PageBackgroundBrush}">
+        <Grid Margin="22">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="{Binding Eyebrow}"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource BrandPrimaryBrush}" />
+                    <TextBlock Text="{Binding Title}"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               Margin="0,3,0,0" />
+                    <TextBlock Text="{Binding Subtitle}"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               TextWrapping="Wrap"
+                               MaxWidth="820"
+                               Margin="0,3,0,0" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Button Content="{Binding MarkAllReadLabel}"
+                            Command="{Binding MarkAllReadCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            Height="38"
+                            Padding="12,7"
+                            Margin="0,0,8,0" />
+                    <Button Content="{Binding RefreshLabel}"
+                            Command="{Binding RefreshCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            Height="38"
+                            Padding="14,7" />
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource NotificationSummaryCard}">
+                    <StackPanel>
+                        <TextBlock Text="Out of stock" Style="{StaticResource NotificationCardLabel}" />
+                        <TextBlock Text="{Binding OutOfStockCount}"
+                                   Style="{StaticResource NotificationCardValue}"
+                                   Foreground="#B91C1C" />
+                        <TextBlock Text="Highest-priority medicines to purchase"
+                                   Style="{StaticResource NotificationCardHint}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource NotificationSummaryCard}">
+                    <StackPanel>
+                        <TextBlock Text="Low stock" Style="{StaticResource NotificationCardLabel}" />
+                        <TextBlock Text="{Binding LowStockCount}"
+                                   Style="{StaticResource NotificationCardValue}"
+                                   Foreground="#B45309" />
+                        <TextBlock Text="Below the configured minimum threshold"
+                                   Style="{StaticResource NotificationCardHint}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="4" Style="{StaticResource NotificationSummaryCard}">
+                    <StackPanel>
+                        <TextBlock Text="Unread" Style="{StaticResource NotificationCardLabel}" />
+                        <TextBlock Text="{Binding UnreadCount}"
+                                   Style="{StaticResource NotificationCardValue}"
+                                   Foreground="#0E7490" />
+                        <TextBlock Text="Operational notification history not marked read"
+                                   Style="{StaticResource NotificationCardHint}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="6" Style="{StaticResource NotificationSummaryCard}">
+                    <StackPanel>
+                        <TextBlock Text="Sync &amp; system" Style="{StaticResource NotificationCardLabel}" />
+                        <TextBlock Text="{Binding SyncSystemCount}"
+                                   Style="{StaticResource NotificationCardValue}"
+                                   Foreground="#6D28D9" />
+                        <TextBlock Text="Connectivity, synchronization and system events"
+                                   Style="{StaticResource NotificationCardHint}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="2"
+                    Style="{StaticResource NotificationPanel}"
+                    ClipToBounds="True">
+                <TabControl Background="Transparent"
+                            BorderThickness="0"
+                            Padding="10">
+                    <TabItem Header="{Binding StockTabLabel}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel Margin="4,12,4,10">
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Purchase attention list"
+                                                   FontSize="15"
+                                                   FontWeight="Bold"
+                                                   Foreground="#0F172A" />
+                                        <TextBlock Text="Out-of-stock and low-stock medicines are separated below. Suggested purchase restores stock to the configured minimum."
+                                                   Foreground="#64748B"
+                                                   FontSize="10.8"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,3,0,0" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center">
+                                        <Button Content="{Binding PrintLabel}"
+                                                Command="{Binding PrintCommand}"
+                                                Style="{StaticResource SecondaryButton}"
+                                                Height="36"
+                                                Padding="12,6"
+                                                Margin="0,0,8,0" />
+                                        <Button Content="{Binding ExportLabel}"
+                                                Command="{Binding ExportExcelCommand}"
+                                                Style="{StaticResource PrimaryButton}"
+                                                Height="36"
+                                                Padding="14,6" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border Background="#FFF7F7"
+                                        BorderBrush="#FECACA"
+                                        BorderThickness="1"
+                                        CornerRadius="10"
+                                        Padding="10"
+                                        Margin="0,0,0,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="Out of stock"
+                                                       FontWeight="Bold"
+                                                       Foreground="#991B1B" />
+                                            <TextBlock Text="Purchase these items first."
+                                                       Foreground="#B91C1C"
+                                                       FontSize="10.5" />
+                                        </StackPanel>
+                                        <Border Grid.Column="1"
+                                                Background="#FEE2E2"
+                                                CornerRadius="10"
+                                                Padding="10,4"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding OutOfStockCount}"
+                                                       Foreground="#B91C1C"
+                                                       FontWeight="Bold" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <DataGrid ItemsSource="{Binding OutOfStockItems}"
+                                          Style="{StaticResource NotificationTable}"
+                                          MinHeight="120"
+                                          MaxHeight="230"
+                                          Margin="0,0,0,16">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Medicine" Binding="{Binding Medicine}" Width="2*" MinWidth="220" />
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120" />
+                                        <DataGridTextColumn Header="Current" Binding="{Binding CurrentStock, StringFormat={}{0:N2}}" Width="110" />
+                                        <DataGridTextColumn Header="Minimum" Binding="{Binding MinimumStock, StringFormat={}{0:N2}}" Width="110" />
+                                        <DataGridTextColumn Header="Suggested purchase" Binding="{Binding SuggestedPurchase, StringFormat={}{0:N2}}" Width="145" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <Border Background="#FFFBEB"
+                                        BorderBrush="#FDE68A"
+                                        BorderThickness="1"
+                                        CornerRadius="10"
+                                        Padding="10"
+                                        Margin="0,0,0,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="Low stock"
+                                                       FontWeight="Bold"
+                                                       Foreground="#92400E" />
+                                            <TextBlock Text="Replenish before these medicines reach zero."
+                                                       Foreground="#B45309"
+                                                       FontSize="10.5" />
+                                        </StackPanel>
+                                        <Border Grid.Column="1"
+                                                Background="#FEF3C7"
+                                                CornerRadius="10"
+                                                Padding="10,4"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding LowStockCount}"
+                                                       Foreground="#B45309"
+                                                       FontWeight="Bold" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
+
+                                <DataGrid ItemsSource="{Binding LowStockItems}"
+                                          Style="{StaticResource NotificationTable}"
+                                          MinHeight="120"
+                                          MaxHeight="230">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Medicine" Binding="{Binding Medicine}" Width="2*" MinWidth="220" />
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120" />
+                                        <DataGridTextColumn Header="Current" Binding="{Binding CurrentStock, StringFormat={}{0:N2}}" Width="110" />
+                                        <DataGridTextColumn Header="Minimum" Binding="{Binding MinimumStock, StringFormat={}{0:N2}}" Width="110" />
+                                        <DataGridTextColumn Header="Suggested purchase" Binding="{Binding SuggestedPurchase, StringFormat={}{0:N2}}" Width="145" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+
+                    <TabItem Header="{Binding OperationsTabLabel}">
+                        <DataGrid ItemsSource="{Binding OperationsItems}"
+                                  Style="{StaticResource NotificationTable}"
+                                  Margin="4,12,4,4">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Time" Binding="{Binding CreatedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}" Width="145" />
+                                <DataGridTextColumn Header="Type" Binding="{Binding Kind}" Width="95" />
+                                <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="110" />
+                                <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="135" />
+                                <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="2*" MinWidth="280" />
+                                <DataGridTextColumn Header="Reference" Binding="{Binding Reference}" Width="130" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+
+                    <TabItem Header="{Binding SyncTabLabel}">
+                        <DataGrid ItemsSource="{Binding SyncSystemItems}"
+                                  Style="{StaticResource NotificationTable}"
+                                  Margin="4,12,4,4">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Time" Binding="{Binding CreatedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}" Width="145" />
+                                <DataGridTextColumn Header="Type" Binding="{Binding Kind}" Width="95" />
+                                <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="120" />
+                                <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="2*" MinWidth="320" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+
+                    <TabItem Header="{Binding WarningTabLabel}">
+                        <DataGrid ItemsSource="{Binding WarningErrorItems}"
+                                  Style="{StaticResource NotificationTable}"
+                                  Margin="4,12,4,4">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Time" Binding="{Binding CreatedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}" Width="145" />
+                                <DataGridTextColumn Header="Severity" Binding="{Binding Kind}" Width="100" />
+                                <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="120" />
+                                <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="2*" MinWidth="340" />
+                                <DataGridTextColumn Header="Reference" Binding="{Binding Reference}" Width="130" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+
+                    <TabItem Header="{Binding AllTabLabel}">
+                        <Grid Margin="4,12,4,4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <DataGrid ItemsSource="{Binding AllNotifications}"
+                                      Style="{StaticResource NotificationTable}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Time" Binding="{Binding CreatedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}" Width="145" />
+                                    <DataGridTextColumn Header="Type" Binding="{Binding Kind}" Width="95" />
+                                    <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="120" />
+                                    <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="135" />
+                                    <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="2*" MinWidth="300" />
+                                    <DataGridCheckBoxColumn Header="Read" Binding="{Binding IsRead}" Width="70" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <Button Grid.Row="1"
+                                    Content="{Binding ClearHistoryLabel}"
+                                    Command="{Binding ClearHistoryCommand}"
+                                    Style="{StaticResource SecondaryButton}"
+                                    HorizontalAlignment="Right"
+                                    Height="34"
+                                    Padding="12,5"
+                                    Margin="0,10,0,0"
+                                    Foreground="#B91C1C" />
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+            </Border>
+
+            <TextBlock Grid.Row="3"
+                       Text="{Binding StatusMessage}"
+                       Foreground="#64748B"
+                       FontSize="11.2"
+                       TextWrapping="Wrap"
+                       Margin="2,9,2,0" />
+        </Grid>
+    </Grid>
+</UserControl>
