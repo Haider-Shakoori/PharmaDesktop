@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Storage;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using BusinessOS.Pharmacy.LocalClient;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -41,6 +42,9 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     [ObservableProperty] private string networkProfileStatus = string.Empty;
     [ObservableProperty] private string firewallStatus = string.Empty;
     [ObservableProperty] private string diagnosticsReport = string.Empty;
+    [ObservableProperty] private bool? liveServerSyncEnabled;
+    [ObservableProperty] private string liveServerSyncStatus = string.Empty;
+    [ObservableProperty] private string liveServerSyncManagedBy = string.Empty;
     [ObservableProperty] private string pairingCode = string.Empty;
     [ObservableProperty] private string pairingExpiry = string.Empty;
     [ObservableProperty] private string profileFirstName = string.Empty;
@@ -541,6 +545,22 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     public string ServerIdLabel => T("Server UUID", "شناسه سرور", "د سرور پېژند");
     public string CertificateLabel => T("Certificate fingerprint", "اثر انگشت گواهی", "د سند ګوتنښه");
     public string ServiceLabel => T("Local Server service", "سرویس سرور محلی", "د محلي سرور خدمت");
+    public string LiveServerSyncTitle => T(
+        "Live Server Connection & Sync",
+        "اتصال و همگام‌سازی سرور زنده",
+        "د ژوندۍ سرور اړیکه او همغږي");
+    public string LiveServerSyncSubtitle => T(
+        "This setting is controlled by the Darmaltoon platform. When it is off, this PC continues working locally and pending changes remain queued.",
+        "این تنظیم توسط پلتفرم دارملتون کنترل می‌شود. وقتی خاموش باشد، این کامپیوتر به‌صورت محلی کار می‌کند و تغییرات در صف می‌ماند.",
+        "دا تنظیم د دارملتون پلاتفورم لخوا کنټرولېږي. کله چې بند وي، دا کمپیوټر محلي کار ته دوام ورکوي او بدلونونه په کتار کې پاتې کېږي.");
+    public string LiveServerSyncToggleLabel => T(
+        "Connect & synchronize with live server",
+        "اتصال و همگام‌سازی با سرور زنده",
+        "له ژوندۍ سرور سره نښلول او همغږي");
+    public string LiveServerSyncManagedLabel => T(
+        "Managed by platform",
+        "مدیریت‌شده توسط پلتفرم",
+        "د پلاتفورم لخوا اداره کېږي");
     public string ConnectionLabel => T("Connection", "اتصال", "اړیکه");
     public string TerminalsLabel => T("Registered terminals", "ترمینال‌های ثبت‌شده", "ثبت شوي ترمینلونه");
     public string PairingLabel => T("New terminal pairing", "اتصال ترمینال جدید", "د نوي ترمینل نښلول");
@@ -573,6 +593,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
             LoadPosSettings();
             LoadAppearance();
             LoadNotificationSettings();
+            await LoadPlatformSyncPolicyAsync();
 
             var configuration = await _configurationStore.LoadAsync();
             ApplyConfiguration(configuration);
@@ -635,6 +656,44 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
                 "تنظیمات شبکه بارگذاری شد.",
                 "د شبکې تنظیمات پورته شول.");
         });
+    }
+
+    private async Task LoadPlatformSyncPolicyAsync()
+    {
+        var sync = _services.GetService<ICloudSyncService>();
+        if (sync is null)
+        {
+            LiveServerSyncEnabled = null;
+            LiveServerSyncManagedBy = T(
+                "Managed by Main Pharmacy Server",
+                "مدیریت‌شده توسط سرور اصلی دواخانه",
+                "د اصلي درملتون سرور لخوا اداره کېږي");
+            LiveServerSyncStatus = T(
+                "This terminal does not connect directly to the live server.",
+                "این ترمینال مستقیماً به سرور زنده متصل نمی‌شود.",
+                "دا ترمینل مستقیم ژوندۍ سرور ته نه نښلي.");
+            return;
+        }
+
+        try
+        {
+            var policy = await sync.GetPlatformPolicyAsync();
+            LiveServerSyncEnabled = policy.Enabled;
+            LiveServerSyncManagedBy = T(
+                "Managed by platform",
+                "مدیریت‌شده توسط پلتفرم",
+                "د پلاتفورم لخوا اداره کېږي");
+            LiveServerSyncStatus = policy.Message;
+        }
+        catch (Exception exception)
+        {
+            LiveServerSyncEnabled = null;
+            LiveServerSyncManagedBy = T(
+                "Platform policy unavailable",
+                "سیاست پلتفرم در دسترس نیست",
+                "د پلاتفورم پالیسي شتون نه لري");
+            LiveServerSyncStatus = exception.Message;
+        }
     }
 
     private async Task CreatePairingCodeAsync()
@@ -1110,6 +1169,10 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(ServerIdLabel));
         OnPropertyChanged(nameof(CertificateLabel));
         OnPropertyChanged(nameof(ServiceLabel));
+        OnPropertyChanged(nameof(LiveServerSyncTitle));
+        OnPropertyChanged(nameof(LiveServerSyncSubtitle));
+        OnPropertyChanged(nameof(LiveServerSyncToggleLabel));
+        OnPropertyChanged(nameof(LiveServerSyncManagedLabel));
         OnPropertyChanged(nameof(ConnectionLabel));
         OnPropertyChanged(nameof(TerminalsLabel));
         OnPropertyChanged(nameof(PairingLabel));
