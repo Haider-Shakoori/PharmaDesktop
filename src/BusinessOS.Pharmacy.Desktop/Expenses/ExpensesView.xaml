@@ -6,16 +6,16 @@
              TextOptions.TextRenderingMode="ClearType">
     <UserControl.Resources>
         <Style x:Key="ExpenseSummaryCard" TargetType="Border">
-            <Setter Property="BorderBrush" Value="#B8FFFFFF" />
+            <Setter Property="BorderBrush" Value="#D9FFFFFF" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="16" />
             <Setter Property="Padding" Value="16,14" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect BlurRadius="14"
+                    <DropShadowEffect BlurRadius="16"
                                       ShadowDepth="3"
-                                      Opacity="0.12"
+                                      Opacity="0.10"
                                       RenderingBias="Performance" />
                 </Setter.Value>
             </Setter>
@@ -207,9 +207,9 @@
                 <Border Grid.Column="0" Style="{StaticResource ExpenseSummaryCard}">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#E8FFFFFF" Offset="0" />
-                            <GradientStop Color="#C6ECFEFF" Offset=".56" />
-                            <GradientStop Color="#A8CFFAFE" Offset="1" />
+                            <GradientStop Color="#FAFFFFFF" Offset="0" />
+                            <GradientStop Color="#F0FFFFFF" Offset=".56" />
+                            <GradientStop Color="#E2F8FAFC" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
                     <Grid>
@@ -237,9 +237,9 @@
                 <Border Grid.Column="2" Style="{StaticResource ExpenseSummaryCard}">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#EAFFFFFF" Offset="0" />
-                            <GradientStop Color="#D9F5F3FF" Offset=".55" />
-                            <GradientStop Color="#C3E9D5FF" Offset="1" />
+                            <GradientStop Color="#FAFFFFFF" Offset="0" />
+                            <GradientStop Color="#F0FFFFFF" Offset=".55" />
+                            <GradientStop Color="#E2F8FAFC" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
                     <Grid>
@@ -267,9 +267,9 @@
                 <Border Grid.Column="4" Style="{StaticResource ExpenseSummaryCard}">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#EAFFFFFF" Offset="0" />
-                            <GradientStop Color="#DDFEF2F2" Offset=".54" />
-                            <GradientStop Color="#C7FECACA" Offset="1" />
+                            <GradientStop Color="#FAFFFFFF" Offset="0" />
+                            <GradientStop Color="#F0FFFFFF" Offset=".54" />
+                            <GradientStop Color="#E2F8FAFC" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
                     <Grid>
@@ -297,9 +297,9 @@
                 <Border Grid.Column="6" Style="{StaticResource ExpenseSummaryCard}">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#EAFFFFFF" Offset="0" />
-                            <GradientStop Color="#D9F0FDF4" Offset=".54" />
-                            <GradientStop Color="#BFD1FAE5" Offset="1" />
+                            <GradientStop Color="#FAFFFFFF" Offset="0" />
+                            <GradientStop Color="#F0FFFFFF" Offset=".54" />
+                            <GradientStop Color="#E2F8FAFC" Offset="1" />
                         </LinearGradientBrush>
                     </Border.Background>
                     <Grid>
