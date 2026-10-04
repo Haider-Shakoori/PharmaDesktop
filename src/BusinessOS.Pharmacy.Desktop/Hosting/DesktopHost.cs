@@ -156,7 +156,12 @@ public static class DesktopHost
                 services.AddSingleton<NetworkSettingsViewModel>();
                 services.AddSingleton<PasswordChangeViewModel>();
                 services.AddSingleton<Barcode.BarcodePrintViewModel>();
+                services.AddSingleton<Notifications.NotificationSettingsStore>();
+                services.AddSingleton<Notifications.NotificationHistoryStore>();
+                services.AddSingleton<Notifications.NotificationPurchaseExportService>();
                 services.AddSingleton<Notifications.NotificationService>();
+                services.AddSingleton<Notifications.NotificationCenterViewModel>();
+                services.AddHostedService<Notifications.CloudSyncNotificationBridge>();
                 services.AddSingleton<Profile.UserProfileStore>();
                 services.AddSingleton<Printing.ReceiptSettingsStore>();
                 services.AddSingleton<Pos.PosSettingsStore>();
