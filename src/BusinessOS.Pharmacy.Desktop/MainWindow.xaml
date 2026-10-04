@@ -18,6 +18,7 @@
         xmlns:updates="clr-namespace:BusinessOS.Pharmacy.Desktop.Updates"
         xmlns:auth="clr-namespace:BusinessOS.Pharmacy.Desktop.Authentication"
         xmlns:barcode="clr-namespace:BusinessOS.Pharmacy.Desktop.Barcode"
+        xmlns:notifications="clr-namespace:BusinessOS.Pharmacy.Desktop.Notifications"
         xmlns:localization="clr-namespace:BusinessOS.Pharmacy.Desktop.Localization"
         Title="BusinessOS — Darmaltoon"
         Width="1600" Height="920"
@@ -43,6 +44,7 @@
         <KeyBinding Key="D3" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="updates" />
         <KeyBinding Key="D4" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="network" />
         <KeyBinding Key="D5" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="settings" />
+        <KeyBinding Key="D6" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="notifications" />
         <KeyBinding Key="D7" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="barcode" />
         <KeyBinding Key="F11" Command="{Binding ToggleFullScreenCommand}" />
     </Window.InputBindings>
@@ -124,6 +126,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type barcode:BarcodePrintViewModel}">
             <barcode:BarcodePrintView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type notifications:NotificationCenterViewModel}">
+            <notifications:NotificationCenterView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type customers:CustomersViewModel}">
             <customers:CustomersView />
@@ -518,11 +523,11 @@
                         </Border>
 
                         <Button Command="{Binding NavigateCommand}"
-                                CommandParameter="inventory"
+                                CommandParameter="notifications"
                                 Style="{StaticResource IconButton}"
                                 Width="38" Height="38" MinHeight="38"
                                 Margin="0,0,8,0"
-                                ToolTip="Inventory alerts">
+                                ToolTip="Notification Center · Alt+6">
                             <Grid>
                                 <Path Data="{StaticResource IconBell}" Width="19" Height="19"
                                       Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.8" Fill="Transparent" Stretch="Uniform" />
@@ -633,72 +638,151 @@
                       Panel.ZIndex="99">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border Width="380" Margin="0,8,0,0" Padding="14,11" CornerRadius="10" BorderThickness="1">
+                    <Border Width="392"
+                            Margin="0,8,0,0"
+                            CornerRadius="15"
+                            BorderThickness="1"
+                            ClipToBounds="True">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="20"
+                                              ShadowDepth="4"
+                                              Opacity="0.18"
+                                              RenderingBias="Performance" />
+                        </Border.Effect>
                         <Border.Style>
                             <Style TargetType="Border">
-                                <Setter Property="Background" Value="#EFF6FF" />
-                                <Setter Property="BorderBrush" Value="#BFDBFE" />
+                                <Setter Property="Background" Value="#F5FFFFFF" />
+                                <Setter Property="BorderBrush" Value="#D7E4F2" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding Kind}" Value="Success">
-                                        <Setter Property="Background" Value="#ECFDF5" />
-                                        <Setter Property="BorderBrush" Value="#A7F3D0" />
+                                        <Setter Property="BorderBrush" Value="#B7E8D2" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding Kind}" Value="Warning">
-                                        <Setter Property="Background" Value="#FFFBEB" />
-                                        <Setter Property="BorderBrush" Value="#FDE68A" />
+                                        <Setter Property="BorderBrush" Value="#F5D995" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding Kind}" Value="Error">
-                                        <Setter Property="Background" Value="#FEF2F2" />
-                                        <Setter Property="BorderBrush" Value="#FECACA" />
+                                        <Setter Property="BorderBrush" Value="#F2B8B8" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
+
                         <Grid>
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="5" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel>
-                                <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="12.5">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#1D4ED8" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Kind}" Value="Success">
-                                                    <Setter Property="Foreground" Value="#15803D" />
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Kind}" Value="Warning">
-                                                    <Setter Property="Foreground" Value="#B45309" />
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Kind}" Value="Error">
-                                                    <Setter Property="Foreground" Value="#B91C1C" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <TextBlock Text="{Binding Message}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,3,0,0"
-                                           FontSize="12"
-                                           Foreground="#334155" />
-                            </StackPanel>
-                            <Button Grid.Column="1"
-                                    Style="{StaticResource GhostButton}"
-                                    Width="26" Height="26" MinHeight="26"
-                                    Padding="4"
-                                    Margin="8,0,0,0"
-                                    VerticalAlignment="Top"
-                                    Command="{Binding DismissCommand}"
-                                    ToolTip="Dismiss">
-                                <Path Data="M4,4 L12,12 M12,4 L4,12"
-                                      Width="10" Height="10"
-                                      Stroke="{DynamicResource TextMutedBrush}"
-                                      StrokeThickness="1.8"
-                                      Fill="Transparent"
-                                      Stretch="Uniform" />
-                            </Button>
+
+                            <Border CornerRadius="15,0,0,15">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#3B82F6" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Kind}" Value="Success">
+                                                <Setter Property="Background" Value="#10B981" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Kind}" Value="Warning">
+                                                <Setter Property="Background" Value="#F59E0B" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Kind}" Value="Error">
+                                                <Setter Property="Background" Value="#EF4444" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+
+                            <Grid Grid.Column="1" Margin="14,12,11,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border CornerRadius="9"
+                                                Padding="7,2"
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#EAF2FF" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Kind}" Value="Success">
+                                                            <Setter Property="Background" Value="#E6F8EF" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Kind}" Value="Warning">
+                                                            <Setter Property="Background" Value="#FFF5D8" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Kind}" Value="Error">
+                                                            <Setter Property="Background" Value="#FDEAEA" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontSize="11"
+                                                       FontWeight="Bold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#2563EB" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Kind}" Value="Success">
+                                                                <Setter Property="Foreground" Value="#047857" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Kind}" Value="Warning">
+                                                                <Setter Property="Foreground" Value="#B45309" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Kind}" Value="Error">
+                                                                <Setter Property="Foreground" Value="#B91C1C" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+
+                                        <TextBlock Text="{Binding Category}"
+                                                   Foreground="#64748B"
+                                                   FontSize="10.2"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Text="  •  "
+                                                   Foreground="#CBD5E1"
+                                                   FontSize="10.2"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding CreatedAt, StringFormat={}{0:HH:mm}}"
+                                                   Foreground="#94A3B8"
+                                                   FontSize="10.2"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <TextBlock Text="{Binding Message}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,7,4,0"
+                                               FontSize="12.2"
+                                               LineHeight="18"
+                                               Foreground="#334155" />
+                                </StackPanel>
+
+                                <Button Grid.Column="1"
+                                        Style="{StaticResource GhostButton}"
+                                        Width="28"
+                                        Height="28"
+                                        MinHeight="28"
+                                        Padding="5"
+                                        Margin="8,-3,-2,0"
+                                        VerticalAlignment="Top"
+                                        Command="{Binding DismissCommand}"
+                                        ToolTip="Dismiss">
+                                    <Path Data="M4,4 L12,12 M12,4 L4,12"
+                                          Width="10"
+                                          Height="10"
+                                          Stroke="#64748B"
+                                          StrokeThickness="1.8"
+                                          Fill="Transparent"
+                                          Stretch="Uniform" />
+                                </Button>
+                            </Grid>
                         </Grid>
                     </Border>
                 </DataTemplate>
