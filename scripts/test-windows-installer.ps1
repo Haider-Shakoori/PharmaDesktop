@@ -27,8 +27,12 @@ function Find-Iscc {
     throw "ISCC.exe not found."
 }
 
-function Install-Setup([string]$setup) {
-    $process = Start-Process $setup -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-" -Wait -PassThru
+function Install-Setup([string]$setup, [switch]$CreateDesktopShortcut) {
+    $arguments = @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-")
+    if ($CreateDesktopShortcut) {
+        $arguments += "/TASKS=desktopicon"
+    }
+    $process = Start-Process $setup -ArgumentList $arguments -Wait -PassThru
     if ($process.ExitCode -notin 0, 3010) {
         throw "Setup failed with exit code $($process.ExitCode): $setup"
     }
@@ -43,6 +47,26 @@ function Verify-FirstInteractiveLaunch {
     }
     Stop-Process -Id $process.Id -Force
     $process.WaitForExit()
+}
+
+function Verify-DesktopShortcut([bool]$expected) {
+    $desktopRoots = @(
+        [Environment]::GetFolderPath("CommonDesktopDirectory"),
+        [Environment]::GetFolderPath("DesktopDirectory")
+    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    $shortcut = $desktopRoots |
+        ForEach-Object { Join-Path $_ "Darmaltoon.lnk" } |
+        Where-Object { Test-Path $_ } |
+        Select-Object -First 1
+
+    if ($expected -and [string]::IsNullOrWhiteSpace($shortcut)) {
+        throw "Desktop shortcut was requested but not installed."
+    }
+
+    if (-not $expected -and -not [string]::IsNullOrWhiteSpace($shortcut)) {
+        throw "Desktop shortcut was installed even though the optional task was not selected."
+    }
 }
 
 function Uninstall-Darmaltoon {
@@ -135,9 +159,10 @@ foreach ($file in @($standaloneSetup, $serverSetup, $clientSetup)) {
     if (-not (Test-Path $file)) { throw "Release artifact missing: $file" }
 }
 
-# Clean standalone install.
-Install-Setup $standaloneSetup
+# Clean standalone install with the optional desktop shortcut selected.
+Install-Setup $standaloneSetup -CreateDesktopShortcut
 Verify-InstalledApp "Standalone"
+Verify-DesktopShortcut $true
 Verify-ProgramDataWritableAcl
 Verify-FirstInteractiveLaunch
 Seed-PreservedData
@@ -162,9 +187,10 @@ Verify-ProgramDataPreserved
 Uninstall-Darmaltoon
 Verify-ProgramDataPreserved
 
-# Main Server package.
+# Main Server package: optional desktop shortcut remains unchecked by default.
 Install-Setup $serverSetup
 Verify-InstalledApp "Server"
+Verify-DesktopShortcut $false
 Verify-ProgramDataWritableAcl
 $service = Get-Service -Name "BusinessOS Pharmacy Local Server" -ErrorAction Stop
 if ($service.StartType -ne "Automatic") { throw "Main Server service is not configured for automatic startup." }
@@ -178,6 +204,7 @@ Verify-ProgramDataPreserved
 # Client Terminal package must not install server service.
 Install-Setup $clientSetup
 Verify-InstalledApp "Client"
+Verify-DesktopShortcut $false
 Verify-ProgramDataWritableAcl
 if (Get-Service -Name "BusinessOS Pharmacy Local Server" -ErrorAction SilentlyContinue) { throw "Client Terminal installed the Main Server service." }
 Verify-ProgramDataPreserved

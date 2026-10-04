@@ -51,6 +51,8 @@ jobs:
           dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/notification-toast-real.png notification-toast
           dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/roles-permissions-real.png roles-permissions
           dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/roles-permissions-glass-real.png roles-permissions-glass
+          dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/login-real.png login
+          dotnet run --project tools/DashboardScreenshot/DashboardScreenshot.csproj -c Release --no-build -- artifacts/ui/login-glass-real.png login-glass
           if (-not (Test-Path artifacts/ui/dashboard-real.png)) {
             throw "Real WPF dashboard screenshot was not produced."
           }
@@ -68,6 +70,12 @@ jobs:
           }
           if (-not (Test-Path artifacts/ui/roles-permissions-glass-real.png)) {
             throw "Real WPF glass Roles & Permissions screenshot was not produced."
+          }
+          if (-not (Test-Path artifacts/ui/login-real.png)) {
+            throw "Real WPF login screenshot was not produced."
+          }
+          if (-not (Test-Path artifacts/ui/login-glass-real.png)) {
+            throw "Real WPF glass login screenshot was not produced."
           }
 
       - name: Upload visual QA artifact

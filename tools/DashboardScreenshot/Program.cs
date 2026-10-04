@@ -259,8 +259,8 @@ internal static class Program
             var login = new BusinessOS.Pharmacy.Desktop.Authentication.LoginWindow(
                 new BusinessOS.Pharmacy.Desktop.Authentication.LoginViewModel(session))
             {
-                Width = 760,
-                Height = 860,
+                Width = 980,
+                Height = 680,
                 WindowStyle = WindowStyle.None,
                 ResizeMode = ResizeMode.NoResize,
                 ShowInTaskbar = false,
@@ -273,11 +273,11 @@ internal static class Program
             login.UpdateLayout();
 
             var loginContent = (FrameworkElement)login.Content;
-            loginContent.Measure(new Size(760, 900));
-            loginContent.Arrange(new Rect(0, 0, 760, 900));
+            loginContent.Measure(new Size(980, 680));
+            loginContent.Arrange(new Rect(0, 0, 980, 680));
             loginContent.UpdateLayout();
 
-            CaptureVisual(loginContent, output, 760, 900);
+            CaptureVisual(loginContent, output, 980, 680);
             login.Close();
             app.Shutdown();
             Console.WriteLine($"Captured real WPF {mode} to {output}");

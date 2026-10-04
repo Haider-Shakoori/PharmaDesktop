@@ -37,6 +37,9 @@ AppSupportURL=https://businessos.af
 DefaultDirName={autopf64}\BusinessOS\Darmaltoon
 DefaultGroupName=BusinessOS
 DisableProgramGroupPage=yes
+DisableWelcomePage=no
+DisableReadyPage=no
+DisableFinishedPage=no
 PrivilegesRequired=admin
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -59,6 +62,9 @@ VersionInfoCompany={#MyPublisher}
 VersionInfoDescription=Darmaltoon Pharmacy Management Setup
 VersionInfoProductName=Darmaltoon
 VersionInfoProductVersion={#MyAppVersion}
+AppComments=Premium pharmacy management by BusinessOS.af
+AppContact=BusinessOS Support
+AppCopyright=Copyright (c) BusinessOS.af
 #if AppIconFile != ""
 SetupIconFile={#AppIconFile}
 #endif
@@ -69,9 +75,12 @@ Name: "{commonappdata}\BusinessOS\Pharmacy"; Permissions: users-modify; Flags: u
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+[Tasks]
+Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Shortcuts"; Flags: unchecked
+
 [Icons]
 Name: "{autoprograms}\BusinessOS\Darmaltoon"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
-Name: "{autodesktop}\Darmaltoon"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
+Name: "{autodesktop}\Darmaltoon"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Registry]
 Root: HKLM; Subkey: "Software\BusinessOS\Darmaltoon"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Flags: uninsdeletevalue
@@ -79,6 +88,7 @@ Root: HKLM; Subkey: "Software\BusinessOS\Darmaltoon"; ValueType: string; ValueNa
 
 [Run]
 Filename: "{sys}\icacls.exe"; Parameters: """{commonappdata}\BusinessOS\Pharmacy"" /inheritance:e /grant *S-1-5-32-545:(OI)(CI)M /T /C"; Flags: runhidden waituntilterminated
+Filename: "{app}\{#MyAppExeName}"; Description: "Launch Darmaltoon"; Flags: nowait postinstall skipifsilent
 
 #if DeploymentMode == "Server"
 [Run]
@@ -99,6 +109,16 @@ Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=
 [Code]
 var
   ServiceWasRunning: Boolean;
+
+procedure InitializeWizard;
+begin
+  WizardForm.Caption := 'Darmaltoon Setup';
+  WizardForm.WelcomeLabel1.Caption := 'Welcome to Darmaltoon';
+  WizardForm.WelcomeLabel2.Caption :=
+    'Install Darmaltoon {#MyAppVersion} — {#ModeLabel}' + #13#10 + #13#10 +
+    'Secure, local-first pharmacy management by BusinessOS.af.' + #13#10 +
+    'Choose your shortcut preference on the next steps, then Setup will handle the rest.';
+end;
 
 function ServiceIsRunning(): Boolean;
 var
