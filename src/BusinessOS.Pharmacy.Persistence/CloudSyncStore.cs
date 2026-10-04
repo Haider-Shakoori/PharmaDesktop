@@ -366,6 +366,16 @@ public sealed class CloudSyncStore(
             }
         }
 
+        await context.SaveChangesAsync(cancellationToken);
+
+        await CloudRemoteRecordApplier.ApplyAsync(
+            context,
+            tenantId,
+            stream,
+            records,
+            now,
+            cancellationToken);
+
         var cursor = await context.Set<CloudSyncCursorEntity>()
             .SingleOrDefaultAsync(
                 x => x.TenantId == tenantId && x.Stream == stream,
