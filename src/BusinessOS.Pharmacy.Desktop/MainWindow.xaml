@@ -18,6 +18,7 @@
         xmlns:updates="clr-namespace:BusinessOS.Pharmacy.Desktop.Updates"
         xmlns:auth="clr-namespace:BusinessOS.Pharmacy.Desktop.Authentication"
         xmlns:barcode="clr-namespace:BusinessOS.Pharmacy.Desktop.Barcode"
+        xmlns:notifications="clr-namespace:BusinessOS.Pharmacy.Desktop.Notifications"
         xmlns:localization="clr-namespace:BusinessOS.Pharmacy.Desktop.Localization"
         Title="BusinessOS — Darmaltoon"
         Width="1600" Height="920"
@@ -43,6 +44,7 @@
         <KeyBinding Key="D3" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="updates" />
         <KeyBinding Key="D4" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="network" />
         <KeyBinding Key="D5" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="settings" />
+        <KeyBinding Key="D6" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="notifications" />
         <KeyBinding Key="D7" Modifiers="Alt" Command="{Binding NavigateCommand}" CommandParameter="barcode" />
         <KeyBinding Key="F11" Command="{Binding ToggleFullScreenCommand}" />
     </Window.InputBindings>
@@ -124,6 +126,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type barcode:BarcodePrintViewModel}">
             <barcode:BarcodePrintView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type notifications:NotificationCenterViewModel}">
+            <notifications:NotificationCenterView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type customers:CustomersViewModel}">
             <customers:CustomersView />
@@ -518,11 +523,11 @@
                         </Border>
 
                         <Button Command="{Binding NavigateCommand}"
-                                CommandParameter="inventory"
+                                CommandParameter="notifications"
                                 Style="{StaticResource IconButton}"
                                 Width="38" Height="38" MinHeight="38"
                                 Margin="0,0,8,0"
-                                ToolTip="Inventory alerts">
+                                ToolTip="Notification Center · Alt+6">
                             <Grid>
                                 <Path Data="{StaticResource IconBell}" Width="19" Height="19"
                                       Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.8" Fill="Transparent" Stretch="Uniform" />
