@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BusinessOS.Pharmacy.Application.Abstractions.Administration;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 
 namespace BusinessOS.Pharmacy.Licensing;
 
@@ -11,17 +12,39 @@ public sealed class DesktopAccessManagementService : IAccessManagementService
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IUserSessionStore _sessions;
+    private readonly ICloudSyncStore _syncStore;
 
     public DesktopAccessManagementService(
         IHttpClientFactory httpClientFactory,
-        IUserSessionStore sessions)
+        IUserSessionStore sessions,
+        ICloudSyncStore syncStore)
     {
         _httpClientFactory = httpClientFactory;
         _sessions = sessions;
+        _syncStore = syncStore;
     }
 
-    public Task<AccessManagementSnapshot> LoadAsync(CancellationToken cancellationToken = default) =>
-        SendAsync(HttpMethod.Get, "/api/v1/desktop/access", null, cancellationToken);
+    public async Task<AccessManagementSnapshot> LoadAsync(
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await SendAsync(
+                HttpMethod.Get,
+                "/api/v1/desktop/access",
+                null,
+                cancellationToken);
+        }
+        catch (HttpRequestException)
+        {
+            return await LoadCachedAsync(cancellationToken);
+        }
+        catch (TaskCanceledException)
+            when (!cancellationToken.IsCancellationRequested)
+        {
+            return await LoadCachedAsync(cancellationToken);
+        }
+    }
 
     public Task<AccessManagementSnapshot> CreateUserAsync(
         SaveAccessUserRequest request,
@@ -98,6 +121,185 @@ public sealed class DesktopAccessManagementService : IAccessManagementService
                 "The Darmaltoon access service returned an invalid response.",
                 exception);
         }
+    }
+
+    private async Task<AccessManagementSnapshot> LoadCachedAsync(
+        CancellationToken cancellationToken)
+    {
+        var state = await _sessions.LoadAsync(cancellationToken)
+            ?? throw new InvalidOperationException(
+                "No synchronized pharmacy access directory is available on this PC.");
+
+        var tenantId = state.User.TenantId;
+        var userRecords = await _syncStore.GetRemoteRecordsAsync(
+            tenantId,
+            "users",
+            cancellationToken: cancellationToken);
+        var roleRecords = await _syncStore.GetRemoteRecordsAsync(
+            tenantId,
+            "roles",
+            cancellationToken: cancellationToken);
+        var permissionRecords = await _syncStore.GetRemoteRecordsAsync(
+            tenantId,
+            "permissions",
+            cancellationToken: cancellationToken);
+
+        if (userRecords.Count == 0 &&
+            roleRecords.Count == 0 &&
+            permissionRecords.Count == 0)
+        {
+            throw new InvalidOperationException(
+                "The cloud is unavailable and this PC has not synchronized the pharmacy user directory yet.");
+        }
+
+        var permissions = permissionRecords
+            .Select(ParsePermission)
+            .OrderBy(x => x.Code, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var roles = roleRecords
+            .Select(ParseRole)
+            .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var users = userRecords
+            .Select(ParseUser)
+            .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return new AccessManagementSnapshot(users, roles, permissions);
+    }
+
+    private static AccessPermissionItem ParsePermission(
+        CloudSyncRemoteRecord record)
+    {
+        using var document = JsonDocument.Parse(record.PayloadJson);
+        var root = document.RootElement;
+
+        return new AccessPermissionItem(
+            ReadInt(root, "id", record.ServerId),
+            ReadRequired(root, "code"),
+            ReadRequired(root, "name"),
+            ReadOptional(root, "description"));
+    }
+
+    private static AccessRoleItem ParseRole(
+        CloudSyncRemoteRecord record)
+    {
+        using var document = JsonDocument.Parse(record.PayloadJson);
+        var root = document.RootElement;
+        var permissions = new List<AccessPermissionItem>();
+
+        if (root.TryGetProperty("permissions", out var values) &&
+            values.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var value in values.EnumerateArray())
+            {
+                permissions.Add(new AccessPermissionItem(
+                    ReadInt(value, "id"),
+                    ReadRequired(value, "code"),
+                    ReadRequired(value, "name"),
+                    ReadOptional(value, "description")));
+            }
+        }
+
+        return new AccessRoleItem(
+            ReadInt(root, "id", record.ServerId),
+            ReadRequired(root, "name"),
+            ReadRequired(root, "code"),
+            ReadBool(root, "is_system"),
+            ReadInt(root, "users_count"),
+            permissions);
+    }
+
+    private static AccessUserItem ParseUser(
+        CloudSyncRemoteRecord record)
+    {
+        using var document = JsonDocument.Parse(record.PayloadJson);
+        var root = document.RootElement;
+        var roles = new List<AccessRoleReference>();
+
+        if (root.TryGetProperty("roles", out var values) &&
+            values.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var value in values.EnumerateArray())
+            {
+                roles.Add(new AccessRoleReference(
+                    ReadInt(value, "id"),
+                    ReadRequired(value, "name"),
+                    ReadRequired(value, "code")));
+            }
+        }
+
+        return new AccessUserItem(
+            ReadInt(root, "id", record.ServerId),
+            ReadRequired(root, "name"),
+            ReadRequired(root, "email"),
+            ReadBool(root, "is_active", true) &&
+            !ReadBool(root, "is_deleted"),
+            roles);
+    }
+
+    private static string ReadRequired(
+        JsonElement root,
+        string property) =>
+        ReadOptional(root, property)
+        ?? throw new InvalidOperationException(
+            $"The synchronized access record is missing '{property}'.");
+
+    private static string? ReadOptional(
+        JsonElement root,
+        string property)
+    {
+        if (!root.TryGetProperty(property, out var value) ||
+            value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+            return null;
+
+        return value.ValueKind switch
+        {
+            JsonValueKind.String => value.GetString(),
+            JsonValueKind.Number => value.GetRawText(),
+            _ => null,
+        };
+    }
+
+    private static int ReadInt(
+        JsonElement root,
+        string property,
+        string? fallback = null)
+    {
+        if (root.TryGetProperty(property, out var value))
+        {
+            if (value.ValueKind == JsonValueKind.Number &&
+                value.TryGetInt32(out var numeric))
+                return numeric;
+
+            if (value.ValueKind == JsonValueKind.String &&
+                int.TryParse(value.GetString(), out numeric))
+                return numeric;
+        }
+
+        if (int.TryParse(fallback, out var parsed))
+            return parsed;
+
+        return 0;
+    }
+
+    private static bool ReadBool(
+        JsonElement root,
+        string property,
+        bool fallback = false)
+    {
+        if (!root.TryGetProperty(property, out var value))
+            return fallback;
+
+        return value.ValueKind switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.String when bool.TryParse(value.GetString(), out var parsed) => parsed,
+            _ => fallback,
+        };
     }
 
     private static AccessManagementSnapshot Map(SnapshotDto data) =>
