@@ -168,11 +168,11 @@ foreach ($item in $modes) {
     Get-ChildItem $payloadRoot -Filter *.exe -Recurse | ForEach-Object { Sign-File $_.FullName }
 
     $setupBase = "Darmaltoon-$fileLabel-Setup-$Version-$RuntimeIdentifier"
-    & $iscc "/DMyAppVersion=$Version" "/DSourceDir=$payloadRoot" "/DDeploymentMode=$mode" "/DModeLabel=$label" "/DOutputDir=$outputRoot" "/DOutputBaseFilename=$setupBase" "/DAppIconFile=$appIcon" "/DActivationBootstrapFile=$activationBootstrapExe" "/DEnableInstallerLicenseGate=1" $installerScript
+    & $iscc "/DMyAppVersion=$Version" "/DSourceDir=$payloadRoot" "/DDeploymentMode=$mode" "/DModeLabel=$label" "/DOutputDir=$outputRoot" "/DOutputBaseFilename=$setupBase" "/DAppIconFile=$appIcon" "/DActivationBootstrapFile=$activationBootstrapExe" $installerScript
     if ($LASTEXITCODE -ne 0) { throw "Installer compilation failed for $mode." }
 
     $smokeBase = "Darmaltoon-$fileLabel-Smoke-Setup-$Version-$RuntimeIdentifier"
-    & $iscc "/DMyAppVersion=$Version" "/DSourceDir=$payloadRoot" "/DDeploymentMode=$mode" "/DModeLabel=$label" "/DOutputDir=$smokeInstallerRoot" "/DOutputBaseFilename=$smokeBase" "/DAppIconFile=$appIcon" "/DEnableInstallerLicenseGate=0" $installerScript
+    & $iscc "/DMyAppVersion=$Version" "/DSourceDir=$payloadRoot" "/DDeploymentMode=$mode" "/DModeLabel=$label" "/DOutputDir=$smokeInstallerRoot" "/DOutputBaseFilename=$smokeBase" "/DAppIconFile=$appIcon" "/DDisableInstallerLicenseGate=1" $installerScript
     if ($LASTEXITCODE -ne 0) { throw "Smoke-test installer compilation failed for $mode." }
 
     $setup = Join-Path $outputRoot "$setupBase.exe"
