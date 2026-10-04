@@ -334,7 +334,9 @@ public sealed class PosSalesTests
                 "user-pos",
                 10,
                 DateTimeOffset.UtcNow.AddMinutes(1));
-            var outbox = Assert.Single(pending);
+            var outbox = Assert.Single(
+                pending,
+                x => x.EventType == "sale.completed");
             Assert.Equal("sale.completed", outbox.EventType);
             Assert.Equal("pos-idempotency-1", outbox.IdempotencyKey);
             Assert.Equal("tenant-pos", outbox.TenantId);

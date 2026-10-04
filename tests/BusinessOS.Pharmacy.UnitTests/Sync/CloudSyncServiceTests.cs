@@ -588,6 +588,13 @@ public sealed class CloudSyncServiceTests
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 
+        public Task<IReadOnlyList<CloudSyncRemoteRecord>> GetRemoteRecordsAsync(
+            string tenantId,
+            string stream,
+            int take = 2000,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<CloudSyncRemoteRecord>>([]);
+
         public Task<CloudSyncQueueSnapshot> GetQueueSnapshotAsync(
             string tenantId,
             string actorUserId,

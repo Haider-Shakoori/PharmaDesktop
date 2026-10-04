@@ -10,16 +10,19 @@ public sealed class MedicineCatalogService : IMedicineCatalogService
 {
     private readonly IDbContextFactory<PharmacyDbContext> _contextFactory;
     private readonly IPermissionAuthorizer _permissions;
+    private readonly IUserSessionService? _sessions;
     private readonly IClock _clock;
 
     public MedicineCatalogService(
         IDbContextFactory<PharmacyDbContext> contextFactory,
         IPermissionAuthorizer permissions,
-        IClock clock)
+        IClock clock,
+        IUserSessionService? sessions = null)
     {
         _contextFactory = contextFactory;
         _permissions = permissions;
         _clock = clock;
+        _sessions = sessions;
     }
 
     public async Task<IReadOnlyList<MedicineListItem>> SearchAsync(
@@ -160,6 +163,11 @@ public sealed class MedicineCatalogService : IMedicineCatalogService
 
         Apply(entity, request);
         context.Add(entity);
+        CloudSyncOutboxWriter.QueueMedicineUpsert(
+            context,
+            _sessions?.Current,
+            entity,
+            now);
         await context.SaveChangesAsync(cancellationToken);
         return entity.Id;
     }
@@ -183,6 +191,11 @@ public sealed class MedicineCatalogService : IMedicineCatalogService
 
         Apply(entity, request);
         entity.UpdatedAt = _clock.UtcNow;
+        CloudSyncOutboxWriter.QueueMedicineUpsert(
+            context,
+            _sessions?.Current,
+            entity,
+            entity.UpdatedAt);
         await context.SaveChangesAsync(cancellationToken);
     }
 
