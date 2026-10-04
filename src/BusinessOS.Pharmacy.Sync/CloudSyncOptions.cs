@@ -4,13 +4,13 @@ public sealed record CloudSyncOptions(
     string BaseUrl,
     string PushPath = "/api/v1/desktop/sync/push",
     string PullPath = "/api/v1/desktop/sync/pull",
-    string StatusPath = "/api/v1/desktop/sync/status",
     int TimeoutSeconds = 20,
     int BatchSize = 25,
     int PullPageSize = 100,
     int MaxPullPagesPerRun = 5,
     int IntervalSeconds = 30,
-    int ConflictReviewLimit = 50)
+    int ConflictReviewLimit = 50,
+    string StatusPath = "/api/v1/desktop/sync/status")
 {
     public void Validate()
     {
