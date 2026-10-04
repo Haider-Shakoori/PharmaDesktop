@@ -33,7 +33,7 @@ public sealed class NotificationHistoryStore
 
                 return JsonSerializer.Deserialize<List<AppNotification>>(
                            File.ReadAllText(_file))
-                       ?? Array.Empty<AppNotification>();
+                       ?? new List<AppNotification>();
             }
             catch
             {
@@ -91,7 +91,7 @@ public sealed class NotificationHistoryStore
 
             return JsonSerializer.Deserialize<List<AppNotification>>(
                        File.ReadAllText(_file))
-                   ?? Array.Empty<AppNotification>();
+                   ?? new List<AppNotification>();
         }
         catch
         {
