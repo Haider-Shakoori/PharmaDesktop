@@ -173,6 +173,39 @@ public sealed class CloudSyncService : ICloudSyncService
         }
 
         var accessToken = protectedSession.AccessToken;
+
+        CloudSyncPlatformPolicy policy;
+        try
+        {
+            policy = await _transport.GetPolicyAsync(
+                accessToken,
+                cancellationToken);
+        }
+        catch (CloudSyncAuthorizationException exception)
+        {
+            return new(
+                CloudSyncRunState.LicenseRejected,
+                exception.Message,
+                AttemptedAt: now);
+        }
+        catch (CloudSyncTransportException exception)
+        {
+            return new(
+                exception.Retryable
+                    ? CloudSyncRunState.Offline
+                    : CloudSyncRunState.Failed,
+                exception.Message,
+                AttemptedAt: now);
+        }
+
+        if (!policy.Enabled)
+        {
+            return new(
+                CloudSyncRunState.DisabledByPlatform,
+                policy.Message,
+                AttemptedAt: now);
+        }
+
         var pushed = 0;
         var pulled = 0;
         var runConflicts = 0;
@@ -394,6 +427,30 @@ public sealed class CloudSyncService : ICloudSyncService
             Pushed: pushed,
             Pulled: pulled,
             Conflicts: totalConflicts);
+    }
+
+    public async Task<CloudSyncPlatformPolicySnapshot> GetPlatformPolicyAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var protectedSession = await _sessionStore.LoadAsync(cancellationToken)
+            ?? throw new InvalidOperationException(
+                "Sign in online to read the platform-managed cloud synchronization policy.");
+
+        if (string.IsNullOrWhiteSpace(protectedSession.AccessToken))
+        {
+            throw new InvalidOperationException(
+                "The protected desktop cloud session does not contain an access token.");
+        }
+
+        var policy = await _transport.GetPolicyAsync(
+            protectedSession.AccessToken,
+            cancellationToken);
+
+        return new CloudSyncPlatformPolicySnapshot(
+            policy.Enabled,
+            policy.ManagedBy,
+            policy.Message,
+            policy.ServerTime);
     }
 
     public async Task<CloudSyncConflictReview> GetConflictReviewAsync(
