@@ -188,7 +188,7 @@ $iscc = Find-Iscc
 $baselineDir = Join-Path $env:TEMP "darmaltoon-baseline"
 New-Item -ItemType Directory -Force -Path $baselineDir | Out-Null
 $payload = Join-Path $artifacts "_work\Standalone\payload"
-& $iscc "/DMyAppVersion=0.9.0" "/DSourceDir=$payload" "/DDeploymentMode=Standalone" "/DModeLabel=Standalone" "/DOutputDir=$baselineDir" "/DOutputBaseFilename=Darmaltoon-Baseline-Setup" "/DEnableInstallerLicenseGate=0" $installerScript
+& $iscc "/DMyAppVersion=0.9.0" "/DSourceDir=$payload" "/DDeploymentMode=Standalone" "/DModeLabel=Standalone" "/DOutputDir=$baselineDir" "/DOutputBaseFilename=Darmaltoon-Baseline-Setup" "/DDisableInstallerLicenseGate=1" $installerScript
 if ($LASTEXITCODE -ne 0) { throw "Baseline installer compilation failed." }
 $baselineSetup = Join-Path $baselineDir "Darmaltoon-Baseline-Setup.exe"
 Install-Setup $baselineSetup
