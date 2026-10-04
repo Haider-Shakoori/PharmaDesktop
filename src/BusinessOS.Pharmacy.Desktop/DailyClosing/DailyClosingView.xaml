@@ -320,7 +320,7 @@
                         </Grid.RowDefinitions>
                         <Grid>
                             <TextBlock Text="Day status" Style="{StaticResource ClosingSummaryLabel}" />
-                            <Border Style="{StaticResource ClosingSummaryBadge}">
+                            <Border>
                                 <Border.Style>
                                     <Style TargetType="Border" BasedOn="{StaticResource ClosingSummaryBadge}">
                                         <Setter Property="Background" Value="#DBEAFE" />
