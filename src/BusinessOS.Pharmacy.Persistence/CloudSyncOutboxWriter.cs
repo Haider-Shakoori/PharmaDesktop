@@ -16,7 +16,7 @@ internal static class CloudSyncOutboxWriter
         if (session is null)
             return;
 
-        var key = $"medicine:{medicine.Id}:upsert:{now.UtcTicks}";
+        var key = $"medicine:{medicine.Id}:upsert:{now.UtcDateTime.Ticks}";
         var payload = new Dictionary<string, object?>
         {
             ["v"] = 1,
@@ -58,7 +58,7 @@ internal static class CloudSyncOutboxWriter
         if (session is null)
             return;
 
-        var key = $"customer:{customer.Id}:upsert:{now.UtcTicks}";
+        var key = $"customer:{customer.Id}:upsert:{now.UtcDateTime.Ticks}";
         var payload = new Dictionary<string, object?>
         {
             ["v"] = 1,
