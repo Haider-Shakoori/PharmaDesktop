@@ -4,6 +4,7 @@ public sealed record CloudSyncOptions(
     string BaseUrl,
     string PushPath = "/api/v1/desktop/sync/push",
     string PullPath = "/api/v1/desktop/sync/pull",
+    string StatusPath = "/api/v1/desktop/sync/status",
     int TimeoutSeconds = 20,
     int BatchSize = 25,
     int PullPageSize = 100,
@@ -21,7 +22,7 @@ public sealed record CloudSyncOptions(
             throw new InvalidOperationException(
                 "BusinessOS cloud synchronization requires an HTTPS base URL.");
 
-        if (!IsApiPath(PushPath) || !IsApiPath(PullPath))
+        if (!IsApiPath(PushPath) || !IsApiPath(PullPath) || !IsApiPath(StatusPath))
             throw new InvalidOperationException(
                 "Cloud synchronization API paths must be relative /api/ application paths without query strings or fragments.");
 
