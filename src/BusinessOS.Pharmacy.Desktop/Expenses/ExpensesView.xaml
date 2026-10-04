@@ -1,24 +1,865 @@
-<UserControl x:Class="BusinessOS.Pharmacy.Desktop.Expenses.ExpensesView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-<ScrollViewer VerticalScrollBarVisibility="Auto"><Grid Margin="24"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-<DockPanel><Button DockPanel.Dock="Right" Content="Refresh" Command="{Binding LoadCommand}" Padding="12,6"/><StackPanel><TextBlock Text="{Binding Title}" FontSize="27" FontWeight="Bold"/><TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}"/></StackPanel></DockPanel>
-<Grid Grid.Row="1" Margin="0,18,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="1.2*"/><ColumnDefinition Width="1.2*"/><ColumnDefinition Width="1*"/></Grid.ColumnDefinitions>
-<Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,12,0"><StackPanel>
-<TextBlock Text="Expense account" Style="{StaticResource MutedText}"/><ComboBox ItemsSource="{Binding ExpenseAccounts}" SelectedItem="{Binding SelectedExpenseAccount}" DisplayMemberPath="Name"/>
-<TextBlock Text="Payment account" Style="{StaticResource MutedText}" Margin="0,8,0,0"/><ComboBox ItemsSource="{Binding PaymentAccounts}" SelectedItem="{Binding SelectedPaymentAccount}" DisplayMemberPath="Name"/>
-<TextBlock Text="Location" Style="{StaticResource MutedText}" Margin="0,8,0,0"/><ComboBox ItemsSource="{Binding Locations}" SelectedItem="{Binding SelectedLocation}" DisplayMemberPath="Name"/>
-<TextBlock Text="Business date" Style="{StaticResource MutedText}" Margin="0,8,0,0"/><TextBox Text="{Binding BusinessDateText}"/>
-<TextBlock Text="Amount (AFN)" Style="{StaticResource MutedText}" Margin="0,8,0,0"/><TextBox Text="{Binding Amount}"/>
-</StackPanel></Border>
-<Border Grid.Column="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,12,0"><StackPanel>
-<TextBlock Text="Payee" Style="{StaticResource MutedText}"/><TextBox Text="{Binding Payee}"/><TextBlock Text="Reference" Style="{StaticResource MutedText}" Margin="0,8,0,0"/><TextBox Text="{Binding Reference}"/>
-<TextBlock Text="Notes" Style="{StaticResource MutedText}" Margin="0,8,0,0"/><TextBox Text="{Binding Notes}" Height="100" AcceptsReturn="True"/><TextBlock Text="{Binding EditHint}" Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,8,0,0"/><StackPanel Orientation="Horizontal" Margin="0,12,0,0"><Button Content="{Binding PostLabel}" Command="{Binding PostCommand}" Padding="14,8"/><Button Content="Cancel edit" Command="{Binding CancelEditCommand}" Padding="14,8" Margin="8,0,0,0"/></StackPanel>
-</StackPanel></Border>
-<Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12"><StackPanel>
-<TextBlock Text="Reverse selected expense" FontWeight="SemiBold"/><TextBox Text="{Binding ReversalReason}" Height="80" AcceptsReturn="True" Margin="0,8,0,0" ToolTip="Reason"/><Button Content="{Binding ReverseLabel}" Command="{Binding ReverseCommand}" Padding="14,8" Margin="0,8,0,0"/>
-</StackPanel></Border></Grid>
-<Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,18,0,0"><StackPanel>
-<DockPanel><Button DockPanel.Dock="Right" Content="Search" Command="{Binding SearchCommand}" Padding="10,4"/><TextBox Text="{Binding SearchText}" Width="260" HorizontalAlignment="Left" ToolTip="Number, payee or reference"/></DockPanel>
-<DataGrid x:Name="ExpensesGrid" ItemsSource="{Binding Expenses}" SelectedItem="{Binding SelectedExpense}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" Margin="0,8,0,0" MaxHeight="320" Cursor="Hand" ToolTip="Double-click a posted expense to edit it" MouseDoubleClick="OnExpensesDoubleClick"><DataGrid.Columns>
-<DataGridTextColumn Header="Number" Binding="{Binding ExpenseNumber}" Width="*"/><DataGridTextColumn Header="Date" Binding="{Binding BusinessDate}" Width="110"/><DataGridTextColumn Header="Account" Binding="{Binding ExpenseAccountName}" Width="*"/><DataGridTextColumn Header="Paid from" Binding="{Binding PaymentAccountName}" Width="*"/><DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat=N4}" Width="100"/><DataGridTextColumn Header="Payee" Binding="{Binding Payee}" Width="*"/><DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
-</DataGrid.Columns></DataGrid></StackPanel></Border>
-</Grid></ScrollViewer></UserControl>
+<UserControl x:Class="BusinessOS.Pharmacy.Desktop.Expenses.ExpensesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="Segoe UI"
+             TextOptions.TextFormattingMode="Display"
+             TextOptions.TextRenderingMode="ClearType">
+    <UserControl.Resources>
+        <Style x:Key="ExpenseSummaryCard" TargetType="Border">
+            <Setter Property="BorderBrush" Value="#B8FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="14"
+                                      ShadowDepth="3"
+                                      Opacity="0.12"
+                                      RenderingBias="Performance" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ExpenseSummaryLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#475569" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="ExpenseSummaryValue" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#0F172A" />
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,7,0,4" />
+        </Style>
+
+        <Style x:Key="ExpenseSummaryHint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#64748B" />
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style x:Key="ExpenseSummaryBadge" TargetType="Border">
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Padding" Value="7,3" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+
+        <Style x:Key="ExpenseTableHeader" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#F1F5F9" />
+            <Setter Property="Foreground" Value="#475569" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="BorderBrush" Value="#E2E8F0" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="ExpenseTableCell" TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="FontSize" Value="12.2" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="FontWeight" Value="Bold" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ExpenseTableRow" TargetType="DataGridRow">
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#D9E2EC" />
+            <Setter Property="BorderThickness" Value="0,0,0,2" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Style.Triggers>
+                <Trigger Property="AlternationIndex" Value="1">
+                    <Setter Property="Background" Value="#FAFCFF" />
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F0FDFA" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#0F766E" />
+                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="FontWeight" Value="Bold" />
+                    <Setter Property="BorderBrush" Value="#0D9488" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ExpenseTable" TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserResizeRows" Value="False" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="GridLinesVisibility" Value="None" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="RowHeaderWidth" Value="0" />
+            <Setter Property="AlternationCount" Value="2" />
+            <Setter Property="SelectionMode" Value="Single" />
+            <Setter Property="SelectionUnit" Value="FullRow" />
+            <Setter Property="CellStyle" Value="{StaticResource ExpenseTableCell}" />
+            <Setter Property="ColumnHeaderStyle" Value="{StaticResource ExpenseTableHeader}" />
+            <Setter Property="RowStyle" Value="{StaticResource ExpenseTableRow}" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        </Style>
+
+        <Style x:Key="ExpenseRowText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
+                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="FontWeight" Value="Bold" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ExpenseModalLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="Margin" Value="0,0,0,5" />
+        </Style>
+
+        <Style x:Key="ExpenseSectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13.5" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#0F172A" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource PageBackgroundBrush}">
+        <Grid Margin="22" x:Name="ExpensePageContent">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Effect" Value="{x:Null}" />
+                    <Setter Property="IsHitTestVisible" Value="True" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsEditorOpen}" Value="True">
+                            <Setter Property="IsHitTestVisible" Value="False" />
+                            <Setter Property="Effect">
+                                <Setter.Value>
+                                    <BlurEffect Radius="7"
+                                                KernelType="Gaussian"
+                                                RenderingBias="Performance" />
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Eyebrow}"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource BrandPrimaryBrush}" />
+                    <TextBlock Text="{Binding Title}"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               Margin="0,3,0,0" />
+                    <TextBlock Text="{Binding Subtitle}"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               TextWrapping="Wrap"
+                               Margin="0,3,0,0"
+                               MaxWidth="800"
+                               HorizontalAlignment="Left" />
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource ExpenseSummaryCard}">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#E8FFFFFF" Offset="0" />
+                            <GradientStop Color="#C6ECFEFF" Offset=".56" />
+                            <GradientStop Color="#A8CFFAFE" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <TextBlock Text="Current expense total" Style="{StaticResource ExpenseSummaryLabel}" />
+                            <Border Style="{StaticResource ExpenseSummaryBadge}" Background="#78CFFAFE">
+                                <TextBlock Text="AFN" Foreground="#0E7490" FontSize="9.5" FontWeight="Bold" />
+                            </Border>
+                        </Grid>
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding VisiblePostedTotalText}"
+                                   Style="{StaticResource ExpenseSummaryValue}"
+                                   Foreground="#0E7490" />
+                        <TextBlock Grid.Row="2"
+                                   Text="Posted expenses in the current result set"
+                                   Style="{StaticResource ExpenseSummaryHint}" />
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource ExpenseSummaryCard}">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#EAFFFFFF" Offset="0" />
+                            <GradientStop Color="#D9F5F3FF" Offset=".55" />
+                            <GradientStop Color="#C3E9D5FF" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <TextBlock Text="Expense entries" Style="{StaticResource ExpenseSummaryLabel}" />
+                            <Border Style="{StaticResource ExpenseSummaryBadge}" Background="#75E9D5FF">
+                                <TextBlock Text="ROWS" Foreground="#6D28D9" FontSize="9.5" FontWeight="Bold" />
+                            </Border>
+                        </Grid>
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding VisibleExpenseCountText}"
+                                   Style="{StaticResource ExpenseSummaryValue}"
+                                   Foreground="#6D28D9" />
+                        <TextBlock Grid.Row="2"
+                                   Text="Posted and reversed entries currently loaded"
+                                   Style="{StaticResource ExpenseSummaryHint}" />
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="4" Style="{StaticResource ExpenseSummaryCard}">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#EAFFFFFF" Offset="0" />
+                            <GradientStop Color="#DDFEF2F2" Offset=".54" />
+                            <GradientStop Color="#C7FECACA" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <TextBlock Text="Reversed entries" Style="{StaticResource ExpenseSummaryLabel}" />
+                            <Border Style="{StaticResource ExpenseSummaryBadge}" Background="#78FECACA">
+                                <TextBlock Text="REV" Foreground="#B91C1C" FontSize="9.5" FontWeight="Bold" />
+                            </Border>
+                        </Grid>
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding VisibleReversedCountText}"
+                                   Style="{StaticResource ExpenseSummaryValue}"
+                                   Foreground="#B91C1C" />
+                        <TextBlock Grid.Row="2"
+                                   Text="Audit-preserved corrections and reversals"
+                                   Style="{StaticResource ExpenseSummaryHint}" />
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="6" Style="{StaticResource ExpenseSummaryCard}">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#EAFFFFFF" Offset="0" />
+                            <GradientStop Color="#D9F0FDF4" Offset=".54" />
+                            <GradientStop Color="#BFD1FAE5" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <TextBlock Text="Average expense" Style="{StaticResource ExpenseSummaryLabel}" />
+                            <Border Style="{StaticResource ExpenseSummaryBadge}" Background="#74D1FAE5">
+                                <TextBlock Text="AVG" Foreground="#047857" FontSize="9.5" FontWeight="Bold" />
+                            </Border>
+                        </Grid>
+                        <TextBlock Grid.Row="1"
+                                   Text="{Binding VisibleAverageExpenseText}"
+                                   Style="{StaticResource ExpenseSummaryValue}"
+                                   Foreground="#047857" />
+                        <TextBlock Grid.Row="2"
+                                   Text="Average across currently posted expenses"
+                                   Style="{StaticResource ExpenseSummaryHint}" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="2"
+                    Background="White"
+                    BorderBrush="#DCE5F0"
+                    BorderThickness="1"
+                    CornerRadius="13"
+                    ClipToBounds="True">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="12,12,12,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2.4*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Background="White"
+                                BorderBrush="#CBD5E1"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Height="38"
+                                Margin="0,0,8,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="34" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Path Data="{StaticResource IconSearch}"
+                                      Width="15"
+                                      Height="15"
+                                      Stroke="#64748B"
+                                      StrokeThickness="1.7"
+                                      Fill="Transparent"
+                                      Stretch="Uniform"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" />
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         Padding="0"
+                                         FontSize="12"
+                                         VerticalContentAlignment="Center"
+                                         ToolTip="Expense number, payee or reference" />
+                            </Grid>
+                        </Border>
+
+                        <Button Grid.Column="1"
+                                Content="Search"
+                                Command="{Binding SearchCommand}"
+                                Style="{StaticResource SecondaryButton}"
+                                Height="38"
+                                Padding="11,7"
+                                Margin="0,0,8,0" />
+
+                        <Button Grid.Column="2"
+                                Content="Refresh"
+                                Command="{Binding LoadCommand}"
+                                Style="{StaticResource SecondaryButton}"
+                                Height="38"
+                                Padding="11,7"
+                                Margin="0,0,8,0" />
+
+                        <Button Grid.Column="3"
+                                Command="{Binding NewExpenseCommand}"
+                                Style="{StaticResource PrimaryButton}"
+                                Height="38"
+                                Padding="14,7"
+                                Background="#1677FF"
+                                BorderBrush="#1677FF"
+                                Foreground="White">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconAdd}"
+                                      Width="14"
+                                      Height="14"
+                                      Stroke="White"
+                                      StrokeThickness="2"
+                                      Fill="Transparent"
+                                      Stretch="Uniform"
+                                      Margin="0,0,6,0" />
+                                <TextBlock Text="{Binding NewExpenseLabel}"
+                                           Foreground="White"
+                                           FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <DataGrid x:Name="ExpensesGrid"
+                              Grid.Row="1"
+                              ItemsSource="{Binding Expenses}"
+                              SelectedItem="{Binding SelectedExpense}"
+                              Style="{StaticResource ExpenseTable}"
+                              Margin="12,0,12,0"
+                              Cursor="Hand"
+                              ToolTip="{Binding EditHint}"
+                              MouseDoubleClick="OnExpensesDoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Number"
+                                                Binding="{Binding ExpenseNumber}"
+                                                ElementStyle="{StaticResource ExpenseRowText}"
+                                                Width="120" />
+                            <DataGridTextColumn Header="Date"
+                                                Binding="{Binding BusinessDate}"
+                                                ElementStyle="{StaticResource ExpenseRowText}"
+                                                Width="105" />
+                            <DataGridTextColumn Header="Expense account"
+                                                Binding="{Binding ExpenseAccountName}"
+                                                ElementStyle="{StaticResource ExpenseRowText}"
+                                                Width="1.25*"
+                                                MinWidth="150" />
+                            <DataGridTextColumn Header="Paid from"
+                                                Binding="{Binding PaymentAccountName}"
+                                                ElementStyle="{StaticResource ExpenseRowText}"
+                                                Width="1.05*"
+                                                MinWidth="135" />
+                            <DataGridTemplateColumn Header="Amount" Width="125">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock VerticalAlignment="Center" FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#0F766E" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
+                                                            <Setter Property="Foreground" Value="White" />
+                                                            <Setter Property="FontWeight" Value="Bold" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                            <Run Text="؋ " />
+                                            <Run Text="{Binding Amount, StringFormat={}{0:N2}}" />
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Payee"
+                                                Binding="{Binding Payee}"
+                                                ElementStyle="{StaticResource ExpenseRowText}"
+                                                Width="1*"
+                                                MinWidth="120" />
+                            <DataGridTextColumn Header="Reference"
+                                                Binding="{Binding Reference}"
+                                                ElementStyle="{StaticResource ExpenseRowText}"
+                                                Width="1*"
+                                                MinWidth="110" />
+                            <DataGridTemplateColumn Header="Status" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="10"
+                                                Padding="9,3"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#FEE2E2" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="posted">
+                                                            <Setter Property="Background" Value="#D1FAE5" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
+                                                            <Setter Property="Background" Value="#28FFFFFF" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding Status}"
+                                                       FontSize="10.2"
+                                                       FontWeight="SemiBold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#B91C1C" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="posted">
+                                                                <Setter Property="Foreground" Value="#047857" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
+                                                                <Setter Property="Foreground" Value="White" />
+                                                                <Setter Property="FontWeight" Value="Bold" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Border Grid.Row="2"
+                            Background="#F8FAFC"
+                            BorderBrush="#E2E8F0"
+                            BorderThickness="0,1,0,1"
+                            Padding="12,10"
+                            Margin="0,10,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="220" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Width="34"
+                                    Height="34"
+                                    CornerRadius="9"
+                                    Background="#FEE2E2"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,10,0">
+                                <TextBlock Text="↶"
+                                           Foreground="#B91C1C"
+                                           FontSize="17"
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Reverse selected expense"
+                                           FontSize="11.8"
+                                           FontWeight="SemiBold"
+                                           Foreground="#0F172A" />
+                                <TextBlock FontSize="10.3"
+                                           Foreground="#64748B"
+                                           TextTrimming="CharacterEllipsis">
+                                    <Run Text="Selected: " />
+                                    <Run Text="{Binding SelectedExpense.ExpenseNumber, TargetNullValue='None'}" FontWeight="SemiBold" />
+                                    <Run Text="  •  A reason is required and the audit trail is preserved." />
+                                </TextBlock>
+                            </StackPanel>
+
+                            <TextBox Grid.Column="2"
+                                     Text="{Binding ReversalReason, UpdateSourceTrigger=PropertyChanged}"
+                                     Height="36"
+                                     Padding="9,5"
+                                     Margin="10,0,8,0"
+                                     VerticalContentAlignment="Center"
+                                     ToolTip="Reversal reason (minimum 3 characters)" />
+
+                            <Button Grid.Column="3"
+                                    Content="{Binding ReverseLabel}"
+                                    Command="{Binding ReverseCommand}"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Height="36"
+                                    Padding="12,6"
+                                    Foreground="#B91C1C"
+                                    BorderBrush="#FCA5A5"
+                                    Background="#FFF7F7" />
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="3" Margin="14,10,14,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   Foreground="#64748B"
+                                   FontSize="11.3"
+                                   TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding EditHint}"
+                                   Foreground="#94A3B8"
+                                   FontSize="10.5"
+                                   VerticalAlignment="Center"
+                                   Margin="18,0,0,0" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <TextBlock Grid.Row="3"
+                       Text="Tip: use search to narrow the KPI cards and table to a specific expense, payee, or reference."
+                       Foreground="#94A3B8"
+                       FontSize="10.5"
+                       Margin="2,9,0,0" />
+        </Grid>
+
+        <Grid Panel.ZIndex="70"
+              Visibility="{Binding IsEditorOpen, Converter={StaticResource GlobalBoolToVisibility}}">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#70F8FAFC" Offset="0" />
+                    <GradientStop Color="#60E9EFF7" Offset="0.55" />
+                    <GradientStop Color="#72FFFFFF" Offset="1" />
+                </LinearGradientBrush>
+            </Grid.Background>
+
+            <Border Width="930"
+                    MaxWidth="930"
+                    MaxHeight="720"
+                    Margin="28"
+                    Background="White"
+                    BorderBrush="#D8E2EE"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="18"
+                                      ShadowDepth="5"
+                                      Opacity="0.18"
+                                      RenderingBias="Performance" />
+                </Border.Effect>
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Margin="22,18,18,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{Binding ExpenseEditorTitle}"
+                                       FontSize="19"
+                                       FontWeight="SemiBold"
+                                       Foreground="#0F172A" />
+                            <TextBlock Text="{Binding EditHint}"
+                                       FontSize="11.5"
+                                       Foreground="#64748B"
+                                       Margin="0,3,0,0"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <Button Grid.Column="1"
+                                Content="✕"
+                                Command="{Binding CancelEditCommand}"
+                                Style="{StaticResource GhostButton}"
+                                Foreground="#475569"
+                                Width="32"
+                                Height="32"
+                                Padding="0"
+                                FontSize="14" />
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  Padding="22,10,22,18">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="22" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel>
+                                <Border Background="#F0FDFA"
+                                        BorderBrush="#CCFBF1"
+                                        BorderThickness="1"
+                                        CornerRadius="10"
+                                        Padding="12"
+                                        Margin="0,0,0,14">
+                                    <StackPanel>
+                                        <TextBlock Text="Accounting"
+                                                   Style="{StaticResource ExpenseSectionTitle}" />
+                                        <TextBlock Text="Choose where the expense is classified and which account pays it."
+                                                   Foreground="#64748B"
+                                                   FontSize="10.5"
+                                                   Margin="0,3,0,0"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+
+                                <TextBlock Text="Expense account" Style="{StaticResource ExpenseModalLabel}" />
+                                <ComboBox ItemsSource="{Binding ExpenseAccounts}"
+                                          SelectedItem="{Binding SelectedExpenseAccount}"
+                                          DisplayMemberPath="Name"
+                                          MinHeight="38"
+                                          Padding="8,4"
+                                          Margin="0,0,0,12" />
+
+                                <TextBlock Text="Payment account" Style="{StaticResource ExpenseModalLabel}" />
+                                <ComboBox ItemsSource="{Binding PaymentAccounts}"
+                                          SelectedItem="{Binding SelectedPaymentAccount}"
+                                          DisplayMemberPath="Name"
+                                          MinHeight="38"
+                                          Padding="8,4"
+                                          Margin="0,0,0,12" />
+
+                                <TextBlock Text="Location" Style="{StaticResource ExpenseModalLabel}" />
+                                <ComboBox ItemsSource="{Binding Locations}"
+                                          SelectedItem="{Binding SelectedLocation}"
+                                          DisplayMemberPath="Name"
+                                          MinHeight="38"
+                                          Padding="8,4"
+                                          Margin="0,0,0,12" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel>
+                                        <TextBlock Text="Business date" Style="{StaticResource ExpenseModalLabel}" />
+                                        <TextBox Text="{Binding BusinessDateText, UpdateSourceTrigger=PropertyChanged}"
+                                                 MinHeight="38"
+                                                 Padding="9,6"
+                                                 ToolTip="YYYY-MM-DD" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Amount (AFN)" Style="{StaticResource ExpenseModalLabel}" />
+                                        <Border Background="White"
+                                                BorderBrush="#CBD5E1"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Height="38">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="34" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="؋"
+                                                           Foreground="#0F766E"
+                                                           FontSize="14"
+                                                           FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                                <TextBox Grid.Column="1"
+                                                         Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged}"
+                                                         Background="Transparent"
+                                                         BorderThickness="0"
+                                                         Padding="0"
+                                                         VerticalContentAlignment="Center" />
+                                            </Grid>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <Border Background="#EFF6FF"
+                                        BorderBrush="#DBEAFE"
+                                        BorderThickness="1"
+                                        CornerRadius="10"
+                                        Padding="12"
+                                        Margin="0,0,0,14">
+                                    <StackPanel>
+                                        <TextBlock Text="Expense details"
+                                                   Style="{StaticResource ExpenseSectionTitle}" />
+                                        <TextBlock Text="Add enough detail to make later reviews, reports, and audits easy."
+                                                   Foreground="#64748B"
+                                                   FontSize="10.5"
+                                                   Margin="0,3,0,0"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+
+                                <TextBlock Text="Payee" Style="{StaticResource ExpenseModalLabel}" />
+                                <TextBox Text="{Binding Payee, UpdateSourceTrigger=PropertyChanged}"
+                                         MinHeight="38"
+                                         Padding="9,6"
+                                         Margin="0,0,0,12" />
+
+                                <TextBlock Text="Reference" Style="{StaticResource ExpenseModalLabel}" />
+                                <TextBox Text="{Binding Reference, UpdateSourceTrigger=PropertyChanged}"
+                                         MinHeight="38"
+                                         Padding="9,6"
+                                         Margin="0,0,0,12" />
+
+                                <TextBlock Text="Notes" Style="{StaticResource ExpenseModalLabel}" />
+                                <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         MinHeight="150"
+                                         Padding="9,8"
+                                         VerticalScrollBarVisibility="Auto"
+                                         Margin="0,0,0,12" />
+
+                                <Border Background="#FFFBEB"
+                                        BorderBrush="#FDE68A"
+                                        BorderThickness="1"
+                                        CornerRadius="10"
+                                        Padding="10">
+                                    <TextBlock Text="{Binding EditHint}"
+                                               Foreground="#92400E"
+                                               FontSize="10.5"
+                                               TextWrapping="Wrap" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2"
+                            BorderBrush="#E2E8F0"
+                            BorderThickness="0,1,0,0"
+                            Background="#F8FAFC"
+                            Padding="18,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="{Binding StatusMessage}"
+                                       Foreground="#64748B"
+                                       FontSize="11"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Content="Cancel"
+                                        Command="{Binding CancelEditCommand}"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Foreground="#334155"
+                                        Height="36"
+                                        Padding="13,6"
+                                        Margin="0,0,8,0" />
+                                <Button Content="{Binding PostLabel}"
+                                        Command="{Binding PostCommand}"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Foreground="White"
+                                        Height="36"
+                                        Padding="14,6" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
