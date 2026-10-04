@@ -4,6 +4,10 @@ namespace BusinessOS.Pharmacy.Sync;
 
 public interface ICloudSyncTransport
 {
+    Task<CloudSyncPlatformPolicy> GetPolicyAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<CloudSyncPushAcknowledgement>> PushAsync(
         string accessToken,
         IReadOnlyList<CloudSyncOutboxItem> events,
@@ -16,6 +20,12 @@ public interface ICloudSyncTransport
         int limit,
         CancellationToken cancellationToken = default);
 }
+
+public sealed record CloudSyncPlatformPolicy(
+    bool Enabled,
+    string ManagedBy,
+    string Message,
+    DateTimeOffset ServerTime);
 
 public sealed record CloudSyncPushAcknowledgement(
     string IdempotencyKey,
