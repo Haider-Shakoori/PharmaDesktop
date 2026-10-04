@@ -81,6 +81,9 @@ public interface ICloudSyncService
     Task<CloudSyncRunResult> SyncOnceAsync(
         CancellationToken cancellationToken = default);
 
+    Task<CloudSyncPlatformPolicySnapshot> GetPlatformPolicyAsync(
+        CancellationToken cancellationToken = default);
+
     CloudSyncRunResult LastResult { get; }
 
     event Action<CloudSyncRunResult>? ResultUpdated;
@@ -96,6 +99,12 @@ public interface ICloudSyncService
         string idempotencyKey,
         CancellationToken cancellationToken = default);
 }
+
+public sealed record CloudSyncPlatformPolicySnapshot(
+    bool Enabled,
+    string ManagedBy,
+    string Message,
+    DateTimeOffset? CheckedAt = null);
 
 public sealed record CloudSyncConflictItem(
     string IdempotencyKey,
@@ -148,6 +157,7 @@ public enum CloudSyncRunState
     Conflicts = 5,
     LicenseRejected = 6,
     Failed = 7,
+    DisabledByPlatform = 8,
 }
 
 public sealed record CloudSyncRunResult(
