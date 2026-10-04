@@ -29,6 +29,7 @@ public sealed partial class ExpensesViewModel : ObservableObject
     [ObservableProperty] private ExpenseListItem? selectedExpense;
     [ObservableProperty] private string reversalReason = "";
     [ObservableProperty] private bool isEditingExpense;
+    [ObservableProperty] private bool isEditorOpen;
 
     public ExpensesViewModel(IExpenseService service, IClock clock)
     {
@@ -38,13 +39,15 @@ public sealed partial class ExpensesViewModel : ObservableObject
         PostCommand = new AsyncRelayCommand(PostAsync, CanPost);
         ReverseCommand = new AsyncRelayCommand(ReverseAsync, CanReverse);
         SearchCommand = new AsyncRelayCommand(SearchAsync, () => !IsBusy);
-        CancelEditCommand = new RelayCommand(CancelEdit, () => !IsBusy && IsEditingExpense);
+        NewExpenseCommand = new RelayCommand(NewExpense, () => !IsBusy);
+        CancelEditCommand = new RelayCommand(CancelEdit, () => !IsBusy && IsEditorOpen);
     }
 
     public IAsyncRelayCommand LoadCommand { get; }
     public IAsyncRelayCommand PostCommand { get; }
     public IAsyncRelayCommand ReverseCommand { get; }
     public IAsyncRelayCommand SearchCommand { get; }
+    public IRelayCommand NewExpenseCommand { get; }
     public IRelayCommand CancelEditCommand { get; }
 
     public ObservableCollection<LedgerAccountItem> ExpenseAccounts { get; } = [];
@@ -52,14 +55,37 @@ public sealed partial class ExpensesViewModel : ObservableObject
     public ObservableCollection<ExpenseLocationItem> Locations { get; } = [];
     public ObservableCollection<ExpenseListItem> Expenses { get; } = [];
 
+    public string Eyebrow => T("FINANCE & CONTROL", "مالی و کنترول", "مالي او کنټرول");
     public string Title => T("Expenses & Accounting", "مصارف و حسابداری", "لګښتونه او حسابداري");
+    public string Subtitle => T(
+        "Record operating expenses, review payment activity, and keep every correction auditable.",
+        "مصارف عملیاتی را ثبت کنید، پرداخت‌ها را مرور کنید و هر اصلاح را قابل حسابرسی نگه دارید.",
+        "عملياتي لګښتونه ثبت کړئ، تادیات وڅارئ او هر اصلاح د پلټنې وړ وساتئ.");
+    public string NewExpenseLabel => T("New expense", "مصرف جدید", "نوی لګښت");
+    public string ExpenseEditorTitle => IsEditingExpense
+        ? T("Edit expense", "ویرایش مصرف", "لګښت سم کړئ")
+        : T("Record expense", "ثبت مصرف", "لګښت ثبت کړئ");
     public string PostLabel => IsEditingExpense
         ? T("Update expense", "به‌روزرسانی مصرف", "لګښت تازه کړئ")
         : T("Post expense", "ثبت مصرف", "لګښت ثبت کړئ");
     public string ReverseLabel => T("Reverse selected", "معکوس کردن انتخاب", "ټاکل شوی معکوس کړئ");
     public string EditHint => IsEditingExpense
         ? T("Editing selected expense. Saving creates an auditable reversal and corrected replacement.", "مصرف انتخاب‌شده در حال ویرایش است. ذخیره، یک معکوس قابل حسابرسی و سند اصلاح‌شده ایجاد می‌کند.", "ټاکل شوی لګښت سمېږي. خوندي کول د پلټنې وړ معکوس او اصلاح شوی بدیل جوړوي.")
-        : T("Double-click an expense row to edit it.", "برای ویرایش روی ردیف مصرف دوبار کلیک کنید.", "د لګښت د سمولو لپاره پر قطار دوه ځله کلیک وکړئ.");
+        : T("Double-click a posted expense row to edit it.", "برای ویرایش روی ردیف مصرف ثبت‌شده دوبار کلیک کنید.", "د ثبت شوي لګښت د سمولو لپاره پر قطار دوه ځله کلیک وکړئ.");
+
+    public int VisibleExpenseCount => Expenses.Count;
+    public int VisiblePostedCount => Expenses.Count(x => string.Equals(x.Status, "posted", StringComparison.OrdinalIgnoreCase));
+    public int VisibleReversedCount => Expenses.Count - VisiblePostedCount;
+    public decimal VisiblePostedTotal => Expenses
+        .Where(x => string.Equals(x.Status, "posted", StringComparison.OrdinalIgnoreCase))
+        .Sum(x => x.Amount);
+    public decimal VisibleAverageExpense => VisiblePostedCount == 0
+        ? 0
+        : VisiblePostedTotal / VisiblePostedCount;
+    public string VisiblePostedTotalText => $"؋ {VisiblePostedTotal:N2}";
+    public string VisibleExpenseCountText => VisibleExpenseCount.ToString("N0");
+    public string VisibleReversedCountText => VisibleReversedCount.ToString("N0");
+    public string VisibleAverageExpenseText => $"؋ {VisibleAverageExpense:N2}";
 
     public void SetLanguage(UiLanguage language)
     {
@@ -112,6 +138,7 @@ public sealed partial class ExpensesViewModel : ObservableObject
 
             _editingExpenseId = detail.Expense.Id;
             IsEditingExpense = true;
+            IsEditorOpen = true;
             SelectedExpenseAccount = ExpenseAccounts.FirstOrDefault(x =>
                 string.Equals(x.Name, detail.Expense.ExpenseAccountName, StringComparison.OrdinalIgnoreCase));
             SelectedPaymentAccount = PaymentAccounts.FirstOrDefault(x =>
@@ -142,6 +169,8 @@ public sealed partial class ExpensesViewModel : ObservableObject
         RaiseLabels();
         Notify();
     }
+
+    partial void OnIsEditorOpenChanged(bool value) => Notify();
 
     private bool CanPost() =>
         !IsBusy &&
@@ -185,6 +214,7 @@ public sealed partial class ExpensesViewModel : ObservableObject
 
             _idempotencyKey = Guid.NewGuid().ToString("N");
             ResetEditor();
+            IsEditorOpen = false;
             await SearchCore();
             SelectedExpense = Expenses.FirstOrDefault(x => x.Id == result.Expense.Id);
             StatusMessage = wasEditing
@@ -216,10 +246,27 @@ public sealed partial class ExpensesViewModel : ObservableObject
         });
     }
 
+    private void NewExpense()
+    {
+        if (IsBusy)
+            return;
+
+        ResetEditor();
+        IsEditorOpen = true;
+        StatusMessage = T(
+            "Ready to record a new expense.",
+            "آماده ثبت مصرف جدید.",
+            "د نوي لګښت ثبتولو ته چمتو دی.");
+    }
+
     private void CancelEdit()
     {
+        var wasEditing = IsEditingExpense;
         ResetEditor();
-        StatusMessage = T("Expense edit cancelled.", "ویرایش مصرف لغو شد.", "د لګښت سمون لغوه شو.");
+        IsEditorOpen = false;
+        StatusMessage = wasEditing
+            ? T("Expense edit cancelled.", "ویرایش مصرف لغو شد.", "د لګښت سمون لغوه شو.")
+            : T("New expense cancelled.", "ثبت مصرف جدید لغو شد.", "د نوي لګښت ثبت لغوه شو.");
     }
 
     private void ResetEditor()
@@ -248,6 +295,21 @@ public sealed partial class ExpensesViewModel : ObservableObject
         Expenses.Clear();
         foreach (var item in rows)
             Expenses.Add(item);
+
+        RaiseSummaryProperties();
+    }
+
+    private void RaiseSummaryProperties()
+    {
+        OnPropertyChanged(nameof(VisibleExpenseCount));
+        OnPropertyChanged(nameof(VisiblePostedCount));
+        OnPropertyChanged(nameof(VisibleReversedCount));
+        OnPropertyChanged(nameof(VisiblePostedTotal));
+        OnPropertyChanged(nameof(VisibleAverageExpense));
+        OnPropertyChanged(nameof(VisiblePostedTotalText));
+        OnPropertyChanged(nameof(VisibleExpenseCountText));
+        OnPropertyChanged(nameof(VisibleReversedCountText));
+        OnPropertyChanged(nameof(VisibleAverageExpenseText));
     }
 
     private async Task Busy(Func<Task> action)
@@ -278,12 +340,17 @@ public sealed partial class ExpensesViewModel : ObservableObject
         PostCommand.NotifyCanExecuteChanged();
         ReverseCommand.NotifyCanExecuteChanged();
         SearchCommand.NotifyCanExecuteChanged();
+        NewExpenseCommand.NotifyCanExecuteChanged();
         CancelEditCommand.NotifyCanExecuteChanged();
     }
 
     private void RaiseLabels()
     {
+        OnPropertyChanged(nameof(Eyebrow));
         OnPropertyChanged(nameof(Title));
+        OnPropertyChanged(nameof(Subtitle));
+        OnPropertyChanged(nameof(NewExpenseLabel));
+        OnPropertyChanged(nameof(ExpenseEditorTitle));
         OnPropertyChanged(nameof(PostLabel));
         OnPropertyChanged(nameof(ReverseLabel));
         OnPropertyChanged(nameof(EditHint));

@@ -130,8 +130,9 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Foreground" Value="White" />
-                    <Setter Property="FontWeight" Value="Bold" />
+                    <Setter Property="Foreground" Value="#115E59" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -139,21 +140,22 @@
         <Style x:Key="CustomerTableRow" TargetType="DataGridRow">
             <Setter Property="Height" Value="44" />
             <Setter Property="Background" Value="#FFFFFF" />
-            <Setter Property="BorderBrush" Value="#D9E2EC" />
-            <Setter Property="BorderThickness" Value="0,0,0,2" />
+            <Setter Property="BorderBrush" Value="#E8EEF4" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Style.Triggers>
                 <Trigger Property="AlternationIndex" Value="1">
-                    <Setter Property="Background" Value="#FAFCFF" />
+                    <Setter Property="Background" Value="#FBFCFE" />
                 </Trigger>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#F0FDFA" />
+                    <Setter Property="Background" Value="#F3FAF8" />
+                    <Setter Property="BorderBrush" Value="#D7EEE9" />
                 </Trigger>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#0F766E" />
-                    <Setter Property="Foreground" Value="White" />
-                    <Setter Property="FontWeight" Value="Bold" />
-                    <Setter Property="BorderBrush" Value="#0D9488" />
+                    <Setter Property="Background" Value="#E9FBF7" />
+                    <Setter Property="Foreground" Value="#115E59" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                    <Setter Property="BorderBrush" Value="#99E7D9" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -185,8 +187,8 @@
             <Setter Property="Foreground" Value="#334155" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
-                    <Setter Property="Foreground" Value="White" />
-                    <Setter Property="FontWeight" Value="Bold" />
+                    <Setter Property="Foreground" Value="#115E59" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -197,8 +199,8 @@
             <Setter Property="HorizontalAlignment" Value="Left" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
-                    <Setter Property="Foreground" Value="White" />
-                    <Setter Property="FontWeight" Value="Bold" />
+                    <Setter Property="Foreground" Value="#0F766E" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -209,8 +211,8 @@
             <Setter Property="HorizontalAlignment" Value="Left" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
-                    <Setter Property="Foreground" Value="White" />
-                    <Setter Property="FontWeight" Value="Bold" />
+                    <Setter Property="Foreground" Value="#52736F" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -225,9 +227,9 @@
             <Setter Property="BorderBrush" Value="#DBEAFE" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
-                    <Setter Property="Foreground" Value="White" />
-                    <Setter Property="Background" Value="#28FFFFFF" />
-                    <Setter Property="BorderBrush" Value="#66FFFFFF" />
+                    <Setter Property="Foreground" Value="#0F766E" />
+                    <Setter Property="Background" Value="#CCFBF1" />
+                    <Setter Property="BorderBrush" Value="#99F6E4" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -656,9 +658,7 @@
                                                         <DataTrigger Binding="{Binding IsActive}" Value="False">
                                                             <Setter Property="Background" Value="#E2E8F0" />
                                                         </DataTrigger>
-                                                        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
-                                                            <Setter Property="Background" Value="#28FFFFFF" />
-                                                        </DataTrigger>
+
                                                     </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
@@ -673,10 +673,7 @@
                                                                 <Setter Property="Text" Value="Inactive" />
                                                                 <Setter Property="Foreground" Value="#475569" />
                                                             </DataTrigger>
-                                                            <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
-                                                                <Setter Property="Foreground" Value="White" />
-                                                                <Setter Property="FontWeight" Value="Bold" />
-                                                            </DataTrigger>
+
                                                         </Style.Triggers>
                                                     </Style>
                                                 </TextBlock.Style>
