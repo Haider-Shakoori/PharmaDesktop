@@ -152,11 +152,24 @@ function Verify-ProgramDataWritableAcl {
     }
 }
 
-$standaloneSetup = Join-Path $artifacts "Darmaltoon-Standalone-Setup-$Version-win-x64.exe"
-$serverSetup = Join-Path $artifacts "Darmaltoon-MainServer-Setup-$Version-win-x64.exe"
-$clientSetup = Join-Path $artifacts "Darmaltoon-ClientTerminal-Setup-$Version-win-x64.exe"
+$productionSetups = @(
+    (Join-Path $artifacts "Darmaltoon-Standalone-Setup-$Version-win-x64.exe"),
+    (Join-Path $artifacts "Darmaltoon-MainServer-Setup-$Version-win-x64.exe"),
+    (Join-Path $artifacts "Darmaltoon-ClientTerminal-Setup-$Version-win-x64.exe")
+)
+foreach ($file in $productionSetups) {
+    if (-not (Test-Path $file)) { throw "Production release artifact missing: $file" }
+}
+
+# Customer Standalone/Main Server installers enforce online one-time activation.
+# CI uses separately compiled gate-disabled installers for packaging smoke tests so
+# no production license key or bypass is embedded in the shipped artifacts.
+$smokeInstallerRoot = Join-Path $artifacts "_work\smoke-installers"
+$standaloneSetup = Join-Path $smokeInstallerRoot "Darmaltoon-Standalone-Smoke-Setup-$Version-win-x64.exe"
+$serverSetup = Join-Path $smokeInstallerRoot "Darmaltoon-MainServer-Smoke-Setup-$Version-win-x64.exe"
+$clientSetup = Join-Path $smokeInstallerRoot "Darmaltoon-ClientTerminal-Smoke-Setup-$Version-win-x64.exe"
 foreach ($file in @($standaloneSetup, $serverSetup, $clientSetup)) {
-    if (-not (Test-Path $file)) { throw "Release artifact missing: $file" }
+    if (-not (Test-Path $file)) { throw "Smoke-test installer missing: $file" }
 }
 
 # Clean standalone install with the optional desktop shortcut selected.
@@ -175,7 +188,7 @@ $iscc = Find-Iscc
 $baselineDir = Join-Path $env:TEMP "darmaltoon-baseline"
 New-Item -ItemType Directory -Force -Path $baselineDir | Out-Null
 $payload = Join-Path $artifacts "_work\Standalone\payload"
-& $iscc "/DMyAppVersion=0.9.0" "/DSourceDir=$payload" "/DDeploymentMode=Standalone" "/DModeLabel=Standalone" "/DOutputDir=$baselineDir" "/DOutputBaseFilename=Darmaltoon-Baseline-Setup" $installerScript
+& $iscc "/DMyAppVersion=0.9.0" "/DSourceDir=$payload" "/DDeploymentMode=Standalone" "/DModeLabel=Standalone" "/DOutputDir=$baselineDir" "/DOutputBaseFilename=Darmaltoon-Baseline-Setup" "/DEnableInstallerLicenseGate=0" $installerScript
 if ($LASTEXITCODE -ne 0) { throw "Baseline installer compilation failed." }
 $baselineSetup = Join-Path $baselineDir "Darmaltoon-Baseline-Setup.exe"
 Install-Setup $baselineSetup
