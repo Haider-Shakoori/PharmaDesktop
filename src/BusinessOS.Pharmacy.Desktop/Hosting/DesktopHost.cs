@@ -161,6 +161,7 @@ public static class DesktopHost
                 services.AddSingleton<Notifications.NotificationPurchaseExportService>();
                 services.AddSingleton<Notifications.NotificationService>();
                 services.AddSingleton<Notifications.NotificationCenterViewModel>();
+                services.AddHostedService<Notifications.CloudSyncNotificationBridge>();
                 services.AddSingleton<Profile.UserProfileStore>();
                 services.AddSingleton<Printing.ReceiptSettingsStore>();
                 services.AddSingleton<Pos.PosSettingsStore>();
