@@ -76,16 +76,26 @@ internal static class Program
                 (mode == "settings-glass" ? BusinessOS.Pharmacy.Desktop.Appearance.AppearanceTheme.Glass
                                           : BusinessOS.Pharmacy.Desktop.Appearance.AppearanceTheme.Classic).ToString()));
 
+            var notificationSettings =
+                new BusinessOS.Pharmacy.Desktop.Notifications.NotificationSettingsStore();
+            var notificationHistory =
+                new BusinessOS.Pharmacy.Desktop.Notifications.NotificationHistoryStore();
+            var notificationService =
+                new BusinessOS.Pharmacy.Desktop.Notifications.NotificationService(
+                    notificationHistory,
+                    notificationSettings);
+
             var settingsViewModel = new BusinessOS.Pharmacy.Desktop.Networking.NetworkSettingsViewModel(
                 services,
                 new FakeNetworkStore(network),
                 null!,
                 null!,
                 new BusinessOS.Pharmacy.Desktop.Profile.UserProfileStore(),
-                new BusinessOS.Pharmacy.Desktop.Notifications.NotificationService(),
+                notificationService,
                 new BusinessOS.Pharmacy.Desktop.Printing.ReceiptSettingsStore(),
                 new BusinessOS.Pharmacy.Desktop.Pos.PosSettingsStore(),
-                appearanceStore);
+                appearanceStore,
+                notificationSettings);
 
             settingsViewModel.LoadProfile();
             settingsViewModel.LoadReceiptSettings();
