@@ -194,6 +194,67 @@ public sealed class CloudSyncApplyTests
     }
 
     [Fact]
+    public async Task Local_master_data_saves_are_queued_for_cloud_in_the_same_database()
+    {
+        var root = CreateTemporaryRoot();
+
+        try
+        {
+            await using var provider = BuildProvider(root);
+            await provider.GetRequiredService<ILocalDatabaseInitializer>()
+                .InitializeAsync("tenant-sync-apply");
+
+            var medicines = provider.GetRequiredService<IMedicineCatalogService>();
+            var medicineId = await medicines.CreateAsync(new SaveMedicineRequest(
+                null,
+                null,
+                "LOCAL-SYNC-001",
+                null,
+                "Local Sync Medicine",
+                "Local Generic",
+                "100 mg",
+                "Tablet",
+                "box",
+                "tablet",
+                100m,
+                10m,
+                false,
+                true,
+                true,
+                true,
+                "Queued for cloud"));
+
+            var customers = provider.GetRequiredService<ICustomerService>();
+            var customerId = await customers.CreateAsync(new SaveCustomerRequest(
+                "Local Sync Customer",
+                "0700777000",
+                "local-sync@example.test",
+                250m,
+                true,
+                "Queued for cloud"));
+
+            var sync = provider.GetRequiredService<ICloudSyncStore>();
+            var pending = await sync.GetPendingAsync(
+                "tenant-sync-apply",
+                "sync-user",
+                20,
+                DateTimeOffset.UtcNow.AddMinutes(1));
+
+            Assert.Contains(pending, x =>
+                x.EventType == "medicine.upsert" &&
+                x.PayloadJson.Contains(medicineId, StringComparison.Ordinal));
+            Assert.Contains(pending, x =>
+                x.EventType == "customer.upsert" &&
+                x.PayloadJson.Contains(customerId, StringComparison.Ordinal));
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
+    [Fact]
     public async Task User_stream_updates_existing_offline_identity_metadata_without_replacing_password_verifier()
     {
         var root = CreateTemporaryRoot();
