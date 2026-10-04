@@ -1,4 +1,3 @@
-using System.Text.Json;
 using BusinessOS.Pharmacy.Application.Abstractions.Licensing;
 using BusinessOS.Pharmacy.Application.Abstractions.Storage;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
@@ -181,12 +180,6 @@ internal static class Program
             Directory.CreateDirectory(directory);
         }
 
-        File.WriteAllText(
-            resultFile,
-            JsonSerializer.Serialize(new
-            {
-                status,
-                message,
-            }));
+        File.WriteAllText(resultFile, message);
     }
 }
