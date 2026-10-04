@@ -102,8 +102,8 @@
                                         <CheckBox IsChecked="{Binding IsSelected}"
                                                   Margin="0,3">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
-                                                <TextBlock Text="{Binding Code, StringFormat='  ({0})'}"
+                                                <TextBlock Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding Code, Mode=OneWay, StringFormat='  ({0})'}"
                                                            Style="{StaticResource MutedText}"/>
                                             </StackPanel>
                                         </CheckBox>
@@ -217,11 +217,11 @@
                                         <CheckBox IsChecked="{Binding IsSelected}" Margin="0,4">
                                             <StackPanel>
                                                 <TextBlock FontWeight="SemiBold">
-                                                    <Run Text="{Binding Name}"/>
+                                                    <Run Text="{Binding Name, Mode=OneWay}"/>
                                                     <Run Text=" · "/>
-                                                    <Run Text="{Binding Code}"/>
+                                                    <Run Text="{Binding Code, Mode=OneWay}"/>
                                                 </TextBlock>
-                                                <TextBlock Text="{Binding Description}"
+                                                <TextBlock Text="{Binding Description, Mode=OneWay}"
                                                            Style="{StaticResource MutedText}"
                                                            FontSize="11"
                                                            TextWrapping="Wrap"/>
