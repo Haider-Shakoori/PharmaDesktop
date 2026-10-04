@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using BusinessOS.Pharmacy.Application.Abstractions.Administration;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Desktop.Localization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -93,12 +94,18 @@ public sealed partial class AccessManagementViewModel : ObservableObject
 
         await BusyAsync(async () =>
         {
+            var sync = _services.GetService<ICloudSyncService>();
+            if (sync is not null)
+            {
+                _ = await sync.SyncOnceAsync();
+            }
+
             var snapshot = await service.LoadAsync();
             ApplySnapshot(snapshot);
             StatusMessage = T(
-                "Access management data loaded.",
-                "اطلاعات مدیریت دسترسی بارگذاری شد.",
-                "د لاسرسي مدیریت معلومات پورته شول.");
+                "Access management data refreshed from the pharmacy cloud.",
+                "اطلاعات مدیریت دسترسی از فضای ابری دواخانه تازه شد.",
+                "د لاسرسي مدیریت معلومات د درملتون له کلاوډ څخه تازه شول.");
         });
     }
 
