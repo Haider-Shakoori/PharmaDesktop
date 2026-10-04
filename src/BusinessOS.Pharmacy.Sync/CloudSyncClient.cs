@@ -66,6 +66,30 @@ public sealed class CloudSyncClient : ICloudSyncTransport, IDisposable
             },
         };
 
+    public async Task<CloudSyncPlatformPolicy> GetPolicyAsync(
+        string accessToken,
+        CancellationToken cancellationToken = default)
+    {
+        using var request = CreateRequest(
+            HttpMethod.Get,
+            _options.StatusPath,
+            accessToken);
+
+        using var response = await SendAsync(request, cancellationToken);
+        var envelope = await response.Content.ReadFromJsonAsync<PolicyEnvelope>(
+            JsonOptions,
+            cancellationToken)
+            ?? throw new CloudSyncTransportException(
+                "The BusinessOS sync server returned an empty policy response.",
+                retryable: true);
+
+        return new CloudSyncPlatformPolicy(
+            envelope.Data.Enabled,
+            envelope.Data.ManagedBy,
+            envelope.Data.Message,
+            envelope.ServerTime);
+    }
+
     public async Task<IReadOnlyList<CloudSyncPushAcknowledgement>> PushAsync(
         string accessToken,
         IReadOnlyList<CloudSyncOutboxItem> events,
@@ -295,6 +319,20 @@ public sealed class CloudSyncClient : ICloudSyncTransport, IDisposable
         if (_ownsClient)
             _httpClient.Dispose();
     }
+
+    private sealed record PolicyEnvelope(
+        [property: JsonPropertyName("data")]
+        PolicyData Data,
+        [property: JsonPropertyName("server_time")]
+        DateTimeOffset ServerTime);
+
+    private sealed record PolicyData(
+        [property: JsonPropertyName("enabled")]
+        bool Enabled,
+        [property: JsonPropertyName("managed_by")]
+        string ManagedBy,
+        [property: JsonPropertyName("message")]
+        string Message);
 
     private sealed record PushRequest(
         [property: JsonPropertyName("events")]
