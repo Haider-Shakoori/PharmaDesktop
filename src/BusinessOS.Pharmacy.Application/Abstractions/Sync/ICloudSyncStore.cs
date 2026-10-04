@@ -49,6 +49,12 @@ public interface ICloudSyncStore
         IReadOnlyList<CloudSyncRemoteRecord> records,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<CloudSyncRemoteRecord>> GetRemoteRecordsAsync(
+        string tenantId,
+        string stream,
+        int take = 2000,
+        CancellationToken cancellationToken = default);
+
     Task<CloudSyncQueueSnapshot> GetQueueSnapshotAsync(
         string tenantId,
         string actorUserId,
