@@ -19,12 +19,11 @@
 #ifndef AppIconFile
   #define AppIconFile ""
 #endif
-#ifndef EnableInstallerLicenseGate
-  #define EnableInstallerLicenseGate 1
-#endif
-#if EnableInstallerLicenseGate == 1
-  #ifndef ActivationBootstrapFile
-    #error ActivationBootstrapFile must be defined when the installer license gate is enabled
+#ifndef DisableInstallerLicenseGate
+  #if DeploymentMode != "Client"
+    #ifndef ActivationBootstrapFile
+      #error ActivationBootstrapFile must be defined when the installer license gate is enabled
+    #endif
   #endif
 #endif
 
@@ -82,8 +81,10 @@ Name: "{commonappdata}\BusinessOS\Pharmacy"; Permissions: users-modify; Flags: u
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-#if EnableInstallerLicenseGate == 1 && DeploymentMode != "Client"
+#ifndef DisableInstallerLicenseGate
+#if DeploymentMode != "Client"
 Source: "{#ActivationBootstrapFile}"; Flags: dontcopy
+#endif
 #endif
 
 [Tasks]
@@ -120,13 +121,15 @@ Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=
 [Code]
 var
   ServiceWasRunning: Boolean;
-#if EnableInstallerLicenseGate == 1 && DeploymentMode != "Client"
+#ifndef DisableInstallerLicenseGate
+#if DeploymentMode != "Client"
   LicensePage: TInputQueryWizardPage;
   ExistingActivationVerified: Boolean;
   LicenseActivationSucceeded: Boolean;
 #endif
 
-#if EnableInstallerLicenseGate == 1 && DeploymentMode != "Client"
+#ifndef DisableInstallerLicenseGate
+#if DeploymentMode != "Client"
 function RunActivationBootstrap(Arguments: String; var StatusText: String): Boolean;
 var
   BootstrapPath: String;
@@ -198,6 +201,7 @@ begin
   DeleteFile(LicensePath);
 end;
 #endif
+#endif
 
 procedure InitializeWizard;
 begin
@@ -208,7 +212,8 @@ begin
     'Secure, local-first pharmacy management by BusinessOS.af.' + #13#10 +
     'Choose your shortcut preference on the next steps, then Setup will handle the rest.';
 
-#if EnableInstallerLicenseGate == 1 && DeploymentMode != "Client"
+#ifndef DisableInstallerLicenseGate
+#if DeploymentMode != "Client"
   ExistingActivationVerified := VerifyExistingActivation();
   LicenseActivationSucceeded := ExistingActivationVerified;
 
@@ -221,14 +226,17 @@ begin
 
   LicensePage.Add('One-time activation key:', False);
 #endif
+#endif
 end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
   Result := False;
-#if EnableInstallerLicenseGate == 1 && DeploymentMode != "Client"
+#ifndef DisableInstallerLicenseGate
+#if DeploymentMode != "Client"
   if (PageID = LicensePage.ID) and LicenseActivationSucceeded then
     Result := True;
+#endif
 #endif
 end;
 
@@ -238,7 +246,8 @@ var
 begin
   Result := True;
 
-#if EnableInstallerLicenseGate == 1 && DeploymentMode != "Client"
+#ifndef DisableInstallerLicenseGate
+#if DeploymentMode != "Client"
   if CurPageID = LicensePage.ID then
   begin
     if Trim(LicensePage.Values[0]) = '' then
@@ -276,6 +285,7 @@ begin
     end;
   end;
 #endif
+#endif
 end;
 
 function ServiceIsRunning(): Boolean;
@@ -294,7 +304,8 @@ var
   ResultCode: Integer;
 begin
   Result := '';
-#if EnableInstallerLicenseGate == 1 && DeploymentMode != "Client"
+#ifndef DisableInstallerLicenseGate
+#if DeploymentMode != "Client"
   if not LicenseActivationSucceeded then
   begin
     Result :=
@@ -302,6 +313,7 @@ begin
       'Enter a valid one-time Windows activation key, or contact Darmaltoon support.';
     Exit;
   end;
+#endif
 #endif
   ServiceWasRunning := ServiceIsRunning();
 #if DeploymentMode == "Server"
