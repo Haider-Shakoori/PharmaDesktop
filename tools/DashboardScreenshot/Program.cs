@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using BusinessOS.Pharmacy.Application.Abstractions.Administration;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Dashboard;
 using BusinessOS.Pharmacy.Application.Abstractions.Networking;
@@ -12,6 +13,7 @@ using BusinessOS.Pharmacy.Application.Abstractions.Sales;
 using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
 using BusinessOS.Pharmacy.Desktop;
+using BusinessOS.Pharmacy.Desktop.Administration;
 using BusinessOS.Pharmacy.Desktop.Authentication;
 using BusinessOS.Pharmacy.Desktop.Dashboard;
 using BusinessOS.Pharmacy.Desktop.Localization;
@@ -104,6 +106,23 @@ internal static class Program
 
             currentPage = settingsViewModel;
             selectedKey = "settings";
+        }
+
+        if (mode is "roles-permissions" or "roles-permissions-glass")
+        {
+            var accessServices = new ServiceCollection()
+                .AddSingleton<IAccessManagementService>(new FakeAccessManagementService())
+                .AddSingleton<ICloudSyncService>(new FakeSyncService(now))
+                .BuildServiceProvider();
+
+            var access = new AccessManagementViewModel(accessServices);
+            access.SetSection("roles");
+            access.LoadAsync().GetAwaiter().GetResult();
+            access.SelectedRole = access.Roles.FirstOrDefault(x => x.Code == "pharmacist")
+                ?? access.Roles.FirstOrDefault();
+
+            currentPage = access;
+            selectedKey = "roles";
         }
 
         if (mode is "medicines" or "medicines-glass")
@@ -496,6 +515,59 @@ internal static class Program
         }
 
         return (width, height);
+    }
+
+    private sealed class FakeAccessManagementService : IAccessManagementService
+    {
+        private static readonly AccessPermissionItem[] Permissions =
+        [
+            new(1, "dashboard.view", "View dashboard", "View pharmacy dashboard and summary metrics."),
+            new(2, "pos.sell", "Use point of sale", "Create and complete pharmacy sales."),
+            new(3, "inventory.manage", "Manage inventory", "Review and adjust medicine stock."),
+            new(4, "reports.view", "View reports", "Open operational and financial reports."),
+        ];
+
+        private static AccessManagementSnapshot Snapshot() =>
+            new(
+                [
+                    new AccessUserItem(
+                        1,
+                        "Pharma",
+                        "pharma@gmail.com",
+                        true,
+                        [new AccessRoleReference(2, "Pharmacist", "pharmacist")]),
+                ],
+                [
+                    new AccessRoleItem(1, "Owner", "owner", true, 1, Permissions),
+                    new AccessRoleItem(2, "Pharmacist", "pharmacist", true, 1, Permissions.Take(3).ToArray()),
+                    new AccessRoleItem(3, "Cashier", "cashier", true, 0, [Permissions[1]]),
+                ],
+                Permissions);
+
+        public Task<AccessManagementSnapshot> LoadAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(Snapshot());
+
+        public Task<AccessManagementSnapshot> CreateUserAsync(
+            SaveAccessUserRequest request,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(Snapshot());
+
+        public Task<AccessManagementSnapshot> UpdateUserAsync(
+            int userId,
+            SaveAccessUserRequest request,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(Snapshot());
+
+        public Task<AccessManagementSnapshot> CreateRoleAsync(
+            SaveAccessRoleRequest request,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(Snapshot());
+
+        public Task<AccessManagementSnapshot> UpdateRoleAsync(
+            int roleId,
+            IReadOnlyList<int> permissionIds,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(Snapshot());
     }
 
     private sealed class FakeReceiptPrinter : ISaleReceiptPrinter
