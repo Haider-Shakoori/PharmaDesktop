@@ -39,6 +39,50 @@ public sealed class CloudSyncServiceTests
     }
 
     [Fact]
+    public async Task Platform_disabled_policy_stops_push_and_pull_without_touching_pending_queue()
+    {
+        var user = User();
+        var store = new FakeStore
+        {
+            Pending =
+            [
+                new CloudSyncOutboxItem(
+                    "outbox-1",
+                    "tenant-1",
+                    "user-1",
+                    "customer.upsert",
+                    "customer:queued:1",
+                    """{"local_id":"customer-1"}""",
+                    0,
+                    Now.AddMinutes(-1)),
+            ],
+        };
+        var transport = new FakeTransport
+        {
+            PolicyEnabled = false,
+        };
+
+        var service = CreateService(
+            DeploymentMode.Standalone,
+            store,
+            transport,
+            user,
+            Entitlement(),
+            ProtectedSession(user));
+
+        var result = await service.SyncOnceAsync();
+
+        Assert.Equal(CloudSyncRunState.DisabledByPlatform, result.State);
+        Assert.Equal(1, transport.PolicyCalls);
+        Assert.Equal(0, transport.PushCalls);
+        Assert.Equal(0, transport.PullCalls);
+        Assert.Empty(store.AcceptedKeys);
+        Assert.Empty(store.RejectedKeys);
+        Assert.Empty(store.DeferredKeys);
+        Assert.Single(store.Pending);
+    }
+
+    [Fact]
     public async Task Retryable_transport_failure_defers_outbox_without_losing_event()
     {
         var user = User();
@@ -471,10 +515,27 @@ public sealed class CloudSyncServiceTests
 
     private sealed class FakeTransport : ICloudSyncTransport
     {
+        public int PolicyCalls { get; private set; }
         public int PushCalls { get; private set; }
         public int PullCalls { get; private set; }
+        public bool PolicyEnabled { get; init; } = true;
         public Exception? PushFailure { get; init; }
         public IReadOnlyList<CloudSyncPushAcknowledgement> PushResults { get; init; } = [];
+
+        public Task<CloudSyncPlatformPolicy> GetPolicyAsync(
+            string accessToken,
+            CancellationToken cancellationToken = default)
+        {
+            PolicyCalls++;
+            return Task.FromResult(
+                new CloudSyncPlatformPolicy(
+                    PolicyEnabled,
+                    "platform",
+                    PolicyEnabled
+                        ? "Live server connection and synchronization are enabled by the platform."
+                        : "Live server connection and synchronization are disabled by the platform. Local work remains available and pending changes stay queued.",
+                    Now));
+        }
 
         public Task<IReadOnlyList<CloudSyncPushAcknowledgement>> PushAsync(
             string accessToken,
