@@ -305,7 +305,8 @@ public sealed class CloudSyncApplyTests
                           "server_updated_at":"2026-10-04T07:00:00Z"
                         }
                         """,
-                        DateTimeOffset.UtcNow));
+                        DateTimeOffset.UtcNow),
+                ]);
 
             var updated = await credentials.FindUserByEmailAsync("user@example.test");
             Assert.NotNull(updated);
