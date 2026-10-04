@@ -136,6 +136,7 @@ var
   BootstrapPath: String;
   ResultPath: String;
   ResultCode: Integer;
+  ResultLines: TArrayOfString;
 begin
   Result := False;
   StatusText := '';
@@ -159,8 +160,10 @@ begin
     Exit;
   end;
 
-  if FileExists(ResultPath) then
-    LoadStringFromFile(ResultPath, StatusText);
+  if FileExists(ResultPath) and
+     LoadStringsFromFile(ResultPath, ResultLines) and
+     (GetArrayLength(ResultLines) > 0) then
+    StatusText := ResultLines[0];
 
   DeleteFile(ResultPath);
 
