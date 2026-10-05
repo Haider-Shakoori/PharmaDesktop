@@ -61,6 +61,8 @@ public sealed class LanPurchasingService(LanApiClient api) : IPurchasingService
     public Task<PurchaseOrderDetail?> GetOrderAsync(string id, CancellationToken ct = default) => api.GetOptionalAsync<PurchaseOrderDetail>($"purchasing/orders/{E(id)}", ct);
     public async Task<string> CreateOrderAsync(CreatePurchaseOrderRequest request, CancellationToken ct = default) =>
         (await api.PostAsync<CreatePurchaseOrderRequest, IdResponse>("purchasing/orders", request, ct)).Id;
+    public async Task<string> CompletePurchaseAsync(CompletePurchaseRequest request, CancellationToken ct = default) =>
+        (await api.PostAsync<CompletePurchaseRequest, IdResponse>("purchasing/complete", request, ct)).Id;
     public Task SubmitOrderAsync(string orderId, CancellationToken ct = default) => api.PostAsync($"purchasing/orders/{E(orderId)}/submit", ct);
     public Task ApproveOrderAsync(string orderId, CancellationToken ct = default) => api.PostAsync($"purchasing/orders/{E(orderId)}/approve", ct);
     public Task CancelOrderAsync(string orderId, CancellationToken ct = default) => api.PostAsync($"purchasing/orders/{E(orderId)}/cancel", ct);
