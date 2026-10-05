@@ -62,6 +62,9 @@ public sealed partial class PurchasingViewModel : ObservableObject
     [ObservableProperty] private decimal draftUnitCost;
     [ObservableProperty] private decimal draftDiscount;
     [ObservableProperty] private decimal draftLandedCost;
+    [ObservableProperty] private string draftBatchNumber = string.Empty;
+    [ObservableProperty] private string draftExpiresAtText = string.Empty;
+    [ObservableProperty] private decimal? draftSalePrice;
 
     [ObservableProperty] private PurchaseOrderLineItem? selectedOrderLine;
     [ObservableProperty] private decimal receiptQuantity;
@@ -133,6 +136,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
         ClearDraftLinesCommand = new RelayCommand(ClearDraftLines, () => !IsBusy);
         CreateOrderCommand = new AsyncRelayCommand(CreateOrderAsync, CanCreateOrder);
         QuickCreateOrderCommand = new AsyncRelayCommand(QuickCreateOrderAsync, CanCreateOrder);
+        SavePurchaseCommand = new AsyncRelayCommand(SavePurchaseAsync, CanSavePurchase);
         SubmitOrderCommand = new AsyncRelayCommand(SubmitOrderAsync, CanSubmitOrder);
         ApproveOrderCommand = new AsyncRelayCommand(ApproveOrderAsync, CanApproveOrder);
         CancelOrderCommand = new AsyncRelayCommand(CancelOrderAsync, CanCancelOrder);
@@ -176,6 +180,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
     public IRelayCommand ClearDraftLinesCommand { get; }
     public IAsyncRelayCommand CreateOrderCommand { get; }
     public IAsyncRelayCommand QuickCreateOrderCommand { get; }
+    public IAsyncRelayCommand SavePurchaseCommand { get; }
     public IAsyncRelayCommand SubmitOrderCommand { get; }
     public IAsyncRelayCommand ApproveOrderCommand { get; }
     public IAsyncRelayCommand CancelOrderCommand { get; }
@@ -403,6 +408,10 @@ public sealed partial class PurchasingViewModel : ObservableObject
         OnPropertyChanged(nameof(QuickCreateLabel));
         OnPropertyChanged(nameof(QuickCreateHint));
     }
+
+    partial void OnPaymentAmountChanged(decimal value) => SavePurchaseCommand.NotifyCanExecuteChanged();
+
+    partial void OnCanPaySuppliersChanged(bool value) => SavePurchaseCommand.NotifyCanExecuteChanged();
 
     partial void OnSelectedOrderLineChanged(PurchaseOrderLineItem? value)
     {
@@ -726,17 +735,25 @@ public sealed partial class PurchasingViewModel : ObservableObject
             return;
         }
 
+        var expiry = ParseOptionalDate(DraftExpiresAtText, "Expiry date");
+
         DraftLines.Add(new PurchaseOrderDraftLineViewModel(
             SelectedDraftMedicine,
             DraftQuantity,
             DraftUnitCost,
             DraftDiscount,
-            DraftLandedCost));
+            DraftLandedCost,
+            string.IsNullOrWhiteSpace(DraftBatchNumber) ? null : DraftBatchNumber.Trim(),
+            expiry,
+            DraftSalePrice));
 
         DraftQuantity = 1m;
         DraftUnitCost = 0m;
         DraftDiscount = 0m;
         DraftLandedCost = 0m;
+        DraftBatchNumber = string.Empty;
+        DraftExpiresAtText = string.Empty;
+        DraftSalePrice = null;
         RaiseDraftState();
     }
 
@@ -761,6 +778,65 @@ public sealed partial class PurchasingViewModel : ObservableObject
         SelectedOrderSupplier is not null &&
         DraftLines.Count > 0 &&
         DraftLines.All(x => x.OrderedQuantity > 0m && x.UnitCost >= 0m);
+
+    private bool CanSavePurchase() =>
+        !IsBusy &&
+        CanManagePurchases &&
+        SelectedOrderSupplier is not null &&
+        DraftLines.Count > 0 &&
+        PaymentAmount >= 0m &&
+        PaymentAmount <= DraftTotal &&
+        (PaymentAmount == 0m || CanPaySuppliers) &&
+        DraftLines.All(x =>
+            x.OrderedQuantity > 0m &&
+            x.UnitCost >= 0m &&
+            (!x.Medicine.BatchTrackingRequired || !string.IsNullOrWhiteSpace(x.BatchNumber)) &&
+            (!x.Medicine.ExpiryTrackingRequired || x.ExpiresAt is not null));
+
+    private async Task SavePurchaseAsync()
+    {
+        if (SelectedOrderSupplier is null)
+        {
+            throw new InvalidOperationException("Select a supplier.");
+        }
+
+        await ExecuteBusyAsync(async () =>
+        {
+            var id = await _purchasing.CompletePurchaseAsync(
+                new CompletePurchaseRequest(
+                    SelectedOrderSupplier.Id,
+                    ParseRequiredDate(OrderDateText, "Order date"),
+                    OrderCurrency,
+                    OrderNotes,
+                    PaymentAmount,
+                    SelectedPaymentMethod,
+                    PaymentReference,
+                    PaymentNotes,
+                    DraftLines.Select(x => new CompletePurchaseLineRequest(
+                        x.Medicine.Id,
+                        x.OrderedQuantity,
+                        x.UnitCost,
+                        x.DiscountAmount,
+                        x.LandedCostAllocated,
+                        x.BatchNumber,
+                        x.ExpiresAt,
+                        x.SalePrice)).ToList()));
+
+            DraftLines.Clear();
+            OrderNotes = string.Empty;
+            PaymentAmount = 0m;
+            PaymentReference = string.Empty;
+            PaymentNotes = string.Empty;
+            RaiseDraftState();
+
+            await RefreshCreatedOrderAsync(id);
+
+            StatusMessage = Translate(
+                "Purchase saved. Inventory and supplier balance were updated.",
+                "خرید ذخیره شد. موجودی و حساب تأمین‌کننده به‌روزرسانی شد.",
+                "پېرود خوندي شو. زېرمتون او د عرضه کوونکي حساب تازه شول.");
+        });
+    }
 
     private async Task CreateOrderAsync()
     {
@@ -1130,6 +1206,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
         OnPropertyChanged(nameof(DraftSummary));
         CreateOrderCommand.NotifyCanExecuteChanged();
         QuickCreateOrderCommand.NotifyCanExecuteChanged();
+        SavePurchaseCommand.NotifyCanExecuteChanged();
     }
 
     private async Task ExecuteBusyAsync(Func<Task> action)
@@ -1173,6 +1250,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
         ClearDraftLinesCommand.NotifyCanExecuteChanged();
         CreateOrderCommand.NotifyCanExecuteChanged();
         QuickCreateOrderCommand.NotifyCanExecuteChanged();
+        SavePurchaseCommand.NotifyCanExecuteChanged();
         SubmitOrderCommand.NotifyCanExecuteChanged();
         ApproveOrderCommand.NotifyCanExecuteChanged();
         CancelOrderCommand.NotifyCanExecuteChanged();
@@ -1223,7 +1301,10 @@ public sealed record PurchaseOrderDraftLineViewModel(
     decimal OrderedQuantity,
     decimal UnitCost,
     decimal DiscountAmount,
-    decimal LandedCostAllocated)
+    decimal LandedCostAllocated,
+    string? BatchNumber,
+    DateOnly? ExpiresAt,
+    decimal? SalePrice)
 {
     public string MedicineLabel => string.Join(
         " ",
