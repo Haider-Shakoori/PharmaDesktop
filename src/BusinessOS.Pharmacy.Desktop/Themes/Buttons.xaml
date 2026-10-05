@@ -21,7 +21,19 @@
                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                           TextElement.Foreground="{TemplateBinding Foreground}"
-                                          TextElement.FontWeight="{TemplateBinding FontWeight}" />
+                                          TextElement.FontWeight="{TemplateBinding FontWeight}">
+                            <ContentPresenter.Resources>
+                                <!-- Keep all text inside a button synchronized with
+                                     the Button.Foreground. This overrides the app-wide
+                                     implicit TextBlock foreground that otherwise turns
+                                     text dark even on primary blue buttons. Explicit
+                                     per-TextBlock foregrounds still take precedence. -->
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground"
+                                            Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -44,14 +56,6 @@
     </Style>
 
     <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource ProfessionalButtonBase}">
-        <Style.Resources>
-            <!-- The app-wide implicit TextBlock style sets its own foreground.
-                 Override it inside primary buttons so composite button content
-                 always keeps readable white text on the blue surface. -->
-            <Style TargetType="TextBlock">
-                <Setter Property="Foreground" Value="White" />
-            </Style>
-        </Style.Resources>
         <Setter Property="Foreground" Value="White" />
         <Setter Property="Background" Value="{DynamicResource BrandPrimaryBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}" />
@@ -80,11 +84,6 @@
     </Style>
 
     <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource ProfessionalButtonBase}">
-        <Style.Resources>
-            <Style TargetType="TextBlock">
-                <Setter Property="Foreground" Value="White" />
-            </Style>
-        </Style.Resources>
         <Setter Property="Foreground" Value="White" />
         <Setter Property="Background" Value="{DynamicResource DangerBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
