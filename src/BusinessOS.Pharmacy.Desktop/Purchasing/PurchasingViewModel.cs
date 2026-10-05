@@ -735,7 +735,35 @@ public sealed partial class PurchasingViewModel : ObservableObject
             return;
         }
 
-        var expiry = ParseOptionalDate(DraftExpiresAtText, "Expiry date");
+        DateOnly? expiry;
+        try
+        {
+            expiry = ParseOptionalDate(DraftExpiresAtText, "Expiry date");
+        }
+        catch (ArgumentException exception)
+        {
+            StatusMessage = exception.Message;
+            return;
+        }
+
+        if (SelectedDraftMedicine.BatchTrackingRequired &&
+            string.IsNullOrWhiteSpace(DraftBatchNumber))
+        {
+            StatusMessage = Translate(
+                "This medicine requires a batch number.",
+                "این دوا به شماره بچ نیاز دارد.",
+                "دا درمل د بچ شمېرې ته اړتیا لري.");
+            return;
+        }
+
+        if (SelectedDraftMedicine.ExpiryTrackingRequired && expiry is null)
+        {
+            StatusMessage = Translate(
+                "This medicine requires an expiry date.",
+                "این دوا به تاریخ انقضا نیاز دارد.",
+                "دا درمل د ختمېدو نېټې ته اړتیا لري.");
+            return;
+        }
 
         DraftLines.Add(new PurchaseOrderDraftLineViewModel(
             SelectedDraftMedicine,
