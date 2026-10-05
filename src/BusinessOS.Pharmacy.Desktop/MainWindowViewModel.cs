@@ -207,7 +207,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
         "reports" => Translate("Reports", "گزارش‌ها", "راپورونه"),
         "backup" => Translate("Backup & Restore", "پشتیبان‌گیری و بازیابی", "بیک اپ او بېرته راګرځول"),
         "updates" => Translate("Application Updates", "به‌روزرسانی برنامه", "د اپلیکیشن تازه کول"),
-        "network" => Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ټرمینلونه"),
         "medicines" => Translate("Medicines", "ادویه", "درمل"),
         "inventory" => Translate("Inventory", "موجودی", "زېرمه"),
         "purchases" => Translate("Supplier", "تأمین‌کننده", "عرضه کوونکی"),
@@ -233,10 +232,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
             "Signed releases with checksum verification and deployment-mode compatibility checks",
             "نسخه‌های امضاشده با بررسی صحت و سازگاری حالت نصب",
             "لاسلیک شوي نسخې د checksum او نصب حالت د سازګارۍ له تایید سره"),
-        "network" => Translate(
-            "LAN server, client terminals and connection diagnostics",
-            "سرور شبکه، ترمینال‌های مشتری و عیب‌یابی اتصال",
-            "د LAN سرور، مراجع ترمینلونه او د نښلونې تشخیص"),
         "closing" => Translate(
             "Cashier shifts, cash reconciliation and auditable day finalization",
             "شیفت صندوق، تطبیق نقد و نهایی‌سازی قابل حسابرسی",
@@ -464,16 +459,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         AddIfAllowed("settings.manage", "updates", Translate("Sync & Updates", "همگام‌سازی و به‌روزرسانی", "همغږي او تازه کول"), system);
 
-        if (_networkConfiguration.Mode == DeploymentMode.Server &&
-            (_permissions.HasPermission("users.manage") ||
-             _permissions.HasPermission("settings.manage")))
-        {
-            AddNavigationItem(
-                "network",
-                Translate("Network & Terminals", "شبکه و ترمینال‌ها", "شبکه او ټرمینلونه"),
-                system);
-        }
-
         AddIfAllowed("settings.manage", "settings", Translate("Settings", "تنظیمات", "امستنې"), administration);
     }
 
@@ -582,11 +567,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 await Updates.LoadAsync();
                 break;
 
-            case "network" when
-                _networkConfiguration.Mode == DeploymentMode.Server &&
-                (_permissions.HasPermission("users.manage") ||
-                 _permissions.HasPermission("settings.manage")):
-                CurrentSectionKey = "network";
+            case "network" when _permissions.HasPermission("settings.manage"):
+                // Network & Terminals now lives inside Settings. Keep this
+                // compatibility route for old dashboard shortcuts/bookmarks.
+                CurrentSectionKey = "settings";
                 CurrentPage = NetworkSettings;
                 await NetworkSettings.LoadAsync();
                 RefreshLanStatusText();
