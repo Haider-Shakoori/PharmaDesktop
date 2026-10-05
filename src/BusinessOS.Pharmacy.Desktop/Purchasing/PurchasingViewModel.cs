@@ -403,6 +403,9 @@ public sealed partial class PurchasingViewModel : ObservableObject
         NotifyCommands();
     }
 
+    partial void OnSelectedOrderSupplierChanged(PurchaseSupplierReferenceItem? value) =>
+        SavePurchaseCommand.NotifyCanExecuteChanged();
+
     partial void OnCanApprovePurchasesChanged(bool value)
     {
         OnPropertyChanged(nameof(QuickCreateLabel));
@@ -431,11 +434,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
 
     partial void OnSelectedReceiptChanged(GoodsReceiptItem? value) => NotifyCommands();
     partial void OnSelectedStockLocationChanged(PurchaseStockLocationReferenceItem? value) => NotifyCommands();
-    partial void OnSelectedInvoiceChanged(PurchaseInvoiceItem? value)
-    {
-        PaymentAmount = value?.BalanceDue ?? 0m;
-        NotifyCommands();
-    }
+    partial void OnSelectedInvoiceChanged(PurchaseInvoiceItem? value) => NotifyCommands();
 
     private async Task LoadReferencesAsync()
     {
