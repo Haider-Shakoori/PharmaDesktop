@@ -242,6 +242,86 @@ public sealed class PurchasingTests
     }
 
     [Fact]
+    public async Task Simplified_purchase_with_zero_payment_saves_po_posts_inventory_and_supplier_payable()
+    {
+        var root = CreateTemporaryRoot();
+
+        try
+        {
+            await using var provider = BuildProvider(root);
+            await InitializeAsync(provider);
+
+            var purchasing = provider.GetRequiredService<IPurchasingService>();
+            var inventory = provider.GetRequiredService<IInventoryService>();
+            var suppliers = provider.GetRequiredService<ISupplierService>();
+
+            await inventory.EnsureDefaultsAsync();
+
+            var supplierId = await CreateSupplierAsync(provider, paymentTermsDays: 30);
+            var medicineId = await CreateMedicineAsync(provider, "SIMPLE-PO-001", "Simple Purchase Medicine");
+
+            var orderId = await purchasing.CompletePurchaseAsync(
+                new CompletePurchaseRequest(
+                    supplierId,
+                    new DateOnly(2026, 10, 6),
+                    "AFN",
+                    "One-step pharmacy purchase",
+                    0m,
+                    "cash",
+                    null,
+                    "Nothing paid at purchase time",
+                    [
+                        new CompletePurchaseLineRequest(
+                            medicineId,
+                            10m,
+                            20m,
+                            DiscountAmount: 10m,
+                            LandedCostAllocated: 5m,
+                            BatchNumber: "LOT-SIMPLE-1",
+                            ExpiresAt: new DateOnly(2027, 10, 6),
+                            SalePrice: 30m)
+                    ]));
+
+            var order = await purchasing.GetOrderAsync(orderId);
+            Assert.NotNull(order);
+            Assert.Equal("received", order!.Order.Status);
+            Assert.Equal(195m, order.Order.GrandTotal);
+            Assert.Equal(10m, Assert.Single(order.Lines).ReceivedQuantity);
+
+            var receipt = Assert.Single(order.Receipts);
+            Assert.Equal("posted", receipt.Status);
+            Assert.NotNull(receipt.InventoryPostedAt);
+            Assert.NotNull(receipt.StockLocationId);
+
+            var invoice = Assert.Single(order.Invoices);
+            Assert.Equal("open", invoice.Status);
+            Assert.Equal(195m, invoice.GrandTotal);
+            Assert.Equal(0m, invoice.PaidTotal);
+            Assert.Equal(195m, invoice.BalanceDue);
+            Assert.Empty(invoice.Payments);
+
+            var batch = Assert.Single(
+                await inventory.SearchBatchesAsync(
+                    new InventoryBatchFilter(Search: "LOT-SIMPLE-1", Take: 20)));
+
+            Assert.Equal(10m, batch.ReceivedQuantity);
+            Assert.Equal(10m, batch.AvailableQuantity);
+            Assert.Equal(19.5m, batch.PurchaseCost);
+            Assert.Equal(30m, batch.SalePrice);
+
+            var summary = await suppliers.GetSummaryAsync();
+            Assert.Equal(195m, summary.TotalDealValue);
+            Assert.Equal(0m, summary.TotalPaid);
+            Assert.Equal(195m, summary.OutstandingPayable);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            DeleteTemporaryRoot(root);
+        }
+    }
+
+    [Fact]
     public async Task Partial_receipts_post_bonus_stock_and_weighted_cost_then_complete_order()
     {
         var root = CreateTemporaryRoot();

@@ -361,6 +361,347 @@ public sealed class PurchasingService : IPurchasingService
         return order.Id;
     }
 
+    public async Task<string> CompletePurchaseAsync(
+        CompletePurchaseRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        _permissions.Demand("purchases.manage");
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.SupplierId);
+        ValidateCurrency(request.Currency);
+        _ = NormalizeOptional(request.Notes, 2000);
+        _ = NormalizeOptional(request.PaymentReference, 160);
+        _ = NormalizeOptional(request.PaymentNotes, 2000);
+
+        if (request.Lines is null || request.Lines.Count is < 1 or > 250)
+        {
+            throw new ArgumentOutOfRangeException(nameof(request.Lines));
+        }
+
+        if (!PaymentMethods.Contains(request.PaymentMethod))
+        {
+            throw new ArgumentException("Unsupported supplier payment method.", nameof(request.PaymentMethod));
+        }
+
+        ValidateMoney(request.PaymentAmount, nameof(request.PaymentAmount));
+        if (request.PaymentAmount > 0m)
+        {
+            _permissions.Demand("purchases.pay");
+        }
+
+        foreach (var line in request.Lines)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(line.MedicineId);
+            ValidateQuantity(line.Quantity, nameof(line.Quantity));
+            ValidateMoney(line.UnitCost, nameof(line.UnitCost));
+            ValidateMoney(line.DiscountAmount, nameof(line.DiscountAmount));
+            ValidateMoney(line.LandedCostAllocated, nameof(line.LandedCostAllocated));
+            _ = NormalizeOptional(line.BatchNumber, 120);
+            if (line.SalePrice is not null)
+            {
+                ValidateMoney(line.SalePrice.Value, nameof(line.SalePrice));
+            }
+        }
+
+        var actorId = CurrentUserId();
+        var now = _clock.UtcNow;
+        var currency = request.Currency.Trim().ToUpperInvariant();
+
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await InventoryWriteTransaction.BeginAsync(context, cancellationToken);
+
+        var supplier = await context.Set<SupplierEntity>()
+            .SingleOrDefaultAsync(x => x.Id == request.SupplierId && x.IsActive, cancellationToken)
+            ?? throw new InvalidOperationException("Supplier was not found or is inactive.");
+
+        var stockLocation = await context.Set<StockLocationEntity>()
+            .Include(x => x.Branch)
+            .Where(x => x.IsActive && x.Branch.IsActive)
+            .OrderByDescending(x => x.IsDefault)
+            .ThenBy(x => x.Name)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException(
+                "No active stock location exists. Create or enable a stock location before saving a purchase.");
+
+        var medicineIds = request.Lines.Select(x => x.MedicineId).Distinct().ToList();
+        var medicines = await context.Set<MedicineEntity>()
+            .Where(x => medicineIds.Contains(x.Id) && x.IsActive)
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        if (medicines.Count != medicineIds.Count)
+        {
+            throw new InvalidOperationException("One or more medicines were not found or are inactive.");
+        }
+
+        decimal subtotal = 0m;
+        decimal discountTotal = 0m;
+        decimal landedTotal = 0m;
+        var prepared = new List<(CompletePurchaseLineRequest Request, MedicineEntity Medicine, decimal Qty, decimal UnitCost, decimal Discount, decimal Landed, decimal LineTotal)>();
+
+        foreach (var line in request.Lines)
+        {
+            var medicine = medicines[line.MedicineId];
+            var qty = ScaleQuantity(line.Quantity);
+            var unitCost = ScaleMoney(line.UnitCost);
+            var discount = ScaleMoney(line.DiscountAmount);
+            var landed = ScaleMoney(line.LandedCostAllocated);
+            var baseAmount = qty * unitCost;
+
+            if (discount > baseAmount)
+            {
+                throw new ArgumentException("Line discount cannot exceed the line base amount.");
+            }
+
+            if (medicine.BatchTrackingRequired && string.IsNullOrWhiteSpace(line.BatchNumber))
+            {
+                throw new InvalidOperationException(
+                    $"{medicine.BrandName} requires a batch number. Enter it while preparing the purchase list.");
+            }
+
+            if (medicine.ExpiryTrackingRequired && line.ExpiresAt is null)
+            {
+                throw new InvalidOperationException(
+                    $"{medicine.BrandName} requires an expiry date. Enter it while preparing the purchase list.");
+            }
+
+            var lineTotal = ScaleMoney(baseAmount - discount + landed);
+            subtotal += baseAmount;
+            discountTotal += discount;
+            landedTotal += landed;
+            prepared.Add((line, medicine, qty, unitCost, discount, landed, lineTotal));
+        }
+
+        subtotal = ScaleMoney(subtotal);
+        discountTotal = ScaleMoney(discountTotal);
+        landedTotal = ScaleMoney(landedTotal);
+        var grandTotal = ScaleMoney(subtotal - discountTotal + landedTotal);
+        var paymentAmount = ScaleMoney(request.PaymentAmount);
+
+        if (paymentAmount > grandTotal)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(request.PaymentAmount),
+                "Payment cannot exceed the purchase total.");
+        }
+
+        var order = new PurchaseOrderEntity
+        {
+            Id = Guid.CreateVersion7().ToString(),
+            SupplierId = supplier.Id,
+            Number = CreateDocumentNumber("PO", now),
+            Status = "received",
+            OrderDate = request.OrderDate,
+            ExpectedDate = null,
+            Currency = currency,
+            Subtotal = subtotal,
+            DiscountTotal = discountTotal,
+            LandedCostTotal = landedTotal,
+            GrandTotal = grandTotal,
+            Notes = NormalizeOptional(request.Notes, 2000),
+            CreatedBy = actorId,
+            ApprovedBy = actorId,
+            SubmittedAt = now,
+            ApprovedAt = now,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        context.Add(order);
+
+        var receipt = new GoodsReceiptEntity
+        {
+            Id = Guid.CreateVersion7().ToString(),
+            PurchaseOrderId = order.Id,
+            SupplierId = supplier.Id,
+            ReceiptNumber = CreateDocumentNumber("GRN", now),
+            Status = "posted",
+            ReceivedAt = now,
+            StockLocationId = stockLocation.Id,
+            InventoryPostedAt = now,
+            CreatedBy = actorId,
+            Notes = "Automatically posted by simplified purchase workflow.",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        context.Add(receipt);
+
+        foreach (var item in prepared)
+        {
+            var orderLine = new PurchaseOrderLineEntity
+            {
+                Id = Guid.CreateVersion7().ToString(),
+                PurchaseOrderId = order.Id,
+                MedicineId = item.Medicine.Id,
+                Description = BuildMedicineDescription(item.Medicine),
+                OrderedQuantity = item.Qty,
+                ReceivedQuantity = item.Qty,
+                UnitCost = item.UnitCost,
+                DiscountAmount = item.Discount,
+                LandedCostAllocated = item.Landed,
+                LineTotal = item.LineTotal,
+                CreatedAt = now,
+                UpdatedAt = now,
+            };
+            context.Add(orderLine);
+
+            var receiptLine = new GoodsReceiptLineEntity
+            {
+                Id = Guid.CreateVersion7().ToString(),
+                GoodsReceiptId = receipt.Id,
+                PurchaseOrderLineId = orderLine.Id,
+                MedicineId = item.Medicine.Id,
+                ReceivedQuantity = item.Qty,
+                BonusQuantity = 0m,
+                BatchNumber = NormalizeOptional(item.Request.BatchNumber, 120),
+                ManufacturedAt = null,
+                ExpiresAt = item.Request.ExpiresAt,
+                UnitCost = item.UnitCost,
+                SalePrice = item.Request.SalePrice is null
+                    ? null
+                    : ScaleMoney(item.Request.SalePrice.Value),
+                CreatedAt = now,
+                UpdatedAt = now,
+            };
+            context.Add(receiptLine);
+
+            await context.SaveChangesAsync(cancellationToken);
+
+            var batchKey = BuildBatchKey(
+                receiptLine.BatchNumber,
+                receiptLine.ExpiresAt,
+                receiptLine.Id);
+
+            var batch = await context.Set<ProductBatchEntity>()
+                .SingleOrDefaultAsync(
+                    x => x.MedicineId == item.Medicine.Id &&
+                         x.StockLocationId == stockLocation.Id &&
+                         x.BatchKey == batchKey,
+                    cancellationToken);
+
+            if (batch is null)
+            {
+                batch = new ProductBatchEntity
+                {
+                    Id = Guid.CreateVersion7().ToString(),
+                    MedicineId = item.Medicine.Id,
+                    SupplierId = supplier.Id,
+                    PurchaseOrderId = order.Id,
+                    GoodsReceiptId = receipt.Id,
+                    BranchId = stockLocation.BranchId,
+                    StockLocationId = stockLocation.Id,
+                    BatchNumber = receiptLine.BatchNumber,
+                    BatchKey = batchKey,
+                    ManufacturedAt = null,
+                    ExpiresAt = receiptLine.ExpiresAt,
+                    Status = "active",
+                    ReceivedQuantity = 0m,
+                    AvailableQuantity = 0m,
+                    PurchaseCost = 0m,
+                    SalePrice = receiptLine.SalePrice,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                };
+                context.Add(batch);
+                await context.SaveChangesAsync(cancellationToken);
+            }
+
+            var incomingCostTotal = item.LineTotal;
+            var oldReceived = batch.ReceivedQuantity;
+            var newReceived = ScaleQuantity(oldReceived + item.Qty);
+            var oldCostTotal = oldReceived * batch.PurchaseCost;
+            var weightedCost = newReceived == 0m
+                ? 0m
+                : ScaleMoney((oldCostTotal + incomingCostTotal) / newReceived);
+            var effectiveIncomingCost = ScaleMoney(incomingCostTotal / item.Qty);
+
+            batch.ReceivedQuantity = newReceived;
+            batch.PurchaseCost = weightedCost;
+            if (receiptLine.SalePrice is not null)
+            {
+                batch.SalePrice = receiptLine.SalePrice;
+            }
+
+            if (batch.Status == "depleted")
+            {
+                batch.Status = "active";
+            }
+
+            batch.UpdatedAt = now;
+            await context.SaveChangesAsync(cancellationToken);
+
+            await _ledger.RecordAsync(
+                context,
+                batch,
+                item.Qty,
+                "purchase_receipt",
+                "goods_receipt",
+                receipt.Id,
+                $"quick-purchase:{receipt.Id}:{receiptLine.Id}",
+                actorId,
+                receiptLine.Id,
+                "Purchase saved and posted directly to inventory",
+                effectiveIncomingCost,
+                null,
+                cancellationToken);
+        }
+
+        var balanceDue = ScaleMoney(grandTotal - paymentAmount);
+        var invoiceStatus = balanceDue == 0m
+            ? "paid"
+            : paymentAmount == 0m
+                ? "open"
+                : "partially_paid";
+
+        var invoice = new PurchaseInvoiceEntity
+        {
+            Id = Guid.CreateVersion7().ToString(),
+            SupplierId = supplier.Id,
+            PurchaseOrderId = order.Id,
+            GoodsReceiptId = receipt.Id,
+            InvoiceNumber = CreateDocumentNumber("PINV", now),
+            SupplierInvoiceNumber = null,
+            InvoiceDate = request.OrderDate,
+            DueDate = request.OrderDate.AddDays(supplier.PaymentTermsDays),
+            Currency = currency,
+            Status = invoiceStatus,
+            Subtotal = subtotal,
+            DiscountTotal = discountTotal,
+            LandedCostTotal = landedTotal,
+            GrandTotal = grandTotal,
+            PaidTotal = paymentAmount,
+            BalanceDue = balanceDue,
+            CreatedBy = actorId,
+            Notes = NormalizeOptional(request.PaymentNotes, 2000),
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        context.Add(invoice);
+
+        if (paymentAmount > 0m)
+        {
+            context.Add(new SupplierPaymentEntity
+            {
+                Id = Guid.CreateVersion7().ToString(),
+                PurchaseInvoiceId = invoice.Id,
+                SupplierId = supplier.Id,
+                PaymentNumber = CreateDocumentNumber("PAY", now),
+                Amount = paymentAmount,
+                Currency = currency,
+                Method = request.PaymentMethod.Trim().ToLowerInvariant(),
+                Reference = NormalizeOptional(request.PaymentReference, 160),
+                PaidAt = now,
+                IdempotencyKey = $"quick-purchase:{order.Id}:payment",
+                CreatedBy = actorId,
+                Notes = NormalizeOptional(request.PaymentNotes, 2000),
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return order.Id;
+    }
+
     public async Task SubmitOrderAsync(
         string orderId,
         CancellationToken cancellationToken = default)

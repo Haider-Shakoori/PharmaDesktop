@@ -485,6 +485,7 @@ authorized.MapGet("/purchasing/references", async (IPurchasingService service, C
 authorized.MapPost("/purchasing/orders/search", async (PurchaseOrderSearchFilter filter, IPurchasingService service, CancellationToken ct) => Results.Ok(await service.SearchOrdersAsync(filter, ct)));
 authorized.MapGet("/purchasing/orders/{id}", async (string id, IPurchasingService service, CancellationToken ct) => { var result = await service.GetOrderAsync(id, ct); return result is null ? Results.NotFound() : Results.Ok(result); });
 authorized.MapPost("/purchasing/orders", async (CreatePurchaseOrderRequest request, IPurchasingService service, CancellationToken ct) => Results.Ok(new MedicineCreateResponse(await service.CreateOrderAsync(request, ct))));
+authorized.MapPost("/purchasing/complete", async (CompletePurchaseRequest request, IPurchasingService service, CancellationToken ct) => Results.Ok(new MedicineCreateResponse(await service.CompletePurchaseAsync(request, ct))));
 authorized.MapPost("/purchasing/orders/{id}/submit", async (string id, IPurchasingService service, CancellationToken ct) => { await service.SubmitOrderAsync(id, ct); return Results.NoContent(); });
 authorized.MapPost("/purchasing/orders/{id}/approve", async (string id, IPurchasingService service, CancellationToken ct) => { await service.ApproveOrderAsync(id, ct); return Results.NoContent(); });
 authorized.MapPost("/purchasing/orders/{id}/cancel", async (string id, IPurchasingService service, CancellationToken ct) => { await service.CancelOrderAsync(id, ct); return Results.NoContent(); });
