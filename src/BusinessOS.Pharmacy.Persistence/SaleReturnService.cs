@@ -43,8 +43,22 @@ public sealed class SaleReturnService : ISaleReturnService
             query = query.Where(x => EF.Functions.Like(x.SaleNumber, pattern) || (x.Customer != null && (EF.Functions.Like(x.Customer.Name, pattern) || (x.Customer.Phone != null && EF.Functions.Like(x.Customer.Phone, pattern)))));
         }
 
-        return await query.OrderByDescending(x => x.CompletedAt).Take(take)
-            .Select(x => new SaleListItem(x.Id, x.SaleNumber, x.BusinessDate, x.CompletedAt, x.Customer == null ? null : x.Customer.Name, x.StockLocation.Name, x.PaymentStatus, x.GrandTotal, x.PaidTotal, x.DueTotal, x.ChangeTotal))
+        return await query
+            .OrderByDescending(x => x.BusinessDate)
+            .ThenByDescending(x => x.Id)
+            .Take(take)
+            .Select(x => new SaleListItem(
+                x.Id,
+                x.SaleNumber,
+                x.BusinessDate,
+                x.CompletedAt,
+                x.Customer == null ? null : x.Customer.Name,
+                x.StockLocation.Name,
+                x.PaymentStatus,
+                x.GrandTotal,
+                x.PaidTotal,
+                x.DueTotal,
+                x.ChangeTotal))
             .ToListAsync(cancellationToken);
     }
 
