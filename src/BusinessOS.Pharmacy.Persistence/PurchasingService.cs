@@ -644,6 +644,13 @@ public sealed class PurchasingService : IPurchasingService
                 cancellationToken);
         }
 
+        var balanceDue = ScaleMoney(grandTotal - paymentAmount);
+        var invoiceStatus = balanceDue == 0m
+            ? "paid"
+            : paymentAmount == 0m
+                ? "open"
+                : "partially_paid";
+
         var invoice = new PurchaseInvoiceEntity
         {
             Id = Guid.CreateVersion7().ToString(),
@@ -655,17 +662,13 @@ public sealed class PurchasingService : IPurchasingService
             InvoiceDate = request.OrderDate,
             DueDate = request.OrderDate.AddDays(supplier.PaymentTermsDays),
             Currency = currency,
-            Status = paymentAmount == 0m
-                ? "open"
-                : paymentAmount == grandTotal
-                    ? "paid"
-                    : "partially_paid",
+            Status = invoiceStatus,
             Subtotal = subtotal,
             DiscountTotal = discountTotal,
             LandedCostTotal = landedTotal,
             GrandTotal = grandTotal,
             PaidTotal = paymentAmount,
-            BalanceDue = ScaleMoney(grandTotal - paymentAmount),
+            BalanceDue = balanceDue,
             CreatedBy = actorId,
             Notes = NormalizeOptional(request.PaymentNotes, 2000),
             CreatedAt = now,
