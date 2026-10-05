@@ -17,6 +17,10 @@ public interface IPurchasingService
         CreatePurchaseOrderRequest request,
         CancellationToken cancellationToken = default);
 
+    Task<string> CompletePurchaseAsync(
+        CompletePurchaseRequest request,
+        CancellationToken cancellationToken = default);
+
     Task SubmitOrderAsync(
         string orderId,
         CancellationToken cancellationToken = default);
@@ -136,6 +140,27 @@ public sealed record CreatePurchaseOrderLineRequest(
     decimal UnitCost,
     decimal DiscountAmount = 0m,
     decimal LandedCostAllocated = 0m);
+
+public sealed record CompletePurchaseRequest(
+    string SupplierId,
+    DateOnly OrderDate,
+    string Currency,
+    string? Notes,
+    decimal PaymentAmount,
+    string PaymentMethod,
+    string? PaymentReference,
+    string? PaymentNotes,
+    IReadOnlyList<CompletePurchaseLineRequest> Lines);
+
+public sealed record CompletePurchaseLineRequest(
+    string MedicineId,
+    decimal Quantity,
+    decimal UnitCost,
+    decimal DiscountAmount = 0m,
+    decimal LandedCostAllocated = 0m,
+    string? BatchNumber = null,
+    DateOnly? ExpiresAt = null,
+    decimal? SalePrice = null);
 
 public sealed record CaptureGoodsReceiptRequest(
     DateTimeOffset ReceivedAt,
