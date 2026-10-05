@@ -60,6 +60,12 @@ public sealed partial class ReturnsViewModel : ObservableObject
     public string ProcessLabel => Translate("Complete return", "تکمیل برگشت", "ستنېدل بشپړ کړئ");
     public decimal CalculatedRefund => decimal.Round(ReturnLines.Sum(x => x.RefundAmount), 4, MidpointRounding.AwayFromZero);
     public string CalculatedRefundText => $"AFN {CalculatedRefund:N4}";
+    public decimal RefundSettledTotal => decimal.Round(Refunds.Sum(x => x.Amount), 4, MidpointRounding.AwayFromZero);
+    public decimal RefundBalance => decimal.Round(CalculatedRefund - RefundSettledTotal, 4, MidpointRounding.AwayFromZero);
+    public bool IsSettlementBalanced => CalculatedRefund > 0m && RefundBalance == 0m;
+    public string SettlementStatusText => IsSettlementBalanced
+        ? Translate("Settlement balanced", "تسویه متوازن است", "تصفیه برابره ده")
+        : Translate($"Remaining AFN {RefundBalance:N4}", $"باقی‌مانده AFN {RefundBalance:N4}", $"پاتې AFN {RefundBalance:N4}");
 
     public void SetLanguage(UiLanguage language)
     {
@@ -165,19 +171,30 @@ public sealed partial class ReturnsViewModel : ObservableObject
     private bool CanAddRefund() => !IsBusy && RefundAmount > 0m && RefundMethods.Contains(SelectedRefundMethod);
     private void AddRefund()
     {
-        Refunds.Add(new ReturnRefundDraftViewModel(SelectedRefundMethod, decimal.Round(RefundAmount, 4, MidpointRounding.AwayFromZero), string.IsNullOrWhiteSpace(RefundReference) ? null : RefundReference.Trim()));
+        Refunds.Add(new ReturnRefundDraftViewModel(
+            SelectedRefundMethod,
+            decimal.Round(RefundAmount, 4, MidpointRounding.AwayFromZero),
+            string.IsNullOrWhiteSpace(RefundReference) ? null : RefundReference.Trim()));
         RefundAmount = 0m;
         RefundReference = string.Empty;
+        RaiseTotals();
         NotifyCommands();
     }
     private void RemoveRefund(ReturnRefundDraftViewModel? item)
     {
         if (item is null) return;
         Refunds.Remove(item);
+        RaiseTotals();
         NotifyCommands();
     }
 
-    private bool CanProcessReturn() => !IsBusy && SelectedSale is not null && ReturnLines.Count > 0 && Refunds.Count > 0 && !string.IsNullOrWhiteSpace(Reason);
+    private bool CanProcessReturn() =>
+        !IsBusy &&
+        SelectedSale is not null &&
+        ReturnLines.Count > 0 &&
+        Refunds.Count > 0 &&
+        IsSettlementBalanced &&
+        !string.IsNullOrWhiteSpace(Reason);
     private async Task ProcessReturnAsync()
     {
         if (SelectedSale is null) return;
@@ -223,6 +240,10 @@ public sealed partial class ReturnsViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(CalculatedRefund));
         OnPropertyChanged(nameof(CalculatedRefundText));
+        OnPropertyChanged(nameof(RefundSettledTotal));
+        OnPropertyChanged(nameof(RefundBalance));
+        OnPropertyChanged(nameof(IsSettlementBalanced));
+        OnPropertyChanged(nameof(SettlementStatusText));
     }
     private void NotifyCommands()
     {
