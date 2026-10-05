@@ -23,14 +23,6 @@
             <Setter Property="CornerRadius" Value="16" />
             <Setter Property="Padding" Value="16" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect BlurRadius="18"
-                                      ShadowDepth="3"
-                                      Opacity="0.10"
-                                      RenderingBias="Performance" />
-                </Setter.Value>
-            </Setter>
         </Style>
 
         <Style x:Key="ReturnSummaryCard" TargetType="Border">
@@ -143,6 +135,11 @@
             <Setter Property="RowStyle" Value="{StaticResource ReturnTableRow}" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="EnableRowVirtualization" Value="True" />
+            <Setter Property="EnableColumnVirtualization" Value="True" />
+            <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+            <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
         </Style>
 
         <Style x:Key="ReturnSaleListItem" TargetType="ListBoxItem">
@@ -192,7 +189,10 @@
 
     <Grid Background="{DynamicResource PageBackgroundBrush}">
         <ScrollViewer VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled">
+                      HorizontalScrollBarVisibility="Disabled"
+                      PanningMode="VerticalOnly"
+                      IsDeferredScrollingEnabled="True"
+                      UseLayoutRounding="True">
             <Grid Margin="22">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -451,7 +451,10 @@
                                      MinHeight="260"
                                      MaxHeight="380"
                                      Margin="0,14,0,10"
-                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     ScrollViewer.CanContentScroll="True"
+                                     VirtualizingPanel.IsVirtualizing="True"
+                                     VirtualizingPanel.VirtualizationMode="Recycling">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <Grid>
@@ -762,7 +765,10 @@
                                      BorderThickness="0"
                                      MinHeight="90"
                                      MaxHeight="150"
-                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     ScrollViewer.CanContentScroll="True"
+                                     VirtualizingPanel.IsVirtualizing="True"
+                                     VirtualizingPanel.VirtualizationMode="Recycling">
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="ListBoxItem">
                                         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
