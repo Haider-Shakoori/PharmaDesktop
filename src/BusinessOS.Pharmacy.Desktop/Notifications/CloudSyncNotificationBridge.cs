@@ -58,14 +58,11 @@ public sealed class CloudSyncNotificationBridge(
                         "Connection restored");
                 }
 
-                if (result.Pushed + result.Pulled > 0)
-                {
-                    notifications.ShowSync(
-                        $"Cloud sync complete · {result.Pushed:N0} uploaded · {result.Pulled:N0} downloaded.",
-                        NotificationKind.Success,
-                        "Synchronization complete");
-                }
-
+                // Routine successful background synchronization is intentionally
+                // silent. The worker runs frequently and success toasts become
+                // distracting during normal operation. We still notify when a
+                // broken connection is restored above, while failures, conflicts,
+                // authorization issues and platform pauses remain actionable.
                 _lastImportantMessage = null;
                 break;
 

@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace BusinessOS.Pharmacy.Desktop.Authentication;
@@ -14,7 +13,6 @@ public partial class LoginWindow : Window
 
     private readonly LoginViewModel _viewModel;
     private bool _passwordVisible;
-    private bool _syncingPassword;
 
     public LoginWindow(LoginViewModel viewModel)
     {
@@ -40,47 +38,29 @@ public partial class LoginWindow : Window
         await _viewModel.SignInAsync(CurrentPassword);
     }
 
-    private void OnPasswordChanged(object sender, RoutedEventArgs e)
-    {
-        if (_syncingPassword)
-        {
-            return;
-        }
-
-        _syncingPassword = true;
-        PasswordText.Text = PasswordInput.Password;
-        _syncingPassword = false;
-    }
-
-    private void OnPasswordTextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (_syncingPassword)
-        {
-            return;
-        }
-
-        _syncingPassword = true;
-        PasswordInput.Password = PasswordText.Text;
-        _syncingPassword = false;
-    }
-
     private void OnTogglePasswordVisibility(object sender, RoutedEventArgs e)
     {
-        _passwordVisible = !_passwordVisible;
-
-        PasswordInput.Visibility = _passwordVisible ? Visibility.Collapsed : Visibility.Visible;
-        PasswordText.Visibility = _passwordVisible ? Visibility.Visible : Visibility.Collapsed;
-        EyeIcon.Data = Geometry.Parse(_passwordVisible ? EyeOpenGeometry : EyeClosedGeometry);
-
         if (_passwordVisible)
         {
-            PasswordText.CaretIndex = PasswordText.Text.Length;
-            PasswordText.Focus();
-        }
-        else
-        {
+            // Synchronize only when switching controls. Avoid mirroring the
+            // password on every keystroke; that caused unnecessary WPF text
+            // layout and made credential entry feel sluggish.
+            PasswordInput.Password = PasswordText.Text;
+            _passwordVisible = false;
+            PasswordText.Visibility = Visibility.Collapsed;
+            PasswordInput.Visibility = Visibility.Visible;
+            EyeIcon.Data = Geometry.Parse(EyeClosedGeometry);
             PasswordInput.Focus();
+            return;
         }
+
+        PasswordText.Text = PasswordInput.Password;
+        _passwordVisible = true;
+        PasswordInput.Visibility = Visibility.Collapsed;
+        PasswordText.Visibility = Visibility.Visible;
+        EyeIcon.Data = Geometry.Parse(EyeOpenGeometry);
+        PasswordText.CaretIndex = PasswordText.Text.Length;
+        PasswordText.Focus();
     }
 
     private void OnLoginSucceeded(object? sender, EventArgs e)
