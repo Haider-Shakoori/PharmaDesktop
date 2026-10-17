@@ -16,6 +16,8 @@ jobs:
           dotnet-version: "10.0.x"
           cache: true
           cache-dependency-path: "**/*.csproj"
+      - name: Verify canonical Darmaltoon API defaults
+        run: python3 scripts/check_canonical_api.py
       - name: Restore
         run: dotnet restore BusinessOS.Pharmacy.sln
       - name: Build
