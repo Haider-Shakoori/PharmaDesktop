@@ -1,88 +1,932 @@
 <UserControl x:Class="BusinessOS.Pharmacy.Desktop.Returns.ReturnsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             MinWidth="760">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="24">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <DockPanel Grid.Row="0">
-                <Button DockPanel.Dock="Right" Content="Refresh" Command="{Binding LoadCommand}" Padding="12,6"/>
-                <StackPanel><TextBlock Text="{Binding WorkspaceTitle}" FontSize="27" FontWeight="Bold"/><TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedText}" TextWrapping="Wrap"/></StackPanel>
-            </DockPanel>
-            <Grid Grid.Row="1" Margin="0,18,0,0">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="2*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <TextBox Text="{Binding SaleSearch, UpdateSourceTrigger=PropertyChanged}" ToolTip="Sale number or customer"/>
-                <Button Grid.Column="1" Content="Search" Command="{Binding SearchSalesCommand}" Padding="12,6" Margin="8,0,16,0"/>
-                <ComboBox Grid.Column="2" ItemsSource="{Binding Sales}" SelectedItem="{Binding SelectedSale}" DisplayMemberPath="SaleNumber" MinWidth="220"/>
-                <Button Grid.Column="3" Content="Load sale" Command="{Binding LoadSelectedSaleCommand}" Padding="12,6" Margin="8,0,0,0"/>
-            </Grid>
-            <Grid Grid.Row="2" Margin="0,18,0,0">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="1.4*"/><ColumnDefinition Width="1.4*"/><ColumnDefinition Width="1.1*"/></Grid.ColumnDefinitions>
-                <Border Grid.Column="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,12,0">
+             MinWidth="860"
+             FontFamily="Segoe UI"
+             TextOptions.TextFormattingMode="Display"
+             TextOptions.TextRenderingMode="ClearType">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <Style x:Key="ReturnPanel" TargetType="Border">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#FCFFFFFF" Offset="0" />
+                        <GradientStop Color="#F5FFFFFF" Offset=".56" />
+                        <GradientStop Color="#EAF8FAFC" Offset="1" />
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#D9FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+        </Style>
+
+        <Style x:Key="ReturnSummaryCard" TargetType="Border">
+            <Setter Property="Background" Value="#FAFCFF" />
+            <Setter Property="BorderBrush" Value="#E2E8F0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12,10" />
+        </Style>
+
+        <Style x:Key="ReturnSectionTitle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#0F172A" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style x:Key="ReturnSectionHint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#64748B" />
+            <Setter Property="FontSize" Value="10.6" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style x:Key="ReturnFieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#475569" />
+            <Setter Property="FontSize" Value="11.1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,5" />
+        </Style>
+
+        <Style x:Key="ReturnField" TargetType="Control">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="FontSize" Value="11.8" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="ReturnStepBadge" TargetType="Border">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Background" Value="#DCEEFF" />
+            <Setter Property="BorderBrush" Value="#CFE4FF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="ReturnTableHeader" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#F1F5F9" />
+            <Setter Property="Foreground" Value="#475569" />
+            <Setter Property="FontSize" Value="11.3" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="BorderBrush" Value="#E2E8F0" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="ReturnTableCell" TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="#334155" />
+            <Setter Property="FontSize" Value="11.8" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="#115E59" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ReturnTableRow" TargetType="DataGridRow">
+            <Setter Property="Height" Value="43" />
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#E8EEF4" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Style.Triggers>
+                <Trigger Property="AlternationIndex" Value="1">
+                    <Setter Property="Background" Value="#FBFCFE" />
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F3FAF8" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#E9FBF7" />
+                    <Setter Property="Foreground" Value="#115E59" />
+                    <Setter Property="BorderBrush" Value="#99E7D9" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ReturnTable" TargetType="DataGrid">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserResizeRows" Value="False" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="GridLinesVisibility" Value="None" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="RowHeaderWidth" Value="0" />
+            <Setter Property="AlternationCount" Value="2" />
+            <Setter Property="SelectionMode" Value="Single" />
+            <Setter Property="SelectionUnit" Value="FullRow" />
+            <Setter Property="CellStyle" Value="{StaticResource ReturnTableCell}" />
+            <Setter Property="ColumnHeaderStyle" Value="{StaticResource ReturnTableHeader}" />
+            <Setter Property="RowStyle" Value="{StaticResource ReturnTableRow}" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="EnableRowVirtualization" Value="True" />
+            <Setter Property="EnableColumnVirtualization" Value="True" />
+            <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+            <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+        </Style>
+
+        <Style x:Key="ReturnSaleListItem" TargetType="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="ItemChrome"
+                                Background="#FBFCFE"
+                                BorderBrush="#E2E8F0"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="12">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ItemChrome" Property="Background" Value="#F3FAF8" />
+                                <Setter TargetName="ItemChrome" Property="BorderBrush" Value="#D7EEE9" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemChrome" Property="Background" Value="#E9FBF7" />
+                                <Setter TargetName="ItemChrome" Property="BorderBrush" Value="#99E7D9" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ReturnMiniLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#64748B" />
+            <Setter Property="FontSize" Value="10.1" />
+        </Style>
+
+        <Style x:Key="ReturnMiniValue" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#0F172A" />
+            <Setter Property="FontSize" Value="11.3" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource PageBackgroundBrush}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      PanningMode="VerticalOnly"
+                      IsDeferredScrollingEnabled="True"
+                      UseLayoutRounding="True">
+            <Grid Margin="22">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
                     <StackPanel>
-                        <TextBlock Text="{Binding SaleTitle}" FontWeight="SemiBold"/>
-                        <ListBox ItemsSource="{Binding SelectedSaleDetail.Lines}" SelectedItem="{Binding SelectedLine}" MinHeight="220" MaxHeight="350" Margin="0,8,0,0">
-                            <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="3">
-                                <TextBlock Text="{Binding Description}" FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding SoldQuantity, StringFormat=Sold {0:0.####}}" Style="{StaticResource MutedText}"/>
-                                <TextBlock Text="{Binding ReturnedQuantity, StringFormat=Returned {0:0.####}}" Style="{StaticResource MutedText}"/>
-                                <TextBlock Text="{Binding RemainingQuantity, StringFormat=Remaining {0:0.####}}"/>
-                                <TextBlock Text="{Binding NetUnitAmount, StringFormat=Net/unit AFN {0:N4}}"/>
-                            </StackPanel></DataTemplate></ListBox.ItemTemplate>
-                        </ListBox>
-                        <TextBox Text="{Binding ReturnQuantity}" ToolTip="Return quantity" Margin="0,8,0,0"/>
-                        <Button Content="Add item" Command="{Binding AddReturnLineCommand}" Padding="12,6" Margin="0,8,0,0"/>
+                        <TextBlock Text="RETURNS &amp; REFUNDS"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource BrandPrimaryBrush}" />
+                        <TextBlock Text="{Binding WorkspaceTitle}"
+                                   FontSize="22"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   Margin="0,3,0,0" />
+                        <TextBlock Text="Find a completed sale, choose the medicines being returned, and settle the exact refund amount."
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   TextWrapping="Wrap"
+                                   MaxWidth="840"
+                                   Margin="0,3,0,0" />
                     </StackPanel>
-                </Border>
-                <Border Grid.Column="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,12,0">
-                    <StackPanel>
-                        <DockPanel><TextBlock Text="{Binding LinesTitle}" FontWeight="SemiBold"/><TextBlock DockPanel.Dock="Right" Text="{Binding CalculatedRefundText}" FontWeight="SemiBold"/></DockPanel>
-                        <DataGrid ItemsSource="{Binding ReturnLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" MinHeight="180" Margin="0,8,0,0">
+
+                    <Button Grid.Column="1"
+                            Content="Refresh"
+                            Command="{Binding LoadCommand}"
+                            Style="{StaticResource SecondaryButton}"
+                            Height="38"
+                            Padding="14,7"
+                            VerticalAlignment="Center" />
+                </Grid>
+
+                <Grid Grid.Row="1" Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.6*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="1*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource ReturnPanel}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Find completed sale"
+                                               Style="{StaticResource ReturnSectionTitle}" />
+                                    <TextBlock Text="Search by invoice number or customer, then open the sale for return processing."
+                                               Style="{StaticResource ReturnSectionHint}"
+                                               Margin="0,3,0,0" />
+                                </StackPanel>
+                                <Border Grid.Column="1"
+                                        Background="#EAF3FF"
+                                        CornerRadius="9"
+                                        Padding="9,4"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="Step 1"
+                                               Foreground="#0B5FC6"
+                                               FontSize="9.8"
+                                               FontWeight="Bold" />
+                                </Border>
+                            </Grid>
+
+                            <Grid Grid.Row="1" Margin="0,14,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1.2*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Search" Style="{StaticResource ReturnFieldLabel}" />
+                                    <TextBox Text="{Binding SaleSearch, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource ReturnField}"
+                                             ToolTip="Sale number or customer" />
+                                </StackPanel>
+
+                                <Button Grid.Column="2"
+                                        Content="Search"
+                                        Command="{Binding SearchSalesCommand}"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Height="38"
+                                        Padding="13,7"
+                                        VerticalAlignment="Bottom" />
+
+                                <StackPanel Grid.Column="4">
+                                    <TextBlock Text="Completed sale" Style="{StaticResource ReturnFieldLabel}" />
+                                    <ComboBox ItemsSource="{Binding Sales}"
+                                              SelectedItem="{Binding SelectedSale}"
+                                              DisplayMemberPath="SaleNumber"
+                                              Style="{StaticResource ReturnField}"
+                                              MinWidth="190" />
+                                </StackPanel>
+
+                                <Button Grid.Column="6"
+                                        Content="Open sale"
+                                        Command="{Binding LoadSelectedSaleCommand}"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Height="38"
+                                        Padding="14,7"
+                                        VerticalAlignment="Bottom" />
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="2" Style="{StaticResource ReturnPanel}">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Selected sale"
+                                               Style="{StaticResource ReturnSectionTitle}" />
+                                    <TextBlock Text="Snapshot of the invoice currently being returned."
+                                               Style="{StaticResource ReturnSectionHint}"
+                                               Margin="0,3,0,0" />
+                                </StackPanel>
+                                <Border Grid.Column="1"
+                                        Background="#ECFDF5"
+                                        CornerRadius="9"
+                                        Padding="9,4"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding SelectedSale.PaymentStatus, TargetNullValue=No sale}"
+                                               Foreground="#047857"
+                                               FontSize="9.6"
+                                               FontWeight="Bold" />
+                                </Border>
+                            </Grid>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Style="{StaticResource ReturnSummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Invoice" Style="{StaticResource ReturnMiniLabel}" />
+                                        <TextBlock Text="{Binding SelectedSale.SaleNumber, TargetNullValue=—}"
+                                                   Style="{StaticResource ReturnMiniValue}"
+                                                   Margin="0,3,0,0" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="2" Style="{StaticResource ReturnSummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Sale total" Style="{StaticResource ReturnMiniLabel}" />
+                                        <TextBlock Text="{Binding SelectedSale.GrandTotal, StringFormat=AFN {0:N2}, TargetNullValue='AFN 0.00'}"
+                                                   Foreground="#0B5FC6"
+                                                   FontSize="14.5"
+                                                   FontWeight="Bold"
+                                                   Margin="0,3,0,0" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Style="{StaticResource ReturnSummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Customer" Style="{StaticResource ReturnMiniLabel}" />
+                                        <TextBlock Text="{Binding SelectedSale.CustomerName, TargetNullValue=Walk-in customer}"
+                                                   Style="{StaticResource ReturnMiniValue}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,3,0,0" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="2" Style="{StaticResource ReturnSummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Business date" Style="{StaticResource ReturnMiniLabel}" />
+                                        <TextBlock Text="{Binding SelectedSale.BusinessDate, TargetNullValue=—}"
+                                                   Style="{StaticResource ReturnMiniValue}"
+                                                   Margin="0,3,0,0" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Grid Grid.Row="2" Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.15*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="1.2*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="0.95*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource ReturnPanel}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Style="{StaticResource ReturnStepBadge}">
+                                    <TextBlock Text="1"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Foreground="#0B5FC6"
+                                               FontWeight="Bold" />
+                                </Border>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="{Binding SaleTitle}"
+                                               Style="{StaticResource ReturnSectionTitle}" />
+                                    <TextBlock Text="Choose one sale line and enter the quantity being returned."
+                                               Style="{StaticResource ReturnSectionHint}"
+                                               Margin="0,2,0,0" />
+                                </StackPanel>
+                            </Grid>
+
+                            <ListBox Grid.Row="1"
+                                     ItemsSource="{Binding SelectedSaleDetail.Lines}"
+                                     SelectedItem="{Binding SelectedLine}"
+                                     ItemContainerStyle="{StaticResource ReturnSaleListItem}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     MinHeight="260"
+                                     MaxHeight="380"
+                                     Margin="0,14,0,10"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     ScrollViewer.CanContentScroll="True"
+                                     VirtualizingPanel.IsVirtualizing="True"
+                                     VirtualizingPanel.VirtualizationMode="Recycling">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Description}"
+                                                           Foreground="#0F172A"
+                                                           FontSize="12"
+                                                           FontWeight="SemiBold"
+                                                           TextWrapping="Wrap" />
+                                                <Border Grid.Column="1"
+                                                        Background="#EAF3FF"
+                                                        CornerRadius="9"
+                                                        Padding="7,3"
+                                                        Margin="8,0,0,0"
+                                                        VerticalAlignment="Top">
+                                                    <TextBlock Text="{Binding RemainingQuantity, StringFormat={}Available {0:0.####}}"
+                                                               Foreground="#0B5FC6"
+                                                               FontSize="9.4"
+                                                               FontWeight="Bold" />
+                                                </Border>
+                                            </Grid>
+
+                                            <UniformGrid Grid.Row="1" Columns="3" Margin="0,9,0,0">
+                                                <StackPanel>
+                                                    <TextBlock Text="Sold" Style="{StaticResource ReturnMiniLabel}" />
+                                                    <TextBlock Text="{Binding SoldQuantity, StringFormat={}{0:0.####}}"
+                                                               Style="{StaticResource ReturnMiniValue}" />
+                                                </StackPanel>
+                                                <StackPanel>
+                                                    <TextBlock Text="Returned" Style="{StaticResource ReturnMiniLabel}" />
+                                                    <TextBlock Text="{Binding ReturnedQuantity, StringFormat={}{0:0.####}}"
+                                                               Style="{StaticResource ReturnMiniValue}" />
+                                                </StackPanel>
+                                                <StackPanel>
+                                                    <TextBlock Text="Refund / unit" Style="{StaticResource ReturnMiniLabel}" />
+                                                    <TextBlock Text="{Binding NetUnitAmount, StringFormat=AFN {0:N4}}"
+                                                               Foreground="#047857"
+                                                               FontSize="11.2"
+                                                               FontWeight="SemiBold" />
+                                                </StackPanel>
+                                            </UniformGrid>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Return quantity" Style="{StaticResource ReturnFieldLabel}" />
+                                    <TextBox Text="{Binding ReturnQuantity}"
+                                             Style="{StaticResource ReturnField}"
+                                             ToolTip="Return quantity" />
+                                </StackPanel>
+                                <Button Grid.Column="2"
+                                        Content="Add item"
+                                        Command="{Binding AddReturnLineCommand}"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Height="38"
+                                        Padding="14,7"
+                                        VerticalAlignment="Bottom" />
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="2" Style="{StaticResource ReturnPanel}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Style="{StaticResource ReturnStepBadge}">
+                                    <TextBlock Text="2"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Foreground="#0B5FC6"
+                                               FontWeight="Bold" />
+                                </Border>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="{Binding LinesTitle}"
+                                               Style="{StaticResource ReturnSectionTitle}" />
+                                    <TextBlock Text="Review the selected items and document why they are being returned."
+                                               Style="{StaticResource ReturnSectionHint}"
+                                               Margin="0,2,0,0" />
+                                </StackPanel>
+                                <Border Grid.Column="3"
+                                        Background="#D1FAE5"
+                                        CornerRadius="10"
+                                        Padding="9,5"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding CalculatedRefundText}"
+                                               Foreground="#047857"
+                                               FontSize="10"
+                                               FontWeight="Bold" />
+                                </Border>
+                            </Grid>
+
+                            <Grid Grid.Row="1" Margin="0,14,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Style="{StaticResource ReturnSummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Items selected" Style="{StaticResource ReturnMiniLabel}" />
+                                        <TextBlock Text="{Binding ReturnLines.Count}"
+                                                   Foreground="#0B5FC6"
+                                                   FontSize="17"
+                                                   FontWeight="Bold"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="2" Style="{StaticResource ReturnSummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Calculated refund" Style="{StaticResource ReturnMiniLabel}" />
+                                        <TextBlock Text="{Binding CalculatedRefund, StringFormat=AFN {0:N4}}"
+                                                   Foreground="#047857"
+                                                   FontSize="15"
+                                                   FontWeight="Bold"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <DataGrid Grid.Row="2"
+                                      ItemsSource="{Binding ReturnLines}"
+                                      Style="{StaticResource ReturnTable}"
+                                      MinHeight="205"
+                                      MaxHeight="300"
+                                      Margin="0,0,0,10">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Medicine" Binding="{Binding Description}" Width="*" MinWidth="160" />
+                                    <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, StringFormat=0.####}" Width="65" />
+                                    <DataGridTextColumn Header="Refund" Binding="{Binding RefundAmount, StringFormat=N4}" Width="90" />
+                                    <DataGridTemplateColumn Header="" Width="72">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="Remove"
+                                                        Command="{Binding DataContext.RemoveReturnLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource GhostButton}"
+                                                        Foreground="#B91C1C"
+                                                        Height="27"
+                                                        Padding="7,3" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <StackPanel Grid.Row="3">
+                                <TextBlock Text="Return reason" Style="{StaticResource ReturnFieldLabel}" />
+                                <TextBox Text="{Binding Reason}"
+                                         ToolTip="Explain why this return is being processed"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         MinHeight="62"
+                                         Padding="8" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="4" Style="{StaticResource ReturnPanel}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Style="{StaticResource ReturnStepBadge}">
+                                    <TextBlock Text="3"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Foreground="#0B5FC6"
+                                               FontWeight="Bold" />
+                                </Border>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="{Binding RefundsTitle}"
+                                               Style="{StaticResource ReturnSectionTitle}" />
+                                    <TextBlock Text="Settlement must match the calculated refund before completion."
+                                               Style="{StaticResource ReturnSectionHint}"
+                                               Margin="0,2,0,0" />
+                                </StackPanel>
+                            </Grid>
+
+                            <UniformGrid Grid.Row="1" Columns="3" Margin="0,14,0,12">
+                                <Border Style="{StaticResource ReturnSummaryCard}" Margin="0,0,7,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Due" Style="{StaticResource ReturnMiniLabel}" />
+                                        <TextBlock Text="{Binding CalculatedRefund, StringFormat=AFN {0:N2}}"
+                                                   Foreground="#0B5FC6"
+                                                   FontSize="13.5"
+                                                   FontWeight="Bold"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource ReturnSummaryCard}" Margin="0,0,7,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Settled" Style="{StaticResource ReturnMiniLabel}" />
+                                        <TextBlock Text="{Binding RefundSettledTotal, StringFormat=AFN {0:N2}}"
+                                                   Foreground="#047857"
+                                                   FontSize="13.5"
+                                                   FontWeight="Bold"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource ReturnSummaryCard}">
+                                    <StackPanel>
+                                        <TextBlock Text="Remaining" Style="{StaticResource ReturnMiniLabel}" />
+                                        <TextBlock Text="{Binding RefundBalance, StringFormat=AFN {0:N2}}"
+                                                   Foreground="#B45309"
+                                                   FontSize="13.5"
+                                                   FontWeight="Bold"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+
+                            <StackPanel Grid.Row="2">
+                                <TextBlock Text="Refund method" Style="{StaticResource ReturnFieldLabel}" />
+                                <ComboBox ItemsSource="{Binding RefundMethods}"
+                                          SelectedItem="{Binding SelectedRefundMethod}"
+                                          Style="{StaticResource ReturnField}" />
+                                <TextBlock Text="Amount"
+                                           Style="{StaticResource ReturnFieldLabel}"
+                                           Margin="0,9,0,5" />
+                                <TextBox Text="{Binding RefundAmount}"
+                                         Style="{StaticResource ReturnField}"
+                                         ToolTip="Refund amount" />
+                                <TextBlock Text="Reference"
+                                           Style="{StaticResource ReturnFieldLabel}"
+                                           Margin="0,9,0,5" />
+                                <TextBox Text="{Binding RefundReference}"
+                                         Style="{StaticResource ReturnField}"
+                                         ToolTip="Optional bank/mobile/reference number" />
+                                <Button Content="Add refund"
+                                        Command="{Binding AddRefundCommand}"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Height="36"
+                                        Padding="12,6"
+                                        Margin="0,10,0,0"
+                                        HorizontalAlignment="Stretch" />
+                            </StackPanel>
+
+                            <Border Grid.Row="3"
+                                    Background="#F8FAFC"
+                                    BorderBrush="#E2E8F0"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="10,7"
+                                    Margin="0,12,0,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Settlement status"
+                                               Foreground="#64748B"
+                                               FontSize="10.4"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SettlementStatusText}"
+                                               Foreground="#0F766E"
+                                               FontSize="10.4"
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+
+                            <ListBox Grid.Row="4"
+                                     ItemsSource="{Binding Refunds}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     MinHeight="90"
+                                     MaxHeight="150"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     ScrollViewer.CanContentScroll="True"
+                                     VirtualizingPanel.IsVirtualizing="True"
+                                     VirtualizingPanel.VirtualizationMode="Recycling">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="Margin" Value="0,0,0,6" />
+                                        <Setter Property="IsHitTestVisible" Value="True" />
+                                        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#FBFCFE"
+                                                BorderBrush="#E2E8F0"
+                                                BorderThickness="1"
+                                                CornerRadius="10"
+                                                Padding="9,7">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Method}"
+                                                               Foreground="#0F172A"
+                                                               FontSize="11"
+                                                               FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding Amount, StringFormat=AFN {0:N4}}"
+                                                               Foreground="#047857"
+                                                               FontSize="10.5"
+                                                               Margin="0,2,0,0" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1"
+                                                        Content="×"
+                                                        Command="{Binding DataContext.RemoveRefundCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource GhostButton}"
+                                                        Foreground="#B91C1C"
+                                                        Width="30"
+                                                        Height="28"
+                                                        Padding="4"
+                                                        VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <Button Grid.Row="5"
+                                    Content="{Binding ProcessLabel}"
+                                    Command="{Binding ProcessReturnCommand}"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Height="42"
+                                    Padding="16,8"
+                                    Margin="0,12,0,0"
+                                    FontWeight="SemiBold"
+                                    HorizontalAlignment="Stretch" />
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <Border Grid.Row="3"
+                        Style="{StaticResource ReturnPanel}"
+                        Padding="12"
+                        Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="4,2,4,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Recent returns"
+                                           Style="{StaticResource ReturnSectionTitle}" />
+                                <TextBlock Text="Latest completed returns for quick verification and audit review."
+                                           Style="{StaticResource ReturnSectionHint}"
+                                           Margin="0,3,0,0" />
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    Background="#F1F5F9"
+                                    CornerRadius="9"
+                                    Padding="9,4"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="{Binding RecentReturns.Count, StringFormat={}{0} records}"
+                                           Foreground="#475569"
+                                           FontSize="9.8"
+                                           FontWeight="Bold" />
+                            </Border>
+                        </Grid>
+
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding RecentReturns}"
+                                  Style="{StaticResource ReturnTable}"
+                                  MaxHeight="245"
+                                  MinHeight="150"
+                                  Margin="2,8,2,2">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Medicine" Binding="{Binding Description}" Width="*"/>
-                                <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, StringFormat=0.####}" Width="70"/>
-                                <DataGridTextColumn Header="Refund" Binding="{Binding RefundAmount, StringFormat=N4}" Width="100"/>
-                                <DataGridTemplateColumn Width="70"><DataGridTemplateColumn.CellTemplate><DataTemplate>
-                                    <Button Content="Remove" Command="{Binding DataContext.RemoveReturnLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
-                                </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Return" Binding="{Binding ReturnNumber}" Width="*" MinWidth="160" />
+                                <DataGridTextColumn Header="Sale" Binding="{Binding SaleNumber}" Width="*" MinWidth="150" />
+                                <DataGridTextColumn Header="Date" Binding="{Binding BusinessDate}" Width="115" />
+                                <DataGridTextColumn Header="Location" Binding="{Binding StockLocationName}" Width="*" MinWidth="130" />
+                                <DataGridTextColumn Header="Refund" Binding="{Binding RefundTotal, StringFormat=N4}" Width="110" />
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" />
+                                <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="1.5*" MinWidth="180" />
                             </DataGrid.Columns>
                         </DataGrid>
-                        <TextBox Text="{Binding Reason}" ToolTip="Return reason" AcceptsReturn="True" Height="58" Margin="0,8,0,0"/>
-                    </StackPanel>
+                    </Grid>
                 </Border>
-                <Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12">
-                    <StackPanel>
-                        <TextBlock Text="{Binding RefundsTitle}" FontWeight="SemiBold"/>
-                        <ComboBox ItemsSource="{Binding RefundMethods}" SelectedItem="{Binding SelectedRefundMethod}" Margin="0,8,0,0"/>
-                        <TextBox Text="{Binding RefundAmount}" ToolTip="Refund amount" Margin="0,6,0,0"/>
-                        <TextBox Text="{Binding RefundReference}" ToolTip="Reference" Margin="0,6,0,0"/>
-                        <Button Content="Add refund" Command="{Binding AddRefundCommand}" Padding="12,6" Margin="0,8,0,0"/>
-                        <ListBox ItemsSource="{Binding Refunds}" MinHeight="100" Margin="0,8,0,0">
-                            <ListBox.ItemTemplate><DataTemplate><DockPanel Margin="2">
-                                <Button DockPanel.Dock="Right" Content="Ã—" Command="{Binding DataContext.RemoveRefundCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}" Padding="5,1"/>
-                                <TextBlock><Run Text="{Binding Method}"/><Run Text="  "/><Run Text="{Binding Amount, StringFormat=N4}"/></TextBlock>
-                            </DockPanel></DataTemplate></ListBox.ItemTemplate>
-                        </ListBox>
-                        <Button Content="{Binding ProcessLabel}" Command="{Binding ProcessReturnCommand}" Padding="14,8" Margin="0,12,0,0" FontWeight="SemiBold"/>
-                    </StackPanel>
+
+                <Border Grid.Row="4"
+                        Background="#F8FAFC"
+                        BorderBrush="#E2E8F0"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="12,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Width="8"
+                                Height="8"
+                                CornerRadius="4"
+                                Background="{DynamicResource BrandPrimaryBrush}"
+                                VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding StatusMessage}"
+                                   Foreground="#64748B"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center" />
+
+                        <StackPanel Grid.Column="3"
+                                    Orientation="Horizontal"
+                                    Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="Loading"
+                                       Foreground="#64748B"
+                                       FontSize="10.5"
+                                       FontWeight="SemiBold"
+                                       Margin="0,0,8,0"
+                                       VerticalAlignment="Center" />
+                            <ProgressBar Width="82"
+                                         Height="5"
+                                         IsIndeterminate="True"
+                                         Foreground="{DynamicResource BrandPrimaryBrush}"
+                                         Background="#E2E8F0" />
+                        </StackPanel>
+                    </Grid>
                 </Border>
             </Grid>
-            <Border Grid.Row="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,18,0,0">
-                <StackPanel>
-                    <TextBlock Text="Recent returns" FontWeight="SemiBold"/>
-                    <DataGrid ItemsSource="{Binding RecentReturns}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" MaxHeight="220" Margin="0,8,0,0">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Return" Binding="{Binding ReturnNumber}" Width="*"/>
-                            <DataGridTextColumn Header="Sale" Binding="{Binding SaleNumber}" Width="*"/>
-                            <DataGridTextColumn Header="Date" Binding="{Binding BusinessDate}" Width="110"/>
-                            <DataGridTextColumn Header="Refund" Binding="{Binding RefundTotal, StringFormat=N4}" Width="100"/>
-                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </StackPanel>
-            </Border>
-        </Grid>
-    </ScrollViewer>
+        </ScrollViewer>
+    </Grid>
 </UserControl>

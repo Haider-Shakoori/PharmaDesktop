@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Icon="pack://application:,,,/Darmaltoon;component/Assets/Darmaltoon.ico"
         Title="Sign in — Darmaltoon"
-        Width="980"
-        Height="680"
+        Width="900"
+        Height="620"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource AppBackgroundBrush}">
@@ -48,14 +48,7 @@
             <Setter Property="Padding" Value="0" />
         </Style>
 
-        <Style x:Key="LoginFeatureCard" TargetType="Border">
-            <Setter Property="Background" Value="#16FFFFFF" />
-            <Setter Property="BorderBrush" Value="#2BFFFFFF" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Padding" Value="12,10" />
-            <Setter Property="Margin" Value="0,0,0,10" />
-        </Style>
+
     </Window.Resources>
 
     <Grid Margin="28">
@@ -63,55 +56,47 @@
                 BorderBrush="{DynamicResource CardBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="28">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="28"
-                                  ShadowDepth="8"
-                                  Opacity="0.14"
-                                  Direction="270" />
-            </Border.Effect>
-
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="380" />
+                    <ColumnDefinition Width="300" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Brand / trust panel -->
+                <!-- Simplified brand panel -->
                 <Border Grid.Column="0"
                         CornerRadius="28,0,0,28"
                         Background="{StaticResource LoginBrandGradient}">
                     <Grid ClipToBounds="True">
-                        <Ellipse Width="270"
-                                 Height="270"
-                                 Fill="#0FFFFFFF"
+                        <Ellipse Width="210"
+                                 Height="210"
+                                 Fill="#0EFFFFFF"
                                  HorizontalAlignment="Right"
                                  VerticalAlignment="Top"
-                                 Margin="0,-115,-120,0" />
-                        <Ellipse Width="220"
-                                 Height="220"
-                                 Fill="#0BFFFFFF"
+                                 Margin="0,-95,-95,0" />
+                        <Ellipse Width="180"
+                                 Height="180"
+                                 Fill="#09FFFFFF"
                                  HorizontalAlignment="Left"
                                  VerticalAlignment="Bottom"
-                                 Margin="-90,0,0,-105" />
+                                 Margin="-80,0,0,-90" />
 
-                        <Grid Margin="34">
+                        <Grid Margin="32">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <StackPanel>
-                                <Border Width="62"
-                                        Height="62"
-                                        CornerRadius="18"
+                            <StackPanel VerticalAlignment="Center">
+                                <Border Width="70"
+                                        Height="70"
+                                        CornerRadius="20"
                                         Background="#24FFFFFF"
                                         BorderBrush="#36FFFFFF"
                                         BorderThickness="1"
                                         HorizontalAlignment="Left">
                                     <Path Data="{StaticResource IconPharmacyCross}"
-                                          Width="34"
-                                          Height="34"
+                                          Width="38"
+                                          Height="38"
                                           Stretch="Uniform"
                                           Fill="White"
                                           StrokeThickness="0"
@@ -121,125 +106,23 @@
 
                                 <TextBlock Text="DARMALTOON"
                                            Foreground="White"
-                                           FontSize="12"
+                                           FontSize="13"
                                            FontWeight="Bold"
-                                           Margin="0,20,0,0" />
-                                <TextBlock Text="Pharmacy, simplified."
+                                           Margin="0,22,0,0" />
+                                <TextBlock Text="Pharmacy Management"
                                            Foreground="White"
-                                           FontSize="29"
+                                           FontSize="25"
                                            FontWeight="Bold"
-                                           Margin="0,7,0,0" />
-                                <TextBlock Text="A secure, local-first pharmacy workspace built for reliable daily operations."
-                                           Foreground="#DCEBFF"
-                                           FontSize="13.5"
-                                           LineHeight="21"
-                                           TextWrapping="Wrap"
-                                           Margin="0,10,0,0" />
+                                           Margin="0,7,0,0"
+                                           TextWrapping="Wrap" />
                             </StackPanel>
 
-                            <StackPanel Grid.Row="1"
-                                        VerticalAlignment="Center"
-                                        Margin="0,24,0,12">
-                                <Border Style="{StaticResource LoginFeatureCard}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="34" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border Width="24"
-                                                Height="24"
-                                                CornerRadius="12"
-                                                Background="#24FFFFFF"
-                                                VerticalAlignment="Center">
-                                            <TextBlock Text="✓"
-                                                       Foreground="White"
-                                                       FontWeight="Bold"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center" />
-                                        </Border>
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="Local-first reliability"
-                                                       Foreground="White"
-                                                       FontWeight="SemiBold"
-                                                       FontSize="13" />
-                                            <TextBlock Text="Keep working even when the internet is unstable."
-                                                       Foreground="#CFE3FF"
-                                                       FontSize="11.5"
-                                                       TextWrapping="Wrap"
-                                                       Margin="0,2,0,0" />
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-
-                                <Border Style="{StaticResource LoginFeatureCard}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="34" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border Width="24"
-                                                Height="24"
-                                                CornerRadius="12"
-                                                Background="#24FFFFFF"
-                                                VerticalAlignment="Center">
-                                            <TextBlock Text="✓"
-                                                       Foreground="White"
-                                                       FontWeight="Bold"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center" />
-                                        </Border>
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="Protected access"
-                                                       Foreground="White"
-                                                       FontWeight="SemiBold"
-                                                       FontSize="13" />
-                                            <TextBlock Text="Device-bound licensing and secure staff sessions."
-                                                       Foreground="#CFE3FF"
-                                                       FontSize="11.5"
-                                                       TextWrapping="Wrap"
-                                                       Margin="0,2,0,0" />
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-
-                                <Border Style="{StaticResource LoginFeatureCard}" Margin="0">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="34" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border Width="24"
-                                                Height="24"
-                                                CornerRadius="12"
-                                                Background="#24FFFFFF"
-                                                VerticalAlignment="Center">
-                                            <TextBlock Text="✓"
-                                                       Foreground="White"
-                                                       FontWeight="Bold"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center" />
-                                        </Border>
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="BusinessOS ecosystem"
-                                                       Foreground="White"
-                                                       FontWeight="SemiBold"
-                                                       FontSize="13" />
-                                            <TextBlock Text="Cloud-connected when your platform policy allows it."
-                                                       Foreground="#CFE3FF"
-                                                       FontSize="11.5"
-                                                       TextWrapping="Wrap"
-                                                       Margin="0,2,0,0" />
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="2">
+                            <StackPanel Grid.Row="1">
                                 <TextBlock Text="BusinessOS.af"
                                            Foreground="White"
                                            FontWeight="SemiBold"
                                            FontSize="12.5" />
-                                <TextBlock Text="Darmaltoon · darmaltoon.com"
+                                <TextBlock Text="darmaltoon.com"
                                            Foreground="#BFD9FA"
                                            FontSize="11.5"
                                            Margin="0,2,0,0" />
@@ -301,7 +184,7 @@
                                              Grid.Column="1"
                                              Margin="0,0,12,0"
                                              Style="{StaticResource LoginFieldInput}"
-                                             Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                                             Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, Delay=120}"
                                              IsEnabled="{Binding IsNotBusy}" />
                                 </Grid>
                             </Border>
@@ -338,15 +221,13 @@
                                                  Grid.Column="1"
                                                  Margin="0,0,4,0"
                                                  Style="{StaticResource LoginFieldInput}"
-                                                 IsEnabled="{Binding IsNotBusy}"
-                                                 PasswordChanged="OnPasswordChanged" />
+                                                 IsEnabled="{Binding IsNotBusy}" />
                                     <TextBox x:Name="PasswordText"
                                              Grid.Column="1"
                                              Margin="0,0,4,0"
                                              Style="{StaticResource LoginFieldInput}"
                                              Visibility="Collapsed"
-                                             IsEnabled="{Binding IsNotBusy}"
-                                             TextChanged="OnPasswordTextChanged" />
+                                             IsEnabled="{Binding IsNotBusy}" />
                                     <Button Grid.Column="2"
                                             Style="{StaticResource GhostButton}"
                                             Width="40"

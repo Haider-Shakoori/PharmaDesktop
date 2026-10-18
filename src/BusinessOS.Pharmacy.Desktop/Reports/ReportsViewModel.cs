@@ -25,10 +25,18 @@ public sealed partial class ReportsViewModel : ObservableObject
         _reports = reports;
         LoadCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
         ExportCommand = new AsyncRelayCommand(ExportAsync, () => !IsBusy && ExportTypes.Contains(SelectedExportType));
+        TodayCommand = new AsyncRelayCommand(() => LoadPresetAsync(ReportPreset.Today), () => !IsBusy);
+        ThisWeekCommand = new AsyncRelayCommand(() => LoadPresetAsync(ReportPreset.ThisWeek), () => !IsBusy);
+        ThisMonthCommand = new AsyncRelayCommand(() => LoadPresetAsync(ReportPreset.ThisMonth), () => !IsBusy);
+        Last30DaysCommand = new AsyncRelayCommand(() => LoadPresetAsync(ReportPreset.Last30Days), () => !IsBusy);
     }
 
     public IAsyncRelayCommand LoadCommand { get; }
     public IAsyncRelayCommand ExportCommand { get; }
+    public IAsyncRelayCommand TodayCommand { get; }
+    public IAsyncRelayCommand ThisWeekCommand { get; }
+    public IAsyncRelayCommand ThisMonthCommand { get; }
+    public IAsyncRelayCommand Last30DaysCommand { get; }
 
     public ObservableCollection<ReportSaleItem> Sales { get; } = new();
     public ObservableCollection<ReportReturnItem> Returns { get; } = new();
@@ -43,6 +51,24 @@ public sealed partial class ReportsViewModel : ObservableObject
     public string SummaryTitle => Translate("Performance summary", "خلاصه عملکرد", "د فعالیت لنډیز");
     public string LoadLabel => Translate("Refresh report", "به‌روزرسانی", "راپور تازه کړئ");
     public string ExportLabel => Translate("Export CSV", "خروجی CSV", "CSV صادر کړئ");
+
+    public decimal GrossMarginPercent =>
+        Summary is { NetSales: > 0 } summary
+            ? summary.GrossProfit / summary.NetSales * 100m
+            : 0m;
+
+    public decimal ReturnRatePercent =>
+        Summary is { Sales: > 0 } summary
+            ? summary.Returns / summary.Sales * 100m
+            : 0m;
+
+    public decimal CollectionRatePercent =>
+        Summary is { NetSales: > 0 } summary
+            ? summary.Collections / summary.NetSales * 100m
+            : 0m;
+
+    public decimal OutstandingExposure =>
+        Summary is null ? 0m : Summary.Receivables + Summary.Payables;
 
     public void SetLanguage(UiLanguage language)
     {
@@ -80,6 +106,44 @@ public sealed partial class ReportsViewModel : ObservableObject
 
     partial void OnSelectedExportTypeChanged(string value) =>
         ExportCommand.NotifyCanExecuteChanged();
+
+    partial void OnSummaryChanged(ReportSummary? value)
+    {
+        OnPropertyChanged(nameof(GrossMarginPercent));
+        OnPropertyChanged(nameof(ReturnRatePercent));
+        OnPropertyChanged(nameof(CollectionRatePercent));
+        OnPropertyChanged(nameof(OutstandingExposure));
+    }
+
+    private async Task LoadPresetAsync(ReportPreset preset)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly from;
+
+        switch (preset)
+        {
+            case ReportPreset.Today:
+                from = today;
+                break;
+            case ReportPreset.ThisWeek:
+                var daysSinceMonday = ((int)today.DayOfWeek + 6) % 7;
+                from = today.AddDays(-daysSinceMonday);
+                break;
+            case ReportPreset.ThisMonth:
+                from = new DateOnly(today.Year, today.Month, 1);
+                break;
+            case ReportPreset.Last30Days:
+                from = today.AddDays(-29);
+                break;
+            default:
+                from = today;
+                break;
+        }
+
+        FromText = from.ToString("yyyy-MM-dd");
+        ToText = today.ToString("yyyy-MM-dd");
+        await LoadAsync();
+    }
 
     private async Task ExportAsync()
     {
@@ -163,6 +227,10 @@ public sealed partial class ReportsViewModel : ObservableObject
     {
         LoadCommand.NotifyCanExecuteChanged();
         ExportCommand.NotifyCanExecuteChanged();
+        TodayCommand.NotifyCanExecuteChanged();
+        ThisWeekCommand.NotifyCanExecuteChanged();
+        ThisMonthCommand.NotifyCanExecuteChanged();
+        Last30DaysCommand.NotifyCanExecuteChanged();
     }
 
     private static void Replace<T>(ObservableCollection<T> target, IEnumerable<T> source)
@@ -172,6 +240,14 @@ public sealed partial class ReportsViewModel : ObservableObject
         {
             target.Add(item);
         }
+    }
+
+    private enum ReportPreset
+    {
+        Today,
+        ThisWeek,
+        ThisMonth,
+        Last30Days,
     }
 
     private string Translate(string english, string dari, string pashto) =>

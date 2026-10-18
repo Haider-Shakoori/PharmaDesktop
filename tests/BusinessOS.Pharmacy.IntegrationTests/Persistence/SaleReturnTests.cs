@@ -16,6 +16,27 @@ namespace BusinessOS.Pharmacy.IntegrationTests.Persistence;
 public sealed class SaleReturnTests
 {
     [Fact]
+    public async Task Search_returnable_sales_is_sqlite_safe_and_returns_completed_sales()
+    {
+        var root = CreateTemporaryRoot();
+        try
+        {
+            await using var provider = BuildProvider(root);
+            await InitializeAsync(provider);
+            var setup = await CreateSaleAsync(provider, 1m, 15m, 0m);
+            var returns = provider.GetRequiredService<ISaleReturnService>();
+
+            var results = await returns.SearchReturnableSalesAsync(
+                new SaleSearchFilter(Search: setup.Sale.Sale.SaleNumber, Take: 25));
+
+            var sale = Assert.Single(results);
+            Assert.Equal(setup.Sale.Sale.Id, sale.Id);
+            Assert.Equal(setup.Sale.Sale.SaleNumber, sale.SaleNumber);
+        }
+        finally { SqliteConnection.ClearAllPools(); DeleteTemporaryRoot(root); }
+    }
+
+    [Fact]
     public async Task Return_restock_is_allocation_aware_and_idempotent()
     {
         var root = CreateTemporaryRoot();

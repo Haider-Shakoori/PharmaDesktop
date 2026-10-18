@@ -1,34 +1,79 @@
 <UserControl x:Class="BusinessOS.Pharmacy.Desktop.Networking.NetworkSettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:auth="clr-namespace:BusinessOS.Pharmacy.Desktop.Authentication">
-    <Grid Margin="26">
+             xmlns:auth="clr-namespace:BusinessOS.Pharmacy.Desktop.Authentication"
+             FontFamily="Segoe UI"
+             TextOptions.TextFormattingMode="Display"
+             TextOptions.TextRenderingMode="ClearType">
+    <UserControl.Resources>
+        <Style x:Key="SettingsPanel" TargetType="Border">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#FCFFFFFF" Offset="0" />
+                        <GradientStop Color="#F5FFFFFF" Offset=".58" />
+                        <GradientStop Color="#EAF8FAFC" Offset="1" />
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#D9FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="18"
+                                      ShadowDepth="3"
+                                      Opacity="0.10"
+                                      RenderingBias="Performance" />
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource PageBackgroundBrush}">
+        <Grid Margin="22">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-    <Grid Grid.Row="0" Margin="0,0,0,14">
-    <Grid.ColumnDefinitions>
-    <ColumnDefinition Width="*"/>
-    <ColumnDefinition Width="Auto"/>
-    </Grid.ColumnDefinitions>
-    <StackPanel>
-    <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitleText}"/>
-    <TextBlock Text="{Binding Subtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
-    </StackPanel>
-    <Button Grid.Column="1"
-    Content="{Binding RefreshLabel}"
-    Command="{Binding RefreshCommand}"
-    Padding="14,8"/>
-    </Grid>
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="SETTINGS &amp; CONNECTIVITY"
+                               FontSize="11"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource BrandPrimaryBrush}" />
+                    <TextBlock Text="{Binding Title}"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               Margin="0,3,0,0" />
+                    <TextBlock Text="{Binding Subtitle}"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               TextWrapping="Wrap"
+                               Margin="0,3,0,0" />
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Content="{Binding RefreshLabel}"
+                        Command="{Binding RefreshCommand}"
+                        Style="{StaticResource SecondaryButton}"
+                        Height="38"
+                        Padding="14,7"
+                        VerticalAlignment="Center" />
+            </Grid>
 
         <TabControl Grid.Row="1">
             <TabItem Header="{Binding ProfileAppearanceTabLabel}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="4,16,4,6">
-                        <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                        <Border Style="{StaticResource SettingsPanel}" Margin="0,0,0,16">
                         <StackPanel>
                         <TextBlock Text="{Binding ProfileTitle}" Style="{StaticResource SectionTitleText}" />
                         <TextBlock Text="{Binding ProfileSubtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,14" TextWrapping="Wrap" />
@@ -85,7 +130,7 @@
                         </StackPanel>
                         </Border>
 
-                        <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                        <Border Style="{StaticResource SettingsPanel}" Margin="0,0,0,16">
                         <StackPanel>
                         <TextBlock Text="{Binding AppearanceTitle}" Style="{StaticResource SectionTitleText}" />
                         <TextBlock Text="{Binding AppearanceSubtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,14" TextWrapping="Wrap" />
@@ -115,7 +160,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="4,16,4,6">
-                        <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                        <Border Style="{StaticResource SettingsPanel}" Margin="0,0,0,16">
                         <StackPanel>
                         <TextBlock Text="{Binding ReceiptTitle}" Style="{StaticResource SectionTitleText}" />
                         <TextBlock Text="{Binding ReceiptSubtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,14" TextWrapping="Wrap" />
@@ -138,7 +183,7 @@
                         </StackPanel>
                         </Border>
 
-                        <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                        <Border Style="{StaticResource SettingsPanel}" Margin="0,0,0,16">
                         <StackPanel>
                         <TextBlock Text="{Binding PosTitle}" Style="{StaticResource SectionTitleText}" />
                         <TextBlock Text="{Binding PosSubtitle}" Style="{StaticResource MutedText}" Margin="0,4,0,14" TextWrapping="Wrap" />
@@ -200,7 +245,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="4,16,4,6">
-                        <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                        <Border Style="{StaticResource SettingsPanel}" Margin="0,0,0,16">
                             <StackPanel>
                                 <TextBlock Text="{Binding NotificationTitle}"
                                            Style="{StaticResource SectionTitleText}" />
@@ -303,7 +348,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="4,16,4,6">
-                        <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                        <Border Style="{StaticResource SettingsPanel}" Margin="0,0,0,16">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -338,14 +383,14 @@
                         </Border>
 
                         <UniformGrid Columns="2" Margin="0,0,0,16">
-                        <Border Style="{StaticResource SurfaceCard}" Margin="0,0,8,0">
+                        <Border Style="{StaticResource SettingsPanel}" Margin="0,0,8,0">
                         <StackPanel>
                         <TextBlock Text="{Binding DeploymentModeLabel}" FontWeight="SemiBold"/>
                         <TextBlock Text="{Binding CurrentMode}" FontSize="22" FontWeight="Bold" Margin="0,7,0,0"/>
                         <TextBlock Text="{Binding ServiceStatus}" Style="{StaticResource MutedText}" Margin="0,7,0,0" TextWrapping="Wrap"/>
                         </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource SurfaceCard}" Margin="8,0,0,0">
+                        <Border Style="{StaticResource SettingsPanel}" Margin="8,0,0,0">
                         <StackPanel>
                         <TextBlock Text="{Binding ConnectionLabel}" FontWeight="SemiBold"/>
                         <TextBlock Text="{Binding ConnectionStatus}" Margin="0,7,0,0" TextWrapping="Wrap"/>
@@ -354,7 +399,7 @@
                         </Border>
                         </UniformGrid>
 
-                        <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                        <Border Style="{StaticResource SettingsPanel}" Margin="0,0,0,16">
                         <StackPanel>
                         <TextBlock Text="{Binding DeploymentModeLabel}" Style="{StaticResource SectionTitleText}" Margin="0,0,0,12"/>
                         <Grid>
@@ -380,7 +425,7 @@
                         </StackPanel>
                         </Border>
 
-                        <Border Style="{StaticResource SurfaceCard}" Margin="0,0,0,16">
+                        <Border Style="{StaticResource SettingsPanel}" Margin="0,0,0,16">
                         <StackPanel>
                         <TextBlock Text="{Binding ServiceLabel}" Style="{StaticResource SectionTitleText}" Margin="0,0,0,12"/>
 
@@ -425,7 +470,7 @@
                         <ColumnDefinition Width="0.95*"/>
                         </Grid.ColumnDefinitions>
 
-                        <Border Grid.Column="0" Style="{StaticResource SurfaceCard}">
+                        <Border Grid.Column="0" Style="{StaticResource SettingsPanel}">
                         <StackPanel>
                         <TextBlock Text="{Binding PairingLabel}" Style="{StaticResource SectionTitleText}" Margin="0,0,0,12"/>
                         <Button Content="{Binding CreatePairingLabel}"
@@ -458,7 +503,7 @@
                         </StackPanel>
                         </Border>
 
-                        <Border Grid.Column="2" Style="{StaticResource SurfaceCard}">
+                        <Border Grid.Column="2" Style="{StaticResource SettingsPanel}">
                         <StackPanel>
                         <TextBlock Text="{Binding TerminalsLabel}" Style="{StaticResource SectionTitleText}" Margin="0,0,0,12"/>
                         <ComboBox ItemsSource="{Binding Terminals}"
@@ -500,7 +545,7 @@
                         </Border>
                         </Grid>
 
-                        <Border Style="{StaticResource SurfaceCard}">
+                        <Border Style="{StaticResource SettingsPanel}">
                         <StackPanel>
                         <Grid>
                         <Grid.ColumnDefinitions>
@@ -544,5 +589,6 @@
                 </ScrollViewer>
             </TabItem>
         </TabControl>
+        </Grid>
     </Grid>
 </UserControl>

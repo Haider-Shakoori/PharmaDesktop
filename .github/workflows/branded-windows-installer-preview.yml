@@ -1,0 +1,136 @@
+name: branded-windows-installer-preview
+
+on:
+  push:
+    branches:
+      - ui/reports-premium-refresh
+    paths:
+      - ".github/workflows/branded-windows-installer-preview.yml"
+      - ".release/windows-version.txt"
+      - "packaging/windows/**"
+      - "scripts/build-windows-release.ps1"
+      - "scripts/test-windows-installer.ps1"
+      - "src/**"
+      - "tests/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-branded-installers:
+    runs-on: windows-2025
+    timeout-minutes: 50
+    env:
+      DARMALTOON_SIGNING_PFX_BASE64: ${{ secrets.DARMALTOON_SIGNING_PFX_BASE64 }}
+      DARMALTOON_SIGNING_PFX_PASSWORD: ${{ secrets.DARMALTOON_SIGNING_PFX_PASSWORD }}
+      INNO_SETUP_LICENSE_KEY: ${{ secrets.INNO_SETUP_LICENSE_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: release_version
+        shell: pwsh
+        run: |
+          $version = (Get-Content ".release/windows-version.txt" -Raw).Trim()
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Release version must use semantic x.y.z format."
+          }
+          "RELEASE_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "Building branded Darmaltoon $version installers"
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          $installed = $false
+          if (Get-Command winget.exe -ErrorAction SilentlyContinue) {
+            winget install --id JRSoftware.InnoSetup.7 -e --source winget --silent --accept-package-agreements --accept-source-agreements
+            $installed = $LASTEXITCODE -eq 0
+          }
+          if (-not $installed) {
+            choco install innosetup -y --no-progress
+            if ($LASTEXITCODE -ne 0) { throw "Could not install Inno Setup." }
+          }
+
+      - name: Restore
+        run: dotnet restore BusinessOS.Pharmacy.sln
+
+      - name: Release build
+        run: dotnet build BusinessOS.Pharmacy.sln -c Release --no-restore
+
+      - name: Unit tests
+        run: dotnet test tests/BusinessOS.Pharmacy.UnitTests/BusinessOS.Pharmacy.UnitTests.csproj -c Release --no-build --verbosity minimal
+
+      - name: Integration tests
+        run: dotnet test tests/BusinessOS.Pharmacy.IntegrationTests/BusinessOS.Pharmacy.IntegrationTests.csproj -c Release --no-build --verbosity minimal
+
+      - name: Build branded self-contained installers
+        shell: pwsh
+        run: ./scripts/build-windows-release.ps1 -Version $env:RELEASE_VERSION
+
+      - name: Installer smoke tests
+        shell: pwsh
+        run: ./scripts/test-windows-installer.ps1 -Version $env:RELEASE_VERSION
+
+      - name: Verify branded outputs
+        shell: pwsh
+        run: |
+          $manifest = Get-Content artifacts/windows/release-manifest.json -Raw | ConvertFrom-Json
+          if ($manifest.product -ne "Darmaltoon") { throw "Unexpected product branding." }
+          if ($manifest.publisher -ne "BusinessOS.af") { throw "Unexpected publisher branding." }
+          if ($manifest.self_contained -ne $true) { throw "Installer must be self-contained." }
+          foreach ($artifact in $manifest.artifacts) {
+            $path = Join-Path artifacts/windows $artifact.file
+            if (-not (Test-Path $path)) { throw "Missing artifact $($artifact.file)" }
+            if ((Get-FileHash $path -Algorithm SHA256).Hash -ne $artifact.sha256) {
+              throw "Checksum mismatch for $($artifact.file)"
+            }
+          }
+
+      - name: Upload all branded Windows packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-Windows-${{ steps.release_version.outputs.version }}
+          path: |
+            artifacts/windows/*Setup*.exe
+            artifacts/windows/*.zip
+            artifacts/windows/SHA256SUMS.txt
+            artifacts/windows/release-manifest.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload Standalone installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-Standalone-Setup-${{ steps.release_version.outputs.version }}
+          path: artifacts/windows/Darmaltoon-Standalone-Setup-${{ steps.release_version.outputs.version }}-win-x64.exe
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload Main Server installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-MainServer-Setup-${{ steps.release_version.outputs.version }}
+          path: artifacts/windows/Darmaltoon-MainServer-Setup-${{ steps.release_version.outputs.version }}-win-x64.exe
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+      - name: Upload Client Terminal installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Darmaltoon-ClientTerminal-Setup-${{ steps.release_version.outputs.version }}
+          path: artifacts/windows/Darmaltoon-ClientTerminal-Setup-${{ steps.release_version.outputs.version }}-win-x64.exe
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
