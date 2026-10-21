@@ -109,21 +109,16 @@
                                         BorderBrush="#36FFFFFF"
                                         BorderThickness="1"
                                         HorizontalAlignment="Left">
-                                    <Path Data="{StaticResource IconPharmacyCross}"
-                                          Width="34"
-                                          Height="34"
-                                          Stretch="Uniform"
-                                          Fill="White"
-                                          StrokeThickness="0"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center" />
+                                    <Image Source="pack://application:,,,/Darmaltoon;component/Assets/DarmaltoonIcon.png"
+                                           Width="52" Height="54" Stretch="Uniform"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Border>
 
-                                <TextBlock Text="DARMALTOON"
-                                           Foreground="White"
-                                           FontSize="12"
-                                           FontWeight="Bold"
-                                           Margin="0,20,0,0" />
+                                <Border Background="#F8FBFF" CornerRadius="12"
+                                        Padding="12,4" HorizontalAlignment="Left" Margin="0,16,0,0">
+                                    <Image Source="pack://application:,,,/Darmaltoon;component/Assets/DarmaltoonWordmark.png"
+                                           Width="240" Height="52" Stretch="Uniform" />
+                                </Border>
                                 <TextBlock Text="Pharmacy, simplified."
                                            Foreground="White"
                                            FontSize="29"
