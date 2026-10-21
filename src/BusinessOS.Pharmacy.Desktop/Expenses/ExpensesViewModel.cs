@@ -18,6 +18,9 @@ public sealed partial class ExpensesViewModel : ObservableObject
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string statusMessage = "";
     [ObservableProperty] private LedgerAccountItem? selectedExpenseAccount;
+    [ObservableProperty] private ExpenseCategoryItem? selectedCategory;
+    [ObservableProperty] private string newCategoryName = string.Empty;
+    [ObservableProperty] private string categoryStatus = string.Empty;
     [ObservableProperty] private LedgerAccountItem? selectedPaymentAccount;
     [ObservableProperty] private ExpenseLocationItem? selectedLocation;
     [ObservableProperty] private string businessDateText = "";
@@ -41,6 +44,7 @@ public sealed partial class ExpensesViewModel : ObservableObject
         SearchCommand = new AsyncRelayCommand(SearchAsync, () => !IsBusy);
         NewExpenseCommand = new RelayCommand(NewExpense, () => !IsBusy);
         CancelEditCommand = new RelayCommand(CancelEdit, () => !IsBusy && IsEditorOpen);
+        CreateCategoryCommand = new AsyncRelayCommand(CreateCategoryAsync, () => !IsBusy && !string.IsNullOrWhiteSpace(NewCategoryName));
     }
 
     public IAsyncRelayCommand LoadCommand { get; }
@@ -49,8 +53,10 @@ public sealed partial class ExpensesViewModel : ObservableObject
     public IAsyncRelayCommand SearchCommand { get; }
     public IRelayCommand NewExpenseCommand { get; }
     public IRelayCommand CancelEditCommand { get; }
+    public IAsyncRelayCommand CreateCategoryCommand { get; }
 
     public ObservableCollection<LedgerAccountItem> ExpenseAccounts { get; } = [];
+    public ObservableCollection<ExpenseCategoryItem> Categories { get; } = [];
     public ObservableCollection<LedgerAccountItem> PaymentAccounts { get; } = [];
     public ObservableCollection<ExpenseLocationItem> Locations { get; } = [];
     public ObservableCollection<ExpenseListItem> Expenses { get; } = [];
@@ -101,6 +107,10 @@ public sealed partial class ExpensesViewModel : ObservableObject
         foreach (var item in references.ExpenseAccounts)
             ExpenseAccounts.Add(item);
 
+        Categories.Clear();
+        foreach (var item in references.Categories)
+            Categories.Add(item);
+
         PaymentAccounts.Clear();
         foreach (var item in references.PaymentAccounts)
             PaymentAccounts.Add(item);
@@ -109,6 +119,7 @@ public sealed partial class ExpensesViewModel : ObservableObject
         foreach (var item in references.Locations)
             Locations.Add(item);
 
+        SelectedCategory ??= Categories.FirstOrDefault();
         SelectedExpenseAccount ??=
             ExpenseAccounts.FirstOrDefault(x => x.SystemKey == "operating_expense") ??
             ExpenseAccounts.FirstOrDefault();
@@ -141,6 +152,7 @@ public sealed partial class ExpensesViewModel : ObservableObject
             IsEditorOpen = true;
             SelectedExpenseAccount = ExpenseAccounts.FirstOrDefault(x =>
                 string.Equals(x.Name, detail.Expense.ExpenseAccountName, StringComparison.OrdinalIgnoreCase));
+            SelectedCategory = Categories.FirstOrDefault(x => x.Id == detail.Expense.CategoryId);
             SelectedPaymentAccount = PaymentAccounts.FirstOrDefault(x =>
                 string.Equals(x.Name, detail.Expense.PaymentAccountName, StringComparison.OrdinalIgnoreCase));
             SelectedLocation = detail.Expense.StockLocationName is null
@@ -161,6 +173,8 @@ public sealed partial class ExpensesViewModel : ObservableObject
 
     partial void OnSelectedExpenseAccountChanged(LedgerAccountItem? value) => Notify();
     partial void OnSelectedPaymentAccountChanged(LedgerAccountItem? value) => Notify();
+    partial void OnSelectedCategoryChanged(ExpenseCategoryItem? value) => Notify();
+    partial void OnNewCategoryNameChanged(string value) => Notify();
     partial void OnAmountChanged(decimal value) => Notify();
     partial void OnSelectedExpenseChanged(ExpenseListItem? value) => Notify();
     partial void OnReversalReasonChanged(string value) => Notify();
@@ -175,6 +189,7 @@ public sealed partial class ExpensesViewModel : ObservableObject
     private bool CanPost() =>
         !IsBusy &&
         SelectedExpenseAccount is not null &&
+        SelectedCategory is not null &&
         SelectedPaymentAccount is not null &&
         Amount > 0 &&
         DateOnly.TryParse(BusinessDateText, out _);
@@ -196,7 +211,8 @@ public sealed partial class ExpensesViewModel : ObservableObject
                 Payee,
                 Reference,
                 Notes,
-                _idempotencyKey);
+                _idempotencyKey,
+                SelectedCategory!.Id);
 
             var wasEditing = IsEditingExpense && _editingExpenseId is not null;
             ExpenseDetail result;
@@ -278,6 +294,7 @@ public sealed partial class ExpensesViewModel : ObservableObject
         Reference = "";
         Notes = "";
         BusinessDateText = StockDate();
+        SelectedCategory = Categories.FirstOrDefault();
         SelectedExpenseAccount =
             ExpenseAccounts.FirstOrDefault(x => x.SystemKey == "operating_expense") ??
             ExpenseAccounts.FirstOrDefault();
@@ -285,6 +302,24 @@ public sealed partial class ExpensesViewModel : ObservableObject
             PaymentAccounts.FirstOrDefault(x => x.SystemKey == "cash_on_hand") ??
             PaymentAccounts.FirstOrDefault();
         SelectedLocation = Locations.FirstOrDefault(x => x.IsDefault);
+    }
+
+    private async Task CreateCategoryAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewCategoryName))
+            return;
+        await Busy(async () =>
+        {
+            var item = await _service.CreateCategoryAsync(NewCategoryName);
+            Categories.Add(item);
+            var sorted = Categories.OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
+            Categories.Clear();
+            foreach (var category in sorted)
+                Categories.Add(category);
+            SelectedCategory = item;
+            NewCategoryName = string.Empty;
+            CategoryStatus = T("Expense category saved.", "کتگوری مصرف ذخیره شد.", "د لګښت کټګوري خوندي شوه.");
+        });
     }
 
     private async Task SearchAsync() => await Busy(SearchCore);
@@ -342,6 +377,7 @@ public sealed partial class ExpensesViewModel : ObservableObject
         SearchCommand.NotifyCanExecuteChanged();
         NewExpenseCommand.NotifyCanExecuteChanged();
         CancelEditCommand.NotifyCanExecuteChanged();
+        CreateCategoryCommand.NotifyCanExecuteChanged();
     }
 
     private void RaiseLabels()

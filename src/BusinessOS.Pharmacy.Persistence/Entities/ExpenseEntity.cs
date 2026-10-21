@@ -4,6 +4,8 @@ internal sealed class ExpenseEntity
     public string Id { get; set; } = string.Empty;
     public string ExpenseNumber { get; set; } = string.Empty;
     public string ExpenseAccountId { get; set; } = string.Empty;
+    public string? CategoryId { get; set; }
+    public ExpenseCategoryEntity? Category { get; set; }
     public string PaymentAccountId { get; set; } = string.Empty;
     public string? StockLocationId { get; set; }
     public DateOnly BusinessDate { get; set; }

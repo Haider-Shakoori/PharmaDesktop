@@ -107,6 +107,7 @@ public sealed class LanExpenseService(LanApiClient api) : IExpenseService
 {
     public Task EnsureDefaultsAsync(CancellationToken ct = default) => api.PostAsync("expenses/defaults", ct);
     public Task<ExpenseReferenceData> GetReferenceDataAsync(CancellationToken ct = default) => api.GetAsync<ExpenseReferenceData>("expenses/references", ct);
+    public Task<ExpenseCategoryItem> CreateCategoryAsync(string name, CancellationToken ct = default) => api.PostAsync<string, ExpenseCategoryItem>("expenses/categories", name, ct);
     public Task<ExpenseDetail> PostAsync(PostExpenseRequest request, CancellationToken ct = default) => api.PostAsync<PostExpenseRequest, ExpenseDetail>("expenses", request, ct);
     public Task<ExpenseDetail> ReverseAsync(string expenseId, string reason, CancellationToken ct = default) => api.PostAsync<ReasonRequest, ExpenseDetail>($"expenses/{E(expenseId)}/reverse", new ReasonRequest(reason), ct);
     public Task<ExpenseDetail> AmendAsync(string expenseId, PostExpenseRequest request, string reason, CancellationToken ct = default) => api.PostAsync<ExpenseAmendRequest, ExpenseDetail>($"expenses/{E(expenseId)}/amend", new ExpenseAmendRequest(request, reason), ct);

@@ -21,8 +21,33 @@ internal sealed class ExpenseService : IExpenseService
         var accounts=await c.Set<LedgerAccountEntity>().AsNoTracking().Where(x=>x.IsActive).OrderBy(x=>x.Code).ToListAsync(ct);
         var locations=await c.Set<StockLocationEntity>().AsNoTracking().Include(x=>x.Branch).Where(x=>x.IsActive&&x.Branch.IsActive).OrderByDescending(x=>x.IsDefault).ThenBy(x=>x.Name)
             .Select(x=>new ExpenseLocationItem(x.Id,x.Name,x.Branch.Name,x.IsDefault)).ToListAsync(ct);
+        var categories=await c.Set<ExpenseCategoryEntity>().AsNoTracking()
+            .Where(x=>x.IsActive).OrderBy(x=>x.Name)
+            .Select(x=>new ExpenseCategoryItem(x.Id,x.Name)).ToListAsync(ct);
         LedgerAccountItem Map(LedgerAccountEntity x)=>new(x.Id,x.Code,x.Name,x.Type,x.NormalBalance,x.SystemKey,x.Currency,x.IsSystem,x.IsActive);
-        return new ExpenseReferenceData(accounts.Where(x=>x.Type=="expense").Select(Map).ToList(),accounts.Where(IsPaymentAccount).Select(Map).ToList(),locations);
+        return new ExpenseReferenceData(accounts.Where(x=>x.Type=="expense").Select(Map).ToList(),accounts.Where(IsPaymentAccount).Select(Map).ToList(),locations,categories);
+    }
+
+    public async Task<ExpenseCategoryItem> CreateCategoryAsync(string name,CancellationToken ct=default)
+    {
+        _permissions.Demand("accounting.manage");
+        var clean=Norm(name,100)??throw new ArgumentException("Enter an expense category name.",nameof(name));
+        var normalized=clean.ToUpperInvariant();
+        var actor=_sessions.Current?.UserId??throw new InvalidOperationException("A pharmacy user must be signed in.");
+        await using var c=await _factory.CreateDbContextAsync(ct);
+        await using var tx=await InventoryWriteTransaction.BeginAsync(c,ct);
+        if(await c.Set<ExpenseCategoryEntity>().AnyAsync(x=>x.NormalizedName==normalized,ct))
+            throw new InvalidOperationException("An expense category with this name already exists.");
+        var now=_clock.UtcNow;
+        var category=new ExpenseCategoryEntity
+        {
+            Id=Guid.CreateVersion7().ToString(),Name=clean,NormalizedName=normalized,
+            IsActive=true,CreatedAt=now,UpdatedAt=now
+        };
+        c.Add(category);
+        await c.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
+        return new ExpenseCategoryItem(category.Id,category.Name);
     }
 
     public async Task<ExpenseDetail> PostAsync(PostExpenseRequest r,CancellationToken ct=default)
@@ -36,13 +61,15 @@ internal sealed class ExpenseService : IExpenseService
         var payment=await c.Set<LedgerAccountEntity>().SingleOrDefaultAsync(x=>x.Id==r.PaymentAccountId&&x.IsActive,ct)??throw new InvalidOperationException("Payment account was not found or is inactive.");
         if(expense.Type!="expense") throw new InvalidOperationException("Select an expense account.");
         if(!IsPaymentAccount(payment)) throw new InvalidOperationException("Select a cash, bank, mobile, hawala, or other settlement asset account.");
+        if(r.CategoryId is not null && !await c.Set<ExpenseCategoryEntity>().AnyAsync(x=>x.Id==r.CategoryId&&x.IsActive,ct))
+            throw new InvalidOperationException("Select an active expense category.");
         StockLocationEntity? location=null;
         if(!string.IsNullOrWhiteSpace(r.StockLocationId)) location=await c.Set<StockLocationEntity>().SingleOrDefaultAsync(x=>x.Id==r.StockLocationId&&x.IsActive,ct)??throw new InvalidOperationException("Stock location was not found or is inactive.");
         var now=_clock.UtcNow; var amount=Scale(r.Amount); var currency=r.Currency.Trim().ToUpperInvariant();
         var row=new ExpenseEntity
         {
             Id=Guid.CreateVersion7().ToString(),ExpenseNumber=$"EXP-{r.BusinessDate:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..10].ToUpperInvariant()}",
-            ExpenseAccountId=expense.Id,PaymentAccountId=payment.Id,StockLocationId=location?.Id,BusinessDate=r.BusinessDate,Currency=currency,Amount=amount,
+            ExpenseAccountId=expense.Id,PaymentAccountId=payment.Id,CategoryId=r.CategoryId,StockLocationId=location?.Id,BusinessDate=r.BusinessDate,Currency=currency,Amount=amount,
             Payee=Norm(r.Payee,180),Reference=Norm(r.Reference,160),Notes=Norm(r.Notes,2000),Status="posted",IdempotencyKey=r.IdempotencyKey.Trim(),
             CreatedBy=actor,PostedAt=now,CreatedAt=now,UpdatedAt=now
         };
@@ -91,6 +118,8 @@ internal sealed class ExpenseService : IExpenseService
             ??throw new InvalidOperationException("Payment account was not found or is inactive.");
         if(expense.Type!="expense") throw new InvalidOperationException("Select an expense account.");
         if(!IsPaymentAccount(payment)) throw new InvalidOperationException("Select a cash, bank, mobile, hawala, or other settlement asset account.");
+        if(r.CategoryId is not null && !await c.Set<ExpenseCategoryEntity>().AnyAsync(x=>x.Id==r.CategoryId&&x.IsActive,ct))
+            throw new InvalidOperationException("Select an active expense category.");
 
         StockLocationEntity? location=null;
         if(!string.IsNullOrWhiteSpace(r.StockLocationId))
@@ -115,6 +144,7 @@ internal sealed class ExpenseService : IExpenseService
             ExpenseNumber=$"EXP-{r.BusinessDate:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..10].ToUpperInvariant()}",
             ExpenseAccountId=expense.Id,
             PaymentAccountId=payment.Id,
+            CategoryId=r.CategoryId,
             StockLocationId=location?.Id,
             BusinessDate=r.BusinessDate,
             Currency=currency,
@@ -164,9 +194,10 @@ internal sealed class ExpenseService : IExpenseService
         return rows.Select(ToJournal).ToList();
     }
 
-    private static IQueryable<ExpenseEntity> ExpenseQuery(PharmacyDbContext c)=>c.Set<ExpenseEntity>().Include(x=>x.ExpenseAccount).Include(x=>x.PaymentAccount).Include(x=>x.StockLocation);
+    private static IQueryable<ExpenseEntity> ExpenseQuery(PharmacyDbContext c)=>c.Set<ExpenseEntity>()
+        .Include(x=>x.ExpenseAccount).Include(x=>x.PaymentAccount).Include(x=>x.StockLocation).Include(x=>x.Category);
     private static bool IsPaymentAccount(LedgerAccountEntity x)=>x.Type=="asset"&&x.SystemKey!="accounts_receivable"&&x.SystemKey!="inventory";
-    private static ExpenseListItem ToListProjection(ExpenseEntity x)=>new(x.Id,x.ExpenseNumber,x.BusinessDate,x.ExpenseAccount.Name,x.PaymentAccount.Name,x.StockLocation==null?null:x.StockLocation.Name,x.Currency,x.Amount,x.Payee,x.Reference,x.Status,x.PostedAt,x.ReversedAt);
+    private static ExpenseListItem ToListProjection(ExpenseEntity x)=>new(x.Id,x.ExpenseNumber,x.BusinessDate,x.ExpenseAccount.Name,x.PaymentAccount.Name,x.StockLocation==null?null:x.StockLocation.Name,x.Currency,x.Amount,x.Payee,x.Reference,x.Status,x.PostedAt,x.ReversedAt,x.Category?.Name,x.CategoryId);
     private static ExpenseDetail ToDetail(ExpenseEntity x)=>new(ToListProjection(x),x.Notes,x.CreatedBy,x.IdempotencyKey);
     private static JournalEntryDetail ToJournal(JournalEntryEntity x)=>new(x.Id,x.JournalNumber,x.BusinessDate,x.OccurredAt,x.Status,x.Currency,x.SourceType,x.SourceId,x.SourceEvent,x.SourceNumber,x.Description,x.TotalDebit,x.TotalCredit,x.ReversalOfId,x.ReversalReason,x.Lines.Select(l=>new JournalLineItem(l.Id,l.LedgerAccount.Code,l.LedgerAccount.Name,l.StockLocationId,l.Debit,l.Credit,l.Memo)).ToList());
     private static decimal Scale(decimal x)=>decimal.Round(x,4,MidpointRounding.AwayFromZero);

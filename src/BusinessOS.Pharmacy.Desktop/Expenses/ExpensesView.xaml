@@ -436,6 +436,11 @@
                                                 Binding="{Binding BusinessDate}"
                                                 ElementStyle="{StaticResource ExpenseRowText}"
                                                 Width="105" />
+                            <DataGridTextColumn Header="Category"
+                                                Binding="{Binding CategoryName, TargetNullValue=Uncategorized}"
+                                                ElementStyle="{StaticResource ExpenseRowText}"
+                                                Width="1*"
+                                                MinWidth="115" />
                             <DataGridTextColumn Header="Expense account"
                                                 Binding="{Binding ExpenseAccountName}"
                                                 ElementStyle="{StaticResource ExpenseRowText}"
@@ -702,6 +707,28 @@
                                     </StackPanel>
                                 </Border>
 
+                                <TextBlock Text="Expense category" Style="{StaticResource ExpenseModalLabel}" />
+                                <ComboBox ItemsSource="{Binding Categories}"
+                                          SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                                          DisplayMemberPath="Name"
+                                          MinHeight="38" Padding="8,4" Margin="0,0,0,8" />
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="8" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding NewCategoryName, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="New expense category name"
+                                             MinHeight="36" Padding="9,6" />
+                                    <Button Grid.Column="2" Content="Add category"
+                                            Command="{Binding CreateCategoryCommand}"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Padding="12,6" />
+                                </Grid>
+                                <TextBlock Text="{Binding CategoryStatus}"
+                                           Foreground="#0F766E" TextWrapping="Wrap"
+                                           FontSize="11" Margin="0,0,0,12" />
                                 <TextBlock Text="Expense account" Style="{StaticResource ExpenseModalLabel}" />
                                 <ComboBox ItemsSource="{Binding ExpenseAccounts}"
                                           SelectedItem="{Binding SelectedExpenseAccount}"

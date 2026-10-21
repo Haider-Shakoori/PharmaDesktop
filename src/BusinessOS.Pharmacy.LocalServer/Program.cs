@@ -515,6 +515,7 @@ authorized.MapGet("/returns/{id}", async (string id, ISaleReturnService service,
 
 authorized.MapPost("/expenses/defaults", async (IExpenseService service, CancellationToken ct) => { await service.EnsureDefaultsAsync(ct); return Results.NoContent(); });
 authorized.MapGet("/expenses/references", async (IExpenseService service, CancellationToken ct) => Results.Ok(await service.GetReferenceDataAsync(ct)));
+authorized.MapPost("/expenses/categories", async (string name, IExpenseService service, CancellationToken ct) => Results.Ok(await service.CreateCategoryAsync(name, ct)));
 authorized.MapPost("/expenses", async (PostExpenseRequest request, IExpenseService service, CancellationToken ct) => Results.Ok(await service.PostAsync(request, ct)));
 authorized.MapPost("/expenses/{id}/reverse", async (string id, ReasonApiRequest request, IExpenseService service, CancellationToken ct) => Results.Ok(await service.ReverseAsync(id, request.Reason, ct)));
 authorized.MapPost("/expenses/{id}/amend", async (string id, ExpenseAmendApiRequest request, IExpenseService service, CancellationToken ct) => Results.Ok(await service.AmendAsync(id, request.Expense, request.Reason, ct)));

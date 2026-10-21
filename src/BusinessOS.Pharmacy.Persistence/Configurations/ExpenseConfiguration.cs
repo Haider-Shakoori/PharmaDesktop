@@ -17,5 +17,8 @@ internal sealed class ExpenseConfiguration : IEntityTypeConfiguration<ExpenseEnt
         b.HasIndex(x=>x.ExpenseNumber).IsUnique(); b.HasIndex(x=>x.BusinessDate); b.HasIndex(x=>x.Status); b.HasIndex(x=>x.IdempotencyKey).IsUnique(); b.HasIndex(x=>x.PostedAt); b.HasIndex(x=>x.ReversedAt);
         b.HasOne(x=>x.ExpenseAccount).WithMany().HasForeignKey(x=>x.ExpenseAccountId).OnDelete(DeleteBehavior.Restrict); b.HasOne(x=>x.PaymentAccount).WithMany().HasForeignKey(x=>x.PaymentAccountId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x=>x.StockLocation).WithMany().HasForeignKey(x=>x.StockLocationId).OnDelete(DeleteBehavior.SetNull);
+        b.Property(x=>x.CategoryId).HasColumnName("category_id").HasMaxLength(36);
+        b.HasIndex(x=>x.CategoryId);
+        b.HasOne(x=>x.Category).WithMany().HasForeignKey(x=>x.CategoryId).OnDelete(DeleteBehavior.Restrict);
     }
 }

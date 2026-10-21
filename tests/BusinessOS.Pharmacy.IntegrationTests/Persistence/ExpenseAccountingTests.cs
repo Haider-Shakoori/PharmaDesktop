@@ -20,6 +20,41 @@ public sealed class ExpenseAccountingTests
   var journals=await s.GetJournalsAsync(x.Expense.Id);var j=Assert.Single(journals);Assert.Equal(j.TotalDebit,j.TotalCredit);Assert.Equal(123.4568m,j.TotalDebit);Assert.Equal(2,j.Lines.Count);
   var replay=await s.PostAsync(req);Assert.Equal(x.Expense.Id,replay.Expense.Id);Assert.Single(await s.GetJournalsAsync(x.Expense.Id));}finally{SqliteConnection.ClearAllPools();Delete(root);}
  }
+ [Fact] public async Task Expense_categories_can_be_created_selected_and_preserved_during_amendments()
+ {
+  var root=Temp();
+  try
+  {
+   await using var p=Build(root);
+   await Init(p);
+   var service=p.GetRequiredService<IExpenseService>();
+   var utilities=await service.CreateCategoryAsync("  Utilities  ");
+   Assert.Equal("Utilities",utilities.Name);
+   await Assert.ThrowsAsync<InvalidOperationException>(()=>service.CreateCategoryAsync("UTILITIES"));
+   var category=Assert.Single((await service.GetReferenceDataAsync()).Categories);
+   Assert.Equal(utilities.Id,category.Id);
+
+   var refs=await service.GetReferenceDataAsync();
+   var expense=refs.ExpenseAccounts.Single(x=>x.SystemKey=="operating_expense");
+   var cash=refs.PaymentAccounts.Single(x=>x.SystemKey=="cash_on_hand");
+   var original=await service.PostAsync(new PostExpenseRequest(expense.Id,cash.Id,null,
+       new DateOnly(2026,10,21),"AFN",150m,"Electricity",null,null,"category-expense",utilities.Id));
+   Assert.Equal(utilities.Id,original.Expense.CategoryId);
+   Assert.Equal("Utilities",original.Expense.CategoryName);
+   Assert.Equal("Utilities",Assert.Single(await service.SearchAsync(new ExpenseSearchFilter(Search:original.Expense.ExpenseNumber))).CategoryName);
+   Assert.Equal(150m,Assert.Single((await service.GetJournalsAsync(original.Expense.Id))).TotalDebit);
+
+   var transport=await service.CreateCategoryAsync("Transport");
+   var changed=await service.AmendAsync(original.Expense.Id,
+       new PostExpenseRequest(expense.Id,cash.Id,null,new DateOnly(2026,10,21),"AFN",
+           170m,"Electricity",null,null,"category-updated",transport.Id),"Changed category");
+   Assert.Equal("Transport",changed.Expense.CategoryName);
+   Assert.Equal("reversed",(await service.GetAsync(original.Expense.Id))!.Expense.Status);
+   Assert.Equal(2,(await service.GetJournalsAsync(original.Expense.Id)).Count);
+   Assert.Equal(170m,Assert.Single(await service.GetJournalsAsync(changed.Expense.Id)).TotalDebit);
+  }
+  finally {SqliteConnection.ClearAllPools();Delete(root);}
+ }
  [Fact] public async Task Inventory_cannot_be_used_as_expense_payment_account()
  {
   var root=Temp();try{await using var p=Build(root);await Init(p);var s=p.GetRequiredService<IExpenseService>();var refs=await s.GetReferenceDataAsync();var expense=refs.ExpenseAccounts.First();
