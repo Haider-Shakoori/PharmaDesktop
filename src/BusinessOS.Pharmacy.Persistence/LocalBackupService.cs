@@ -50,6 +50,63 @@ public sealed class LocalBackupService : ILocalBackupService
         finally { _gate.Release(); }
     }
 
+    /// <summary>
+    /// A trusted local background worker creates tenant-validated automatic snapshots.
+    /// Uses the same database integrity checks and serialization gate as manual backups.
+    /// </summary>
+    public async Task<LocalBackupSnapshot?> CreateAutomaticIfDueAsync(
+        string expectedTenantId, int intervalHours, int keepCount,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateTenant(expectedTenantId);
+        if (intervalHours is not (1 or 6 or 24) || keepCount is not (7 or 14 or 30))
+            throw new ArgumentOutOfRangeException(nameof(intervalHours));
+
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            _paths.EnsureCreated();
+            var existing = Directory.EnumerateFiles(
+                _paths.BackupsDirectory, "darmaltoon-automatic-*.db",
+                SearchOption.TopDirectoryOnly)
+                .OrderByDescending(File.GetLastWriteTimeUtc)
+                .ToList();
+            // Only recognize intact, tenant-matching scheduled backups as proof
+            // that the interval was satisfied.
+            foreach (var file in existing)
+            {
+                LocalBackupSnapshot valid;
+                try { valid = await DescribeAsync(file, expectedTenantId, true, cancellationToken); }
+                catch { continue; }
+                if (_clock.UtcNow - valid.CreatedAt < TimeSpan.FromHours(intervalHours))
+                    return null;
+                break;
+            }
+
+            var created = await CreateInternalAsync(expectedTenantId, "automatic", cancellationToken);
+            // Never prune a manual or pre-restore backup. Keep the new backup
+            // and the most recent verified older automatic snapshots.
+            var validAutomatic = new List<LocalBackupSnapshot> { created };
+            foreach (var file in existing)
+            {
+                try
+                {
+                    validAutomatic.Add(await DescribeAsync(file, expectedTenantId, true, cancellationToken));
+                }
+                catch { /* Retain damaged or unmatched files for manual inspection. */ }
+            }
+            foreach (var stale in validAutomatic
+                         .OrderByDescending(x => x.CreatedAt)
+                         .Skip(keepCount))
+            {
+                File.Delete(stale.FullPath);
+                File.Delete(stale.FullPath + ".manifest.json");
+            }
+            return created;
+        }
+        finally { _gate.Release(); }
+    }
+
     public async Task<LocalBackupVerification> VerifyAsync(string backupPath, string expectedTenantId, CancellationToken cancellationToken = default)
     {
         _permissions.Demand("settings.manage");
@@ -205,7 +262,7 @@ public sealed class LocalBackupService : ILocalBackupService
                 throw new InvalidOperationException("Backup manifest identity does not match the database.");
             if (manifest.Length != info.Length)
                 throw new InvalidOperationException("Backup length does not match its manifest.");
-            if (manifest.Kind is not ("manual" or "pre-restore"))
+            if (manifest.Kind is not ("manual" or "pre-restore" or "automatic"))
                 throw new InvalidOperationException("Backup manifest kind is invalid.");
             if (!string.Equals(manifest.Sha256, sha256, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Backup checksum does not match its manifest. The backup may be damaged or modified.");
@@ -266,7 +323,8 @@ public sealed class LocalBackupService : ILocalBackupService
     }
 
     private static string InferKind(string fileName) =>
-        fileName.Contains("pre-restore", StringComparison.OrdinalIgnoreCase) ? "pre-restore" : "manual";
+        fileName.Contains("pre-restore", StringComparison.OrdinalIgnoreCase) ? "pre-restore" :
+        fileName.Contains("-automatic-", StringComparison.OrdinalIgnoreCase) ? "automatic" : "manual";
 
     private static void ValidateTenant(string tenantId)
     {

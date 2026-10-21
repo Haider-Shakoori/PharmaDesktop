@@ -537,6 +537,44 @@
                 </ScrollViewer>
             </TabItem>
 
+            <TabItem Header="Automatic Backup">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="6,16,6,12">
+                        <Border Style="{StaticResource SurfaceCard}" MaxWidth="750"
+                                HorizontalAlignment="Left">
+                            <StackPanel>
+                                <TextBlock Text="Automatic Database Backup"
+                                           Style="{StaticResource SectionTitleText}" />
+                                <TextBlock Text="Create tenant-verified SQLite backups while the application is running. Existing manual and pre-restore backups are never deleted."
+                                           TextWrapping="Wrap" Style="{StaticResource MutedText}"
+                                           Margin="0,8,0,16" />
+                                <CheckBox Content="Enable automatic backups"
+                                          IsChecked="{Binding AutoBackupEnabled, Mode=TwoWay}"
+                                          Margin="0,0,0,14" />
+                                <TextBlock Text="Backup frequency" FontWeight="SemiBold" />
+                                <ComboBox ItemsSource="{Binding BackupIntervalOptions}"
+                                          SelectedItem="{Binding AutoBackupIntervalHours, Mode=TwoWay}"
+                                          Width="180" HorizontalAlignment="Left" Margin="0,6,0,10" />
+                                <TextBlock Text="Interval in hours: 1, 6 or 24"
+                                           Style="{StaticResource MutedText}" Margin="0,0,0,14" />
+                                <TextBlock Text="Keep last automatic backups" FontWeight="SemiBold" />
+                                <ComboBox ItemsSource="{Binding BackupKeepOptions}"
+                                          SelectedItem="{Binding AutoBackupKeepCount, Mode=TwoWay}"
+                                          Width="180" HorizontalAlignment="Left" Margin="0,6,0,10" />
+                                <TextBlock Text="Keep 7, 14 or 30 verified automatic backups."
+                                           Style="{StaticResource MutedText}" Margin="0,0,0,16" />
+                                <Button Content="Save Automatic Backup Settings"
+                                        Command="{Binding SaveAutoBackupSettingsCommand}"
+                                        Style="{StaticResource PrimaryButton}"
+                                        HorizontalAlignment="Left" Padding="18,8" />
+                                <TextBlock Text="{Binding AutoBackupStatus}" TextWrapping="Wrap"
+                                           Style="{StaticResource MutedText}" Margin="0,12,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
             <TabItem Header="{Binding SecurityTabLabel}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
