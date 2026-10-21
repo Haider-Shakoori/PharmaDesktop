@@ -202,36 +202,35 @@
             </Border.Style>
             <DockPanel Margin="12,12,12,8">
                 <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Border Width="58" Height="58"
-                                CornerRadius="16"
-                                Background="{DynamicResource BrandPrimaryBrush}">
-                            <Path Data="{StaticResource IconPharmacyCross}"
-                                  Width="34" Height="34"
-                                  Stretch="Uniform"
-                                  Fill="White"
-                                  StrokeThickness="0"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center" />
-                        </Border>
-                        <StackPanel Grid.Column="1" Margin="12,-2,0,0" VerticalAlignment="Center">
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
+                    <Grid Height="62">
+                        <Image Source="pack://application:,,,/Darmaltoon;component/Assets/DarmaltoonWordmark.png"
+                               Width="242" Height="60" Stretch="Uniform"
+                               HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <Image.Style>
+                                <Style TargetType="Image">
+                                    <Setter Property="Visibility" Value="Visible" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding SidebarCollapsed}" Value="True">
                                             <Setter Property="Visibility" Value="Collapsed" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                            </StackPanel.Style>
-                            <TextBlock Text="BusinessOS" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" />
-                            <TextBlock Text="Darmaltoon" FontSize="22" FontWeight="Bold"
-                                       Foreground="{DynamicResource BrandPrimaryBrush}" Margin="0,-3,0,0" />
-                        </StackPanel>
+                            </Image.Style>
+                        </Image>
+                        <Image Source="pack://application:,,,/Darmaltoon;component/Assets/DarmaltoonIcon.png"
+                               Width="54" Height="54" Stretch="Uniform"
+                               HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Image.Style>
+                                <Style TargetType="Image">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SidebarCollapsed}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Image.Style>
+                        </Image>
                     </Grid>
                     <TextBlock Text="Manage Today  ·  Healthier Tomorrow"
                                Margin="5,7,0,0"

@@ -32,6 +32,8 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\Darmaltoon.ico" />
+    <Resource Include="Assets\DarmaltoonWordmark.png" />
+    <Resource Include="Assets\DarmaltoonIcon.png" />
     <Resource Include="Assets\Glass\*.png" />
   </ItemGroup>
   <ItemGroup>
