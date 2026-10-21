@@ -16,6 +16,27 @@ namespace BusinessOS.Pharmacy.IntegrationTests.Persistence;
 public sealed class SaleReturnTests
 {
     [Fact]
+    public async Task Search_returnable_sales_uses_sqlite_supported_ordering()
+    {
+        var root = CreateTemporaryRoot();
+        try
+        {
+            await using var provider = BuildProvider(root);
+            await InitializeAsync(provider);
+            var setup = await CreateSaleAsync(provider, 1m, 20m, 0m);
+            var returns = provider.GetRequiredService<ISaleReturnService>();
+
+            var sales = await returns.SearchReturnableSalesAsync(new SaleSearchFilter(Take: 25));
+
+            Assert.Contains(sales, item => item.Id == setup.Sale.Sale.Id);
+            var filtered = await returns.SearchReturnableSalesAsync(new SaleSearchFilter(Search: setup.Sale.Sale.SaleNumber, Take: 25));
+            Assert.Single(filtered);
+            Assert.Equal(setup.Sale.Sale.Id, filtered[0].Id);
+        }
+        finally { SqliteConnection.ClearAllPools(); DeleteTemporaryRoot(root); }
+    }
+
+    [Fact]
     public async Task Return_restock_is_allocation_aware_and_idempotent()
     {
         var root = CreateTemporaryRoot();
