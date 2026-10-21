@@ -116,6 +116,7 @@ public static class DesktopHost
                     services.AddSingleton<ICloudSyncChangeSignal, CloudSyncChangeSignal>();
                     services.AddSingleton<ICloudSyncService, CloudSyncService>();
                     services.AddHostedService<CloudSyncWorker>();
+                    services.AddHostedService<AutomaticBackupWorker>();
                 }
 
                 var updaterSection = context.Configuration.GetSection("BusinessOS:Updater");

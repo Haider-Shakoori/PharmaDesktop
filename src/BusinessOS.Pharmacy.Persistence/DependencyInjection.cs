@@ -44,7 +44,8 @@ public static class DependencyInjection
         }, poolSize: 16);
 
         services.AddSingleton<ILocalDatabaseInitializer, LocalDatabaseInitializer>();
-        services.AddSingleton<ILocalBackupService, LocalBackupService>();
+        services.AddSingleton<LocalBackupService>();
+        services.AddSingleton<ILocalBackupService>(sp => sp.GetRequiredService<LocalBackupService>());
         services.AddSingleton<ICloudSyncStore, CloudSyncStore>();
         services.AddSingleton<ILocalSettingsStore, LocalSettingsStore>();
         services.AddSingleton<ILocalSequenceService, LocalSequenceService>();

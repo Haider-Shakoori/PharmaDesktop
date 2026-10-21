@@ -5,6 +5,8 @@ using BusinessOS.Pharmacy.Application.Abstractions.Networking;
 using BusinessOS.Pharmacy.Application.Abstractions.Storage;
 using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Desktop.Localization;
+using BusinessOS.Pharmacy.Application.Abstractions.Persistence;
+using BusinessOS.Pharmacy.Desktop.Backup;
 using BusinessOS.Pharmacy.LocalClient;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -60,6 +62,13 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     [ObservableProperty] private int posTopSellerCount = 10;
     [ObservableProperty] private int posTopSellerDays = 30;
     [ObservableProperty] private bool useGlassTheme;
+    [ObservableProperty] private bool autoBackupEnabled;
+    [ObservableProperty] private int autoBackupIntervalHours = 24;
+    [ObservableProperty] private int autoBackupKeepCount = 14;
+    [ObservableProperty] private string autoBackupStatus = string.Empty;
+    public int[] BackupIntervalOptions => AutomaticBackupPolicy.Intervals;
+    public int[] BackupKeepOptions => AutomaticBackupPolicy.KeepOptions;
+    public bool CanManageAutoBackups => CurrentMode != DeploymentMode.Client;
     [ObservableProperty] private bool notificationEnableToasts = true;
     [ObservableProperty] private bool notificationSuccessToasts = true;
     [ObservableProperty] private bool notificationInformationToasts = true;
@@ -101,6 +110,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         SaveReceiptSettingsCommand = new RelayCommand(SaveReceiptSettings);
         SavePosSettingsCommand = new RelayCommand(SavePosSettings);
         SaveNotificationSettingsCommand = new RelayCommand(SaveNotificationSettings);
+        SaveAutoBackupSettingsCommand = new AsyncRelayCommand(SaveAutoBackupSettingsAsync);
         RefreshTopSellersCommand = new AsyncRelayCommand(RefreshTopSellersAsync, () => PosShowTopSellers && !IsBusy);
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
@@ -135,6 +145,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
     public IRelayCommand SaveProfileCommand { get; }
     public IRelayCommand SaveReceiptSettingsCommand { get; }
     public IRelayCommand SavePosSettingsCommand { get; }
+    public IAsyncRelayCommand SaveAutoBackupSettingsCommand { get; }
     public IRelayCommand SaveNotificationSettingsCommand { get; }
     public IAsyncRelayCommand RefreshTopSellersCommand { get; }
 
@@ -584,6 +595,40 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
         RaiseLocalizedProperties();
     }
 
+    private async Task LoadAutoBackupSettingsAsync()
+    {
+        if (_services.GetService<ILocalSettingsStore>() is not { } store)
+            return;
+        var policy = await AutomaticBackupPolicy.ReadAsync(store);
+        AutoBackupEnabled = policy.Enabled;
+        AutoBackupIntervalHours = policy.IntervalHours;
+        AutoBackupKeepCount = policy.KeepCount;
+        AutoBackupStatus = T("Automatic backups run while Darmaltoon is open.",
+            "بکاپ خودکار هنگام باز بودن درملتون اجرا می‌شود.",
+            "اتومات بیک اپ د درملتون د چلولو پر مهال ترسره کېږي.");
+    }
+
+    private async Task SaveAutoBackupSettingsAsync()
+    {
+        if (CurrentMode == DeploymentMode.Client)
+        {
+            AutoBackupStatus = "Configure backups on the main pharmacy server.";
+            return;
+        }
+        try
+        {
+            var store = _services.GetRequiredService<ILocalSettingsStore>();
+            var policy = new AutomaticBackupPolicy(
+                AutoBackupEnabled, AutoBackupIntervalHours, AutoBackupKeepCount);
+            await policy.WriteAsync(store);
+            AutoBackupStatus = "Automatic backup settings saved. Verified SQLite backups run while Darmaltoon is open.";
+        }
+        catch (Exception exception)
+        {
+            AutoBackupStatus = exception.Message;
+        }
+    }
+
     public async Task LoadAsync()
     {
         await BusyAsync(async () =>
@@ -593,6 +638,7 @@ public sealed partial class NetworkSettingsViewModel : ObservableObject
             LoadPosSettings();
             LoadAppearance();
             LoadNotificationSettings();
+            await LoadAutoBackupSettingsAsync();
             await LoadPlatformSyncPolicyAsync();
 
             var configuration = await _configurationStore.LoadAsync();

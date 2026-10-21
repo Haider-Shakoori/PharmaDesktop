@@ -43,6 +43,47 @@ public sealed class BackupRestoreTests
     }
 
     [Fact]
+    public async Task Scheduled_backup_is_verified_and_not_duplicated_inside_interval()
+    {
+        var root = Temp();
+        try
+        {
+            await using var provider = Build(root);
+            await provider.GetRequiredService<ILocalDatabaseInitializer>().InitializeAsync("tenant-backup");
+            var backups = provider.GetRequiredService<LocalBackupService>();
+            var first = await backups.CreateAutomaticIfDueAsync("tenant-backup", 1, 7);
+            Assert.NotNull(first);
+            Assert.Equal("automatic", first.Kind);
+            Assert.True((await backups.VerifyAsync(first.FullPath, "tenant-backup")).IsValid);
+
+            var second = await backups.CreateAutomaticIfDueAsync("tenant-backup", 1, 7);
+            Assert.Null(second);
+            Assert.Single(Directory.EnumerateFiles(Path.Combine(root, "backups"), "darmaltoon-automatic-*.db"));
+
+            var manual = await backups.CreateAsync("tenant-backup");
+            Assert.True(File.Exists(manual.FullPath));
+            Assert.False(string.Equals(manual.Kind, "automatic", StringComparison.Ordinal));
+        }
+        finally { SqliteConnection.ClearAllPools(); Delete(root); }
+    }
+
+    [Fact]
+    public async Task Scheduled_backup_rejects_cross_tenant_operation_without_creating_files()
+    {
+        var root = Temp();
+        try
+        {
+            await using var provider = Build(root);
+            await provider.GetRequiredService<ILocalDatabaseInitializer>().InitializeAsync("tenant-backup");
+            var service = provider.GetRequiredService<LocalBackupService>();
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => service.CreateAutomaticIfDueAsync("wrong-tenant", 1, 7));
+            Assert.Empty(Directory.EnumerateFiles(Path.Combine(root, "backups"), "darmaltoon-automatic-*.db"));
+        }
+        finally { SqliteConnection.ClearAllPools(); Delete(root); }
+    }
+
+    [Fact]
     public async Task Modified_backup_is_rejected_without_changing_live_database()
     {
         var root = Temp();
