@@ -2,6 +2,7 @@ using System.Net.Mail;
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Customers;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,17 +14,20 @@ public sealed class CustomerService : ICustomerService, ICustomerCreditPolicy
     private readonly IPermissionAuthorizer _permissions;
     private readonly IUserSessionService? _sessions;
     private readonly IClock _clock;
+    private readonly ICloudSyncChangeSignal? _cloudSignal;
 
     public CustomerService(
         IDbContextFactory<PharmacyDbContext> contextFactory,
         IPermissionAuthorizer permissions,
         IClock clock,
-        IUserSessionService? sessions = null)
+        IUserSessionService? sessions = null,
+        ICloudSyncChangeSignal? cloudSignal = null)
     {
         _contextFactory = contextFactory;
         _permissions = permissions;
         _clock = clock;
         _sessions = sessions;
+        _cloudSignal = cloudSignal;
     }
 
     public async Task<IReadOnlyList<CustomerListItem>> SearchAsync(
@@ -136,6 +140,7 @@ public sealed class CustomerService : ICustomerService, ICustomerCreditPolicy
             entity,
             now);
         await context.SaveChangesAsync(cancellationToken);
+        _cloudSignal?.Notify();
         return entity.Id;
     }
 
@@ -161,6 +166,7 @@ public sealed class CustomerService : ICustomerService, ICustomerCreditPolicy
             entity,
             entity.UpdatedAt);
         await context.SaveChangesAsync(cancellationToken);
+        _cloudSignal?.Notify();
     }
 
     public async Task<CustomerCreditProfile> ValidateAsync(

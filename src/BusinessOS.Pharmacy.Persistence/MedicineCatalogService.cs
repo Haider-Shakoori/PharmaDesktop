@@ -1,6 +1,7 @@
 using BusinessOS.Pharmacy.Application.Abstractions.Authentication;
 using BusinessOS.Pharmacy.Application.Abstractions.Medicines;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,17 +13,20 @@ public sealed class MedicineCatalogService : IMedicineCatalogService
     private readonly IPermissionAuthorizer _permissions;
     private readonly IUserSessionService? _sessions;
     private readonly IClock _clock;
+    private readonly ICloudSyncChangeSignal? _cloudSignal;
 
     public MedicineCatalogService(
         IDbContextFactory<PharmacyDbContext> contextFactory,
         IPermissionAuthorizer permissions,
         IClock clock,
-        IUserSessionService? sessions = null)
+        IUserSessionService? sessions = null,
+        ICloudSyncChangeSignal? cloudSignal = null)
     {
         _contextFactory = contextFactory;
         _permissions = permissions;
         _clock = clock;
         _sessions = sessions;
+        _cloudSignal = cloudSignal;
     }
 
     public async Task<IReadOnlyList<MedicineListItem>> SearchAsync(
@@ -169,6 +173,7 @@ public sealed class MedicineCatalogService : IMedicineCatalogService
             entity,
             now);
         await context.SaveChangesAsync(cancellationToken);
+        _cloudSignal?.Notify();
         return entity.Id;
     }
 
@@ -197,6 +202,7 @@ public sealed class MedicineCatalogService : IMedicineCatalogService
             entity,
             entity.UpdatedAt);
         await context.SaveChangesAsync(cancellationToken);
+        _cloudSignal?.Notify();
     }
 
     public async Task<string> CreateCategoryAsync(
