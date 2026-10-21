@@ -302,10 +302,11 @@ public sealed class InventoryBatchTests
             var location = (await inventory.GetReferenceDataAsync()).Locations.Single();
             var medicineId = await CreateMedicineAsync(catalog, "INV-FEFO", "FEFO Medicine");
 
-            var expired = await OpenAsync(inventory, medicineId, location.Id, "EXPIRED", new DateOnly(2026, 9, 29), 5m);
-            var quarantined = await OpenAsync(inventory, medicineId, location.Id, "QUAR", new DateOnly(2026, 10, 10), 5m);
-            var early = await OpenAsync(inventory, medicineId, location.Id, "EARLY", new DateOnly(2026, 10, 20), 5m);
-            var late = await OpenAsync(inventory, medicineId, location.Id, "LATE", new DateOnly(2026, 12, 1), 5m);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var expired = await OpenAsync(inventory, medicineId, location.Id, "EXPIRED", today.AddDays(-30), 5m);
+            var quarantined = await OpenAsync(inventory, medicineId, location.Id, "QUAR", today.AddDays(10), 5m);
+            var early = await OpenAsync(inventory, medicineId, location.Id, "EARLY", today.AddDays(20), 5m);
+            var late = await OpenAsync(inventory, medicineId, location.Id, "LATE", today.AddDays(60), 5m);
 
             await inventory.ChangeBatchStatusAsync(
                 new ChangeBatchStatusRequest(
