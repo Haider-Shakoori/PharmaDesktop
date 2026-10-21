@@ -37,6 +37,13 @@ public sealed class CloudSyncStore(
             .Where(x =>
                 x.NextAttemptAt is null ||
                 x.NextAttemptAt <= now)
+            .OrderBy(x => x.EventType switch
+            {
+                "medicine.upsert" => 0,
+                "customer.upsert" => 1,
+                _ => 2,
+            })
+            .ThenBy(x => x.Id)
             .Take(take)
             .Select(x => new CloudSyncOutboxItem(
                 x.Id,
@@ -178,9 +185,15 @@ public sealed class CloudSyncStore(
             }
 
             payload["reference_resolution_v"] = 1;
-            row.PayloadJson = payload.ToJsonString();
+            var repairedPayload = payload.ToJsonString();
+            if (row.AttemptCount > 0 &&
+                string.Equals(row.PayloadJson, repairedPayload, StringComparison.Ordinal))
+                continue;
+
+            row.PayloadJson = repairedPayload;
             row.Status = "pending";
-            row.AttemptCount = 0;
+            // Preserve retry budget. Invalid references should eventually enter
+            // the conflict queue, not be retried forever with zero attempts.
             row.NextAttemptAt = null;
             row.LastErrorCode = null;
             row.LastErrorMessage = null;

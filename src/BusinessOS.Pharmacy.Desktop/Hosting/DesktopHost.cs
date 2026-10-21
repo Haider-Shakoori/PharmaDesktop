@@ -113,6 +113,7 @@ public static class DesktopHost
                     services.AddSingleton(syncOptions);
                     services.AddSingleton<ICloudSyncTransport>(
                         _ => new CloudSyncClient(syncOptions));
+                    services.AddSingleton<ICloudSyncChangeSignal, CloudSyncChangeSignal>();
                     services.AddSingleton<ICloudSyncService, CloudSyncService>();
                     services.AddHostedService<CloudSyncWorker>();
                 }

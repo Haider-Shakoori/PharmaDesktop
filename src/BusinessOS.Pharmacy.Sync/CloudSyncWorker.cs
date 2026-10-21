@@ -5,7 +5,8 @@ namespace BusinessOS.Pharmacy.Sync;
 
 public sealed class CloudSyncWorker(
     ICloudSyncService sync,
-    CloudSyncOptions options) : IHostedService, IDisposable
+    CloudSyncOptions options,
+    ICloudSyncChangeSignal changes) : IHostedService, IDisposable
 {
     private CancellationTokenSource? _stop;
     private Task? _loop;
@@ -40,10 +41,7 @@ public sealed class CloudSyncWorker(
         {
             await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
 
-            using var timer = new PeriodicTimer(
-                TimeSpan.FromSeconds(options.IntervalSeconds));
-
-            do
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
@@ -56,12 +54,17 @@ public sealed class CloudSyncWorker(
                 }
                 catch
                 {
-                    // Synchronization is deliberately best-effort. Operational
-                    // pharmacy transactions must never fail because cloud
-                    // connectivity is unavailable.
+                    // A failed cloud request must not interrupt offline operations.
                 }
+
+                // Wake as soon as a committed medicine/customer/sale generates
+                // a local event. Poll on the normal interval as a safety net.
+                var notified = await changes.WaitAsync(
+                    TimeSpan.FromSeconds(options.IntervalSeconds),
+                    cancellationToken);
+                if (notified)
+                    await Task.Delay(TimeSpan.FromMilliseconds(350), cancellationToken);
             }
-            while (await timer.WaitForNextTickAsync(cancellationToken));
         }
         catch (OperationCanceledException)
             when (cancellationToken.IsCancellationRequested)

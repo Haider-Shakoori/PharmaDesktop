@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using BusinessOS.Pharmacy.Application.Abstractions.Sales;
 using BusinessOS.Pharmacy.Application.Abstractions.Time;
+using BusinessOS.Pharmacy.Application.Abstractions.Sync;
 using BusinessOS.Pharmacy.Domain.Authentication;
 using BusinessOS.Pharmacy.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -19,20 +20,22 @@ public sealed class PosService : IPosService
     private readonly IUserSessionService _sessions;
     private readonly IClock _clock;
     private readonly StockLedger _ledger;
+    private readonly ICloudSyncChangeSignal? _cloudSignal;
 
     public PosService(
         IDbContextFactory<PharmacyDbContext> contextFactory,
         IPermissionAuthorizer permissions,
         IUserSessionService sessions,
         IClock clock,
-        StockLedger ledger
-        )
+        StockLedger ledger,
+        ICloudSyncChangeSignal? cloudSignal = null)
     {
         _contextFactory = contextFactory;
         _permissions = permissions;
         _sessions = sessions;
         _clock = clock;
         _ledger = ledger;
+        _cloudSignal = cloudSignal;
     }
 
     public async Task<PosReferenceData> GetReferenceDataAsync(
@@ -738,6 +741,7 @@ public sealed class PosService : IPosService
 
         await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        _cloudSignal?.Notify();
 
         await using var readContext = await _contextFactory.CreateDbContextAsync(cancellationToken);
         var completed = await QuerySale(readContext)
