@@ -22,7 +22,10 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
 
-        ApplyStoredAppearance();
+        try
+        {
+
+            ApplyStoredAppearance();
 
         if (TryHandleInstallVerification(e.Args))
         {
@@ -88,9 +91,19 @@ public partial class App : System.Windows.Application
             .GetRequiredService<GlobalExceptionHandler>()
             .Attach(this);
 
-        await _host.Services
-            .GetRequiredService<StartupCoordinator>()
-            .StartAsync();
+            await _host.Services
+                .GetRequiredService<StartupCoordinator>()
+                .StartAsync();
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(
+                $"Darmaltoon could not start.\n\n{exception.GetType().Name}: {exception.Message}",
+                "Darmaltoon startup error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Shutdown(-1);
+        }
     }
 
     private static void ApplyStoredAppearance()
