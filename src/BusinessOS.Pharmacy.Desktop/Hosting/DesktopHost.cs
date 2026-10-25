@@ -75,25 +75,15 @@ public static class DesktopHost
 
                     var syncSection =
                         context.Configuration.GetSection("BusinessOS:Sync");
-                    // The licensing API assigns each tenant its actual cloud host.
-                    // Use that host for sync when an activation is already present;
-                    // the configured URL remains the bootstrap fallback for a new
-                    // installation that has not been activated yet.
+                    // Use the configured cloud host during startup. Loading the
+                    // activation store synchronously here can block Host.Build
+                    // before the desktop window is created.
                     var configuredSyncBaseUrl =
                         syncSection["BaseUrl"] ??
                         context.Configuration["BusinessOS:Licensing:BaseUrl"] ??
                         "https://pharmacy.businessos.af";
-                    var activatedSyncBaseUrl = new WindowsActivationStore(paths)
-                        .LoadAsync()
-                        .GetAwaiter()
-                        .GetResult()
-                        ?.Tenant
-                        ?.CloudBaseUrl;
-                    var syncBaseUrl = IsSafeSyncBaseUrl(activatedSyncBaseUrl)
-                        ? activatedSyncBaseUrl!
-                        : configuredSyncBaseUrl;
                     var syncOptions = new CloudSyncOptions(
-                        syncBaseUrl,
+                        configuredSyncBaseUrl,
                         syncSection["PushPath"] ??
                         "/api/v1/desktop/sync/push",
                         syncSection["PullPath"] ??

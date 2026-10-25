@@ -20,12 +20,14 @@ public partial class App : System.Windows.Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
-        base.OnStartup(e);
-
         try
         {
+            TraceStartup("OnStartup entered");
+            base.OnStartup(e);
+            TraceStartup("Application base startup completed");
 
             ApplyStoredAppearance();
+            TraceStartup("Appearance applied");
 
         if (TryHandleInstallVerification(e.Args))
         {
@@ -35,9 +37,11 @@ public partial class App : System.Windows.Application
 
         var paths = new ApplicationPaths();
         paths.EnsureCreated();
+            TraceStartup($"Application paths ready: {paths.DatabasePath}");
 
         var configurationStore = new NetworkConfigurationStore(paths);
         var networkConfiguration = await configurationStore.LoadAsync();
+            TraceStartup($"Network configuration loaded: configured={networkConfiguration.IsConfigured}, mode={networkConfiguration.Mode}");
         var installerMode = ReadInstallerDeploymentMode();
 
         if (!networkConfiguration.IsConfigured)
@@ -85,7 +89,9 @@ public partial class App : System.Windows.Application
         }
 
         _host = DesktopHost.Build(paths, networkConfiguration);
+            TraceStartup("Desktop host built");
         await _host.StartAsync();
+            TraceStartup("Desktop host started");
 
         _host.Services
             .GetRequiredService<GlobalExceptionHandler>()
@@ -94,15 +100,31 @@ public partial class App : System.Windows.Application
             await _host.Services
                 .GetRequiredService<StartupCoordinator>()
                 .StartAsync();
+            TraceStartup("Startup coordinator completed");
         }
         catch (Exception exception)
         {
+            TraceStartup($"STARTUP FAILURE: {exception}");
             MessageBox.Show(
                 $"Darmaltoon could not start.\n\n{exception.GetType().Name}: {exception.Message}",
                 "Darmaltoon startup error",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
             Shutdown(-1);
+        }
+    }
+
+    private static void TraceStartup(string message)
+    {
+        try
+        {
+            File.AppendAllText(
+                Path.Combine(AppContext.BaseDirectory, "startup-trace.log"),
+                $"{DateTimeOffset.Now:O} {message}{Environment.NewLine}");
+        }
+        catch
+        {
+            // Startup tracing must never prevent the application from starting.
         }
     }
 
