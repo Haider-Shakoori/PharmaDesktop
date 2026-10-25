@@ -75,10 +75,25 @@ public static class DesktopHost
 
                     var syncSection =
                         context.Configuration.GetSection("BusinessOS:Sync");
-                    var syncOptions = new CloudSyncOptions(
+                    // The licensing API assigns each tenant its actual cloud host.
+                    // Use that host for sync when an activation is already present;
+                    // the configured URL remains the bootstrap fallback for a new
+                    // installation that has not been activated yet.
+                    var configuredSyncBaseUrl =
                         syncSection["BaseUrl"] ??
                         context.Configuration["BusinessOS:Licensing:BaseUrl"] ??
-                        "https://pharmacy.businessos.af",
+                        "https://pharmacy.businessos.af";
+                    var activatedSyncBaseUrl = new WindowsActivationStore(paths)
+                        .LoadAsync()
+                        .GetAwaiter()
+                        .GetResult()
+                        ?.Tenant
+                        ?.CloudBaseUrl;
+                    var syncBaseUrl = IsSafeSyncBaseUrl(activatedSyncBaseUrl)
+                        ? activatedSyncBaseUrl!
+                        : configuredSyncBaseUrl;
+                    var syncOptions = new CloudSyncOptions(
+                        syncBaseUrl,
                         syncSection["PushPath"] ??
                         "/api/v1/desktop/sync/push",
                         syncSection["PullPath"] ??
@@ -174,6 +189,13 @@ public static class DesktopHost
             })
             .Build();
     }
+
+    private static bool IsSafeSyncBaseUrl(string? value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
+        uri.Scheme == Uri.UriSchemeHttps &&
+        string.IsNullOrEmpty(uri.UserInfo) &&
+        string.IsNullOrEmpty(uri.Query) &&
+        string.IsNullOrEmpty(uri.Fragment);
 
     private static HttpClient CreateUpdateHttpClient(int timeoutSeconds)
     {

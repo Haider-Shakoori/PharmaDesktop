@@ -9,6 +9,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0">
@@ -51,12 +52,51 @@
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                     CornerRadius="8" Padding="16">
                 <StackPanel>
+                    <DockPanel LastChildFill="False">
+                        <TextBlock Text="{Binding SyncStatusTitle}" FontSize="15" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" DockPanel.Dock="Left"/>
+                        <Button Content="{Binding SyncNowLabel}" Command="{Binding SyncNowCommand}"
+                                DockPanel.Dock="Right" Padding="12,6"/>
+                    </DockPanel>
+                    <TextBlock Text="{Binding SyncStatusText}" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding SyncHistoryTitle}" FontWeight="SemiBold" Margin="0,12,0,5"/>
+                    <TextBlock Text="{Binding SyncHistoryEmpty}" Foreground="{DynamicResource TextMutedBrush}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SyncHistory.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <ItemsControl ItemsSource="{Binding SyncHistory}" MaxHeight="130">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,3,0,3"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="5" Margin="0,24,0,0"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="16">
+                <StackPanel>
                     <Grid>
                         <TextBlock Text="{Binding ConflictsTitle}" FontSize="15" FontWeight="SemiBold"
                                    VerticalAlignment="Center"/>
                         <Button Content="{Binding RefreshConflictsLabel}"
                                 Command="{Binding RefreshConflictsCommand}"
                                 HorizontalAlignment="Right" Padding="10,5"/>
+                        <Button Content="{Binding ForceSyncConflictsLabel}"
+                                Command="{Binding ForceSyncConflictsCommand}"
+                                HorizontalAlignment="Right" Margin="0,0,130,0" Padding="10,5"/>
                     </Grid>
 
                     <TextBlock Text="{Binding ConflictSummary}" TextWrapping="Wrap" Margin="0,8,0,0"

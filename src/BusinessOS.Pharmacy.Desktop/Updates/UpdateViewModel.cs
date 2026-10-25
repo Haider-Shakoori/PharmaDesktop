@@ -22,6 +22,8 @@ public sealed partial class UpdateViewModel : ObservableObject
     private UiLanguage _language = UiLanguageCatalog.All[0];
     private UpdateCheckResult? _check;
     private PreparedUpdate? _prepared;
+    private bool _syncSubscribed;
+    private string? _lastHistoryKey;
 
     [ObservableProperty] private string currentVersion = string.Empty;
     [ObservableProperty] private string availableVersion = "—";
@@ -31,6 +33,7 @@ public sealed partial class UpdateViewModel : ObservableObject
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string conflictSummary = string.Empty;
     [ObservableProperty] private bool hasConflicts;
+    [ObservableProperty] private string syncStatusText = "Cloud synchronization has not run yet.";
 
     public UpdateViewModel(
         IServiceProvider services,
@@ -52,24 +55,35 @@ public sealed partial class UpdateViewModel : ObservableObject
         InstallCommand = new AsyncRelayCommand(
             InstallAsync,
             () => !IsBusy && _prepared is not null);
+        SyncNowCommand = new AsyncRelayCommand(SyncNowAsync, () => !IsBusy);
         RefreshConflictsCommand = new AsyncRelayCommand(
             RefreshConflictsAsync,
             () => !IsBusy);
         RetryConflictCommand = new AsyncRelayCommand<string>(
             RetryConflictAsync,
             _ => !IsBusy);
+        ForceSyncConflictsCommand = new AsyncRelayCommand(
+            ForceSyncConflictsAsync,
+            () => !IsBusy && HasConflicts);
         DismissConflictCommand = new AsyncRelayCommand<string>(
             DismissConflictAsync,
             _ => !IsBusy);
     }
 
     public ObservableCollection<SyncConflictItemViewModel> Conflicts { get; } = new();
+    public ObservableCollection<string> SyncHistory { get; } = new();
+    public IAsyncRelayCommand SyncNowCommand { get; }
+    public string SyncStatusTitle => T("Cloud sync status", "وضعیت همگام‌سازی ابری", "د کلاوډ همغږۍ حالت");
+    public string SyncNowLabel => T("Sync now", "همگام‌سازی اکنون", "اوس همغږي کړئ");
+    public string SyncHistoryTitle => T("Recent sync attempts (this session)", "تلاش‌های اخیر همگام‌سازی (این نشست)", "د همغږۍ وروستۍ هڅې (دا ناسته)");
+    public string SyncHistoryEmpty => T("No synchronization attempts in this session.", "در این نشست همگام‌سازی انجام نشده است.", "په دې ناسته کې د همغږۍ هڅه نشته.");
 
     public IAsyncRelayCommand CheckCommand { get; }
     public IAsyncRelayCommand DownloadCommand { get; }
     public IAsyncRelayCommand InstallCommand { get; }
     public IAsyncRelayCommand RefreshConflictsCommand { get; }
     public IAsyncRelayCommand<string> RetryConflictCommand { get; }
+    public IAsyncRelayCommand ForceSyncConflictsCommand { get; }
     public IAsyncRelayCommand<string> DismissConflictCommand { get; }
 
     public string ConflictsTitle => T(
@@ -87,6 +101,7 @@ public sealed partial class UpdateViewModel : ObservableObject
     public string RetryLabel => T("Retry", "تلاش دوباره", "بیا هڅه");
     public string DismissLabel => T("Dismiss", "نادیده گرفتن", "پرېږده");
     public string RefreshConflictsLabel => T("Refresh conflicts", "به‌روزرسانی تعارض‌ها", "Conflicts نوې کړئ");
+    public string ForceSyncConflictsLabel => T("Force sync conflicts", "همگام‌سازی اجباری تعارض‌ها", "د شخړو جبري همغږي");
 
     public string Title => T("Application Updates", "به‌روزرسانی برنامه", "د اپلېکېشن تازه کول");
     public string Subtitle => T(
@@ -104,6 +119,10 @@ public sealed partial class UpdateViewModel : ObservableObject
         OnPropertyChanged(nameof(CheckLabel));
         OnPropertyChanged(nameof(DownloadLabel));
         OnPropertyChanged(nameof(InstallLabel));
+        OnPropertyChanged(nameof(SyncStatusTitle));
+        OnPropertyChanged(nameof(SyncNowLabel));
+        OnPropertyChanged(nameof(SyncHistoryTitle));
+        OnPropertyChanged(nameof(SyncHistoryEmpty));
         CompatibilityText = ModeText();
     }
 
@@ -119,7 +138,68 @@ public sealed partial class UpdateViewModel : ObservableObject
                 "تازه کول یوازې د سم لاسلیک او د بسته د سم checksum سره منل کېږي.");
         }
 
+        var sync = _services.GetService<ICloudSyncService>();
+        if (sync is not null)
+        {
+            if (!_syncSubscribed)
+            {
+                sync.ResultUpdated += OnSyncResultUpdated;
+                _syncSubscribed = true;
+            }
+            ApplySyncResult(sync.LastResult);
+        }
+        else
+        {
+            SyncStatusText = T("Cloud sync is unavailable for this mode.",
+                "همگام‌سازی ابری برای این حالت در دسترس نیست.",
+                "په دې حالت کې کلاوډ همغږي نشته.");
+        }
+
         return RefreshConflictsAsync();
+    }
+
+    private async Task SyncNowAsync()
+    {
+        var sync = _services.GetService<ICloudSyncService>();
+        if (sync is null)
+        {
+            SyncStatusText = T("Cloud sync is unavailable for this mode.",
+                "همگام‌سازی ابری برای این حالت در دسترس نیست.",
+                "په دې حالت کې کلاوډ همغږي نشته.");
+            return;
+        }
+
+        await BusyAsync(async () =>
+        {
+            var result = await sync.SyncOnceAsync();
+            ApplySyncResult(result);
+        });
+        await RefreshConflictsAsync();
+    }
+
+    private void OnSyncResultUpdated(CloudSyncRunResult result)
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is not null && !dispatcher.CheckAccess())
+        {
+            _ = dispatcher.BeginInvoke(() => ApplySyncResult(result));
+            return;
+        }
+        ApplySyncResult(result);
+    }
+
+    private void ApplySyncResult(CloudSyncRunResult result)
+    {
+        var attempted = result.AttemptedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") ?? "—";
+        SyncStatusText = $"{result.State} · {result.Message} · Last attempt: {attempted}"
+            + $" · Sent: {result.Pushed} · Received: {result.Pulled} · Conflicts: {result.Conflicts}";
+
+        if (result.State == CloudSyncRunState.NeverRun) return;
+        var key = $"{result.AttemptedAt:O}|{result.State}|{result.Pushed}|{result.Pulled}|{result.Conflicts}";
+        if (key == _lastHistoryKey) return;
+        _lastHistoryKey = key;
+        SyncHistory.Insert(0, $"{attempted} · {result.State} · ↑{result.Pushed} ↓{result.Pulled} · {result.Message}");
+        while (SyncHistory.Count > 20) SyncHistory.RemoveAt(SyncHistory.Count - 1);
     }
 
     private async Task RefreshConflictsAsync()
@@ -187,6 +267,38 @@ public sealed partial class UpdateViewModel : ObservableObject
             try
             {
                 ApplyConflicts(await sync.DismissConflictAsync(idempotencyKey), keepSummary: false);
+            }
+            catch (Exception exception)
+            {
+                ConflictSummary = exception.Message;
+            }
+        });
+    }
+
+    private async Task ForceSyncConflictsAsync()
+    {
+        var sync = _services.GetService<ICloudSyncService>();
+        if (sync is null)
+            return;
+
+        await BusyAsync(async () =>
+        {
+            try
+            {
+                var review = await sync.GetConflictReviewAsync();
+                var retryable = review.Conflicts
+                    .Where(x => x.CanRetry)
+                    .Select(x => x.IdempotencyKey)
+                    .ToList();
+
+                foreach (var key in retryable)
+                    review = await sync.RetryConflictAsync(key);
+
+                var result = await sync.SyncOnceAsync();
+                ApplySyncResult(result);
+                ApplyConflicts(
+                    await sync.GetConflictReviewAsync(),
+                    keepSummary: false);
             }
             catch (Exception exception)
             {
@@ -311,11 +423,13 @@ public sealed partial class UpdateViewModel : ObservableObject
 
     private void NotifyCommands()
     {
+        SyncNowCommand.NotifyCanExecuteChanged();
         CheckCommand.NotifyCanExecuteChanged();
         DownloadCommand.NotifyCanExecuteChanged();
         InstallCommand.NotifyCanExecuteChanged();
         RefreshConflictsCommand.NotifyCanExecuteChanged();
         RetryConflictCommand.NotifyCanExecuteChanged();
+        ForceSyncConflictsCommand.NotifyCanExecuteChanged();
         DismissConflictCommand.NotifyCanExecuteChanged();
     }
 

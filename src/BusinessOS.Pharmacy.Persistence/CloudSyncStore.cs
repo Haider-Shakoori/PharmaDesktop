@@ -72,7 +72,9 @@ public sealed class CloudSyncStore(
             .Where(x =>
                 x.TenantId == tenantId &&
                 x.ActorUserId == actorUserId &&
-                (x.Status == "conflict" || x.Status == "pending") &&
+                (x.Status == "conflict" ||
+                 x.Status == "pending" ||
+                 x.Status == "dismissed") &&
                 x.EventType == "sale.completed" &&
                 x.LastErrorCode == "reference_missing")
             .ToListAsync(cancellationToken);
@@ -162,6 +164,13 @@ public sealed class CloudSyncStore(
                 }
 
                 line["medicine_code"] = medicine.MedicineCode;
+                await EnsureMedicineReferenceQueuedAsync(
+                    context,
+                    tenantId,
+                    actorUserId,
+                    medicine,
+                    now,
+                    cancellationToken);
             }
 
             if (!resolvedAllLines)
@@ -205,6 +214,69 @@ public sealed class CloudSyncStore(
             await context.SaveChangesAsync(cancellationToken);
 
         return repaired;
+    }
+
+    private static async Task EnsureMedicineReferenceQueuedAsync(
+        PharmacyDbContext context,
+        string tenantId,
+        string actorUserId,
+        MedicineEntity medicine,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var idempotencyKey =
+            $"medicine:{medicine.Id}:upsert:reference-repair-v1";
+        if (context.ChangeTracker.Entries<CloudSyncOutboxEntity>()
+            .Any(x => x.Entity.IdempotencyKey == idempotencyKey))
+            return;
+        var exists = await context.Set<CloudSyncOutboxEntity>()
+            .AnyAsync(
+                x => x.TenantId == tenantId &&
+                     x.ActorUserId == actorUserId &&
+                     x.IdempotencyKey == idempotencyKey,
+                cancellationToken);
+        if (exists)
+            return;
+
+        var payload = new Dictionary<string, object?>
+        {
+            ["v"] = 1,
+            ["local_id"] = medicine.Id,
+            ["idempotency_key"] = idempotencyKey,
+            ["medicine_code"] = medicine.MedicineCode,
+            ["barcode"] = medicine.Barcode,
+            ["brand_name"] = medicine.BrandName,
+            ["generic_name"] = medicine.GenericName,
+            ["strength"] = medicine.Strength,
+            ["dosage_form"] = medicine.DosageForm,
+            ["purchase_unit"] = medicine.PurchaseUnit,
+            ["sale_unit"] = medicine.SaleUnit,
+            ["units_per_purchase_unit"] = medicine.UnitsPerPurchaseUnit
+                .ToString("0.0000", CultureInfo.InvariantCulture),
+            ["reorder_level"] = medicine.ReorderLevel
+                .ToString("0.0000", CultureInfo.InvariantCulture),
+            ["prescription_required"] = medicine.PrescriptionRequired,
+            ["batch_tracking_required"] = medicine.BatchTrackingRequired,
+            ["expiry_tracking_required"] = medicine.ExpiryTrackingRequired,
+            ["is_active"] = medicine.IsActive,
+            ["notes"] = medicine.Notes,
+            ["local_updated_at"] = medicine.UpdatedAt
+                .ToString("O", CultureInfo.InvariantCulture),
+        };
+
+        context.Add(new CloudSyncOutboxEntity
+        {
+            Id = Guid.CreateVersion7().ToString(),
+            TenantId = tenantId,
+            ActorUserId = actorUserId,
+            EventType = "medicine.upsert",
+            IdempotencyKey = idempotencyKey,
+            PayloadJson = JsonSerializer.Serialize(payload),
+            Status = "pending",
+            AttemptCount = 0,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
     }
 
     public async Task MarkAcceptedAsync(
