@@ -202,7 +202,8 @@
             </Border.Style>
             <DockPanel Margin="12,12,12,8">
                 <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-                    <Grid Height="62">
+                    <!-- Keep both logo variants in their original orientation in RTL languages. -->
+                    <Grid Height="62" FlowDirection="LeftToRight">
                         <Image Source="pack://application:,,,/Darmaltoon;component/Assets/DarmaltoonWordmark.png"
                                Width="242" Height="60" Stretch="Uniform"
                                HorizontalAlignment="Left" VerticalAlignment="Center">
@@ -233,6 +234,7 @@
                         </Image>
                     </Grid>
                     <TextBlock Text="Manage Today  ·  Healthier Tomorrow"
+                               FlowDirection="LeftToRight"
                                Margin="5,7,0,0"
                                FontSize="12"
                                FontWeight="SemiBold"
