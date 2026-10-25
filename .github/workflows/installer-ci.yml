@@ -1,0 +1,68 @@
+name: installer-ci
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "packaging/windows/**"
+      - "scripts/build-windows-release.ps1"
+      - "scripts/test-windows-installer.ps1"
+      - "src/BusinessOS.Pharmacy.ActivationBootstrap/**"
+      - "src/BusinessOS.Pharmacy.Licensing/**"
+      - "BusinessOS.Pharmacy.sln"
+      - ".github/workflows/installer-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  windows-installer:
+    runs-on: windows-2025
+    timeout-minutes: 45
+    env:
+      INNO_SETUP_LICENSE_KEY: ${{ secrets.INNO_SETUP_LICENSE_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install Inno Setup compiler
+        shell: pwsh
+        run: |
+          $installed = $false
+          if (Get-Command winget.exe -ErrorAction SilentlyContinue) {
+            winget install --id JRSoftware.InnoSetup.7 -e --source winget --silent --accept-package-agreements --accept-source-agreements
+            $installed = $LASTEXITCODE -eq 0
+          }
+          if (-not $installed) {
+            choco install innosetup -y --no-progress
+            if ($LASTEXITCODE -ne 0) { throw "Could not install Inno Setup." }
+          }
+
+      - name: Restore
+        run: dotnet restore BusinessOS.Pharmacy.sln
+
+      - name: Release build
+        run: dotnet build BusinessOS.Pharmacy.sln -c Release --no-restore
+
+      - name: Build gated Windows installers
+        shell: pwsh
+        run: ./scripts/build-windows-release.ps1 -Version 0.0.0
+
+      - name: Installer smoke test
+        shell: pwsh
+        run: ./scripts/test-windows-installer.ps1 -Version 0.0.0
+
+      - name: Verify production gated artifacts exist
+        shell: pwsh
+        run: |
+          foreach ($file in @(
+            "artifacts/windows/Darmaltoon-Standalone-Setup-0.0.0-win-x64.exe",
+            "artifacts/windows/Darmaltoon-MainServer-Setup-0.0.0-win-x64.exe",
+            "artifacts/windows/Darmaltoon-ClientTerminal-Setup-0.0.0-win-x64.exe"
+          )) {
+            if (-not (Test-Path $file)) { throw "Missing production installer: $file" }
+          }
