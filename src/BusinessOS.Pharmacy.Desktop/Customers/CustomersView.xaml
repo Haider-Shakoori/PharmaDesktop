@@ -784,6 +784,9 @@
         </Grid>
 
         <Grid Panel.ZIndex="50"
+              x:Name="Customers_EditorOverlay"
+              AutomationProperties.AutomationId="Customers_EditorOverlay"
+              AutomationProperties.Name="Customer editor"
               Visibility="{Binding IsEditorOpen, Converter={StaticResource GlobalBoolToVisibility}}">
             <Grid.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">

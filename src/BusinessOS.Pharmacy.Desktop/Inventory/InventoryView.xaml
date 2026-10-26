@@ -977,6 +977,9 @@
         </Grid>
 
         <Grid Panel.ZIndex="50"
+              x:Name="Inventory_EditorOverlay"
+              AutomationProperties.AutomationId="Inventory_EditorOverlay"
+              AutomationProperties.Name="Inventory editor"
               Visibility="{Binding IsEditorOpen, Converter={StaticResource GlobalBoolToVisibility}}">
             <Grid.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
