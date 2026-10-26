@@ -756,6 +756,9 @@
 
         <Grid Grid.RowSpan="3"
               Panel.ZIndex="70"
+              x:Name="Purchasing_EditorOverlay"
+              AutomationProperties.AutomationId="Purchasing_EditorOverlay"
+              AutomationProperties.Name="Purchase editor"
               Visibility="{Binding IsEditorOpen, Converter={StaticResource GlobalBoolToVisibility}}">
             <Grid.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
