@@ -617,6 +617,9 @@
         </Grid>
 
         <Grid Panel.ZIndex="70"
+              x:Name="Expenses_EditorOverlay"
+              AutomationProperties.AutomationId="Expenses_EditorOverlay"
+              AutomationProperties.Name="Expense editor"
               Visibility="{Binding IsEditorOpen, Converter={StaticResource GlobalBoolToVisibility}}">
             <Grid.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
